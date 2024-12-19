@@ -1,0 +1,85 @@
+------------------------------------------------
+  Objects
+------------------------------------------------
+blockchain
+  |
+  +-- microchain
+        |
+        |<-- enhanced with dedicated methods
+        |    according to the type
+        |
+        +-- microblock
+              |
+              +-- section
+                    |
+                    +-- field
+
+------------------------------------------------
+  Section definition
+------------------------------------------------
+type: INTERNAL_SCHEMA
+      EXTERNAL_SCHEMA
+      PROVABLE
+
+if INTERNAL_SCHEMA:
+  schameDef: object
+  if the schema includes private data:
+    accessRules: [
+      [ KEY_TYPE0 | index0, "foo.bar" ],
+      [ KEY_TYPE1 | index1, "baz.*" ]
+    ]
+
+------------------------------------------------
+  Section encoding
+------------------------------------------------
+publicData: binary (if public),
+privateData: { (if private & !provable) [encrypted]
+  padding       : binary,
+  serializedData: binary
+},
+provableData: { (if provable) [encrypted]
+  merklePepper  : binary,
+  padding       : binary,
+  serializedData: binary
+}
+
+{
+  schemaId  : uint8 (flag 0x80 for external),
+  schemaInfo: binary (if external schema),
+
+  subSections: [
+    flags         : uint8 (public / private / provable),
+    keyIdentifier : uint16 (if private),
+    accessRules   : object (if private),
+    merkleRootHash: binary (if provable),
+    data          : binary
+  ]
+}
+
+------------------------------------------------
+  Account
+------------------------------------------------
+
+------------------------------------------------
+  Organization
+------------------------------------------------
+
+------------------------------------------------
+  Node
+------------------------------------------------
+
+------------------------------------------------
+  Application
+------------------------------------------------
+
+------------------------------------------------
+  Oracle
+------------------------------------------------
+
+------------------------------------------------
+  User
+------------------------------------------------
+
+------------------------------------------------
+  Flow
+------------------------------------------------

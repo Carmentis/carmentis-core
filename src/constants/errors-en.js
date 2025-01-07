@@ -34,7 +34,8 @@ export const ERRORS_EN = {
     "External definition not provided for section with ID '%0'",
     "Public field '%0' cannot be assigned to a private subsection",
     "Inconsistent Merkle root hash in subsection with ID 0x%0 (expected: %1 / computed: %2)",
-    "Key not found: ID=0x%0"
+    "Key not found: ID=0x%0",
+    "'%0' not assign to any subsection"
   ],
 
   [ ERROR_TYPES.PATH ]: [

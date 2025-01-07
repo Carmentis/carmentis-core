@@ -135,7 +135,8 @@ export const APPLICATION_DEFINITION = {
   messages: [
     {
       name: "msg",
-      parts: new Uint8Array(0)
+      texts: [ "Hello" ],
+      fields: []
     }
   ]
 };

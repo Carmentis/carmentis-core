@@ -19,7 +19,6 @@ import * as crypto from "../crypto/crypto.js";
 //  The hashes are stored from top to bottom and left to right. (So, the above tree is stored as 'KIJFGH#ABCDE#012345678#'.)    //
 //  Padding hashes are set to all 0's.                                                                                          //
 // ============================================================================================================================ //
-
 const HEADER_SIZE = 4;
 const HASH_SIZE   = 32;
 

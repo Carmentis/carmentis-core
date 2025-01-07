@@ -37,6 +37,7 @@ export const SECTION_NO_EXTERNAL_DEF   = 0x02;
 export const SECTION_PUBLIC_TO_PRIVATE = 0x03;
 export const SECTION_BAD_MERKLE_HASH   = 0x04;
 export const SECTION_KEY_NOT_FOUND     = 0x05;
+export const SECTION_NO_SUBSECTION     = 0x06;
 
 // PATH
 export const PATH_DUPLICATE_RULE      = 0x00;

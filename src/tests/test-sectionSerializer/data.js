@@ -1,5 +1,7 @@
 import { DATA } from "../../constants/constants.js";
 
+export const KEY_INDEX = 101;
+
 export const EXTERNAL_APP_DEF = {
   fields: [
     { name: "name",        type: DATA.STRING },
@@ -9,8 +11,8 @@ export const EXTERNAL_APP_DEF = {
     { name: "website",     type: DATA.STRING | DATA.PRIVATE }
   ],
   subsections: [
-    [ "*",             DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, 101, 0 ],
-    [ "countryCode",   DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES, 101, 1 ],
-    [ "city, address", DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, 101, 1 ]
+    [ "*",             DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, KEY_INDEX, 0 ],
+    [ "countryCode",   DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES, KEY_INDEX, 1 ],
+    [ "city, address", DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, KEY_INDEX, 1 ]
   ]
 };

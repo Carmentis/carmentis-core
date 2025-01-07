@@ -256,6 +256,10 @@ function getFlattenedFields(def, ruleSets) {
         let isPublic = !(item.type & DATA.PRIVATE),
             [ subId, modifiers ] = getSubsection(newPath, isPublic, ruleSets);
 
+        if(subId == -1) {
+          throw new sectionError(ERRORS.SECTION_NO_SUBSECTION, newName.join("."));
+        }
+
         hasPublicData |= isPublic;
 
         list.push({
@@ -287,7 +291,7 @@ function getSubsection(fieldPath, isPublic, ruleSets) {
   ruleSets.forEach(rule => {
     rule.accessRules.forEach(object => {
       let depth = object.path.length,
-          wildcard = object.path[depth - 1] == access.WILDCARD;
+          wildcard = object.path[depth - 1] == DATA.WILDCARD;
 
       if(wildcard) {
         if(!isPublic && fieldPath.length >= depth && object.path.slice(0, -1).every((v, i) => v == fieldPath[i])) {

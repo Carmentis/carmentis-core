@@ -89,7 +89,8 @@ export const MSG_GET_VB_CONTENT           = 0x04;
 export const MSG_GET_MICROBLOCK           = 0x05;
 export const MSG_GET_MICROBLOCKS          = 0x06;
 export const MSG_GET_OBJECT_BY_PUBLIC_KEY = 0x07;
-export const MSG_SEND_MICROBLOCK          = 0x08;
+export const MSG_GET_ACCOUNT_BALANCE      = 0x08;
+export const MSG_SEND_MICROBLOCK          = 0x09;
 
 export const MSG_ANS_OK                   = 0x80;
 export const MSG_ANS_HASH                 = 0x81;

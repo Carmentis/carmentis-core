@@ -210,6 +210,9 @@ const APP_LEDGER = {
       { name: "hostId",     type: DATA.UINT8 },
       { name: "guestId",    type: DATA.UINT8 },
       { name: "channelKey", type: DATA.AES_KEY | DATA.PRIVATE }
+    ],
+    subsections: [
+      [ "channelKey", DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, 127, 0 ]
     ]
   },
   [ APP_LEDGER_SUBSCRIPTION ]: {

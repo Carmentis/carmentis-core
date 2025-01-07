@@ -4,10 +4,11 @@ import * as sdk from "../../sdk.js";
 import * as memoryDb from "../memoryDb.js";
 import { log, outcome } from "../logger.js";
 
-import * as crypto from "../../crypto/crypto.js"; // !!
+const { blockchainCore, ROLES, accountVb, organizationVb, applicationVb, appLedgerVb } = sdk.blockchain;
+const crypto = sdk.crypto;
 
 export async function run() {
-  const node = spawn("node", [ "dummyNode.js" ]);
+  const node = spawn("node", [ "../../../carmentis-test-node/node.js" ]);
 
   node.stdout.on("data", async (data) => {
     data = data.toString().replace(/\n$/, "");
@@ -45,8 +46,8 @@ export async function run() {
 async function accountTest() {
   log("--- Testing account VB ----");
 
-  sdk.blockchainCore.setDbInterface(memoryDb);
-  sdk.blockchainCore.setNode("http://127.0.0.1:3000");
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode("http://127.0.0.1:3000");
 
   let vb, mb, transfer;
 
@@ -57,9 +58,9 @@ async function accountTest() {
 
   log("Creating root account");
 
-  sdk.blockchainCore.setUser(sdk.ROLES.USER, issuerPrivateKey);
+  blockchainCore.setUser(ROLES.USER, issuerPrivateKey);
 
-  vb = new sdk.accountVb();
+  vb = new accountVb();
 
   await vb.addTokenIssuance({
     issuerPublicKey: issuerPublicKey,
@@ -72,11 +73,11 @@ async function accountTest() {
 
   log("Creating buyer account");
 
-  sdk.blockchainCore.setUser(sdk.ROLES.USER, issuerPrivateKey);
+  blockchainCore.setUser(ROLES.USER, issuerPrivateKey);
 
   let vbHash = mb.hash;
 
-  vb = new sdk.accountVb();
+  vb = new accountVb();
 
   await vb.create({
     sellerAccount: vbHash,
@@ -92,9 +93,9 @@ async function accountTest() {
 
   log("Transfer from root account to buyer account");
 
-  sdk.blockchainCore.setUser(sdk.ROLES.USER, issuerPrivateKey);
+  blockchainCore.setUser(ROLES.USER, issuerPrivateKey);
 
-  vb = new sdk.accountVb();
+  vb = new accountVb();
   await vb.load(vbHash);
 
   transfer = vb.createTransfer(buyerVbHash, 5e4);
@@ -115,15 +116,15 @@ async function organizationTest() {
   let orgPrivateKey = crypto.generateKey256(),
       orgPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(orgPrivateKey);
 
-  sdk.blockchainCore.setDbInterface(memoryDb);
-  sdk.blockchainCore.setNode("http://127.0.0.1:3000");
-  sdk.blockchainCore.setUser(sdk.ROLES.OPERATOR, orgPrivateKey);
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode("http://127.0.0.1:3000");
+  blockchainCore.setUser(ROLES.OPERATOR, orgPrivateKey);
 
   let vb, mb;
 
   log("Creating organization VB");
 
-  vb = new sdk.organizationVb();
+  vb = new organizationVb();
 
   await vb.addPublicKey({
     publicKey: orgPublicKey
@@ -146,7 +147,7 @@ async function organizationTest() {
 
   log("Adding new description");
 
-  vb = new sdk.organizationVb();
+  vb = new organizationVb();
   await vb.load(vbHash);
 
   await vb.addDescription({
@@ -164,11 +165,11 @@ async function organizationTest() {
 
   log("Adding new description");
 
-  vb = new sdk.organizationVb();
+  vb = new organizationVb();
 
   await vb.load(vbHash);
 
-  vb = new sdk.organizationVb();
+  vb = new organizationVb();
   await vb.load(vbHash);
 
   await vb.addDescription({
@@ -184,7 +185,7 @@ async function organizationTest() {
 
   console.log(await vb.getDescription());
 
-  vb = new sdk.organizationVb();
+  vb = new organizationVb();
   await vb.load(vbHash);
 
   console.log(await vb.getDescription());
@@ -199,13 +200,13 @@ async function organizationTest() {
 async function applicationTest(organization) {
   log("--- Testing application VB ----");
 
-  sdk.blockchainCore.setDbInterface(memoryDb);
-  sdk.blockchainCore.setNode("http://127.0.0.1:3000");
-  sdk.blockchainCore.setUser(sdk.ROLES.OPERATOR, organization.privateKey);
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode("http://127.0.0.1:3000");
+  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
 
   let vb, mb;
 
-  vb = new sdk.applicationVb();
+  vb = new applicationVb();
 
   log("Adding declaration");
 
@@ -228,7 +229,7 @@ async function applicationTest(organization) {
 
   let vbHash = mb.hash;
 
-  vb = new sdk.applicationVb();
+  vb = new applicationVb();
   await vb.load(vbHash);
 
   console.log("description", JSON.stringify(await vb.getDescription()));
@@ -240,9 +241,9 @@ async function applicationTest(organization) {
 async function appLedgerTest(organization, appId) {
   log("--- Testing app ledger VB ----");
 
-  sdk.blockchainCore.setDbInterface(memoryDb);
-  sdk.blockchainCore.setNode("http://127.0.0.1:3000");
-  sdk.blockchainCore.setUser(sdk.ROLES.OPERATOR, organization.privateKey);
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode("http://127.0.0.1:3000");
+  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
 
   let fields = {
     transactionId: "FS1234",
@@ -275,7 +276,7 @@ async function appLedgerTest(organization, appId) {
 
   let vb, mb;
 
-  vb = new sdk.appLedgerVb();
+  vb = new appLedgerVb();
 
   await vb.prepareUserApproval(
     {

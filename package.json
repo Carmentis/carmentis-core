@@ -1,7 +1,18 @@
 {
+  "name": "@cmts-dev/carmentis-sdk",
   "type": "module",
-  "scripts": {
+  "version": "0.0.1",
+  "author": "Carmentis SAS",
+  "scripts": {},
+  "main": "sdk.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Carmentis/carmentis-core.git"
   },
-  "dependencies": {
-  }
+  "description": "Carmentis SDKs",
+  "license": "SEE LICENCE IN LICENCE.txt",
+  "bugs": {
+    "url": "https://github.com/Carmentis/carmentis-core/issues"
+  },
+  "homepage": "https://github.com/Carmentis/carmentis-core#readme"
 }

@@ -155,6 +155,16 @@ export class virtualBlockchain extends blockchainCore {
     throw "updateState() must be called from a child class";
   }
 
+  async computeGas() {
+    if(!await this.checkStructure(this.currentMicroblock.getStructure())) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_MB_STRUCTURE);
+    }
+
+    let mb = this.currentMicroblock.finalize();
+
+    return mb.header.gas;
+  }
+
   async publish() {
     if(!await this.checkStructure(this.currentMicroblock.getStructure())) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_MB_STRUCTURE);

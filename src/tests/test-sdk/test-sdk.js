@@ -8,13 +8,13 @@ const { blockchainCore, ROLES, accountVb, organizationVb, applicationVb, appLedg
 const crypto = sdk.crypto;
 
 export async function run() {
-  const node = spawn("node", [ "../../../carmentis-dev-node/node.js" ]);
+  const node = spawn("node", [ "../../../carmentis-dev-node/dev-node.js" ]);
 
   node.stdout.on("data", async (data) => {
     data = data.toString().replace(/\n$/, "");
     console.log(`(node) ${data}`);
 
-    if(data == "ready") {
+    if(/^Server is ready/.test(data)) {
       try {
         let organization, appId;
 
@@ -138,6 +138,10 @@ async function organizationTest() {
   });
 
   await vb.sign();
+
+  let gas = await vb.computeGas();
+
+  console.log("Gas:", gas);
 
   mb = await vb.publish();
 

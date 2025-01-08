@@ -66,6 +66,7 @@ export const ERRORS_EN = {
   ],
 
   [ ERROR_TYPES.ACCOUNT ]: [
+    "Unknown account %0",
     "A public key is already attached to this account",
     "No public key is attached to this account",
     "Payee ID %0 is undefined",

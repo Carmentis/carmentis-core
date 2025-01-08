@@ -1,6 +1,6 @@
 import { ERRORS, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
-import { accountError } from "../errors/error.js";
+import { sectionError, accountError } from "../errors/error.js";
 
 // ============================================================================================================================ //
 //  accountVb                                                                                                                   //
@@ -110,6 +110,10 @@ export class accountVb extends virtualBlockchain {
           // everything else is signed by the account owner
           this.verifySignature(mb, this.state.publicKey, object);
         }
+        break;
+      }
+      default: {
+        throw new sectionError(ERRORS.SECTION_INVALID_ID, sectionId, ID.OBJECT_NAME[ID.OBJ_ACCOUNT]);
         break;
       }
     }

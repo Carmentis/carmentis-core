@@ -1,4 +1,4 @@
-import { ID, SCHEMAS, ERRORS } from "../constants/constants.js";
+import { ID, SCHEMAS, ERRORS, PROTOCOL } from "../constants/constants.js";
 import * as schemaSerializer from "../serializers/schema-serializer.js";
 import { blockchainCore } from "./blockchainCore.js";
 import { accountVb } from "./vb-account.js";
@@ -37,7 +37,16 @@ export class blockchainManager extends blockchainCore {
   static async checkMicroblock(mb) {
     let mbHash = crypto.sha256(mb),
         object = schemaSerializer.decode(SCHEMAS.MICROBLOCK, mb),
+        ts = new Date() / 1000,
         state;
+
+    if(object.header.timestamp < ts - PROTOCOL.MAX_MICROBLOCK_PAST_DELAY) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_TOO_FAR_PAST);
+    }
+
+    if(object.header.timestamp > ts + PROTOCOL.MAX_MICROBLOCK_FUTURE_DELAY) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_TOO_FAR_FUTURE);
+    }
 
     if(object.header.gas != this.computeGas(mb.length)) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_INVALID_GAS);

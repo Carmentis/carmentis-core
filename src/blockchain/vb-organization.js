@@ -1,5 +1,6 @@
-import { ID, SECTIONS } from "../constants/constants.js";
+import { ERRORS, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
+import { sectionError, organizationError } from "../errors/error.js";
 
 // ============================================================================================================================ //
 //  organizationVb                                                                                                              //
@@ -32,8 +33,17 @@ export class organizationVb extends virtualBlockchain {
         break;
       }
 
+      case SECTIONS.ORG_DESCRIPTION: {
+        break;
+      }
+
       case SECTIONS.ORG_SIGNATURE: {
         this.verifySignature(mb, this.state.publicKey, object);
+        break;
+      }
+
+      default: {
+        throw new sectionError(ERRORS.SECTION_INVALID_ID, sectionId, ID.OBJECT_NAME[ID.OBJ_ORGANIZATION]);
         break;
       }
     }

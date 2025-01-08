@@ -90,7 +90,8 @@ export const MSG_GET_MICROBLOCK           = 0x05;
 export const MSG_GET_MICROBLOCKS          = 0x06;
 export const MSG_GET_OBJECT_BY_PUBLIC_KEY = 0x07;
 export const MSG_GET_ACCOUNT_BALANCE      = 0x08;
-export const MSG_SEND_MICROBLOCK          = 0x09;
+export const MSG_GET_ACCOUNT_HISTORY      = 0x09;
+export const MSG_SEND_MICROBLOCK          = 0x0A;
 
 export const MSG_ANS_OK                   = 0x80;
 export const MSG_ANS_HASH                 = 0x81;
@@ -103,9 +104,11 @@ export const MSG_ANS_VB_INFO              = 0x87;
 export const MSG_ANS_VB_CONTENT           = 0x88;
 export const MSG_ANS_MICROBLOCK           = 0x89;
 export const MSG_ANS_MICROBLOCKS          = 0x8A;
-export const MSG_ANS_ACCEPT_MICROBLOCK    = 0x8B;
-export const MSG_ANS_CONSUMPTION          = 0x8C;
-export const MSG_ANS_ANCHORING            = 0x8D;
+export const MSG_ANS_ACCOUNT_BALANCE      = 0x8B;
+export const MSG_ANS_ACCOUNT_HISTORY      = 0x8C;
+export const MSG_ANS_ACCEPT_MICROBLOCK    = 0x8D;
+export const MSG_ANS_CONSUMPTION          = 0x8E;
+export const MSG_ANS_ANCHORING            = 0x8F;
 
 export const MSG_ANS_ERROR                = 0xFF;
 
@@ -163,6 +166,11 @@ export const MESSAGES = {
   ],
   [ MSG_GET_MICROBLOCKS ] : [
     { name: "list", type: DATA.HASH | DATA.ARRAY }
+  ],
+  [ MSG_ANS_ACCOUNT_BALANCE ] : [
+    { name: "balance", type: DATA.UINT48 }
+  ],
+  [ MSG_ANS_ACCOUNT_HISTORY ] : [
   ],
   [ MSG_GET_OBJECT_BY_PUBLIC_KEY ] : [
     { name: "publicKey", type: DATA.PUB_KEY }

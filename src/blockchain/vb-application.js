@@ -2,7 +2,7 @@ import { ERRORS, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { organizationVb } from "./vb-organization.js";
 import * as message from "../paths/message.js";
-import { applicationError } from "../errors/error.js";
+import { sectionError, applicationError } from "../errors/error.js";
 
 // ============================================================================================================================ //
 //  applicationVb                                                                                                               //
@@ -83,6 +83,10 @@ export class applicationVb extends virtualBlockchain {
         let vb = await this.getOrganizationVb();
 
         this.verifySignature(mb, vb.state.publicKey, object);
+        break;
+      }
+      default: {
+        throw new sectionError(ERRORS.SECTION_INVALID_ID, sectionId, ID.OBJECT_NAME[ID.OBJ_APPLICATION]);
         break;
       }
     }

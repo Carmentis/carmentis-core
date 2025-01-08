@@ -1,7 +1,7 @@
 import { ERRORS, DATA, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { applicationVb } from "./vb-application.js";
-import { appLedgerError } from "../errors/error.js";
+import { sectionError, appLedgerError } from "../errors/error.js";
 
 // ============================================================================================================================ //
 //  appLedgerVb                                                                                                                 //
@@ -259,6 +259,10 @@ export class appLedgerVb extends virtualBlockchain {
             object.channelKey
           );
         }
+        break;
+      }
+      default: {
+        throw new sectionError(ERRORS.SECTION_INVALID_ID, sectionId, ID.OBJECT_NAME[ID.OBJ_APP_LEDGER]);
         break;
       }
     }

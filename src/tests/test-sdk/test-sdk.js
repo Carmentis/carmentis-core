@@ -8,7 +8,7 @@ const { blockchainCore, ROLES, accountVb, organizationVb, applicationVb, appLedg
 const crypto = sdk.crypto;
 
 export async function run() {
-  const node = spawn("node", [ "../../../carmentis-test-node/node.js" ]);
+  const node = spawn("node", [ "../../../carmentis-dev-node/node.js" ]);
 
   node.stdout.on("data", async (data) => {
     data = data.toString().replace(/\n$/, "");

@@ -65,12 +65,13 @@ export const BLOCKCHAIN_TOO_FAR_PAST       = 0x0B;
 export const BLOCKCHAIN_TOO_FAR_FUTURE     = 0x0C;
 
 // ACCOUNT
-export const ACCOUNT_KEY_DUPLICATE      = 0x00;
-export const ACCOUNT_KEY_UNDEFINED      = 0x01;
-export const ACCOUNT_PAYEE_UNDEFINED    = 0x02;
-export const ACCOUNT_INSUFFICIENT_FUNDS = 0x03;
-export const ACCOUNT_INVALID_PAYEE      = 0x04;
-export const ACCOUNT_ALREADY_CREATED    = 0x05;
+export const ACCOUNT_UNKNOWN            = 0x00;
+export const ACCOUNT_KEY_DUPLICATE      = 0x01;
+export const ACCOUNT_KEY_UNDEFINED      = 0x02;
+export const ACCOUNT_PAYEE_UNDEFINED    = 0x03;
+export const ACCOUNT_INSUFFICIENT_FUNDS = 0x04;
+export const ACCOUNT_INVALID_PAYEE      = 0x05;
+export const ACCOUNT_ALREADY_CREATED    = 0x06;
 
 // APPLICATION
 export const APPLICATION_MISSING_ORG = 0x00;

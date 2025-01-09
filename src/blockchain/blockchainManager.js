@@ -35,6 +35,8 @@ export class blockchainManager extends blockchainCore {
   }
 
   static async checkMicroblock(mb) {
+    console.log("Entering checkMicroblock()");
+
     let mbHash = crypto.sha256(mb),
         object = schemaSerializer.decode(SCHEMAS.MICROBLOCK, mb),
         ts = new Date() / 1000,
@@ -78,6 +80,7 @@ export class blockchainManager extends blockchainCore {
     let vb = this.getVbInstance(mbRecord.vbType);
 
     if(object.header.height == 1) {
+      console.log("height = 1");
       vb.id = mbHash;
     }
     else {

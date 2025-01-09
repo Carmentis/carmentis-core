@@ -81,7 +81,9 @@ export class blockchainManager extends blockchainCore {
       vb.id = mbHash;
     }
     else {
+      console.log("loading", mbRecord.vbHash, vb, state);
       await vb.load(mbRecord.vbHash);
+      console.log("loaded", vb);
       vb.state = state;
     }
 

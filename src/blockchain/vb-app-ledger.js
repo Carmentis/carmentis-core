@@ -261,6 +261,7 @@ export class appLedgerVb extends virtualBlockchain {
         }
         break;
       }
+
       default: {
         throw new sectionError(ERRORS.SECTION_INVALID_ID, sectionId, ID.OBJECT_NAME[ID.OBJ_APP_LEDGER]);
         break;

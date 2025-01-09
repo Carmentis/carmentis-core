@@ -41,13 +41,13 @@ export class microblock extends blockchainCore {
 
     this.object = {
       header: {
-        magicString : MAGIC,
-        version     : PROTOCOL.VERSION,
-        height      : height,
-        previousHash: previousHash,
-        timestamp   : Math.floor(Date.now() / 1000),
-        gas         : 0,
-        gasPrice    : 0
+        magicString    : MAGIC,
+        protocolVersion: PROTOCOL.VERSION,
+        height         : height,
+        previousHash   : previousHash,
+        timestamp      : Math.floor(Date.now() / 1000),
+        gas            : 0,
+        gasPrice       : 0
       },
       body: {
         sections: []

@@ -85,6 +85,7 @@ export class applicationVb extends virtualBlockchain {
         this.verifySignature(mb, vb.state.publicKey, object);
         break;
       }
+
       default: {
         throw new sectionError(ERRORS.SECTION_INVALID_ID, sectionId, ID.OBJECT_NAME[ID.OBJ_APPLICATION]);
         break;

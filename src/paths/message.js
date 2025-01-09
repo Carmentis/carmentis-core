@@ -61,7 +61,7 @@ function decodeMessage(appDef, texts, fields) {
     parts.push(texts[n] || "");
 
     if(fields[n]) {
-      parts.push(`{{${DATA.REF_NAME[fields[n].type] + "." + path.decode(appDef, fields[n].path)}}}`);
+      parts.push(`{{${DATA.REF_NAME[fields[n].type]}.${path.decode(appDef, fields[n].path)}}}`);
     }
   }
 

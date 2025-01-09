@@ -1,5 +1,6 @@
 import { spawn } from "child_process";
-import { APP } from "./app.js";
+import { APP_V1 } from "./app-v1.js";
+import { APP_V2 } from "./app-v2.js";
 import * as sdk from "../../sdk.js";
 import * as memoryDb from "../memoryDb.js";
 import { log, outcome } from "../logger.js";
@@ -218,13 +219,13 @@ async function applicationTest(organization) {
 
   log("Adding description");
 
-  await vb.addDescription(APP.description);
+  await vb.addDescription(APP_V1.description);
 
   log("Adding definition");
 
   await vb.addDefinition({
     version: 1,
-    definition: APP.definition
+    definition: APP_V1.definition
   });
 
   await vb.sign();
@@ -232,6 +233,22 @@ async function applicationTest(organization) {
   mb = await vb.publish();
 
   let vbHash = mb.hash;
+
+  vb = new applicationVb();
+  await vb.load(vbHash);
+
+  console.log("Updating definition");
+
+  await vb.addDefinition({
+    version: 2,
+    definition: APP_V2.definition
+  });
+
+  console.log("Signing");
+
+  await vb.sign();
+
+  mb = await vb.publish();
 
   vb = new applicationVb();
   await vb.load(vbHash);

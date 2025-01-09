@@ -27,6 +27,7 @@ export const VB_STATES = {
   [ ID.OBJ_APP_USER ] : [
   ],
   [ ID.OBJ_APPLICATION ] : [
+    { name: "organizationId", type: DATA.HASH }
   ],
   [ ID.OBJ_APP_LEDGER ] : [
   ],
@@ -313,13 +314,13 @@ export const SECTION = [
 //  Microblocks                                                                                                                 //
 // ============================================================================================================================ //
 export const MICROBLOCK_HEADER = [
-  { name: "magicString",  type: DATA.STRING, size: 4 },
-  { name: "version",      type: DATA.UINT16 },
-  { name: "height",       type: DATA.UINT48 },
-  { name: "previousHash", type: DATA.HASH },
-  { name: "timestamp",    type: DATA.UINT48 },
-  { name: "gas",          type: DATA.UINT24 },
-  { name: "gasPrice",     type: DATA.UINT32 }
+  { name: "magicString",     type: DATA.STRING, size: 4 },
+  { name: "protocolVersion", type: DATA.UINT16 },
+  { name: "height",          type: DATA.UINT48 },
+  { name: "previousHash",    type: DATA.HASH },
+  { name: "timestamp",       type: DATA.UINT48 },
+  { name: "gas",             type: DATA.UINT24 },
+  { name: "gasPrice",        type: DATA.UINT32 }
 ];
 
 export const MICROBLOCK_BODY = [

@@ -62,7 +62,8 @@ export const ERRORS_EN = {
     "Invalid signature",
     "Invalid gas amount",
     "The microblock timestamp is too far in the past",
-    "The microblock timestamp is too far in the future"
+    "The microblock timestamp is too far in the future",
+    "Invalid protocol version: expecting '%0', got '%1'"
   ],
 
   [ ERROR_TYPES.ACCOUNT ]: [

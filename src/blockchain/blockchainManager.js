@@ -40,6 +40,10 @@ export class blockchainManager extends blockchainCore {
         ts = new Date() / 1000,
         state;
 
+    if(object.header.protocolVersion != PROTOCOL.VERSION) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_PROTOCOL_VERSION, PROTOCOL.VERSION, object.header.protocolVersion);
+    }
+
     if(object.header.timestamp < ts - PROTOCOL.MAX_MICROBLOCK_PAST_DELAY) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_TOO_FAR_PAST);
     }

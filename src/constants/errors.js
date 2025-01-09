@@ -50,19 +50,20 @@ export const PATH_NOT_A_STRUCT        = 0x06;
 export const PATH_INVALID_ENCODING    = 0x07;
 
 // BLOCKCHAIN
-export const BLOCKCHAIN_NO_ROOT_KEY        = 0x00;
-export const BLOCKCHAIN_NO_DB_INTERFACE    = 0x01;
-export const BLOCKCHAIN_NO_CHAIN_INTERFACE = 0x02;
-export const BLOCKCHAIN_CANNOT_LOAD_VB     = 0x03;
-export const BLOCKCHAIN_CANNOT_LOAD_MB     = 0x04;
-export const BLOCKCHAIN_INVALID_VB_ID      = 0x05;
-export const BLOCKCHAIN_INVALID_VB_TYPE    = 0x06;
-export const BLOCKCHAIN_VB_TYPE_MISMATCH   = 0x07;
-export const BLOCKCHAIN_BAD_MB_STRUCTURE   = 0x08;
-export const BLOCKCHAIN_BAD_SIGNATURE      = 0x09;
-export const BLOCKCHAIN_INVALID_GAS        = 0x0A;
-export const BLOCKCHAIN_TOO_FAR_PAST       = 0x0B;
-export const BLOCKCHAIN_TOO_FAR_FUTURE     = 0x0C;
+export const BLOCKCHAIN_NO_ROOT_KEY          = 0x00;
+export const BLOCKCHAIN_NO_DB_INTERFACE      = 0x01;
+export const BLOCKCHAIN_NO_CHAIN_INTERFACE   = 0x02;
+export const BLOCKCHAIN_CANNOT_LOAD_VB       = 0x03;
+export const BLOCKCHAIN_CANNOT_LOAD_MB       = 0x04;
+export const BLOCKCHAIN_INVALID_VB_ID        = 0x05;
+export const BLOCKCHAIN_INVALID_VB_TYPE      = 0x06;
+export const BLOCKCHAIN_VB_TYPE_MISMATCH     = 0x07;
+export const BLOCKCHAIN_BAD_MB_STRUCTURE     = 0x08;
+export const BLOCKCHAIN_BAD_SIGNATURE        = 0x09;
+export const BLOCKCHAIN_INVALID_GAS          = 0x0A;
+export const BLOCKCHAIN_TOO_FAR_PAST         = 0x0B;
+export const BLOCKCHAIN_TOO_FAR_FUTURE       = 0x0C;
+export const BLOCKCHAIN_BAD_PROTOCOL_VERSION = 0x0D;
 
 // ACCOUNT
 export const ACCOUNT_UNKNOWN            = 0x00;

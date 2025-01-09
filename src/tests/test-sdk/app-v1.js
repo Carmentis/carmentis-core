@@ -1,6 +1,6 @@
 import { DATA } from "../../constants/constants.js";
 
-export const APP = {
+export const APP_V1 = {
   "exportType": "carmentis-application",
   "description": {
     "name": "FileSign",

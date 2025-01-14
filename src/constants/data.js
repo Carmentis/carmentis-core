@@ -24,6 +24,28 @@ export const PRIV_KEY  = 0x15;
 export const AES_KEY   = 0x16;
 export const SIGNATURE = 0x17;
 
+export const PrimitiveTypes = {
+  INT: 0x01,
+  UINT: 0x02,
+  UINT8: 0x03,
+  UINT16: 0x04,
+  UINT24: 0x05,
+  UINT32: 0x06,
+  UINT48: 0x07,
+  STRING: 0x08,
+  DECIMAL: 0x09,
+  AMOUNT: 0x0A,
+  TIMESTAMP: 0x0B,
+  DATE: 0x0C,
+  HASH: 0x0D,
+  FILE: 0x0E,
+  BINARY: 0x0F,
+  BIN128: 0x10,
+  BIN256: 0x11,
+  BIN264: 0x12,
+  BIN512: 0x13,
+};
+
 export const NAME = [
   "OBJECT",
   "INT",

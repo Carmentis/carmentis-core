@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "declaration": true,             // Enable type declaration generation
+    "emitDeclarationOnly": true,     // Emit only *.d.ts files
+    "outDir": "types",               // Directory for declaration files
+    "allowJs": true,                 // Allow JavaScript files
+    "checkJs": false,                 // Enable type checking in JavaScript
+    "strict": true,                   // Ensure strict type checking,
+
+  },
+  "include": ["src/**/*"],           // Specify the source files
+  "exclude": ["node_modules", "dist"] // Exclude unnecessary files
+}

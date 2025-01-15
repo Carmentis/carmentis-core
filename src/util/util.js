@@ -82,14 +82,14 @@ export function blockNumber(n) {
 export function formatTime(format, date = new Date()) {
   return (
     format
-    .replace(/YYYY/, date.getFullYear())
-    .replace(/YY/, (date.getFullYear() % 100).toString().padStart(2, "0"))
-    .replace(/MM/, (date.getMonth() + 1).toString().padStart(2, "0"))
-    .replace(/DD/, date.getDate().toString().padStart(2, "0"))
-    .replace(/hh/, date.getHours().toString().padStart(2, "0"))
-    .replace(/mm/, date.getMinutes().toString().padStart(2, "0"))
-    .replace(/ss/, date.getSeconds().toString().padStart(2, "0"))
-    .replace(/S+/, s => Math.round(date.getMilliseconds() / 10 ** (3 - s.length)).toString().padStart(s.length, "0"))
+      .replace(/YYYY/, date.getFullYear())
+      .replace(/YY/, (date.getFullYear() % 100).toString().padStart(2, "0"))
+      .replace(/MM/, (date.getMonth() + 1).toString().padStart(2, "0"))
+      .replace(/DD/, date.getDate().toString().padStart(2, "0"))
+      .replace(/hh/, date.getHours().toString().padStart(2, "0"))
+      .replace(/mm/, date.getMinutes().toString().padStart(2, "0"))
+      .replace(/ss/, date.getSeconds().toString().padStart(2, "0"))
+      .replace(/S+/, s => Math.round(date.getMilliseconds() / 10 ** (3 - s.length)).toString().padStart(s.length, "0"))
   );
 }
 
@@ -256,4 +256,18 @@ export function jsonDecodeBase64(str) {
       return value;
     }
   );
+}
+
+// ============================================================================================================================ //
+//  splitInteger()                                                                                                              //
+// ============================================================================================================================ //
+export function splitInteger(n, divisor) {
+  let q = Math.floor(n / divisor),
+      r = n % divisor,
+      arr = [];
+
+  while(divisor--) {
+    arr.push(q + (r-- > 0));
+  }
+  return arr;
 }

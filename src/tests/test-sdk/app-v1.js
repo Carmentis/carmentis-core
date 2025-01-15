@@ -1,7 +1,6 @@
 import { DATA } from "../../constants/constants.js";
 
 export const APP_V1 = {
-  "exportType": "carmentis-application",
   "description": {
     "name": "FileSign",
     "logoUrl": "https://sign.testapps.carmentis.io/assets/img/logo.png",

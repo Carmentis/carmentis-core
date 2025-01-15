@@ -2,6 +2,7 @@ import { ID } from "../constants/constants.js";
 
 export { blockchainCore, ROLES } from "./blockchainCore.js";
 export { blockchainManager } from "./blockchainManager.js";
+export { blockchainQuery } from "./blockchainQuery.js";
 export { accountVb } from "./vb-account.js";
 export { validatorNodeVb } from "./vb-validator-node.js";
 export { organizationVb } from "./vb-organization.js";

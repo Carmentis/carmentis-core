@@ -226,7 +226,7 @@ function encodeField(stream, def, item, name, context) {
 
   checkFieldType(item, def, name);
 
-  switch(def.type & DATA.MSK_TYPE) {
+  switch(def.type & DATA.MSK_PRIMITIVE_TYPE) {
     case DATA.INT: {
       stream.writeVarInt(item);
       break;
@@ -309,7 +309,7 @@ function encodeField(stream, def, item, name, context) {
 function decodeField(stream, def, context) {
   let item;
 
-  switch(def.type & DATA.MSK_TYPE) {
+  switch(def.type & DATA.MSK_PRIMITIVE_TYPE) {
     case DATA.INT: {
       item = stream.readVarInt();
       break;
@@ -395,7 +395,7 @@ function decodeField(stream, def, context) {
 function checkFieldType(item, def, name) {
   let itemType = type.getType(item);
 
-  switch(def.type & DATA.MSK_TYPE) {
+  switch(def.type & DATA.MSK_PRIMITIVE_TYPE) {
     case DATA.INT      : { return isVarInt(); }
     case DATA.UINT     : { return isVarUint(); }
     case DATA.UINT8    : { return isUint(8); }

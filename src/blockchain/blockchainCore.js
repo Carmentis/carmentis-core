@@ -19,7 +19,6 @@ export class blockchainCore {
   static nodeUrl = null;
   static dbInterface = null;
   static chainInterface = null;
-  static nodeCallback = null;
 
   static setUser(role, rootKey) {
     if(!rootKey && (role == ROLES.OPERATOR || role == ROLES.USER)) {
@@ -32,10 +31,6 @@ export class blockchainCore {
 
   static setNode(nodeUrl) {
     this.nodeUrl = nodeUrl;
-  }
-
-  static setNodeCallback(callback) {
-    this.nodeCallback = callback;
   }
 
   static setDbInterface(dbInterface) {
@@ -216,14 +211,14 @@ export class blockchainCore {
     if(!this.chainInterface) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_NO_CHAIN_INTERFACE);
     }
-    await this.chainInterface.put(hash, data);
+    await this.chainInterface.writeBlock(hash, data);
   }
 
   static async chainGet(hash) {
     if(!this.chainInterface) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_NO_CHAIN_INTERFACE);
     }
-    return await this.chainInterface.get(hash);
+    return await this.chainInterface.readBlock(hash);
   }
 
   static isNode() {

@@ -25,6 +25,8 @@ export const ACCOUNT_STRUCTURE = new RegExp(
   `^(<${ACCOUNT_TOKEN_ISSUANCE}>|<${ACCOUNT_CREATION}>|((<${ACCOUNT_PAYEE_DECLARATION}>)?<${ACCOUNT_TRANSFER}>)+)<${ACCOUNT_SIGNATURE}>$`
 );
 
+// TODO: staking, slashing, frozen tokens, burn
+
 const ACCOUNT = {
   [ ACCOUNT_TOKEN_ISSUANCE ]: {
     label: "ACCOUNT_TOKEN_ISSUANCE",
@@ -73,11 +75,14 @@ const ACCOUNT = {
 // ============================================================================================================================ //
 export const ORG_PUBLIC_KEY  = 0;
 export const ORG_DESCRIPTION = 1;
-export const ORG_SIGNATURE   = 2;
+export const ORG_SERVER      = 2;
+export const ORG_SIGNATURE   = 3;
 
 export const ORG_STRUCTURE = new RegExp(
-  `^(<${ORG_PUBLIC_KEY}>|<${ORG_DESCRIPTION}>)+<${ORG_SIGNATURE}>$`
+  `^(<${ORG_PUBLIC_KEY}>|<${ORG_DESCRIPTION}>|<${ORG_SERVER}>)+<${ORG_SIGNATURE}>$`
 );
+
+// TODO: PayForMe / Gas station
 
 const ORGANIZATION = {
   [ ORG_PUBLIC_KEY ]: {
@@ -93,6 +98,12 @@ const ORGANIZATION = {
       { name: "city",        type: DATA.STRING },
       { name: "countryCode", type: DATA.STRING, size: 2 },
       { name: "website",     type: DATA.STRING }
+    ]
+  },
+  [ ORG_SERVER ] : {
+    label: "ORG_SERVER",
+    fields: [
+      { name: "endpoint", type: DATA.STRING }
     ]
   },
   [ ORG_SIGNATURE ]: {
@@ -265,6 +276,11 @@ const APP_LEDGER = {
 export const ORACLE_DECLARATION = 0;
 export const ORACLE_DESCRIPTION = 1;
 export const ORACLE_DEFINITION  = 2;
+export const ORACLE_SIGNATURE   = 3;
+
+export const ORACLE_STRUCTURE = new RegExp(
+  `^(<${ORACLE_DECLARATION}>|<${ORACLE_DESCRIPTION}>|<${ORACLE_DEFINITION}>)+<${ORACLE_SIGNATURE}>$`
+);
 
 const ORACLE = {
   [ ORACLE_DECLARATION ]: {
@@ -284,6 +300,12 @@ const ORACLE = {
     fields: [
       { name: "version",    type: DATA.UINT16 },
       { name: "definition", type: DATA.OBJECT, schema: SCHEMAS.ORACLE_DEFINITION }
+    ]
+  },
+  [ ORACLE_SIGNATURE ]: {
+    label: "ORACLE_SIGNATURE",
+    fields: [
+      { name: "signature", type: DATA.SIGNATURE }
     ]
   }
 };

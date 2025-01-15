@@ -85,8 +85,8 @@ export const MASKABLE = 0x0200; // \__ anonymization
 export const HASHABLE = 0x0400; // /
 
 // bitmasks
-export const MSK_META_ID = 0x0FFF;
-export const MSK_TYPE    = 0x001F;
+export const MSK_OBJECT_INDEX   = 0x03FF;
+export const MSK_PRIMITIVE_TYPE = 0x001F;
 
 // access rules flags
 export const PLAIN    = 0x0;
@@ -130,3 +130,6 @@ export const ACTOR_NAME = [
   "organization",
   "endUser"
 ];
+
+// null hash
+export const NULL_HASH = "0".repeat(64);

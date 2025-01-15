@@ -60,9 +60,11 @@ export const ERRORS_EN = {
     "Invalid virtual blockchain type: expecting '%0', got '%1'",
     "Invalid microblock structure",
     "Invalid signature",
-    "Invalid gas amount",
-    "The microblock timestamp is too far in the past",
-    "The microblock timestamp is too far in the future",
+    "Inconsistent gas amount",
+    "Invalid gas price",
+    "Maximum microblock size exceeded",
+    "Microblock timestamp too far in the past",
+    "Microblock timestamp too far in the future",
     "Invalid protocol version: expecting '%0', got '%1'"
   ],
 
@@ -88,5 +90,9 @@ export const ERRORS_EN = {
     "Unknown actor '%0'",
     "Unknown channel '%0'",
     "Unknown message '%0'"
+  ],
+
+  [ ERROR_TYPES.ORACLE ]: [
+    "Organization is not declared"
   ]
 };

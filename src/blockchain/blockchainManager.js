@@ -22,54 +22,39 @@ const VB_CLASSES = {
 };
 
 export class blockchainManager extends blockchainCore {
-  static async addMicroblock(mb) {
-    let res = await this.checkMicroblock(mb);
-
-    await res.vb.processNodeCallbacks();
-
-    await this.dbPut(SCHEMAS.DB_MICROBLOCK_INFO, res.mbHash, res.mbRecord);
-    await this.dbPut(SCHEMAS.DB_VB_INFO, res.mbRecord.vbHash, res.vbRecord);
-    await this.chainInterface.put(res.mbHash, mb);
-
-    return res;
-  }
-
-  static async checkMicroblock(mb) {
-    console.log("Entering checkMicroblock()");
-
+  static async checkMicroblock(mb, ts = new Date() / 1000) {
     let mbHash = crypto.sha256(mb),
-        object = schemaSerializer.decode(SCHEMAS.MICROBLOCK, mb),
-        ts = new Date() / 1000,
+        mbObject = schemaSerializer.decode(SCHEMAS.MICROBLOCK, mb),
         state;
 
-    if(object.header.protocolVersion != PROTOCOL.VERSION) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_PROTOCOL_VERSION, PROTOCOL.VERSION, object.header.protocolVersion);
+    if(mbObject.header.protocolVersion != PROTOCOL.VERSION) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_PROTOCOL_VERSION, PROTOCOL.VERSION, mbObject.header.protocolVersion);
     }
 
-    if(object.header.timestamp < ts - PROTOCOL.MAX_MICROBLOCK_PAST_DELAY) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_TOO_FAR_PAST);
+    if(mbObject.header.timestamp < ts - PROTOCOL.MAX_MICROBLOCK_PAST_DELAY) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_TOO_FAR_PAST);
     }
 
-    if(object.header.timestamp > ts + PROTOCOL.MAX_MICROBLOCK_FUTURE_DELAY) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_TOO_FAR_FUTURE);
+    if(mbObject.header.timestamp > ts + PROTOCOL.MAX_MICROBLOCK_FUTURE_DELAY) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_TOO_FAR_FUTURE);
     }
 
-    if(object.header.gas != this.computeGas(mb.length)) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_INVALID_GAS);
+    if(mbObject.header.gas != this.computeGas(mb.length)) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS);
     }
 
     let mbRecord = {
-      previousHash: object.header.previousHash,
+      previousHash: mbObject.header.previousHash,
       block: 1,
       index: 0
     };
 
-    if(object.header.height == 1) {
+    if(mbObject.header.height == 1) {
       mbRecord.vbHash = mbHash;
-      mbRecord.vbType = parseInt(object.header.previousHash.slice(0, 2), 16);
+      mbRecord.vbType = parseInt(mbObject.header.previousHash.slice(0, 2), 16);
     }
     else {
-      let previousMb = await this.dbGet(SCHEMAS.DB_MICROBLOCK_INFO, object.header.previousHash);
+      let previousMb = await this.dbGet(SCHEMAS.DB_MICROBLOCK_INFO, mbObject.header.previousHash);
       let vbInfo = await this.dbGet(SCHEMAS.DB_VB_INFO, previousMb.vbHash);
 
       state = schemaSerializer.decode(SCHEMAS.VB_STATES[previousMb.vbType], vbInfo.state)
@@ -79,21 +64,18 @@ export class blockchainManager extends blockchainCore {
 
     let vb = this.getVbInstance(mbRecord.vbType);
 
-    if(object.header.height == 1) {
-      console.log("height = 1");
+    if(mbObject.header.height == 1) {
       vb.id = mbHash;
     }
     else {
-      console.log("loading", mbRecord.vbHash, vb, state);
       await vb.load(mbRecord.vbHash);
-      console.log("loaded", vb);
       vb.state = state;
     }
 
     await vb.importCurrentMicroblock(mb, mbHash);
 
     let vbRecord = {
-      height            : object.header.height,
+      height            : mbObject.header.height,
       type              : mbRecord.vbType,
       lastMicroblockHash: mbHash,
       state             : schemaSerializer.encode(SCHEMAS.VB_STATES[mbRecord.vbType], vb.state)

@@ -42,6 +42,8 @@ export const DB_MICROBLOCK_INFO  = 0x0;
 export const DB_MICROBLOCK_DATA  = 0x1;
 export const DB_VB_INFO          = 0x2;
 export const DB_BLOCK            = 0x3;
+export const DB_ACCOUNT_STATE    = 0x4;
+export const DB_ACCOUNT_HISTORY  = 0x5;
 
 export const DB = {
   [ DB_MICROBLOCK_INFO ] : [
@@ -76,8 +78,45 @@ export const DB = {
         { name: "nSection", type: DATA.UINT48 }
       ]
     }
+  ],
+
+  // current state of an account
+  // the hash of this record is stored in the account radix tree
+  // key: accountHash
+  [ DB_ACCOUNT_STATE ] : [
+    { name: "height",          type: DATA.UINT48 },
+    { name: "balance",         type: DATA.UINT48 },
+    { name: "lastHistoryHash", type: DATA.HASH }
+  ],
+
+  // each transaction that occurred on an account
+  // key: HASH(accountHash + entryHash)
+  [ DB_ACCOUNT_HISTORY ] : [
+    { name: "height",              type: DATA.UINT48 },
+    { name: "previousHistoryHash", type: DATA.HASH },
+    { name: "type",                type: DATA.UINT8 },
+    { name: "timestamp",           type: DATA.UINT48 },
+    { name: "account",             type: DATA.HASH },
+    { name: "amount",              type: DATA.UINT48 },
+    { name: "chainReference",      type: DATA.BINARY }
   ]
 };
+
+// ============================================================================================================================ //
+//  Account history references (chainReference field in DB_ACCOUNT_HISTORY)                                                     //
+// ============================================================================================================================ //
+export const ACCOUNT_SECTION_REFERENCE = [
+  { name: "mbHash",       type: DATA.HASH },
+  { name: "sectionIndex", type: DATA.UINT16 }
+];
+
+export const ACCOUNT_MB_REFERENCE = [
+  { name: "mbHash", type: DATA.HASH }
+];
+
+export const ACCOUNT_BLOCK_REFERENCE = [
+  { name: "height", type: DATA.UINT48 }
+];
 
 // ============================================================================================================================ //
 //  Network messages                                                                                                            //
@@ -90,7 +129,7 @@ export const MSG_GET_VB_CONTENT           = 0x04;
 export const MSG_GET_MICROBLOCK           = 0x05;
 export const MSG_GET_MICROBLOCKS          = 0x06;
 export const MSG_GET_OBJECT_BY_PUBLIC_KEY = 0x07;
-export const MSG_GET_ACCOUNT_BALANCE      = 0x08;
+export const MSG_GET_ACCOUNT_STATE        = 0x08;
 export const MSG_GET_ACCOUNT_HISTORY      = 0x09;
 export const MSG_SEND_MICROBLOCK          = 0x0A;
 
@@ -105,7 +144,7 @@ export const MSG_ANS_VB_INFO              = 0x87;
 export const MSG_ANS_VB_CONTENT           = 0x88;
 export const MSG_ANS_MICROBLOCK           = 0x89;
 export const MSG_ANS_MICROBLOCKS          = 0x8A;
-export const MSG_ANS_ACCOUNT_BALANCE      = 0x8B;
+export const MSG_ANS_ACCOUNT_STATE        = 0x8B;
 export const MSG_ANS_ACCOUNT_HISTORY      = 0x8C;
 export const MSG_ANS_ACCEPT_MICROBLOCK    = 0x8D;
 export const MSG_ANS_CONSUMPTION          = 0x8E;
@@ -122,24 +161,9 @@ export const MSG_NAMES = {
   [ MSG_GET_MICROBLOCK           ]: "GET_MICROBLOCK",
   [ MSG_GET_MICROBLOCKS          ]: "GET_MICROBLOCKS",
   [ MSG_GET_OBJECT_BY_PUBLIC_KEY ]: "GET_OBJECT_BY_PUBLIC_KEY",
+  [ MSG_GET_ACCOUNT_STATE        ]: "GET_ACCOUNT_STATE",
+  [ MSG_GET_ACCOUNT_HISTORY      ]: "GET_ACCOUNT_HISTORY",
   [ MSG_SEND_MICROBLOCK          ]: "SEND_MICROBLOCK",
-                                     
-  [ MSG_ANS_OK                   ]: "ANS_OK",
-  [ MSG_ANS_HASH                 ]: "ANS_HASH",
-  [ MSG_ANS_STRING               ]: "ANS_STRING",
-  [ MSG_ANS_FILE                 ]: "ANS_FILE",
-  [ MSG_ANS_CHAIN_STATUS         ]: "ANS_CHAIN_STATUS",
-  [ MSG_ANS_BLOCK_LIST           ]: "ANS_BLOCK_LIST",
-  [ MSG_ANS_BLOCK                ]: "ANS_BLOCK",
-  [ MSG_ANS_VB_INFO              ]: "ANS_VB_INFO",
-  [ MSG_ANS_VB_CONTENT           ]: "ANS_VB_CONTENT",
-  [ MSG_ANS_MICROBLOCK           ]: "ANS_MICROBLOCK",
-  [ MSG_ANS_MICROBLOCKS          ]: "ANS_MICROBLOCKS",
-  [ MSG_ANS_ACCEPT_MICROBLOCK    ]: "ANS_ACCEPT_MICROBLOCK",
-  [ MSG_ANS_CONSUMPTION          ]: "ANS_CONSUMPTION",
-  [ MSG_ANS_ANCHORING            ]: "ANS_ANCHORING",
-                                     
-  [ MSG_ANS_ERROR                ]: "ANS_ERROR"
 };
 
 export const MESSAGES = {
@@ -168,10 +192,10 @@ export const MESSAGES = {
   [ MSG_GET_MICROBLOCKS ] : [
     { name: "list", type: DATA.HASH | DATA.ARRAY }
   ],
-  [ MSG_ANS_ACCOUNT_BALANCE ] : [
-    { name: "balance", type: DATA.UINT48 }
+  [ MSG_GET_ACCOUNT_STATE ] : [
+    { name: "accountHash", type: DATA.HASH }
   ],
-  [ MSG_ANS_ACCOUNT_HISTORY ] : [
+  [ MSG_GET_ACCOUNT_HISTORY ] : [
   ],
   [ MSG_GET_OBJECT_BY_PUBLIC_KEY ] : [
     { name: "publicKey", type: DATA.PUB_KEY }
@@ -261,6 +285,13 @@ export const MESSAGES = {
     { name: "microChainId", type: DATA.HASH },
     { name: "microBlockId", type: DATA.HASH },
     { name: "height",       type: DATA.UINT48 }
+  ],
+  [ MSG_ANS_ACCOUNT_STATE ] : [
+    { name: "height",          type: DATA.UINT48 },
+    { name: "balance",         type: DATA.UINT48 },
+    { name: "lastHistoryHash", type: DATA.HASH }
+  ],
+  [ MSG_ANS_ACCOUNT_HISTORY ] : [
   ],
   [ MSG_ANS_CONSUMPTION ] : [
     { name: "appLedgers", type: DATA.UINT48 },

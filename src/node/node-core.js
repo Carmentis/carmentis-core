@@ -1,80 +1,45 @@
 import * as sdk from "../sdk.js";
 
-const { ID, SCHEMAS, SECTIONS, ERRORS } = sdk.constants;
+const { ECO, ID, DATA, SCHEMAS, SECTIONS, ERRORS } = sdk.constants;
 const { schemaSerializer } = sdk.serializers;
 const { blockchainCore, ROLES, blockchainManager, accountVb } = sdk.blockchain;
 const { CarmentisError, globalError, blockchainError, accountError } = sdk.errors;
 
 const accounts = new Map();
 
+let dbInterface,
+    chainInterface;
+
 // ============================================================================================================================ //
 //  initialize()                                                                                                                //
 // ============================================================================================================================ //
-export function initialize(dbInterface, chainInterface) {
-  blockchainCore.setDbInterface(dbInterface);
-  blockchainCore.setChainInterface(chainInterface);
+export function initialize(dbIntf, chainIntf) {
+  dbInterface = dbIntf;
+  chainInterface = chainIntf;
+
+  blockchainCore.setDbInterface(dbIntf);
+  blockchainCore.setChainInterface(chainIntf);
   blockchainCore.setUser(ROLES.NODE);
-  blockchainCore.setNodeCallback(callback);
 }
 
 // ============================================================================================================================ //
-//  processMessage()                                                                                                            //
+//  processCatchedError()                                                                                                       //
 // ============================================================================================================================ //
-export async function processMessage(msg) {
-  let answer;
-
-  try {
-    let [ id, object ] = schemaSerializer.decodeMessage(msg);
-
-    console.log("processMessage", SCHEMAS.MSG_NAMES[id]);
-
-    switch(id) {
-      case SCHEMAS.MSG_SEND_MICROBLOCK: {
-        answer = await checkTx(object.data);
-        break;
-      }
-      case SCHEMAS.MSG_GET_MICROBLOCK: {
-        answer = await getMicroblock(object.hash);
-        break;
-      }
-      case SCHEMAS.MSG_GET_MICROBLOCKS: {
-        answer = await getMicroblocks(object.list);
-        break;
-      }
-      case SCHEMAS.MSG_GET_VB_CONTENT: {
-        answer = await getVbContent(object.vbHash);
-        break;
-      }
-      case SCHEMAS.MSG_GET_ACCOUNT_BALANCE: {
-        answer = await getAccountBalance(object.accountHash);
-        break;
-      }
-      case SCHEMAS.MSG_GET_ACCOUNT_HISTORY: {
-        answer = await getAccountHistory(object.accountHash);
-        break;
-      }
-    }
-  }
-  catch(err) {
+export function processCatchedError(err) {
+  if(!(err instanceof CarmentisError)) {
     console.error(err);
-
-    if(!(err instanceof CarmentisError)) {
-      console.error(err);
-      err = new globalError(ERRORS.GLOBAL_INTERNAL_ERROR, err.stack || [ err.toString() ]);
-    }
-    return err.serializeAsMessage();
+    err = new globalError(ERRORS.GLOBAL_INTERNAL_ERROR, err.stack || [ err.toString() ]);
   }
-
-  return answer;
+  return err.serializeAsMessage();
 }
 
 // ============================================================================================================================ //
-//  checkTx()                                                                                                                   //
+//  checkIncomingMicroblock()                                                                                                   //
 // ============================================================================================================================ //
-async function checkTx(tx) {
-  let res = await blockchainManager.addMicroblock(tx);
+export async function checkIncomingMicroblock(mb) {
+  let res = await processMicroblock(mb, false);
 
-  console.log(`New microblock ${res.mbHash} (${tx.length} bytes)`);
+  console.log(`Received microblock ${res.mbHash} (${mb.length} bytes)`);
 
   res.vb.currentMicroblock.sections.forEach((section, n) => {
     console.log(
@@ -83,13 +48,87 @@ async function checkTx(tx) {
     );
   });
 
+  return res;
+}
+
+// ============================================================================================================================ //
+//  incomingMicroblockAnswer()                                                                                                  //
+// ============================================================================================================================ //
+export function incomingMicroblockAnswer() {
   return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_OK, {});
+}
+
+// ============================================================================================================================ //
+//  prepareProposal()                                                                                                           //
+// ============================================================================================================================ //
+export async function prepareProposal(txs) {
+  let proposalTxs = [];
+
+  for(let mb of txs) {
+    try {
+      await processMicroblock(mb, false);
+      proposalTxs.push(mb);
+    }
+    catch(e) {
+      console.error(e);
+    }
+  }
+
+  console.log(`Created proposal with ${proposalTxs.length} microblocks`);
+
+  return proposalTxs;
+}
+
+// ============================================================================================================================ //
+//  processProposal()                                                                                                           //
+// ============================================================================================================================ //
+export async function processProposal(proposalTxs) {
+  console.log(`Checking proposal with ${proposalTxs.length} microblocks`);
+
+  for(let mb of proposalTxs) {
+    try {
+      await processMicroblock(mb, false);
+    }
+    catch(e) {
+      console.error(e);
+      return false;
+    }
+  }
+  return true;
+}
+
+// ============================================================================================================================ //
+//  finalizeBlock()                                                                                                             //
+// ============================================================================================================================ //
+export async function finalizeBlock(txs) {
+  for(let mb of txs) {
+    let res = await processMicroblock(mb, true);
+
+    await blockchainManager.dbPut(SCHEMAS.DB_MICROBLOCK_INFO, res.mbHash, res.mbRecord);
+    await blockchainManager.dbPut(SCHEMAS.DB_VB_INFO, res.mbRecord.vbHash, res.vbRecord);
+    await chainInterface.writeBlock(res.mbHash, mb);
+  }
+}
+
+// ============================================================================================================================ //
+//  processMicroblock()                                                                                                         //
+// ============================================================================================================================ //
+async function processMicroblock(mb, apply) {
+  let res = await blockchainManager.checkMicroblock(mb);
+
+  for(let section of res.vb.currentMicroblock.sections) {
+    await sectionCallback(res.vb, section.id, section.object, apply);
+  }
+
+  await microblockCallback(res.vb.currentMicroblock.object, apply);
+
+  return res;
 }
 
 // ============================================================================================================================ //
 //  getMicroblock()                                                                                                             //
 // ============================================================================================================================ //
-async function getMicroblock(hash) {
+export async function getMicroblock(hash) {
   let mb = await loadMicroblockData(hash);
 
   return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_MICROBLOCK, mb);
@@ -98,7 +137,7 @@ async function getMicroblock(hash) {
 // ============================================================================================================================ //
 //  getMicroblocks()                                                                                                            //
 // ============================================================================================================================ //
-async function getMicroblocks(list) {
+export async function getMicroblocks(list) {
   let mbList = [];
 
   for(let hash of list) {
@@ -111,7 +150,7 @@ async function getMicroblocks(list) {
 // ============================================================================================================================ //
 //  getVbContent()                                                                                                              //
 // ============================================================================================================================ //
-async function getVbContent(vbHash) {
+export async function getVbContent(vbHash) {
   let vbContent = await blockchainCore.getVbContent(vbHash);
 
   return schemaSerializer.encodeMessage(
@@ -121,27 +160,21 @@ async function getVbContent(vbHash) {
 }
 
 // ============================================================================================================================ //
-//  getAccountBalance()                                                                                                         //
+//  getAccountState()                                                                                                           //
 // ============================================================================================================================ //
-async function getAccountBalance(accountHash) {
-  if(!accounts.has(accountHash)) {
-    throw new accountError(ERRORS.ACCOUNT_UNKNOWN, accountHash);
-  }
-
-  let balance = accounts.get(accountHash);
+export async function getAccountState(accountHash) {
+  let state = await loadAccountState(accountHash);
 
   return schemaSerializer.encodeMessage(
-    SCHEMAS.MSG_ANS_ACCOUNT_BALANCE,
-    {
-      balance: balance
-    }
+    SCHEMAS.MSG_ANS_ACCOUNT_STATE,
+    state
   );
 }
 
 // ============================================================================================================================ //
 //  getAccountHistory()                                                                                                         //
 // ============================================================================================================================ //
-async function getAccountHistory(accountHash) {
+export async function getAccountHistory(accountHash) {
   let content = {
   };
 
@@ -161,113 +194,227 @@ async function loadMicroblockData(hash) {
 }
 
 // ============================================================================================================================ //
-//  callback()                                                                                                                  //
+//  sectionCallback()                                                                                                           //
 // ============================================================================================================================ //
-async function callback(vb, sectionId, object) {
+async function sectionCallback(vb, sectionId, object, apply = false) {
   switch(vb.type) {
-    case ID.OBJ_ACCOUNT       : { await accountCallback(vb, sectionId, object); break; }
-    case ID.OBJ_VALIDATOR_NODE: { await nodeCallback(vb, sectionId, object); break; }
-    case ID.OBJ_ORGANIZATION  : { await organizationCallback(vb, sectionId, object); break; }
-    case ID.OBJ_APP_USER      : { await appUserCallback(vb, sectionId, object); break; }
-    case ID.OBJ_APPLICATION   : { await applicationCallback(vb, sectionId, object); break; }
-    case ID.OBJ_APP_LEDGER    : { await appLedgerCallback(vb, sectionId, object); break; }
-    case ID.OBJ_ORACLE        : { await oracleCallback(vb, sectionId, object); break; }
+    case ID.OBJ_ACCOUNT       : { await accountSectionCallback(vb, sectionId, object, apply); break; }
+    case ID.OBJ_VALIDATOR_NODE: { await nodeSectionCallback(vb, sectionId, object, apply); break; }
+    case ID.OBJ_ORGANIZATION  : { await organizationSectionCallback(vb, sectionId, object, apply); break; }
+    case ID.OBJ_APP_USER      : { await appUserSectionCallback(vb, sectionId, object, apply); break; }
+    case ID.OBJ_APPLICATION   : { await applicationSectionCallback(vb, sectionId, object, apply); break; }
+    case ID.OBJ_APP_LEDGER    : { await appLedgerSectionCallback(vb, sectionId, object, apply); break; }
+    case ID.OBJ_ORACLE        : { await oracleSectionCallback(vb, sectionId, object, apply); break; }
   }
 }
 
 // ============================================================================================================================ //
-//  accountCallback()                                                                                                           //
+//  microblockCallback()                                                                                                        //
 // ============================================================================================================================ //
-async function accountCallback(vb, sectionId, object) {
+async function microblockCallback(mbObject, apply = false) {
+  let fees = Math.floor(mbObject.header.gas * mbObject.header.gasPrice / 1000);
+
+  await tokenTransfer(
+    {
+      type: ECO.BK_PAID_FEES,
+      payerAccount: null,
+      payeeAccount: null,
+      amount: fees
+    },
+    apply
+  );
+}
+
+// ============================================================================================================================ //
+//  accountSectionCallback()                                                                                                    //
+// ============================================================================================================================ //
+async function accountSectionCallback(vb, sectionId, object, apply) {
   switch(sectionId) {
     case SECTIONS.ACCOUNT_TOKEN_ISSUANCE: {
-      await tokenTransfer(null, vb.id, object.amount, true);
+      await tokenTransfer(
+        {
+          type: ECO.BK_SENT_ISSUANCE,
+          payerAccount: null,
+          payeeAccount: vb.id,
+          amount: object.amount
+        },
+        apply
+      );
       break;
     }
 
     case SECTIONS.ACCOUNT_CREATION: {
-      await tokenTransfer(object.sellerAccount, vb.id, object.amount, true);
+      await tokenTransfer(
+        {
+          type: ECO.BK_SALE,
+          payerAccount: object.sellerAccount,
+          payeeAccount: vb.id,
+          amount: object.amount
+        },
+        apply
+      );
       break;
     }
 
     case SECTIONS.ACCOUNT_TRANSFER: {
       let payeeAccount = vb.state.payees[object.payeeId];
 
-      await tokenTransfer(vb.id, payeeAccount, object.amount);
+      await tokenTransfer(
+        {
+          type: ECO.BK_OUTGOING_TRANSFER,
+          payerAccount: vb.id,
+          payeeAccount: payeeAccount,
+          amount: object.amount
+        },
+        apply
+      );
       break;
     }
   }
 }
 
 // ============================================================================================================================ //
-//  nodeCallback()                                                                                                              //
+//  nodeSectionCallback()                                                                                                       //
 // ============================================================================================================================ //
-async function nodeCallback(vb, sectionId, object) {
+async function nodeSectionCallback(vb, sectionId, object) {
 }
 
 // ============================================================================================================================ //
-//  organizationCallback()                                                                                                      //
+//  organizationSectionCallback()                                                                                               //
 // ============================================================================================================================ //
-async function organizationCallback(vb, sectionId, object) {
+async function organizationSectionCallback(vb, sectionId, object) {
 }
 
 // ============================================================================================================================ //
-//  appUserCallback()                                                                                                           //
+//  appUserSectionCallback()                                                                                                    //
 // ============================================================================================================================ //
-async function appUserCallback(vb, sectionId, object) {
+async function appUserSectionCallback(vb, sectionId, object) {
 }
 
 // ============================================================================================================================ //
-//  applicationCallback()                                                                                                       //
+//  applicationSectionCallback()                                                                                                //
 // ============================================================================================================================ //
-async function applicationCallback(vb, sectionId, object) {
+async function applicationSectionCallback(vb, sectionId, object) {
 }
 
 // ============================================================================================================================ //
-//  appLedgerCallback()                                                                                                         //
+//  appLedgerSectionCallback()                                                                                                  //
 // ============================================================================================================================ //
-async function appLedgerCallback(vb, sectionId, object) {
+async function appLedgerSectionCallback(vb, sectionId, object) {
 }
 
 // ============================================================================================================================ //
-//  oracleCallback()                                                                                                            //
+//  oracleSectionCallback()                                                                                                     //
 // ============================================================================================================================ //
-async function oracleCallback(vb, sectionId, object) {
+async function oracleSectionCallback(vb, sectionId, object) {
 }
 
 // ============================================================================================================================ //
 //  tokenTransfer()                                                                                                             //
 // ============================================================================================================================ //
-async function tokenTransfer(payerAccount, payeeAccount, amount, creation = false) {
-  if(payerAccount !== null) {
-    let payerBalance = accounts.get(payerAccount);
+async function tokenTransfer(transfer, apply) {
+  let accountCreation = transfer.type == ECO.BK_SENT_ISSUANCE || transfer.type == ECO.BK_SALE,
+      payeeBalance,
+      payerBalance,
+      obj;
 
-    if(payerBalance == undefined || payerBalance < amount) {
-      throw new accountError(ERRORS.ACCOUNT_INSUFFICIENT_FUNDS);
-    }
-
-    payerBalance -= amount;
-    accounts.set(payerAccount, payerBalance);
-
-    console.log(`${payerAccount} -${amount} -> ${payerBalance}`);
-  }
-
-  let payeeBalance = accounts.get(payeeAccount);
-
-  if(creation){
-    if(payeeBalance != undefined) {
-      throw new accountError(ERRORS.ACCOUNT_ALREADY_CREATED, payeeAccount);
-    }
-    payeeBalance = 0;
+  if(transfer.payerAccount === null) {
+    payerBalance = null;
   }
   else {
-    if(payeeBalance == undefined) {
-      throw new accountError(ERRORS.ACCOUNT_INVALID_PAYEE, payeeAccount);
+    let payerState = await loadAccountState(transfer.payerAccount);
+
+    payerBalance = payerState.balance;
+
+    if(payerBalance < transfer.amount) {
+      throw new accountError(ERRORS.ACCOUNT_INSUFFICIENT_FUNDS);
     }
   }
 
-  payeeBalance += amount;
-  accounts.set(payeeAccount, payeeBalance);
+  if(transfer.payeeAccount === null) {
+    payeeBalance = null;
+  }
+  else {
+    let payeeState = await loadAccountState(transfer.payeeAccount);
 
-  console.log(`${payeeAccount} +${amount} -> ${payeeBalance}`);
+    if(accountCreation){
+      if(payeeState.height != 0) {
+        throw new accountError(ERRORS.ACCOUNT_ALREADY_EXISTS, transfer.payeeAccount);
+      }
+    }
+    else {
+      if(payeeState.height == 0) {
+        throw new accountError(ERRORS.ACCOUNT_INVALID_PAYEE, transfer.payeeAccount);
+      }
+    }
+
+    payeeBalance = payeeState.balance;
+  }
+
+  if(apply) {
+    if(payerBalance !== null) {
+      await updateAccount(transfer.type, transfer.payerAccount, transfer.amount);
+
+      console.log(`${transfer.payerAccount} -${transfer.amount} -> ${payerBalance - transfer.amount}`);
+    }
+
+    if(payeeBalance !== null) {
+      await updateAccount(transfer.type ^ 1, transfer.payeeAccount, transfer.amount);
+
+      console.log(`${transfer.payeeAccount} +${transfer.amount} -> ${payeeBalance + transfer.amount}`);
+    }
+  }
+}
+
+// ============================================================================================================================ //
+//  loadAccountState()                                                                                                          //
+// ============================================================================================================================ //
+async function loadAccountState(accountHash) {
+  let record = await dbInterface.get(SCHEMAS.DB_ACCOUNT_STATE, accountHash),
+      state;
+
+  if(record) {
+    state = schemaSerializer.decode(SCHEMAS.DB[SCHEMAS.DB_ACCOUNT_STATE], record);
+  }
+  else {
+    state = {
+      height: 0,
+      balance: 0,
+      lastHistoryHash: DATA.NULL_HASH
+    };
+  }
+
+  return state;
+}
+
+// ============================================================================================================================ //
+//  updateAccount()                                                                                                             //
+// ============================================================================================================================ //
+async function updateAccount(operationType, accountHash, amount) {
+  let state = await loadAccountState(accountHash);
+
+  state.height++;
+  state.balance += operationType & ECO.BK_PLUS ? amount : -amount;
+
+  await dbInterface.put(
+    SCHEMAS.DB_ACCOUNT_STATE,
+    accountHash,
+    schemaSerializer.encode(
+      SCHEMAS.DB[SCHEMAS.DB_ACCOUNT_STATE],
+      state
+    )
+  );
+}
+
+// ============================================================================================================================ //
+//  loadAccountHistory()                                                                                                        //
+// ============================================================================================================================ //
+async function loadAccountHistory(accountHash, historyHash) {
+  let record = await dbInterface.get(SCHEMAS.DB_ACCOUNT_STATE, hash);
+}
+
+// ============================================================================================================================ //
+//  addAccountHistory()                                                                                                         //
+// ============================================================================================================================ //
+async function addAccountHistory(accountHash, history) {
 }

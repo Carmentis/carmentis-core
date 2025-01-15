@@ -198,7 +198,7 @@ export class appLedgerVb extends virtualBlockchain {
     await this.addSignature(this.getKey(SECTIONS.KEY_OPERATOR, 0), SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE);
   }
 
-  updateState(mb, ndx, sectionId, object) {
+  async updateState(mb, ndx, sectionId, object) {
     switch(sectionId) {
       case SECTIONS.APP_LEDGER_DECLARATION: {
         this.state.applicationId = object.applicationId;

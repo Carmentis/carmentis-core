@@ -18,8 +18,16 @@ export class organizationVb extends virtualBlockchain {
     await this.addSection(SECTIONS.ORG_DESCRIPTION, object);
   }
 
+  async addServer(object) {
+    await this.addSection(SECTIONS.ORG_SERVER, object);
+  }
+
   async getDescription() {
     return await this.findSection(SECTIONS.ORG_DESCRIPTION);
+  }
+
+  async getServer() {
+    return await this.findSection(SECTIONS.ORG_SERVER);
   }
 
   async sign() {
@@ -34,6 +42,10 @@ export class organizationVb extends virtualBlockchain {
       }
 
       case SECTIONS.ORG_DESCRIPTION: {
+        break;
+      }
+
+      case SECTIONS.ORG_SERVER: {
         break;
       }
 

@@ -1,4 +1,4 @@
-import { ID, ERRORS, SECTIONS } from "../constants/constants.js";
+import { ID, ERRORS, SECTIONS, ECO } from "../constants/constants.js";
 import { microblock } from "./microblock.js";
 import { blockchainCore, ROLES } from "./blockchainCore.js";
 import * as crypto from "../crypto/crypto.js";
@@ -21,6 +21,7 @@ export class virtualBlockchain extends blockchainCore {
     this.state = {};
     this.currentMicroblock = null;
     this.keyRing = new Map;
+    this.gasPrice = 0;
 
     switch(this.constructor.role) {
       case ROLES.OPERATOR: {
@@ -77,16 +78,6 @@ export class virtualBlockchain extends blockchainCore {
       let section = mb.sections[ndx];
 
       await this.updateState(mb, ndx, section.id, section.object);
-    }
-  }
-
-  async processNodeCallbacks() {
-    if(!this.constructor.isNode()) {
-      throw "processNodeCallbacks() must be called by a node";
-    }
-
-    for(let section of this.currentMicroblock.sections) {
-      await this.constructor.nodeCallback(this, section.id, section.object);
     }
   }
 
@@ -155,14 +146,18 @@ export class virtualBlockchain extends blockchainCore {
     throw "updateState() must be called from a child class";
   }
 
-  async computeGas() {
+  setGasPrice(gasPrice) {
+    this.gasPrice = gasPrice;
+  }
+
+  async computePrice() {
     if(!await this.checkStructure(this.currentMicroblock.getStructure())) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_MB_STRUCTURE);
     }
 
-    let mb = this.currentMicroblock.finalize();
+    let mb = this.currentMicroblock.finalize(this.gasPrice);
 
-    return mb.header.gas;
+    return Math.round(mb.header.gas * mb.header.gasPrice / 1000);
   }
 
   async publish() {
@@ -170,7 +165,7 @@ export class virtualBlockchain extends blockchainCore {
       throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_MB_STRUCTURE);
     }
 
-    let mb = this.currentMicroblock.finalize();
+    let mb = this.currentMicroblock.finalize(this.gasPrice);
 
     if(!this.microblocks.length) {
       this.id = mb.hash;

@@ -110,7 +110,7 @@ export function encode(schema, object, context = {}) {
       }
     }
     else if(def.type & DATA.STRUCT) {
-      encodeSchema(context.structures[def.type & DATA.MSK_META_ID].properties, node, path);
+      encodeSchema(context.structures[def.type & DATA.MSK_OBJECT_INDEX].properties, node, path);
     }
     else if(def.type == DATA.OBJECT) {
       encodeSchema(def.schema, node, path);
@@ -139,7 +139,7 @@ export function encode(schema, object, context = {}) {
       throw new schemaError(ERRORS.SCHEMA_BAD_ENUM, name);
     }
 
-    let enumerationId = def.type & DATA.MSK_META_ID,
+    let enumerationId = def.type & DATA.MSK_OBJECT_INDEX,
         enumeration = context.enumerations && context.enumerations[enumerationId];
 
     if(!enumeration) {
@@ -229,7 +229,7 @@ export function decode(schema, array, context = {}, object = {}) {
     }
     else if(def.type & DATA.STRUCT) {
       node = parentNode[propertyName] || {};
-      decodeSchema(context.structures[def.type & DATA.MSK_META_ID].properties, node, path);
+      decodeSchema(context.structures[def.type & DATA.MSK_OBJECT_INDEX].properties, node, path);
     }
     else if(def.type == DATA.OBJECT) {
       node = parentNode[propertyName] || {};
@@ -261,7 +261,7 @@ export function decode(schema, array, context = {}, object = {}) {
   function decodeEnumeration(def) {
     let ndx = stream.decode({ type: DATA.UINT8 });
 
-    return context.enumerations[def.type & DATA.MSK_META_ID].values[ndx];
+    return context.enumerations[def.type & DATA.MSK_OBJECT_INDEX].values[ndx];
   }
 
   // -------------------------------------------------------------------------------------------------------------------------- //

@@ -60,10 +60,12 @@ export const BLOCKCHAIN_INVALID_VB_TYPE      = 0x06;
 export const BLOCKCHAIN_VB_TYPE_MISMATCH     = 0x07;
 export const BLOCKCHAIN_BAD_MB_STRUCTURE     = 0x08;
 export const BLOCKCHAIN_BAD_SIGNATURE        = 0x09;
-export const BLOCKCHAIN_INVALID_GAS          = 0x0A;
-export const BLOCKCHAIN_TOO_FAR_PAST         = 0x0B;
-export const BLOCKCHAIN_TOO_FAR_FUTURE       = 0x0C;
-export const BLOCKCHAIN_BAD_PROTOCOL_VERSION = 0x0D;
+export const BLOCKCHAIN_MB_INVALID_GAS       = 0x0A;
+export const BLOCKCHAIN_MB_INVALID_GAS_PRICE = 0x0B;
+export const BLOCKCHAIN_MB_TOO_LARGE         = 0x0C;
+export const BLOCKCHAIN_MB_TOO_FAR_PAST      = 0x0D;
+export const BLOCKCHAIN_MB_TOO_FAR_FUTURE    = 0x0E;
+export const BLOCKCHAIN_BAD_PROTOCOL_VERSION = 0x0F;
 
 // ACCOUNT
 export const ACCOUNT_UNKNOWN            = 0x00;
@@ -72,7 +74,7 @@ export const ACCOUNT_KEY_UNDEFINED      = 0x02;
 export const ACCOUNT_PAYEE_UNDEFINED    = 0x03;
 export const ACCOUNT_INSUFFICIENT_FUNDS = 0x04;
 export const ACCOUNT_INVALID_PAYEE      = 0x05;
-export const ACCOUNT_ALREADY_CREATED    = 0x06;
+export const ACCOUNT_ALREADY_EXISTS     = 0x06;
 
 // APPLICATION
 export const APPLICATION_MISSING_ORG = 0x00;
@@ -85,3 +87,6 @@ export const APP_LEDGER_DUPLICATE_CHANNEL = 0x03;
 export const APP_LEDGER_UNKNOWN_ACTOR     = 0x04;
 export const APP_LEDGER_UNKNOWN_CHANNEL   = 0x05;
 export const APP_LEDGER_UNKNOWN_MESSAGE   = 0x06;
+
+// ORACLE
+export const ORACLE_MISSING_ORG = 0x00;

@@ -247,9 +247,9 @@ function getFlattenedFields(def, ruleSets) {
           newName = [...name, item.name];
 
       if(item.type & DATA.STRUCT) {
-        scanFields(def.structures[item.type & DATA.MSK_META_ID].properties, newPath, newName);
+        scanFields(def.structures[item.type & DATA.MSK_OBJECT_INDEX].properties, newPath, newName);
       }
-      else if(!(item.type & DATA.ENUM) && (item.type & DATA.MSK_TYPE) == DATA.OBJECT) {
+      else if(!(item.type & DATA.ENUM) && (item.type & DATA.MSK_PRIMITIVE_TYPE) == DATA.OBJECT) {
         scanFields(item.schema, newPath, newName);
       }
       else {

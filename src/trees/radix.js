@@ -14,7 +14,8 @@ function debug(array) {
 // ---------------------------------------------------------------------------------------------------------------------------- //
 //  This structure is used to:                                                                                                  //
 //  - store the hash of the last micro-block of each virtual blockchain, given the hash of the genesis block as the key         //
-//  - store the balance of each account, given the hash of the account virtual blockchain as the key                            //
+//  - store the hash of the state of each account (from DB_ACCOUNT_STATE), given the hash of the account virtual blockchain as  //
+//    the key                                                                                                                   //
 //                                                                                                                              //
 //  The key hash is split into nibbles. So, each node may have up to 16 children. Each node in the tree is identified by its    //
 //  hash. We use an 'early leaf node' when there's only one remaining path.                                                     //
@@ -22,13 +23,13 @@ function debug(array) {
 //  Standard node:                                                                                                              //
 //    BITMASK (2 bytes) : non-zero bit-mask of active child nodes                                                               //
 //    for each active child (from LSB to MSB):                                                                                  //
-//      HASH (32 bytes) : hash of child node, or target hash if this is the deepest level (*)                                   //
+//      HASH (32 bytes) : hash of child node, or target value if this is the deepest level (*)                                  //
 //    end                                                                                                                       //
 //                                                                                                                              //
 //  Early leaf node:                                                                                                            //
 //    BITMASK (2 bytes)       : set to 0x0000                                                                                   //
 //    TRAILING_PATH (N bytes) : the remaining nibbles in the path, packed in the nearest number of bytes                        //
-//    HASH (32 bytes)         : target hash                                                                                     //
+//    VALUE (32 bytes)        : target value                                                                                    //
 //                                                                                                                              //
 //  (*) Although this case is supported, it will never happen in practice. (For it would mean that we have two hashes that are  //
 //      identical up to the penultimate nibble, which is almost as unlikely as a full hash collision.)                          //
@@ -385,7 +386,7 @@ async function writeTree(storage, key, value, nodeHash) {
 
 // ============================================================================================================================ //
 //  readTree()                                                                                                                  //
-// ============================================================================================================================ //se
+// ============================================================================================================================ //
 async function readTree(storage, key) {
   async function read(key, nodeHash, depth) {
     if(depth == HASH_SIZE * 2) {

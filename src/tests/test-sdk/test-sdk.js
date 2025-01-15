@@ -1,56 +1,83 @@
-import { spawn } from "child_process";
 import { APP_V1 } from "./app-v1.js";
 import { APP_V2 } from "./app-v2.js";
+import { ORACLE } from "./oracle.js";
+
+import { spawn } from "child_process";
 import * as sdk from "../../sdk.js";
 import * as memoryDb from "../memoryDb.js";
 import { log, outcome } from "../logger.js";
 
-const { blockchainCore, ROLES, accountVb, organizationVb, applicationVb, appLedgerVb } = sdk.blockchain;
+const AUTO_NODE_START = true;
+const PATH_TO_NODE = "../../../carmentis-dev-node/dev-node.js";
+const NODE_URL = "http://127.0.0.1:3000";
+
+const { ECO } = sdk.constants;
+
+const {
+  blockchainCore,
+  blockchainQuery,
+  ROLES,
+  accountVb,
+  organizationVb,
+  applicationVb,
+  oracleVb,
+  appLedgerVb
+} = sdk.blockchain;
+
 const crypto = sdk.crypto;
 
 export async function run() {
-  const node = spawn("node", [ "../../../carmentis-dev-node/dev-node.js" ]);
+  if(AUTO_NODE_START) {
+    const node = spawn("node", [ PATH_TO_NODE ]);
 
-  node.stdout.on("data", async (data) => {
-    data = data.toString().replace(/\n$/, "");
-    console.log(`(node) ${data}`);
+    node.stdout.on("data", async (data) => {
+      data = data.toString().replace(/\n$/, "");
+      console.log(`(node) ${data.split(/\r?\n/).join("\n(node) ")}`);
 
-    if(/^Server is ready/.test(data)) {
-      try {
-        let organization, appId;
-
-        await accountTest();
-        organization = await organizationTest();
-        appId = await applicationTest(organization);
-        await appLedgerTest(organization, appId);
-
-        console.log("done");
+      if(/^Server is ready/.test(data)) {
+        await runTests();
+        node.kill();
       }
-      catch(e) {
-        console.error(e);
-      }
+    });
 
-      node.kill();
-    }
-  });
+    node.stderr.on("data", (data) => {
+      data = data.toString().replace(/\n$/, "");
+      console.error(`(node) ${data.split(/\r?\n/).join("\n(node) ")}`);
+    });
 
-  node.stderr.on("data", (data) => {
-    data = data.toString().replace(/\n$/, "");
-    console.error(`(node) ${data}`);
-  });
+    node.on("close", (code) => {
+      console.log(`node terminated`);
+    });
+  }
+  else {
+    await runTests();
+  }
+}
 
-  node.on("close", (code) => {
-    console.log(`node terminated`);
-  });
+async function runTests() {
+  try {
+    let organization, appId, oracleId;
+
+    await accountTest();
+    organization = await organizationTest();
+    appId = await applicationTest(organization);
+    oracleId = await oracleTest(organization, appId);
+    await appLedgerTest(organization, appId);
+
+    console.log("done");
+  }
+  catch(e) {
+    console.error(e);
+  }
 }
 
 async function accountTest() {
   log("--- Testing account VB ----");
 
   blockchainCore.setDbInterface(memoryDb);
-  blockchainCore.setNode("http://127.0.0.1:3000");
+  blockchainCore.setNode(NODE_URL);
 
-  let vb, mb, transfer;
+  let vb, mb, transfer, answer;
 
   let issuerPrivateKey = crypto.generateKey256(),
       issuerPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(issuerPrivateKey),
@@ -70,6 +97,7 @@ async function accountTest() {
 
   await vb.sign();
 
+  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   log("Creating buyer account");
@@ -88,6 +116,7 @@ async function accountTest() {
 
   await vb.sign();
 
+  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   let buyerVbHash = mb.hash;
@@ -106,9 +135,13 @@ async function accountTest() {
 
   await vb.sign();
 
+  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   console.log(vb.state);
+
+  answer = await blockchainQuery.getAccountState(vbHash);
+  console.log(answer);
 }
 
 async function organizationTest() {
@@ -118,7 +151,7 @@ async function organizationTest() {
       orgPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(orgPrivateKey);
 
   blockchainCore.setDbInterface(memoryDb);
-  blockchainCore.setNode("http://127.0.0.1:3000");
+  blockchainCore.setNode(NODE_URL);
   blockchainCore.setUser(ROLES.OPERATOR, orgPrivateKey);
 
   let vb, mb;
@@ -138,11 +171,17 @@ async function organizationTest() {
     website: "www.carmentis.io"
   });
 
+  await vb.addServer({
+    endpoint: "https://foo.bar"
+  });
+
   await vb.sign();
 
-  let gas = await vb.computeGas();
+  vb.setGasPrice(ECO.TOKEN);
 
-  console.log("Gas:", gas);
+  let price = await vb.computePrice();
+
+  console.log("Price:", price);
 
   mb = await vb.publish();
 
@@ -164,6 +203,7 @@ async function organizationTest() {
 
   await vb.sign();
 
+  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   log(await vb.getDescription());
@@ -186,6 +226,7 @@ async function organizationTest() {
 
   await vb.sign();
 
+  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   console.log(await vb.getDescription());
@@ -206,7 +247,7 @@ async function applicationTest(organization) {
   log("--- Testing application VB ----");
 
   blockchainCore.setDbInterface(memoryDb);
-  blockchainCore.setNode("http://127.0.0.1:3000");
+  blockchainCore.setNode(NODE_URL);
   blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
 
   let vb, mb;
@@ -230,12 +271,17 @@ async function applicationTest(organization) {
 
   await vb.sign();
 
+  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   let vbHash = mb.hash;
 
   vb = new applicationVb();
   await vb.load(vbHash);
+
+  console.log("Updating description");
+
+  await vb.addDescription(APP_V2.description);
 
   console.log("Updating definition");
 
@@ -248,6 +294,7 @@ async function applicationTest(organization) {
 
   await vb.sign();
 
+  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   vb = new applicationVb();
@@ -263,7 +310,7 @@ async function appLedgerTest(organization, appId) {
   log("--- Testing app ledger VB ----");
 
   blockchainCore.setDbInterface(memoryDb);
-  blockchainCore.setNode("http://127.0.0.1:3000");
+  blockchainCore.setNode(NODE_URL);
   blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
 
   let fields = {
@@ -336,5 +383,38 @@ async function appLedgerTest(organization, appId) {
     }
   );
 
+  vb.setGasPrice(ECO.TOKEN);
+  mb = await vb.publish();
+}
+
+async function oracleTest(organization) {
+  log("--- Testing oracle VB ----");
+
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode(NODE_URL);
+  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
+
+  let vb, mb;
+
+  vb = new oracleVb();
+
+  log("Adding declaration");
+
+  await vb.addDeclaration({ organizationId: organization.id });
+
+  log("Adding description");
+
+  await vb.addDescription(ORACLE.description);
+
+  log("Adding definition");
+
+  await vb.addDefinition({
+    version: 1,
+    definition: ORACLE.definition
+  });
+
+  await vb.sign();
+
+  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 }

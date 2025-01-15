@@ -50,22 +50,22 @@ export const SCHEMA_OPTIONAL_FIELDS = [
 ];
 
 export const MICROBLOCK_HEADER = {
-  magicString  : "CMTS",
-  version      : 1,
-  height       : 1,
-  previousHash : "0000000000000000000000000000000000000000000000000000000000000000",
-  timestamp    : 12345,
-  gas          : 123,
-  gasPrice     : 1000
+  magicString    : "CMTS",
+  protocolVersion: 1,
+  height         : 1,
+  previousHash   : "0000000000000000000000000000000000000000000000000000000000000000",
+  timestamp      : 12345,
+  gas            : 123,
+  gasPrice       : 1000
 };
 
 export const INVALID_MICROBLOCK_HEADER = {
-  magicString  : "CMTS",
-  version      : 1,
-  height       : 1,
-  previousHash : "0000000000000000000000000000000000000000000000000000000000000000",
-  gas          : 123,
-  gasPrice     : 1000
+  magicString    : "CMTS",
+  protocolVersion: 1,
+  height         : 1,
+  previousHash   : "0000000000000000000000000000000000000000000000000000000000000000",
+  gas            : 123,
+  gasPrice       : 1000
 };
 
 export const MICROBLOCK_SECTION = {

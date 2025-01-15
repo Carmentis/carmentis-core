@@ -1,4 +1,4 @@
-import { PROTOCOL, ERRORS, SCHEMAS, SECTIONS } from "../constants/constants.js";
+import { PROTOCOL, ERRORS, SCHEMAS, SECTIONS, ECO } from "../constants/constants.js";
 import { blockchainCore } from "./blockchainCore.js";
 import * as schemaSerializer from "../serializers/schema-serializer.js";
 import * as sectionSerializer from "../serializers/section-serializer.js";
@@ -47,7 +47,7 @@ export class microblock extends blockchainCore {
         previousHash   : previousHash,
         timestamp      : Math.floor(Date.now() / 1000),
         gas            : 0,
-        gasPrice       : 0
+        gasPrice       : ECO.TOKEN
       },
       body: {
         sections: []
@@ -123,14 +123,25 @@ export class microblock extends blockchainCore {
     return this.sections.map(section => `<${section.id}>`).join("");
   }
 
-  finalize() {
+  finalize(gasPrice) {
+    if(gasPrice < ECO.MINIMUM_GAS_PRICE || gasPrice > ECO.MAXIMUM_GAS_PRICE) {
+      console.log(gasPrice);
+      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS_PRICE);
+    }
+
+    this.object.header.gasPrice = gasPrice;
+
     this.binary = schemaSerializer.encode(
       SCHEMAS.MICROBLOCK,
       this.object
     );
 
+    if(this.binary.length > PROTOCOL.MAX_MICROBLOCK_SIZE) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_TOO_LARGE);
+    }
+
     if(this.object.header.gas != this.constructor.computeGas(this.binary.length)) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_INVALID_GAS);
+      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS);
     }
 
     this.hash = crypto.sha256(this.binary);

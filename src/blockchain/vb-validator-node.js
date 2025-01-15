@@ -10,12 +10,7 @@ export class validatorNodeVb extends virtualBlockchain {
     super(ID.OBJ_VALIDATOR_NODE);
   }
 
-  addSection(sectionId, object) {
-    super.addSection(sectionId, object);
-    this.updateState(sectionId, object);
-  }
-
-  updateState(sectionId, object) {
+  async updateState(mb, ndx, sectionId, object) {
     switch(sectionId) {
       default: {
         throw new sectionError(ERRORS.SECTION_INVALID_ID, sectionId, ID.OBJECT_NAME[ID.OBJ_VALIDATOR_NODE]);

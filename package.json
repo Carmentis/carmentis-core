@@ -1,7 +1,7 @@
 {
   "name": "@cmts-dev/carmentis-sdk",
   "type": "module",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "author": "Carmentis SAS",
   "scripts": {
     "clean": "rimraf dist",
@@ -10,7 +10,8 @@
   "exports": {
     ".": {
       "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
     }
   },
   "main": "dist/index.cjs",

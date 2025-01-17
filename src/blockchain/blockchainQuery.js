@@ -26,8 +26,8 @@ export class blockchainQuery extends blockchainCore {
 
     for(let entry of answer.list) {
       entry.timestamp = new Date(entry.timestamp * 1000);
-
       entry.name = ECO.BK_NAMES[entry.type];
+      entry.amount *= entry.type & ECO.BK_PLUS ? 1 : -1;
 
       entry.chainReference = schemaSerializer.decode(
         ECO.BK_REF_SCHEMAS[ECO.BK_REFERENCES[entry.type]],

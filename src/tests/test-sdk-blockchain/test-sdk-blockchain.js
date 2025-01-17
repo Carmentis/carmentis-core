@@ -151,7 +151,7 @@ async function accountTest() {
 function showAccountHistory(accountHash, list) {
   console.log(`\n--- Account history (${accountHash})\n`);
   console.log(`${"Date".padEnd(25)}| ${"Operation type".padEnd(23)}| ${"Linked account".padEnd(65)}| Amount (CMTS)`);
-  console.log(`${"-".repeat(25)}+${"-".repeat(24)}+${"-".repeat(66)}+${"-".repeat(14)}`);
+  console.log(`${"-".repeat(25)}+${"-".repeat(24)}+${"-".repeat(66)}+${"-".repeat(15)}`);
 
   list.forEach(entry => {
     console.log(
@@ -159,7 +159,7 @@ function showAccountHistory(accountHash, list) {
         entry.timestamp.toJSON(),
         entry.name.padEnd(22),
         entry.linkedAccount,
-        (entry.amount / ECO.TOKEN).toFixed(2).padEnd(13)
+        ((entry.amount < 0 ? "" : "+") + (entry.amount / ECO.TOKEN).toFixed(2)).padEnd(14)
       ].join(" | ")
     );
   });

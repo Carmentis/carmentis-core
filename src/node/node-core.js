@@ -1,21 +1,18 @@
-import * as sdk from "../sdk.js";
+import { ECO, ID, SCHEMAS, SECTIONS, ERRORS } from "../constants/constants.js";
+import { schemaSerializer } from "../serializers/serializers.js";
+import { blockchainCore, ROLES, blockchainManager, accountVb } from "../blockchain/blockchain.js";
+import { CarmentisError, globalError, blockchainError } from "../errors/error.js";
+import * as accounts from "../accounts/accounts.js";
 
-const { ECO, ID, DATA, SCHEMAS, SECTIONS, ERRORS } = sdk.constants;
-const { schemaSerializer } = sdk.serializers;
-const { blockchainCore, ROLES, blockchainManager, accountVb } = sdk.blockchain;
-const { CarmentisError, globalError, blockchainError, accountError } = sdk.errors;
-
-const accounts = new Map();
-
-let dbInterface,
-    chainInterface;
+let chainInterface;
 
 // ============================================================================================================================ //
 //  initialize()                                                                                                                //
 // ============================================================================================================================ //
 export function initialize(dbIntf, chainIntf) {
-  dbInterface = dbIntf;
   chainInterface = chainIntf;
+
+  accounts.setDbInterface(dbIntf);
 
   blockchainCore.setDbInterface(dbIntf);
   blockchainCore.setChainInterface(chainIntf);
@@ -114,13 +111,26 @@ export async function finalizeBlock(txs) {
 //  processMicroblock()                                                                                                         //
 // ============================================================================================================================ //
 async function processMicroblock(mb, apply) {
-  let res = await blockchainManager.checkMicroblock(mb);
+  let res = await blockchainManager.checkMicroblock(mb),
+      sections = res.vb.currentMicroblock.sections;
 
-  for(let section of res.vb.currentMicroblock.sections) {
-    await sectionCallback(res.vb, section.id, section.object, apply);
+  for(let n in sections) {
+    let context = {
+      vb: res.vb,
+      mb: res.vb.currentMicroblock,
+      sectionIndex: +n,
+      timestamp: Math.floor(new Date() / 1000) // should be Comet block time
+    };
+
+    await sectionCallback(context, sections[n].id, sections[n].object, apply);
   }
 
-  await microblockCallback(res.vb.currentMicroblock.object, apply);
+  let context = {
+    vb: res.vb,
+    mb: res.vb.currentMicroblock
+  };
+
+  await microblockCallback(context, apply);
 
   return res;
 }
@@ -163,7 +173,7 @@ export async function getVbContent(vbHash) {
 //  getAccountState()                                                                                                           //
 // ============================================================================================================================ //
 export async function getAccountState(accountHash) {
-  let state = await loadAccountState(accountHash);
+  let state = await accounts.loadState(accountHash);
 
   return schemaSerializer.encodeMessage(
     SCHEMAS.MSG_ANS_ACCOUNT_STATE,
@@ -174,13 +184,12 @@ export async function getAccountState(accountHash) {
 // ============================================================================================================================ //
 //  getAccountHistory()                                                                                                         //
 // ============================================================================================================================ //
-export async function getAccountHistory(accountHash) {
-  let content = {
-  };
+export async function getAccountHistory(accountHash, lastHistoryHash, maxRecords) {
+  let history = await accounts.loadHistory(accountHash, lastHistoryHash, maxRecords);
 
   return schemaSerializer.encodeMessage(
     SCHEMAS.MSG_ANS_ACCOUNT_HISTORY,
-    content
+    history
   );
 }
 
@@ -196,31 +205,35 @@ async function loadMicroblockData(hash) {
 // ============================================================================================================================ //
 //  sectionCallback()                                                                                                           //
 // ============================================================================================================================ //
-async function sectionCallback(vb, sectionId, object, apply = false) {
-  switch(vb.type) {
-    case ID.OBJ_ACCOUNT       : { await accountSectionCallback(vb, sectionId, object, apply); break; }
-    case ID.OBJ_VALIDATOR_NODE: { await nodeSectionCallback(vb, sectionId, object, apply); break; }
-    case ID.OBJ_ORGANIZATION  : { await organizationSectionCallback(vb, sectionId, object, apply); break; }
-    case ID.OBJ_APP_USER      : { await appUserSectionCallback(vb, sectionId, object, apply); break; }
-    case ID.OBJ_APPLICATION   : { await applicationSectionCallback(vb, sectionId, object, apply); break; }
-    case ID.OBJ_APP_LEDGER    : { await appLedgerSectionCallback(vb, sectionId, object, apply); break; }
-    case ID.OBJ_ORACLE        : { await oracleSectionCallback(vb, sectionId, object, apply); break; }
+async function sectionCallback(context, sectionId, object, apply = false) {
+  switch(context.vb.type) {
+    case ID.OBJ_ACCOUNT       : { await accountSectionCallback(context, sectionId, object, apply); break; }
+    case ID.OBJ_VALIDATOR_NODE: { await nodeSectionCallback(context, sectionId, object, apply); break; }
+    case ID.OBJ_ORGANIZATION  : { await organizationSectionCallback(context, sectionId, object, apply); break; }
+    case ID.OBJ_APP_USER      : { await appUserSectionCallback(context, sectionId, object, apply); break; }
+    case ID.OBJ_APPLICATION   : { await applicationSectionCallback(context, sectionId, object, apply); break; }
+    case ID.OBJ_APP_LEDGER    : { await appLedgerSectionCallback(context, sectionId, object, apply); break; }
+    case ID.OBJ_ORACLE        : { await oracleSectionCallback(context, sectionId, object, apply); break; }
   }
 }
 
 // ============================================================================================================================ //
 //  microblockCallback()                                                                                                        //
 // ============================================================================================================================ //
-async function microblockCallback(mbObject, apply = false) {
-  let fees = Math.floor(mbObject.header.gas * mbObject.header.gasPrice / 1000);
+async function microblockCallback(context, apply = false) {
+  let fees = Math.floor(context.mb.object.header.gas * context.mb.object.header.gasPrice / 1000);
 
-  await tokenTransfer(
+  await accounts.tokenTransfer(
     {
       type: ECO.BK_PAID_FEES,
       payerAccount: null,
       payeeAccount: null,
       amount: fees
     },
+    {
+      mbHash: context.mb.hash
+    },
+    context.timestamp,
     apply
   );
 }
@@ -228,44 +241,59 @@ async function microblockCallback(mbObject, apply = false) {
 // ============================================================================================================================ //
 //  accountSectionCallback()                                                                                                    //
 // ============================================================================================================================ //
-async function accountSectionCallback(vb, sectionId, object, apply) {
+async function accountSectionCallback(context, sectionId, object, apply) {
   switch(sectionId) {
     case SECTIONS.ACCOUNT_TOKEN_ISSUANCE: {
-      await tokenTransfer(
+      await accounts.tokenTransfer(
         {
           type: ECO.BK_SENT_ISSUANCE,
           payerAccount: null,
-          payeeAccount: vb.id,
+          payeeAccount: context.vb.id,
           amount: object.amount
         },
+        {
+          mbHash: context.mb.hash,
+          sectionIndex: context.sectionIndex
+        },
+        context.timestamp,
         apply
       );
       break;
     }
 
     case SECTIONS.ACCOUNT_CREATION: {
-      await tokenTransfer(
+      await accounts.tokenTransfer(
         {
           type: ECO.BK_SALE,
           payerAccount: object.sellerAccount,
-          payeeAccount: vb.id,
+          payeeAccount: context.vb.id,
           amount: object.amount
         },
+        {
+          mbHash: context.mb.hash,
+          sectionIndex: context.sectionIndex
+        },
+        context.timestamp,
         apply
       );
       break;
     }
 
     case SECTIONS.ACCOUNT_TRANSFER: {
-      let payeeAccount = vb.state.payees[object.payeeId];
+      let payeeAccount = context.vb.state.payees[object.payeeId];
 
-      await tokenTransfer(
+      await accounts.tokenTransfer(
         {
-          type: ECO.BK_OUTGOING_TRANSFER,
-          payerAccount: vb.id,
+          type: ECO.BK_SENT_PAYMENT,
+          payerAccount: context.vb.id,
           payeeAccount: payeeAccount,
           amount: object.amount
         },
+        {
+          mbHash: context.mb.hash,
+          sectionIndex: context.sectionIndex
+        },
+        context.timestamp,
         apply
       );
       break;
@@ -276,145 +304,35 @@ async function accountSectionCallback(vb, sectionId, object, apply) {
 // ============================================================================================================================ //
 //  nodeSectionCallback()                                                                                                       //
 // ============================================================================================================================ //
-async function nodeSectionCallback(vb, sectionId, object) {
+async function nodeSectionCallback(context, sectionId, object) {
 }
 
 // ============================================================================================================================ //
 //  organizationSectionCallback()                                                                                               //
 // ============================================================================================================================ //
-async function organizationSectionCallback(vb, sectionId, object) {
+async function organizationSectionCallback(context, sectionId, object) {
 }
 
 // ============================================================================================================================ //
 //  appUserSectionCallback()                                                                                                    //
 // ============================================================================================================================ //
-async function appUserSectionCallback(vb, sectionId, object) {
+async function appUserSectionCallback(context, sectionId, object) {
 }
 
 // ============================================================================================================================ //
 //  applicationSectionCallback()                                                                                                //
 // ============================================================================================================================ //
-async function applicationSectionCallback(vb, sectionId, object) {
+async function applicationSectionCallback(context, sectionId, object) {
 }
 
 // ============================================================================================================================ //
 //  appLedgerSectionCallback()                                                                                                  //
 // ============================================================================================================================ //
-async function appLedgerSectionCallback(vb, sectionId, object) {
+async function appLedgerSectionCallback(context, sectionId, object) {
 }
 
 // ============================================================================================================================ //
 //  oracleSectionCallback()                                                                                                     //
 // ============================================================================================================================ //
-async function oracleSectionCallback(vb, sectionId, object) {
-}
-
-// ============================================================================================================================ //
-//  tokenTransfer()                                                                                                             //
-// ============================================================================================================================ //
-async function tokenTransfer(transfer, apply) {
-  let accountCreation = transfer.type == ECO.BK_SENT_ISSUANCE || transfer.type == ECO.BK_SALE,
-      payeeBalance,
-      payerBalance,
-      obj;
-
-  if(transfer.payerAccount === null) {
-    payerBalance = null;
-  }
-  else {
-    let payerState = await loadAccountState(transfer.payerAccount);
-
-    payerBalance = payerState.balance;
-
-    if(payerBalance < transfer.amount) {
-      throw new accountError(ERRORS.ACCOUNT_INSUFFICIENT_FUNDS);
-    }
-  }
-
-  if(transfer.payeeAccount === null) {
-    payeeBalance = null;
-  }
-  else {
-    let payeeState = await loadAccountState(transfer.payeeAccount);
-
-    if(accountCreation){
-      if(payeeState.height != 0) {
-        throw new accountError(ERRORS.ACCOUNT_ALREADY_EXISTS, transfer.payeeAccount);
-      }
-    }
-    else {
-      if(payeeState.height == 0) {
-        throw new accountError(ERRORS.ACCOUNT_INVALID_PAYEE, transfer.payeeAccount);
-      }
-    }
-
-    payeeBalance = payeeState.balance;
-  }
-
-  if(apply) {
-    if(payerBalance !== null) {
-      await updateAccount(transfer.type, transfer.payerAccount, transfer.amount);
-
-      console.log(`${transfer.payerAccount} -${transfer.amount} -> ${payerBalance - transfer.amount}`);
-    }
-
-    if(payeeBalance !== null) {
-      await updateAccount(transfer.type ^ 1, transfer.payeeAccount, transfer.amount);
-
-      console.log(`${transfer.payeeAccount} +${transfer.amount} -> ${payeeBalance + transfer.amount}`);
-    }
-  }
-}
-
-// ============================================================================================================================ //
-//  loadAccountState()                                                                                                          //
-// ============================================================================================================================ //
-async function loadAccountState(accountHash) {
-  let record = await dbInterface.get(SCHEMAS.DB_ACCOUNT_STATE, accountHash),
-      state;
-
-  if(record) {
-    state = schemaSerializer.decode(SCHEMAS.DB[SCHEMAS.DB_ACCOUNT_STATE], record);
-  }
-  else {
-    state = {
-      height: 0,
-      balance: 0,
-      lastHistoryHash: DATA.NULL_HASH
-    };
-  }
-
-  return state;
-}
-
-// ============================================================================================================================ //
-//  updateAccount()                                                                                                             //
-// ============================================================================================================================ //
-async function updateAccount(operationType, accountHash, amount) {
-  let state = await loadAccountState(accountHash);
-
-  state.height++;
-  state.balance += operationType & ECO.BK_PLUS ? amount : -amount;
-
-  await dbInterface.put(
-    SCHEMAS.DB_ACCOUNT_STATE,
-    accountHash,
-    schemaSerializer.encode(
-      SCHEMAS.DB[SCHEMAS.DB_ACCOUNT_STATE],
-      state
-    )
-  );
-}
-
-// ============================================================================================================================ //
-//  loadAccountHistory()                                                                                                        //
-// ============================================================================================================================ //
-async function loadAccountHistory(accountHash, historyHash) {
-  let record = await dbInterface.get(SCHEMAS.DB_ACCOUNT_STATE, hash);
-}
-
-// ============================================================================================================================ //
-//  addAccountHistory()                                                                                                         //
-// ============================================================================================================================ //
-async function addAccountHistory(accountHash, history) {
+async function oracleSectionCallback(context, sectionId, object) {
 }

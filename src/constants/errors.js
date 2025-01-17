@@ -68,13 +68,15 @@ export const BLOCKCHAIN_MB_TOO_FAR_FUTURE    = 0x0E;
 export const BLOCKCHAIN_BAD_PROTOCOL_VERSION = 0x0F;
 
 // ACCOUNT
-export const ACCOUNT_UNKNOWN            = 0x00;
-export const ACCOUNT_KEY_DUPLICATE      = 0x01;
-export const ACCOUNT_KEY_UNDEFINED      = 0x02;
-export const ACCOUNT_PAYEE_UNDEFINED    = 0x03;
-export const ACCOUNT_INSUFFICIENT_FUNDS = 0x04;
-export const ACCOUNT_INVALID_PAYEE      = 0x05;
-export const ACCOUNT_ALREADY_EXISTS     = 0x06;
+export const ACCOUNT_BAD_ISSUANCE_AMOUNT = 0x00;
+export const ACCOUNT_BAD_ISSUANCE_KEY    = 0x01;
+export const ACCOUNT_UNKNOWN             = 0x02;
+export const ACCOUNT_KEY_DUPLICATE       = 0x03;
+export const ACCOUNT_KEY_UNDEFINED       = 0x04;
+export const ACCOUNT_PAYEE_UNDEFINED     = 0x05;
+export const ACCOUNT_INSUFFICIENT_FUNDS  = 0x06;
+export const ACCOUNT_INVALID_PAYEE       = 0x07;
+export const ACCOUNT_ALREADY_EXISTS      = 0x08;
 
 // APPLICATION
 export const APPLICATION_MISSING_ORG = 0x00;

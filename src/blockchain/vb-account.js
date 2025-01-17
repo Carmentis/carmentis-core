@@ -1,4 +1,4 @@
-import { ERRORS, ID, SECTIONS } from "../constants/constants.js";
+import { ERRORS, ECO, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { sectionError, accountError } from "../errors/error.js";
 
@@ -50,6 +50,9 @@ export class accountVb extends virtualBlockchain {
   async updateState(mb, ndx, sectionId, object) {
     switch(sectionId) {
       case SECTIONS.ACCOUNT_TOKEN_ISSUANCE: {
+        if(object.amount != ECO.INITIAL_OFFER) {
+          throw new accountError(ERRORS.ACCOUNT_BAD_ISSUANCE_AMOUNT);
+        }
         if(this.state.publicKey) {
           throw new accountError(ERRORS.ACCOUNT_KEY_DUPLICATE);
         }

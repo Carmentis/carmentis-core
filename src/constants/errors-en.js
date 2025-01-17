@@ -69,6 +69,8 @@ export const ERRORS_EN = {
   ],
 
   [ ERROR_TYPES.ACCOUNT ]: [
+    "Invalid amount for token issuance",
+    "Invalid public key for token issuance",
     "Unknown account %0",
     "A public key is already attached to this account",
     "No public key is attached to this account",

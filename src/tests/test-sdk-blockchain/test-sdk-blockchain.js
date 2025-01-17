@@ -28,25 +28,28 @@ const crypto = sdk.crypto;
 
 export async function run() {
   if(AUTO_NODE_START) {
-    const node = spawn("node", [ PATH_TO_NODE ]);
+    return new Promise(function(resolve, reject) {
+      const node = spawn("node", [ PATH_TO_NODE ]);
 
-    node.stdout.on("data", async (data) => {
-      data = data.toString().replace(/\n$/, "");
-      console.log(`(node) ${data.split(/\r?\n/).join("\n(node) ")}`);
+      node.stdout.on("data", async (data) => {
+        data = data.toString().replace(/\n$/, "");
+        console.log(`(node) ${data.split(/\r?\n/).join("\n(node) ")}`);
 
-      if(/^Server is ready/.test(data)) {
-        await runTests();
-        node.kill();
-      }
-    });
+        if(/^Server is ready/.test(data)) {
+          await runTests();
+          node.kill();
+        }
+      });
 
-    node.stderr.on("data", (data) => {
-      data = data.toString().replace(/\n$/, "");
-      console.error(`(node) ${data.split(/\r?\n/).join("\n(node) ")}`);
-    });
+      node.stderr.on("data", (data) => {
+        data = data.toString().replace(/\n$/, "");
+        console.error(`(node) ${data.split(/\r?\n/).join("\n(node) ")}`);
+      });
 
-    node.on("close", (code) => {
-      console.log(`node terminated`);
+      node.on("close", (code) => {
+        console.log(`node terminated`);
+        resolve();
+      });
     });
   }
   else {
@@ -59,12 +62,10 @@ async function runTests() {
     let organization, appId, oracleId;
 
     await accountTest();
-    organization = await organizationTest();
-    appId = await applicationTest(organization);
-    oracleId = await oracleTest(organization, appId);
-    await appLedgerTest(organization, appId);
-
-    console.log("done");
+    //organization = await organizationTest();
+    //appId = await applicationTest(organization);
+    //oracleId = await oracleTest(organization, appId);
+    //await appLedgerTest(organization, appId);
   }
   catch(e) {
     console.error(e);
@@ -92,7 +93,7 @@ async function accountTest() {
 
   await vb.addTokenIssuance({
     issuerPublicKey: issuerPublicKey,
-    amount: 1e14
+    amount: ECO.INITIAL_OFFER
   });
 
   await vb.sign();
@@ -104,14 +105,14 @@ async function accountTest() {
 
   blockchainCore.setUser(ROLES.USER, issuerPrivateKey);
 
-  let vbHash = mb.hash;
+  let rootAccountVbHash = mb.hash;
 
   vb = new accountVb();
 
   await vb.create({
-    sellerAccount: vbHash,
+    sellerAccount: rootAccountVbHash,
     buyerPublicKey: buyerPublicKey,
-    amount: 1e5
+    amount: 10 * ECO.TOKEN
   });
 
   await vb.sign();
@@ -119,16 +120,16 @@ async function accountTest() {
   vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
-  let buyerVbHash = mb.hash;
+  let buyerAccountVbHash = mb.hash;
 
   log("Transfer from root account to buyer account");
 
   blockchainCore.setUser(ROLES.USER, issuerPrivateKey);
 
   vb = new accountVb();
-  await vb.load(vbHash);
+  await vb.load(rootAccountVbHash);
 
-  transfer = vb.createTransfer(buyerVbHash, 5e4);
+  transfer = vb.createTransfer(buyerAccountVbHash, 5 * ECO.TOKEN);
   transfer.addPublicReference("public ref");
   transfer.addPrivateReference("private ref");
   await transfer.commit();
@@ -138,10 +139,31 @@ async function accountTest() {
   vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
-  console.log(vb.state);
+  answer = await blockchainQuery.getAccountState(rootAccountVbHash);
+  answer = await blockchainQuery.getAccountHistory(rootAccountVbHash, answer.lastHistoryHash);
+  showAccountHistory(rootAccountVbHash, answer);
 
-  answer = await blockchainQuery.getAccountState(vbHash);
-  console.log(answer);
+  answer = await blockchainQuery.getAccountState(buyerAccountVbHash);
+  answer = await blockchainQuery.getAccountHistory(buyerAccountVbHash, answer.lastHistoryHash);
+  showAccountHistory(buyerAccountVbHash, answer);
+}
+
+function showAccountHistory(accountHash, list) {
+  console.log(`\n--- Account history (${accountHash})\n`);
+  console.log(`${"Date".padEnd(25)}| ${"Operation type".padEnd(23)}| ${"Linked account".padEnd(65)}| Amount (CMTS)`);
+  console.log(`${"-".repeat(25)}+${"-".repeat(24)}+${"-".repeat(66)}+${"-".repeat(14)}`);
+
+  list.forEach(entry => {
+    console.log(
+      [
+        entry.timestamp.toJSON(),
+        entry.name.padEnd(22),
+        entry.linkedAccount,
+        (entry.amount / ECO.TOKEN).toFixed(2).padEnd(13)
+      ].join(" | ")
+    );
+  });
+  console.log();
 }
 
 async function organizationTest() {

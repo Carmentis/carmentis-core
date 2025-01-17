@@ -96,7 +96,7 @@ export const DB = {
     { name: "previousHistoryHash", type: DATA.HASH },
     { name: "type",                type: DATA.UINT8 },
     { name: "timestamp",           type: DATA.UINT48 },
-    { name: "account",             type: DATA.HASH },
+    { name: "linkedAccount",       type: DATA.HASH },
     { name: "amount",              type: DATA.UINT48 },
     { name: "chainReference",      type: DATA.BINARY }
   ]
@@ -105,15 +105,18 @@ export const DB = {
 // ============================================================================================================================ //
 //  Account history references (chainReference field in DB_ACCOUNT_HISTORY)                                                     //
 // ============================================================================================================================ //
+// reference to a microblock section (for token transfers)
 export const ACCOUNT_SECTION_REFERENCE = [
   { name: "mbHash",       type: DATA.HASH },
   { name: "sectionIndex", type: DATA.UINT16 }
 ];
 
+// reference to a microblock (for paid fees)
 export const ACCOUNT_MB_REFERENCE = [
   { name: "mbHash", type: DATA.HASH }
 ];
 
+// reference to a block (for earned fees)
 export const ACCOUNT_BLOCK_REFERENCE = [
   { name: "height", type: DATA.UINT48 }
 ];
@@ -175,7 +178,7 @@ export const MESSAGES = {
   ],
   [ MSG_GET_BLOCK_LIST ] : [
     { name: "firstBlockId", type: DATA.UINT48 },
-    { name: "count",        type: DATA.UINT8 }
+    { name: "maxRecords",   type: DATA.UINT16 }
   ],
   [ MSG_GET_BLOCK ] : [
     { name: "height", type: DATA.UINT48 }
@@ -196,6 +199,9 @@ export const MESSAGES = {
     { name: "accountHash", type: DATA.HASH }
   ],
   [ MSG_GET_ACCOUNT_HISTORY ] : [
+    { name: "accountHash",     type: DATA.HASH },
+    { name: "lastHistoryHash", type: DATA.HASH },
+    { name: "maxRecords",      type: DATA.UINT16 }
   ],
   [ MSG_GET_OBJECT_BY_PUBLIC_KEY ] : [
     { name: "publicKey", type: DATA.PUB_KEY }
@@ -286,12 +292,13 @@ export const MESSAGES = {
     { name: "microBlockId", type: DATA.HASH },
     { name: "height",       type: DATA.UINT48 }
   ],
-  [ MSG_ANS_ACCOUNT_STATE ] : [
-    { name: "height",          type: DATA.UINT48 },
-    { name: "balance",         type: DATA.UINT48 },
-    { name: "lastHistoryHash", type: DATA.HASH }
-  ],
+  [ MSG_ANS_ACCOUNT_STATE ] : DB[DB_ACCOUNT_STATE],
   [ MSG_ANS_ACCOUNT_HISTORY ] : [
+    {
+      name: "list",
+      type: DATA.OBJECT | DATA.ARRAY,
+      schema: DB[DB_ACCOUNT_HISTORY]
+    }
   ],
   [ MSG_ANS_CONSUMPTION ] : [
     { name: "appLedgers", type: DATA.UINT48 },
@@ -424,4 +431,15 @@ export const ORACLE_DEFINITION = [
   { name: "structures",   type: DATA.OBJECT | DATA.ARRAY, schema: STRUCTURE },
   { name: "enumerations", type: DATA.OBJECT | DATA.ARRAY, schema: ENUMERATION },
   { name: "masks",        type: DATA.OBJECT | DATA.ARRAY, schema: MASK }
+];
+
+// ============================================================================================================================ //
+//  Wallet interface                                                                                                            //
+// ============================================================================================================================ //
+export const WI_MAX_SERVER_URL_LENGTH = 120;
+
+export const WI_QR_CODE = [
+  { name: "qrId",      type: DATA.BIN128 },
+  { name: "timestamp", type: DATA.UINT48 },
+  { name: "serverUrl", type: DATA.STRING, size: WI_MAX_SERVER_URL_LENGTH }
 ];

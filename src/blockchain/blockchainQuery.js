@@ -3,6 +3,14 @@ import { schemaSerializer } from "../serializers/serializers.js";
 import { blockchainCore } from "./blockchainCore.js";
 
 export class blockchainQuery extends blockchainCore {
+
+
+  /**
+   * Retrieves the state of a specific account identified by its account hash.
+   *
+   * @param {string} accountHash - The hash of the account whose state is to be retrieved.
+   * @return {Promise<{ height: number, balance: number, lastHistoryHash: string }>} A promise that resolves with the account state data.
+   */
   static async getAccountState(accountHash) {
     let answer = await this.nodeQuery(
       SCHEMAS.MSG_GET_ACCOUNT_STATE,
@@ -14,6 +22,24 @@ export class blockchainQuery extends blockchainCore {
     return answer;
   }
 
+  /**
+   * Retrieves the account history for a specific account, allowing the retrieval of specific records
+   * based on a starting point such as the `lastHistoryHash`, and limiting the number of records returned.
+   *
+   * @param {string} accountHash - The unique hash of the account for which the history is requested.
+   * @param {string} lastHistoryHash - The hash of the last history record to start fetching from.
+   * @param {number} [maxRecords=50] - The maximum number of history records to retrieve. Defaults to 50 if not specified.
+   * @returns {Promise<{
+   *   height: number;
+   *   previousHistoryHash: string;
+   *   type: number;
+   *   timestamp: number;
+   *   linkedAccount: string;
+   *   amount: number;
+   *   chainReference: string;
+   * }[]>} A promise that resolves to an array of account history entries. Each entry includes
+   *         updated details such as a converted timestamp, a name derived from the type, and a decoded chain reference.
+   */
   static async getAccountHistory(accountHash, lastHistoryHash, maxRecords = 50) {
     let answer = await this.nodeQuery(
       SCHEMAS.MSG_GET_ACCOUNT_HISTORY,

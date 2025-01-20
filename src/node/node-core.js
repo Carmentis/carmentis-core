@@ -68,8 +68,10 @@ export async function prepareProposal(height, ts, txs) {
       console.error(e);
     }
   }
-  if (proposalTxs.length !== 0)
+
+  if (proposalTxs.length !== 0) {
     console.log(`Created proposal with ${proposalTxs.length} microblocks`);
+  }
 
   return proposalTxs;
 }
@@ -78,9 +80,9 @@ export async function prepareProposal(height, ts, txs) {
 //  processProposal()                                                                                                           //
 // ============================================================================================================================ //
 export async function processProposal(height, ts, proposalTxs) {
-  if (proposalTxs.length !== 0)
+  if (proposalTxs.length !== 0) {
     console.log(`Checking proposal with ${proposalTxs.length} microblocks`);
-
+  }
 
   let context = initializeContext(height, ts);
 
@@ -266,6 +268,8 @@ async function microblockCallback(context, apply = false) {
 async function accountSectionCallback(context, sectionId, object, apply) {
   switch(sectionId) {
     case SECTIONS.ACCOUNT_TOKEN_ISSUANCE: {
+      await accounts.testPublicKeyAvailability(object.issuerPublicKey);
+
       await accounts.tokenTransfer(
         {
           type: ECO.BK_SENT_ISSUANCE,
@@ -287,6 +291,8 @@ async function accountSectionCallback(context, sectionId, object, apply) {
     }
 
     case SECTIONS.ACCOUNT_CREATION: {
+      await accounts.testPublicKeyAvailability(object.buyerPublicKey);
+
       await accounts.tokenTransfer(
         {
           type: ECO.BK_SALE,

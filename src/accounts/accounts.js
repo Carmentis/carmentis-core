@@ -179,6 +179,22 @@ function getHistoryEntryHash(accountHash, recordHash) {
 }
 
 // ============================================================================================================================ //
+//  testPublicKeyAvailability()                                                                                                 //
+// ============================================================================================================================ //
+export async function testPublicKeyAvailability(publicKey) {
+  let keyHash = crypto.sha256(uint8.fromHexa(publicKey));
+
+  let accountHash = await dbInterface.get(
+    SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
+    keyHash
+  );
+
+  if(accountHash) {
+    throw new accountError(ERRORS.ACCOUNT_KEY_ALREADY_IN_USE);
+  }
+}
+
+// ============================================================================================================================ //
 //  saveAccountByPublicKey()                                                                                                    //
 // ============================================================================================================================ //
 export async function saveAccountByPublicKey(accountHash, publicKey) {
@@ -201,6 +217,10 @@ export async function loadAccountByPublicKey(publicKey) {
     SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
     keyHash
   );
+
+  if(!accountHash) {
+    throw new accountError(ERRORS.ACCOUNT_KEY_UNKNOWN);
+  }
 
   return accountHash;
 }

@@ -73,10 +73,12 @@ export const ACCOUNT_BAD_ISSUANCE_KEY    = 0x01;
 export const ACCOUNT_UNKNOWN             = 0x02;
 export const ACCOUNT_KEY_DUPLICATE       = 0x03;
 export const ACCOUNT_KEY_UNDEFINED       = 0x04;
-export const ACCOUNT_PAYEE_UNDEFINED     = 0x05;
-export const ACCOUNT_INSUFFICIENT_FUNDS  = 0x06;
-export const ACCOUNT_INVALID_PAYEE       = 0x07;
-export const ACCOUNT_ALREADY_EXISTS      = 0x08;
+export const ACCOUNT_KEY_ALREADY_IN_USE  = 0x05;
+export const ACCOUNT_KEY_UNKNOWN         = 0x06;
+export const ACCOUNT_PAYEE_UNDEFINED     = 0x07;
+export const ACCOUNT_INSUFFICIENT_FUNDS  = 0x08;
+export const ACCOUNT_INVALID_PAYEE       = 0x09;
+export const ACCOUNT_ALREADY_EXISTS      = 0x0A;
 
 // APPLICATION
 export const APPLICATION_MISSING_ORG = 0x00;

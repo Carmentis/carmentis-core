@@ -74,6 +74,8 @@ export const ERRORS_EN = {
     "Unknown account %0",
     "A public key is already attached to this account",
     "No public key is attached to this account",
+    "This public key is already attached to another account",
+    "This public key is not attached to any account",
     "Payee ID %0 is undefined",
     "Insufficient funds",
     "Invalid payee account %0",

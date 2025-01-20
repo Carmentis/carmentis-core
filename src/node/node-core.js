@@ -68,8 +68,8 @@ export async function prepareProposal(height, ts, txs) {
       console.error(e);
     }
   }
-
-  console.log(`Created proposal with ${proposalTxs.length} microblocks`);
+  if (proposalTxs.length !== 0)
+    console.log(`Created proposal with ${proposalTxs.length} microblocks`);
 
   return proposalTxs;
 }
@@ -78,7 +78,9 @@ export async function prepareProposal(height, ts, txs) {
 //  processProposal()                                                                                                           //
 // ============================================================================================================================ //
 export async function processProposal(height, ts, proposalTxs) {
-  console.log(`Checking proposal with ${proposalTxs.length} microblocks`);
+  if (proposalTxs.length !== 0)
+    console.log(`Checking proposal with ${proposalTxs.length} microblocks`);
+
 
   let context = initializeContext(height, ts);
 

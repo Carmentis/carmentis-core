@@ -146,6 +146,12 @@ async function accountTest() {
   answer = await blockchainQuery.getAccountState(buyerAccountVbHash);
   answer = await blockchainQuery.getAccountHistory(buyerAccountVbHash, answer.lastHistoryHash);
   showAccountHistory(buyerAccountVbHash, answer);
+
+  answer = await blockchainQuery.getAccountByPublicKey(issuerPublicKey);
+  console.log(`Account by public key: ${issuerPublicKey} -> ${answer}`);
+
+  answer = await blockchainQuery.getAccountByPublicKey(buyerPublicKey);
+  console.log(`Account by public key: ${buyerPublicKey} -> ${answer}`);
 }
 
 function showAccountHistory(accountHash, list) {

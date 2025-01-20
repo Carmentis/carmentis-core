@@ -177,3 +177,30 @@ async function addHistoryEntry(state, type, accountHash, linkedAccountHash, amou
 function getHistoryEntryHash(accountHash, recordHash) {
   return crypto.sha256(uint8.from(accountHash, recordHash));
 }
+
+// ============================================================================================================================ //
+//  saveAccountByPublicKey()                                                                                                    //
+// ============================================================================================================================ //
+export async function saveAccountByPublicKey(accountHash, publicKey) {
+  let keyHash = crypto.sha256(uint8.fromHexa(publicKey));
+
+  await dbInterface.put(
+    SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
+    keyHash,
+    accountHash
+  );
+}
+
+// ============================================================================================================================ //
+//  loadAccountByPublicKey()                                                                                                    //
+// ============================================================================================================================ //
+export async function loadAccountByPublicKey(publicKey) {
+  let keyHash = crypto.sha256(uint8.fromHexa(publicKey));
+
+  let accountHash = await dbInterface.get(
+    SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
+    keyHash
+  );
+
+  return accountHash;
+}

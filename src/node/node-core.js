@@ -4,14 +4,10 @@ import { blockchainCore, ROLES, blockchainManager, accountVb } from "../blockcha
 import { CarmentisError, globalError, blockchainError } from "../errors/error.js";
 import * as accounts from "../accounts/accounts.js";
 
-let chainInterface;
-
 // ============================================================================================================================ //
 //  initialize()                                                                                                                //
 // ============================================================================================================================ //
 export function initialize(dbIntf, chainIntf) {
-  chainInterface = chainIntf;
-
   accounts.setDbInterface(dbIntf);
 
   blockchainCore.setDbInterface(dbIntf);
@@ -34,7 +30,8 @@ export function processCatchedError(err) {
 //  checkIncomingMicroblock()                                                                                                   //
 // ============================================================================================================================ //
 export async function checkIncomingMicroblock(mb) {
-  let res = await processMicroblock(mb, false);
+  let context = initializeContext(),
+      res = await processMicroblock(context, mb, false);
 
   console.log(`Received microblock ${res.mbHash} (${mb.length} bytes)`);
 
@@ -58,12 +55,13 @@ export function incomingMicroblockAnswer() {
 // ============================================================================================================================ //
 //  prepareProposal()                                                                                                           //
 // ============================================================================================================================ //
-export async function prepareProposal(txs) {
-  let proposalTxs = [];
+export async function prepareProposal(height, ts, txs) {
+  let context = initializeContext(height, ts),
+      proposalTxs = [];
 
   for(let mb of txs) {
     try {
-      await processMicroblock(mb, false);
+      await processMicroblock(context, mb, false);
       proposalTxs.push(mb);
     }
     catch(e) {
@@ -79,12 +77,14 @@ export async function prepareProposal(txs) {
 // ============================================================================================================================ //
 //  processProposal()                                                                                                           //
 // ============================================================================================================================ //
-export async function processProposal(proposalTxs) {
+export async function processProposal(height, ts, proposalTxs) {
   console.log(`Checking proposal with ${proposalTxs.length} microblocks`);
+
+  let context = initializeContext(height, ts);
 
   for(let mb of proposalTxs) {
     try {
-      await processMicroblock(mb, false);
+      await processMicroblock(context, mb, false);
     }
     catch(e) {
       console.error(e);
@@ -97,38 +97,44 @@ export async function processProposal(proposalTxs) {
 // ============================================================================================================================ //
 //  finalizeBlock()                                                                                                             //
 // ============================================================================================================================ //
-export async function finalizeBlock(txs) {
+export async function finalizeBlock(height, ts, txs) {
+  let context = initializeContext(height, ts);
+
   for(let mb of txs) {
-    let res = await processMicroblock(mb, true);
+    let res = await processMicroblock(context, mb, true);
 
     await blockchainManager.dbPut(SCHEMAS.DB_MICROBLOCK_INFO, res.mbHash, res.mbRecord);
     await blockchainManager.dbPut(SCHEMAS.DB_VB_INFO, res.mbRecord.vbHash, res.vbRecord);
-    await chainInterface.writeBlock(res.mbHash, mb);
   }
+  return true;
+}
+
+// ============================================================================================================================ //
+//  initializeContext()                                                                                                         //
+// ============================================================================================================================ //
+function initializeContext(height, ts) {
+  return {
+    height: height,
+    timestamp: ts,
+    fees: 0
+  };
 }
 
 // ============================================================================================================================ //
 //  processMicroblock()                                                                                                         //
 // ============================================================================================================================ //
-async function processMicroblock(mb, apply) {
+async function processMicroblock(context, mb, apply) {
   let res = await blockchainManager.checkMicroblock(mb),
       sections = res.vb.currentMicroblock.sections;
 
+  context.vb = res.vb;
+  context.mb = res.vb.currentMicroblock;
+
   for(let n in sections) {
-    let context = {
-      vb: res.vb,
-      mb: res.vb.currentMicroblock,
-      sectionIndex: +n,
-      timestamp: Math.floor(new Date() / 1000) // should be Comet block time
-    };
+    context.sectionIndex = +n;
 
     await sectionCallback(context, sections[n].id, sections[n].object, apply);
   }
-
-  let context = {
-    vb: res.vb,
-    mb: res.vb.currentMicroblock
-  };
 
   await microblockCallback(context, apply);
 
@@ -194,6 +200,18 @@ export async function getAccountHistory(accountHash, lastHistoryHash, maxRecords
 }
 
 // ============================================================================================================================ //
+//  getAccountByPublicKey()                                                                                                     //
+// ============================================================================================================================ //
+export async function getAccountByPublicKey(publicKey) {
+  let accountHash = await accounts.loadAccountByPublicKey(publicKey);
+
+  return schemaSerializer.encodeMessage(
+    SCHEMAS.MSG_ANS_ACCOUNT_BY_PUBLIC_KEY,
+    { accountHash: accountHash }
+  );
+}
+
+// ============================================================================================================================ //
 //  loadMicroblockData()                                                                                                        //
 // ============================================================================================================================ //
 async function loadMicroblockData(hash) {
@@ -222,6 +240,8 @@ async function sectionCallback(context, sectionId, object, apply = false) {
 // ============================================================================================================================ //
 async function microblockCallback(context, apply = false) {
   let fees = Math.floor(context.mb.object.header.gas * context.mb.object.header.gasPrice / 1000);
+
+  context.fees += fees;
 
   await accounts.tokenTransfer(
     {
@@ -258,6 +278,9 @@ async function accountSectionCallback(context, sectionId, object, apply) {
         context.timestamp,
         apply
       );
+      if(apply) {
+        await accounts.saveAccountByPublicKey(context.vb.id, object.issuerPublicKey);
+      }
       break;
     }
 
@@ -276,6 +299,9 @@ async function accountSectionCallback(context, sectionId, object, apply) {
         context.timestamp,
         apply
       );
+      if(apply) {
+        await accounts.saveAccountByPublicKey(context.vb.id, object.buyerPublicKey);
+      }
       break;
     }
 

@@ -218,7 +218,7 @@ export class blockchainCore {
     if(!this.chainInterface) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_NO_CHAIN_INTERFACE);
     }
-    return await this.chainInterface.readBlock(hash);
+    return await this.chainInterface.readTx(hash);
   }
 
   static isNode() {

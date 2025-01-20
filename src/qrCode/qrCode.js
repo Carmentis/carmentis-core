@@ -36,18 +36,21 @@ export function create(qrId, timestamp, serverUrl) {
 //  decode()                                                                                                                    //
 // ============================================================================================================================ //
 export function decode(qrData) {
-  let match = qrData.match(/^carmentis:([\w-]*)$/);
+  let match = qrData.match(/^carmentis:([\w-]+)$/);
 
-  if(!match) {
-    return false;
+  if(match) {
+    try {
+      let data = base64.decodeBinary(match[1], base64.URL);
+
+      let obj = schemaSerializer.decode(
+        SCHEMAS.WI_QR_CODE,
+        data
+      );
+
+      return obj;
+    }
+    catch(e) {
+    }
   }
-
-  let data = base64.decodeBinary(match[1], base64.URL);
-
-  let obj = schemaSerializer.decode(
-    SCHEMAS.WI_QR_CODE,
-    data
-  );
-
-  return data;
+  return false;
 }

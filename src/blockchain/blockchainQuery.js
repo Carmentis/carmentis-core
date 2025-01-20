@@ -3,8 +3,6 @@ import { schemaSerializer } from "../serializers/serializers.js";
 import { blockchainCore } from "./blockchainCore.js";
 
 export class blockchainQuery extends blockchainCore {
-
-
   /**
    * Retrieves the state of a specific account identified by its account hash.
    *
@@ -62,5 +60,22 @@ export class blockchainQuery extends blockchainCore {
     }
 
     return answer.list;
+  }
+
+  /**
+   * Retrieves the hash of an account virtual blockchain, given the account public key.
+   *
+   * @param {string} publicKey - The public key of the account whose VB hash is to be retrieved.
+   * @return {Promise<string>} - A promise that resolves with the hash of the account virtual blockchain.
+   */
+  static async getAccountByPublicKey(publicKey) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY,
+      {
+        publicKey: publicKey
+      }
+    );
+
+    return answer.accountHash;
   }
 }

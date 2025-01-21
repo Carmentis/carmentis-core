@@ -9,4 +9,6 @@ const server = http.createServer(function (req, res) {
 
 server.listen(CFG.OPERATOR_PORT);
 
+const socketServer = new wiServer(server);
+
 console.log("ready");

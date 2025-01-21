@@ -12,7 +12,15 @@ export class wiClient {
   }
 
   process() {
-    let socket = clientSocket.getSocket(this.serverUrl);
+    let socket = clientSocket.getSocket(this.serverUrl, this.onConnect, this.onData);
+  }
+
+  onConnect() {
+    console.log("onConnect");
+  }
+
+  onData() {
+    console.log("onData");
   }
 }
 

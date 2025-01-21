@@ -24,10 +24,13 @@ export async function sendMessage(url, schemaId, object) {
         let [ id, object ] = schemaSerializer.decodeMessage(new Uint8Array(answer));
 
         if(id == SCHEMAS.MSG_ANS_ERROR) {
-          throw new CarmentisError(object.error.type | ERROR_TYPES.REMOTE_ERROR, object.error.id, ...object.error.arg);
-        }
+          let error = new CarmentisError(object.error.type | ERROR_TYPES.REMOTE_ERROR, object.error.id, ...object.error.arg);
 
-        resolve(object);
+          reject(error);
+        }
+        else {
+          resolve(object);
+        }
       });
     });
 

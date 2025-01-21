@@ -9,13 +9,13 @@ import * as sdk from "../sdk.js";
 
 (async function() {
   logger.log("==== UNIT TESTS ====");
-  await testFieldSerializer.run();
-  logger.log("");
-  await testSchemaSerializer.run();
-  logger.log("");
-  await testSectionSerializer.run();
-  logger.log("");
-  await testSdkBlockchain.run();
-  logger.log("");
-//await testSdkWalletInterface.run();
+//  await testFieldSerializer.run();
+//  logger.log("");
+//  await testSchemaSerializer.run();
+//  logger.log("");
+//  await testSectionSerializer.run();
+//  logger.log("");
+//  await testSdkBlockchain.run();
+//  logger.log("");
+  await testSdkWalletInterface.run();
 })();

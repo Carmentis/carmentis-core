@@ -9,11 +9,11 @@ const { wiClientNodeJs } = sdk.walletInterface;
 export async function run() {
   log("--- Testing Wallet Interface ----");
 
-  return runProcess("test-sdk-walletInterface/operator.js", "operator", runWallet);
+  await runProcess("test-sdk-walletInterface/operator.js", "operator", runWallet);
 }
 
 async function runWallet() {
-  return runProcess("test-sdk-walletInterface/wallet.js", "wallet", runTests);
+  await runProcess("test-sdk-walletInterface/wallet.js", "wallet", runTests);
 }
 
 async function runTests() {
@@ -34,7 +34,8 @@ function runProcess(path, name, onReadyCallback) {
 
       if(/^ready/.test(data)) {
         await onReadyCallback();
-        process.kill();
+//      console.log(`killing ${name}`);
+//      process.kill();
       }
     });
 

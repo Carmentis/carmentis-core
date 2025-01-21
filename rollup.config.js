@@ -2,7 +2,6 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import dts from "rollup-plugin-dts";
-import polyfillNode from 'rollup-plugin-polyfill-node';
 
 export default [
     {
@@ -22,7 +21,6 @@ export default [
         plugins: [
             resolve(), // Résout les imports de modules tiers
             commonjs(), // Convertit CommonJS en ESM
-            polyfillNode(),
             json(), // Supporte les importations JSON
         ]
     },

@@ -21,13 +21,13 @@ export default [
         plugins: [
             resolve(), // resolve 3rd-party module imports
             commonjs(), // converts CommonJS to ESM
-            json(), // supports JSON imports
+            json() // supports JSON imports
         ]
     },
     // Build for TypeScript definitions
     {
-        input: "types/sdk.d.ts", // This path depends on your TypeScript configuration
+        input: "types/server/sdk.d.ts", // This path depends on your TypeScript configuration
         output: [{ file: "dist/server/index.d.ts", format: "es" }],
         plugins: [dts()],
-    },
+    }
 ];

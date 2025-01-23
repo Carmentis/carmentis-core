@@ -20,7 +20,6 @@ export function initialize(dbIntf, chainIntf) {
 // ============================================================================================================================ //
 export function processCatchedError(err) {
   if(!(err instanceof CarmentisError)) {
-    console.error(err);
     err = new globalError(ERRORS.GLOBAL_INTERNAL_ERROR, err.stack || [ err.toString() ]);
   }
   return err.serializeAsMessage();

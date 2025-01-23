@@ -32,7 +32,7 @@ export default [
     },
     // Build for TypeScript definitions
     {
-        input: "types/sdk.d.ts", // This path depends on your TypeScript configuration
+        input: "types/client/sdk.d.ts", // This path depends on your TypeScript configuration
         output: [{ file: "dist/client/index.d.ts", format: "es" }],
         plugins: [dts()]
     }

@@ -4,6 +4,60 @@ import { blockchainCore } from "./blockchainCore.js";
 
 export class blockchainQuery extends blockchainCore {
   /**
+   * Retrieves the content of a microblock identified by its hash.
+   *
+   * @param {string} hash - The hash of the microblock to be retrieved.
+   * @return {Promise} A promise that resolves with the binary content of the microblock.
+   */
+  static async getMicroblock(hash) {
+    return await this.loadMicroblock(hash);
+  }
+
+  /**
+   * Retrieves a list of microblock contents identified by their hashes.
+   *
+   * @param {string[]} list - An array of hashes of the microblocks to be retrieved.
+   * @return {Promise} A promise that resolves with an array of objects { hash: string, content: Uint8Array() }.
+   */
+  static async getMicroblocks(list) {
+    return await this.loadMicroblocks(list);
+  }
+
+  /**
+   * Retrieves information about a virtual blockchain identified by its hash.
+   *
+   * @param {string} hash - The hash of the virtual blockchain to be processed.
+   * @return {Promise} A promise that resolves with an object matching the schema MSG_ANS_VB_INFO.
+   */
+  static async getVirtualBlockchainInfo(hash) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_VB_INFO,
+      {
+        vbHash: hash
+      }
+    );
+
+    return answer;
+  }
+
+  /**
+   * Retrieves the list of microblocks of a virtual blockchain identified by its hash.
+   *
+   * @param {string} hash - The hash of the virtual blockchain to be processed.
+   * @return {Promise} A promise that resolves with an object matching the schema MSG_ANS_VB_CONTENT.
+   */
+  static async getVirtualBlockchainContent(hash) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_VB_CONTENT,
+      {
+        vbHash: hash
+      }
+    );
+
+    return answer;
+  }
+
+  /**
    * Retrieves the state of a specific account identified by its account hash.
    *
    * @param {string} accountHash - The hash of the account whose state is to be retrieved.
@@ -31,7 +85,8 @@ export class blockchainQuery extends blockchainCore {
    *   height: number;
    *   previousHistoryHash: string;
    *   type: number;
-   *   timestamp: number;
+   *   name: string;
+   *   timestamp: object;
    *   linkedAccount: string;
    *   amount: number;
    *   chainReference: string;

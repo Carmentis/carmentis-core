@@ -1,5 +1,5 @@
+import * as sdk from "../../server/sdk.js";
 import * as CFG from "./config.js";
-import * as sdk from "../../sdk.js";
 import { log, outcome } from "../logger.js";
 
 import { spawn } from "child_process";

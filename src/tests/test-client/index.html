@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+<script type="text/javascript" src="carmentis-sdk.js"></script>
+</head>
+<body>
+<script>
+const NODE_URL = "http://127.0.0.1:3000";
+const { ECO, SCHEMAS } = Carmentis.constants;
+
+const db = {
+  [ SCHEMAS.DB_MICROBLOCK_INFO ]: new Map(),
+  [ SCHEMAS.DB_MICROBLOCK_DATA ]: new Map(),
+  [ SCHEMAS.DB_VB_INFO         ]: new Map(),
+  [ SCHEMAS.DB_BLOCK           ]: new Map()
+};
+
+const memoryDb = {
+  async put(tableId, key, value) {
+    db[tableId].set(key, value);
+    return true;
+  },
+  async get(tableId, key) {
+    return db[tableId].get(key);
+  }
+};
+
+const {
+  blockchainCore,
+  blockchainQuery,
+  microblock,
+  ROLES,
+  accountVb,
+  organizationVb,
+  applicationVb,
+  oracleVb,
+  appLedgerVb
+} = Carmentis.blockchain;
+
+const crypto = Carmentis.crypto;
+
+run();
+
+async function run() {
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode(NODE_URL);
+
+  let vb, mb, transfer, answer;
+
+  let issuerPrivateKey = crypto.generateKey256(),
+      issuerPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(issuerPrivateKey),
+      buyerPrivateKey = crypto.generateKey256(),
+      buyerPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(buyerPrivateKey);
+
+  blockchainCore.setUser(ROLES.USER, issuerPrivateKey);
+
+  vb = new accountVb();
+
+  await vb.addTokenIssuance({
+    issuerPublicKey: issuerPublicKey,
+    amount: ECO.INITIAL_OFFER
+  });
+
+  await vb.sign();
+
+  vb.setGasPrice(ECO.TOKEN);
+  mb = await vb.publish();
+}
+</script>
+</body>
+</html>

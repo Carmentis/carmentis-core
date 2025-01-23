@@ -54,10 +54,10 @@ export class virtualBlockchain extends blockchainCore {
 
     let microblocks = await this.constructor.loadMicroblocks(vbContent.list);
 
-    this.microblocks = microblocks.map(([ content, hash ]) => {
+    this.microblocks = microblocks.map(obj => {
       let mb = new microblock(this.type);
 
-      mb.load(content, hash);
+      mb.load(obj.content, obj.hash);
 
       return mb;
     });

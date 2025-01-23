@@ -1,4 +1,4 @@
-import { SCHEMAS } from "../constants/constants.js";
+import { SCHEMAS } from "../common/constants/constants.js";
 
 const db = {
   [ SCHEMAS.DB_MICROBLOCK_INFO ]: new Map(),

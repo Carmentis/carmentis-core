@@ -95,11 +95,70 @@ export class blockchainCore {
     }
   }
 
+  static async loadMicroblock(hash) {
+    let content;
+
+    if(this.isNode()) {
+      content = await this.loadMicroblockFromChain(hash)
+    }
+    else {
+      content = await this.loadMicroblockFromDb(hash);
+    }
+    return content;
+  }
+
+  static async loadMicroblockFromChain(hash) {
+    return await this.chainGet(hash);
+  }
+
+  static async loadMicroblockFromDb(hash) {
+    let record = await this.dbGet(SCHEMAS.DB_MICROBLOCK_DATA, hash),
+        content;
+
+    if(record) {
+      content = record.content;
+    }
+    else {
+      content = await this.nodeQuery(
+        SCHEMAS.MSG_GET_MICROBLOCK,
+        {
+          mbHash: hash
+        }
+      );
+
+      await this.dbPut(SCHEMAS.DB_MICROBLOCK_DATA, hash, { content: content });
+    }
+
+    return content;
+  }
+
+  static async getMicroblockList(currentHash, targetHash) {
+    let list = [ currentHash ];
+
+    while(currentHash != targetHash) {
+      let mb = await this.dbGet(SCHEMAS.DB_MICROBLOCK_INFO, currentHash);
+
+      if(!mb) {
+        return null;
+      }
+
+      currentHash = mb.previousHash;
+      list.unshift(currentHash);
+    }
+
+    return list;
+  }
+
   static async loadMicroblocks(hashList) {
-    return this.isNode() ?
-      await this.loadMicroblocksFromChain(hashList)
-    :
-      await this.loadMicroblocksFromDb(hashList);
+    let list;
+
+    if(this.isNode()) {
+      list = await this.loadMicroblocksFromChain(hashList)
+    }
+    else {
+      list = await this.loadMicroblocksFromDb(hashList);
+    }
+    return list;
   }
 
   static async loadMicroblocksFromChain(hashList) {
@@ -108,7 +167,7 @@ export class blockchainCore {
     for(let mbHash of hashList) {
       let content = await this.chainGet(mbHash);
 
-      list.push([ content, mbHash ]);
+      list.push({ hash: mbHash, content: content });
     }
 
     return list;
@@ -125,7 +184,7 @@ export class blockchainCore {
           mb = await this.dbGet(SCHEMAS.DB_MICROBLOCK_DATA, mbHash);
 
       if(mb) {
-        list[n] = [ mb.content, mbHash ];
+        list[n] = { hash: mbHash, content: mb.content };
       }
       else {
         missingHashList.push(mbHash);
@@ -146,7 +205,7 @@ export class blockchainCore {
         let content = microblockData.list[i],
             hash = missingHashList[i];
 
-        list[missingIndex[i]] = [ content, hash ];
+        list[missingIndex[i]] = { hash: hash, content: content };
         await this.dbPut(SCHEMAS.DB_MICROBLOCK_DATA, hash, { content: content });
       }
     }

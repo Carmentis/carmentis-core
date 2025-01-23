@@ -1,4 +1,4 @@
-import * as fieldSerializer from "../../serializers/field-serializer.js";
+import * as fieldSerializer from "../../common/serializers/field-serializer.js";
 import { LIST } from "./data.js";
 import { log, outcome } from "../logger.js";
 

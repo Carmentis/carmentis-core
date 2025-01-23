@@ -3,7 +3,7 @@ import { APP_V2 } from "./app-v2.js";
 import { ORACLE } from "./oracle.js";
 
 import { spawn } from "child_process";
-import * as sdk from "../../sdk.js";
+import * as sdk from "../../server/sdk.js";
 import * as memoryDb from "../memoryDb.js";
 import { log, outcome } from "../logger.js";
 
@@ -16,6 +16,7 @@ const { ECO } = sdk.constants;
 const {
   blockchainCore,
   blockchainQuery,
+  microblock,
   ROLES,
   accountVb,
   organizationVb,
@@ -59,9 +60,10 @@ export async function run() {
 
 async function runTests() {
   try {
-    let organization, appId, oracleId;
+    let accountVbHash, organization, appId, oracleId;
 
-    await accountTest();
+    accountVbHash = await accountTest();
+    await blockchainQueryTest(accountVbHash);
     //organization = await organizationTest();
     //appId = await applicationTest(organization);
     //oracleId = await oracleTest(organization, appId);
@@ -139,6 +141,38 @@ async function accountTest() {
   vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
+  for(let accountHash of [ rootAccountVbHash, buyerAccountVbHash ]) {
+    answer = await blockchainQuery.getVirtualBlockchainContent(accountHash);
+    console.log(answer);
+    let mbAnswer = await blockchainQuery.getMicroblocks(answer.list);
+
+    console.log(
+      mbAnswer.map(obj => {
+        let mb = new microblock(sdk.constants.ID.OBJ_ACCOUNT);
+        mb.load(obj.content, obj.hash);
+        return JSON.stringify(mb.sections, null, 2);
+      })
+    );
+  }
+return rootAccountVbHash;
+
+  log("Second transfer from root account to buyer account");
+
+  vb = new accountVb();
+  await vb.load(rootAccountVbHash);
+
+  transfer = vb.createTransfer(buyerAccountVbHash, 2 * ECO.TOKEN);
+  transfer.addPublicReference("public ref");
+  transfer.addPrivateReference("private ref");
+  await transfer.commit();
+
+  await vb.sign();
+
+  vb.setGasPrice(ECO.TOKEN);
+  mb = await vb.publish();
+
+  log("Fetching account data");
+
   answer = await blockchainQuery.getAccountState(rootAccountVbHash);
   answer = await blockchainQuery.getAccountHistory(rootAccountVbHash, answer.lastHistoryHash);
   showAccountHistory(rootAccountVbHash, answer);
@@ -152,6 +186,15 @@ async function accountTest() {
 
   answer = await blockchainQuery.getAccountByPublicKey(buyerPublicKey);
   console.log(`Account by public key: ${buyerPublicKey} -> ${answer}`);
+
+  try {
+    answer = await blockchainQuery.getAccountByPublicKey(sdk.constants.DATA.NULL_HASH);
+    console.log(`Account by public key: ${buyerPublicKey} -> ${answer}`);
+  }
+  catch(e) {
+    console.log("catch()");
+  }
+  console.log("done");
 }
 
 function showAccountHistory(accountHash, list) {
@@ -170,6 +213,18 @@ function showAccountHistory(accountHash, list) {
     );
   });
   console.log();
+}
+
+async function blockchainQueryTest(vbHash) {
+  log("--- Testing blockchainQuery methods ----");
+
+  let content = await blockchainQuery.getMicroblock(vbHash);
+
+  console.log(content);
+
+  let mb = new microblock(sdk.constants.ID.OBJ_ACCOUNT);
+  await mb.load(content, vbHash);
+  console.log(mb);
 }
 
 async function organizationTest() {

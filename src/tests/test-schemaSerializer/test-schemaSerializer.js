@@ -1,6 +1,6 @@
-import * as schemaSerializer from "../../serializers/schema-serializer.js";
+import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
+import { SCHEMAS } from "../../common/constants/constants.js";
 import * as DATA from "./data.js";
-import { SCHEMAS } from "../../constants/constants.js";
 import { log, outcome } from "../logger.js";
 
 const VERBOSE = false;

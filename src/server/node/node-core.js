@@ -1,8 +1,8 @@
-import { ECO, ID, SCHEMAS, SECTIONS, ERRORS } from "../constants/constants.js";
-import { schemaSerializer } from "../serializers/serializers.js";
-import { blockchainCore, ROLES, blockchainManager, accountVb } from "../blockchain/blockchain.js";
-import { CarmentisError, globalError, blockchainError } from "../errors/error.js";
-import * as accounts from "../accounts/accounts.js";
+import { ECO, ID, SCHEMAS, SECTIONS, ERRORS } from "../../common/constants/constants.js";
+import { schemaSerializer } from "../../common/serializers/serializers.js";
+import { blockchainCore, ROLES, blockchainManager, accountVb } from "../../common/blockchain/blockchain.js";
+import { CarmentisError, globalError, blockchainError } from "../../common/errors/error.js";
+import * as accounts from "../../common/accounts/accounts.js";
 
 // ============================================================================================================================ //
 //  initialize()                                                                                                                //
@@ -33,7 +33,11 @@ export async function checkIncomingMicroblock(mb) {
   let context = initializeContext(),
       res = await processMicroblock(context, mb, false);
 
-  console.log(`Received microblock ${res.mbHash} (${mb.length} bytes)`);
+  console.log(`Received${res.vbRecord.height == 1 ? " genesis" : ""} microblock ${res.mbHash} (${mb.length} bytes)`);
+
+  if(res.vbRecord.height > 1) {
+    console.log(`Belonging to VB ${res.vb.id}`);
+  }
 
   res.vb.currentMicroblock.sections.forEach((section, n) => {
     console.log(

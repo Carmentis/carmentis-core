@@ -35,7 +35,14 @@ export class accountVb extends virtualBlockchain {
 
         if(object.payeeId == -1) {
           object.payeeId = this.state.nextPayeeId;
-          await this.addSection(SECTIONS.ACCOUNT_PAYEE_DECLARATION, { id: object.payeeId, account: payeeAccount });
+
+          await this.addSection(
+            SECTIONS.ACCOUNT_PAYEE_DECLARATION,
+            {
+              id: object.payeeId,
+              account: payeeAccount
+            }
+          );
         }
 
         await this.addSection(SECTIONS.ACCOUNT_TRANSFER, object);
@@ -72,11 +79,11 @@ export class accountVb extends virtualBlockchain {
         this.state.payees[object.id] = object.account;
         this.state.nextPayeeId = this.state.nextPayeeId + 1 & 0xFF;
 
-        let payeeVb = new accountVb();
-
-        await payeeVb.load(object.account);
-
         if(!this.constructor.isNode()) {
+          let payeeVb = new accountVb();
+
+          await payeeVb.load(object.account);
+
           this.setKey(
             SECTIONS.KEY_PAYER_PAYEE,
             object.id,

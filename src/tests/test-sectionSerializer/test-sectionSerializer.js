@@ -1,7 +1,7 @@
-import { ID, SECTIONS } from "../../constants/constants.js";
+import * as sectionSerializer from "../../common/serializers/section-serializer.js";
+import * as crypto from "../../common/crypto/crypto.js";
+import { ID, SECTIONS } from "../../common/constants/constants.js";
 import { KEY_INDEX, EXTERNAL_APP_DEF } from "./data.js";
-import * as sectionSerializer from "../../serializers/section-serializer.js";
-import * as crypto from "../../crypto/crypto.js";
 import { log, outcome } from "../logger.js";
 
 export async function run() {

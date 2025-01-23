@@ -1,4 +1,4 @@
-import { DATA } from "../../constants/constants.js";
+import { DATA } from "../../common/constants/constants.js";
 
 export const ORACLE = {
   "description": {

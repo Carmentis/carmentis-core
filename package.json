@@ -5,13 +5,20 @@
   "author": "Carmentis SAS",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "tsc && rollup -c"
+    "build:client": "tsc && rollup --config rollup.config.client.js",
+    "build:server": "tsc && rollup --config rollup.config.server.js",
+    "build": "npm run build:client && npm run build:server"
   },
   "exports": {
-    ".": {
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+    "./client": {
+      "require": "./dist/client/index.cjs",
+      "import": "./dist/client/index.mjs",
+      "types": "./dist/client/index.d.ts"
+    },
+    "./server": {
+      "require": "./dist/server/index.cjs",
+      "import": "./dist/server/index.mjs",
+      "types": "./dist/server/index.d.ts"
     }
   },
   "main": "dist/index.cjs",
@@ -41,7 +48,6 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "rollup-plugin-polyfill-node": "^0.13.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
   }

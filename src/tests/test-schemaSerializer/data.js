@@ -1,4 +1,4 @@
-import { DATA, SCHEMAS } from "../../constants/constants.js";
+import { DATA, SCHEMAS } from "../../common/constants/constants.js";
 
 export const SCHEMA_ARRAY_INTEGERS = [
   {

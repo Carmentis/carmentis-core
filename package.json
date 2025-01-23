@@ -1,7 +1,7 @@
 {
   "name": "@cmts-dev/carmentis-sdk",
   "type": "module",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "author": "Carmentis SAS",
   "scripts": {
     "clean": "rimraf dist && rimraf types",
@@ -24,6 +24,12 @@
   "main": "dist/server/index.cjs",
   "module": "dist/server/index.mjs",
   "types": "dist/server/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "client": ["dist/client/index.d.ts"],
+      "server": ["dist/server/index.d.ts"]
+    }
+  },
   "files": [
     "dist"
   ],

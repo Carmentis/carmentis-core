@@ -18,8 +18,3 @@ export const OBJECT_NAME = [
   "application ledger",
   "oracle"
 ];
-
-// block states
-export const BLOCK_PENDING  = 0;
-export const BLOCK_CLOSED   = 1;
-export const BLOCK_ANCHORED = 2;

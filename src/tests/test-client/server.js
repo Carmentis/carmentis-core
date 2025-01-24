@@ -15,6 +15,11 @@ http.createServer((req, res) => {
       res.write(fs.readFileSync("../../../dist/client/index.js"));
       break;
     }
+    case "/test.js": {
+      res.writeHead(200, { "Content-Type": "text/javascript" });
+      res.write(fs.readFileSync("./test.js"));
+      break;
+    }
   }
 
   res.end();

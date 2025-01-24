@@ -1,5 +1,4 @@
 import { ERRORS, ERROR_TYPES, SCHEMAS } from "../constants/constants.js";
-import * as schemaSerializer from "../serializers/schema-serializer.js";
 import * as util from "../util/util.js";
 
 let language = "EN";
@@ -28,19 +27,6 @@ export class CarmentisError extends Error {
       console.error(errorMessage(this.type, this.id, this.arg));
     }
   }
-
-  serializeAsMessage() {
-    return schemaSerializer.encodeMessage(
-      SCHEMAS.MSG_ANS_ERROR,
-      {
-        error: {
-          type: this.type,
-          id  : this.id,
-          arg : this.arg.map(String)
-        }
-      }
-    );
-  }
 }
 
 export class globalError       extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.GLOBAL,       ...arg); } }
@@ -51,7 +37,7 @@ export class pathError         extends CarmentisError { constructor(...arg) { su
 export class blockchainError   extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.BLOCKCHAIN,   ...arg); } }
 export class accountError      extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.ACCOUNT,      ...arg); } }
 export class nodeError         extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.NODE,         ...arg); } }
-export class organizationError extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.ORGANIZAYION, ...arg); } }
+export class organizationError extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.ORGANIZATION, ...arg); } }
 export class appUserError      extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.APP_USER,     ...arg); } }
 export class applicationError  extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.APPLICATION,  ...arg); } }
 export class appLedgerError    extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.APP_LEDGER,   ...arg); } }

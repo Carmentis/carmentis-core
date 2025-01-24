@@ -4,7 +4,6 @@ export * as crypto from "./crypto/crypto.js";
 export * as blockchain from "./blockchain/blockchain.js";
 export * as errors from "./errors/error.js";
 export * as base64 from "./util/base64.js";
-//export * as walletInterface from "./walletInterface/walletInterface.js";
 
 import * as dataUtils from "./util/data.js";
 export const utils = { data: dataUtils }

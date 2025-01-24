@@ -19,7 +19,7 @@ export const VB_STATES = {
     { name: "payees",      type: DATA.HASH | DATA.ARRAY },
     { name: "nextPayeeId", type: DATA.UINT8 }
   ],
-  [ ID.OBJ_VALIDATION_NODE ] : [
+  [ ID.OBJ_VALIDATOR_NODE ] : [
   ],
   [ ID.OBJ_ORGANIZATION ] : [
     { name: "publicKey", type: DATA.PUB_KEY | DATA.OPTIONAL }
@@ -146,10 +146,11 @@ export const MSG_GET_VB_INFO               = 0x03;
 export const MSG_GET_VB_CONTENT            = 0x04;
 export const MSG_GET_MICROBLOCK            = 0x05;
 export const MSG_GET_MICROBLOCKS           = 0x06;
-export const MSG_GET_ACCOUNT_STATE         = 0x07;
-export const MSG_GET_ACCOUNT_HISTORY       = 0x08;
-export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY = 0x09;
-export const MSG_SEND_MICROBLOCK           = 0x0A;
+export const MSG_GET_NEW_MICROBLOCKS       = 0x07;
+export const MSG_GET_ACCOUNT_STATE         = 0x08;
+export const MSG_GET_ACCOUNT_HISTORY       = 0x09;
+export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY = 0x0A;
+export const MSG_SEND_MICROBLOCK           = 0x0B;
 
 export const MSG_ANS_OK                    = 0x80;
 export const MSG_ANS_HASH                  = 0x81;
@@ -179,6 +180,7 @@ export const MSG_NAMES = {
   [ MSG_GET_VB_CONTENT            ]: "GET_VB_CONTENT",
   [ MSG_GET_MICROBLOCK            ]: "GET_MICROBLOCK",
   [ MSG_GET_MICROBLOCKS           ]: "GET_MICROBLOCKS",
+  [ MSG_GET_NEW_MICROBLOCKS       ]: "GET_NEW_MICROBLOCKS",
   [ MSG_GET_ACCOUNT_STATE         ]: "GET_ACCOUNT_STATE",
   [ MSG_GET_ACCOUNT_HISTORY       ]: "GET_ACCOUNT_HISTORY",
   [ MSG_GET_ACCOUNT_BY_PUBLIC_KEY ]: "GET_ACCOUNT_BY_PUBLIC_KEY",
@@ -207,6 +209,10 @@ export const MESSAGES = {
   ],
   [ MSG_GET_MICROBLOCK ] : [
     { name: "mbHash", type: DATA.HASH }
+  ],
+  [ MSG_GET_NEW_MICROBLOCKS ] : [
+    { name: "vbHash",        type: DATA.HASH },
+    { name: "lastKnownHash", type: DATA.HASH }
   ],
   [ MSG_GET_MICROBLOCKS ] : [
     { name: "list", type: DATA.HASH | DATA.ARRAY }
@@ -293,20 +299,19 @@ export const MESSAGES = {
     { name: "list", type: DATA.HASH | DATA.ARRAY }
   ],
   [ MSG_ANS_MICROBLOCK ] : [
-    { name: "microChainId", type: DATA.HASH },
-    { name: "type",         type: DATA.UINT8 },
-    { name: "block",        type: DATA.UINT48 },
-    { name: "index",        type: DATA.UINT32 },
-    { name: "offset",       type: DATA.UINT32 },
-    { name: "content",      type: DATA.BINARY }
+    { name: "vbHash",  type: DATA.HASH },
+    { name: "type",    type: DATA.UINT8 },
+    { name: "block",   type: DATA.UINT48 },
+    { name: "index",   type: DATA.UINT32 },
+    { name: "content", type: DATA.BINARY }
   ],
   [ MSG_ANS_MICROBLOCKS ] : [
     { name: "list", type: DATA.BINARY | DATA.ARRAY }
   ],
   [ MSG_ANS_ACCEPT_MICROBLOCK ] : [
-    { name: "microChainId", type: DATA.HASH },
-    { name: "microBlockId", type: DATA.HASH },
-    { name: "height",       type: DATA.UINT48 }
+    { name: "vbHash", type: DATA.HASH },
+    { name: "mbHash", type: DATA.HASH },
+    { name: "height", type: DATA.UINT48 }
   ],
   [ MSG_ANS_ACCOUNT_STATE ] : DB[DB_ACCOUNT_STATE],
   [ MSG_ANS_ACCOUNT_HISTORY ] : [

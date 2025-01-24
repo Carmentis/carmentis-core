@@ -36,7 +36,7 @@ export async function run() {
         data = data.toString().replace(/\n$/, "");
         console.log(`(node) ${data.split(/\r?\n/).join("\n(node) ")}`);
 
-        if(/^Server is ready/.test(data)) {
+        if(/^Carmentis node is ready/.test(data)) {
           await runTests();
           node.kill();
         }
@@ -154,7 +154,6 @@ async function accountTest() {
       })
     );
   }
-return rootAccountVbHash;
 
   log("Second transfer from root account to buyer account");
 
@@ -195,6 +194,8 @@ return rootAccountVbHash;
     console.log("catch()");
   }
   console.log("done");
+
+  return rootAccountVbHash;
 }
 
 function showAccountHistory(accountHash, list) {

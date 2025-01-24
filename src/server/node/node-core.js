@@ -22,7 +22,17 @@ export function processCatchedError(err) {
   if(!(err instanceof CarmentisError)) {
     err = new globalError(ERRORS.GLOBAL_INTERNAL_ERROR, err.stack || [ err.toString() ]);
   }
-  return err.serializeAsMessage();
+
+  return schemaSerializer.encodeMessage(
+    SCHEMAS.MSG_ANS_ERROR,
+    {
+      error: {
+        type: err.type,
+        id  : err.id,
+        arg : err.arg.map(String)
+      }
+    }
+  );
 }
 
 // ============================================================================================================================ //
@@ -73,7 +83,7 @@ export async function prepareProposal(height, ts, txs) {
   }
 
   if (proposalTxs.length !== 0) {
-    console.log(`Created proposal with ${proposalTxs.length} microblocks`);
+    console.log(`Created proposal with ${proposalTxs.length} microblock(s)`);
   }
 
   return proposalTxs;
@@ -84,7 +94,7 @@ export async function prepareProposal(height, ts, txs) {
 // ============================================================================================================================ //
 export async function processProposal(height, ts, proposalTxs) {
   if (proposalTxs.length !== 0) {
-    console.log(`Checking proposal with ${proposalTxs.length} microblocks`);
+    console.log(`Checking proposal with ${proposalTxs.length} microblock(s)`);
   }
 
   let context = initializeContext(height, ts);
@@ -164,7 +174,8 @@ export async function getMicroblocks(list) {
   let mbList = [];
 
   for(let hash of list) {
-    mbList.push(await loadMicroblockData(hash));
+    let obj = await loadMicroblockData(hash);
+    mbList.push(obj.content);
   }
 
   return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_MICROBLOCKS, { list: mbList });
@@ -222,9 +233,18 @@ export async function getAccountByPublicKey(publicKey) {
 //  loadMicroblockData()                                                                                                        //
 // ============================================================================================================================ //
 async function loadMicroblockData(hash) {
-  let mb = await blockchainManager.chainGet(hash);
+  let info = await blockchainManager.dbGet(SCHEMAS.DB_MICROBLOCK_INFO, hash);  
+  let content = await blockchainManager.chainGet(hash);
 
-  return mb;
+  let answer = {
+    vbHash : info.vbHash,
+    type   : info.vbType,
+    block  : info.block,
+    index  : info.index,
+    content: content
+  };
+
+  return answer;
 }
 
 // ============================================================================================================================ //

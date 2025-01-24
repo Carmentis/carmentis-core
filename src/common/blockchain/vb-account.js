@@ -6,11 +6,12 @@ import { sectionError, accountError } from "../errors/error.js";
 //  accountVb                                                                                                                   //
 // ============================================================================================================================ //
 export class accountVb extends virtualBlockchain {
-  constructor() {
+  constructor(externalRef) {
     super(ID.OBJ_ACCOUNT);
 
     this.state.payees = [];
     this.state.nextPayeeId = 0;
+    this.externalRef = externalRef;
   }
 
   async addTokenIssuance(object) {
@@ -79,8 +80,8 @@ export class accountVb extends virtualBlockchain {
         this.state.payees[object.id] = object.account;
         this.state.nextPayeeId = this.state.nextPayeeId + 1 & 0xFF;
 
-        if(!this.constructor.isNode()) {
-          let payeeVb = new accountVb();
+        if(!this.externalRef && !this.constructor.isNode()) {
+          let payeeVb = new accountVb(true);
 
           await payeeVb.load(object.account);
 
@@ -111,7 +112,7 @@ export class accountVb extends virtualBlockchain {
 
         if(creationSection) {
           // an account creation is signed by the seller
-          let sellerVb = new accountVb();
+          let sellerVb = new accountVb(true);
           await sellerVb.load(creationSection.object.sellerAccount);
 
           this.verifySignature(mb, sellerVb.state.publicKey, object);

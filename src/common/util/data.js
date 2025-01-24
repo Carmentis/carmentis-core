@@ -1,7 +1,6 @@
 import * as constants from "../constants/data.js";
 import {ENUM, MASKABLE, STRUCT} from "../constants/data.js";
 
-
 /**
  * Determines if the given type is optional.
  *
@@ -12,7 +11,6 @@ export function isOptional( type ) {
     return !!(type & constants.OPTIONAL);
 }
 
-
 /**
  * Determines whether the given type is public.
  *
@@ -22,7 +20,6 @@ export function isOptional( type ) {
 export function isPublic( type ) {
     return !isPrivate(type);
 }
-
 
 /**
  * Determines if the given type is private by evaluating it against
@@ -35,7 +32,6 @@ export function isPrivate( type ) {
     return !!(type & constants.PRIVATE);
 }
 
-
 /**
  * Determines if the given type is an enumeration by checking
  * if the type has the ENUM flag set in its bitmask.
@@ -47,7 +43,6 @@ export function isEnum( type )  {
     return !!(type & constants.ENUM)
 }
 
-
 /**
  * Determines if the given type is a structure by checking against a specific flag.
  *
@@ -57,10 +52,6 @@ export function isEnum( type )  {
 export function isStruct( type ) {
     return !!(type & constants.STRUCT);
 }
-
-
-
-
 
 /**
  * Determines whether a given type is a primitive type or not.
@@ -72,7 +63,6 @@ export function isPrimitive(type) {
     return !isEnum(type) && !isStruct(type)
 }
 
-
 /**
  * Determines if a given type is hashable.
  *
@@ -82,7 +72,6 @@ export function isPrimitive(type) {
 export function isHashable(type) {
     return !!(type & constants.HASHABLE);
 }
-
 
 /**
  * Determines if the given type represents an array.
@@ -94,7 +83,6 @@ export function isArray(type) {
     return !!(type & constants.ARRAY);
 }
 
-
 /**
  * Determines whether the given type is required.
  *
@@ -104,8 +92,6 @@ export function isArray(type) {
 export function isRequired(type) {
     return !isOptional(type)
 }
-
-
 
 /**
  * Retrieves the primitive type from the given type value by applying a mask.
@@ -117,11 +103,8 @@ export function isRequired(type) {
  */
 export function getPrimitiveType(type) {
     if (!isPrimitive(type)) throw new Error("Not a primitive type");
-    return type & constants.MSK_TYPE; // type & constants.MSK_PRIMITIVE_TYPE
+    return type & constants.MSK_PRIMITIVE_TYPE;
 }
-
-
-
 
 /**
  * Extracts the type information of the given input.
@@ -137,8 +120,6 @@ export function extractType(type) {
     throw new Error('The provided type is  neither a primitive, a structure or an enumeration');
 }
 
-
-
 /**
  * Calculates the index of an object based on the given type.
  *
@@ -152,7 +133,6 @@ export function getObjectIndex(type) {
     // TODO use the constant
     return type & 0x03FF // type  & constants.MSK_OBJECT_INDEX
 }
-
 
 /**
  * Constructs a type value based on the provided properties.
@@ -206,14 +186,6 @@ export function createType(properties) {
         type |= MASKABLE;
     }
 
-
-
     console.log("6(result).", type)
     return type;
 }
-
-
-
-
-
-

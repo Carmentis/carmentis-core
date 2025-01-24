@@ -119,12 +119,14 @@ export class blockchainCore {
       content = record.content;
     }
     else {
-      content = await this.nodeQuery(
+      let mb = await this.nodeQuery(
         SCHEMAS.MSG_GET_MICROBLOCK,
         {
           mbHash: hash
         }
       );
+
+      content = mb.content;
 
       await this.dbPut(SCHEMAS.DB_MICROBLOCK_DATA, hash, { content: content });
     }

@@ -71,6 +71,31 @@ const ACCOUNT = {
 };
 
 // ============================================================================================================================ //
+//  Account                                                                                                                     //
+// ============================================================================================================================ //
+export const NODE_DECLARATION = 0;
+export const NODE_SIGNATURE   = 1;
+
+export const NODE_STRUCTURE = new RegExp(
+  `^(<${NODE_DECLARATION}>)<${NODE_SIGNATURE}>$`
+);
+
+const VALIDATOR_NODE = {
+  [ NODE_DECLARATION ]: {
+    label: "NODE_CREATION",
+    fields: [
+      { name: "organizationId", type: DATA.HASH }
+    ]
+  },
+  [ NODE_SIGNATURE ]: {
+    label: "NODE_SIGNATURE",
+    fields: [
+      { name: "signature", type: DATA.SIGNATURE }
+    ]
+  }
+};
+
+// ============================================================================================================================ //
 //  Organization                                                                                                                //
 // ============================================================================================================================ //
 export const ORG_PUBLIC_KEY  = 0;
@@ -158,9 +183,9 @@ const APPLICATION = {
 };
 
 // ============================================================================================================================ //
-//  User ledger                                                                                                                 //
+//  Application user                                                                                                            //
 // ============================================================================================================================ //
-const USER_LEDGER = {
+const APP_USER = {
 };
 
 // ============================================================================================================================ //
@@ -314,10 +339,11 @@ const ORACLE = {
 //  All sections                                                                                                                //
 // ============================================================================================================================ //
 export const DEF = {
-  [ ID.OBJ_ACCOUNT      ]: ACCOUNT,
-  [ ID.OBJ_ORGANIZATION ]: ORGANIZATION,
-  [ ID.OBJ_APPLICATION  ]: APPLICATION,
-  [ ID.OBJ_USER_LEDGER  ]: USER_LEDGER,
-  [ ID.OBJ_APP_LEDGER   ]: APP_LEDGER,
-  [ ID.OBJ_ORACLE       ]: ORACLE
+  [ ID.OBJ_ACCOUNT        ]: ACCOUNT,
+  [ ID.OBJ_VALIDATOR_NODE ]: VALIDATOR_NODE,
+  [ ID.OBJ_ORGANIZATION   ]: ORGANIZATION,
+  [ ID.OBJ_APPLICATION    ]: APPLICATION,
+  [ ID.OBJ_APP_USER       ]: APP_USER,
+  [ ID.OBJ_APP_LEDGER     ]: APP_LEDGER,
+  [ ID.OBJ_ORACLE         ]: ORACLE
 };

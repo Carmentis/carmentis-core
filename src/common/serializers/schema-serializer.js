@@ -136,7 +136,7 @@ export function encode(schema, object, context = {}) {
   // -------------------------------------------------------------------------------------------------------------------------- //
   function encodeEnumeration(def, node, name) {
     if(typeof node != "string") {
-      throw new schemaError(ERRORS.SCHEMA_BAD_ENUM, name);
+      throw new schemaError(ERRORS.SCHEMA_INVALID_ENUM, name);
     }
 
     let enumerationId = def.type & DATA.MSK_OBJECT_INDEX,

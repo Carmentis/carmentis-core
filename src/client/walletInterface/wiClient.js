@@ -4,7 +4,7 @@ import * as web from "../web/web.js";
 
 export class wiClient {
   attachQrCodeContainer(id) {
-//  this.qrElement = web.get("#" + id);
+    this.qrElement = web.get("#" + id);
   }
 
   setServerUrl(url) {

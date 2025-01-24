@@ -21,13 +21,14 @@ export const FIELD_SIZE_TOO_SMALL = 0x05;
 export const FIELD_NOT_HEXA       = 0x06;
 export const FIELD_NOT_INTEGER    = 0x07;
 export const FIELD_NOT_UNSIGNED   = 0x08;
+export const FIELD_NOT_PUBLIC_KEY = 0x09;
 
 // SCHEMA
 export const SCHEMA_CANNOT_ENCODE   = 0x00;
 export const SCHEMA_UNDEFINED_FIELD = 0x01;
-export const SCHEMA_INVALID_ENUN    = 0x02;
-export const SCHEMA_UNDEFINED_ENUN  = 0x03;
-export const SCHEMA_NOT_IN_ENUN     = 0x04;
+export const SCHEMA_INVALID_ENUM    = 0x02;
+export const SCHEMA_UNDEFINED_ENUM  = 0x03;
+export const SCHEMA_NOT_IN_ENUM     = 0x04;
 export const SCHEMA_INVALID_STREAM  = 0x05;
 
 // SECTION
@@ -48,6 +49,7 @@ export const PATH_UNKNOWN_FIELD       = 0x04;
 export const PATH_INCOMPLETE_STRUCT   = 0x05;
 export const PATH_NOT_A_STRUCT        = 0x06;
 export const PATH_INVALID_ENCODING    = 0x07;
+export const PATH_UNEXPECTED_WILDCARD = 0x08;
 
 // BLOCKCHAIN
 export const BLOCKCHAIN_NO_ROOT_KEY          = 0x00;

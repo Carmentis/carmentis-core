@@ -16,7 +16,8 @@ export const ERRORS_EN = {
     "%0 is too small (minimum size is %1)",
     "%0 is not a valid hexadecimal string (it may only contain 0..9, A..F)",
     "%0 is not an integer",
-    "%0 cannot be negative"
+    "%0 cannot be negative",
+    "%0 is not a valid public key"
   ],
 
   [ ERROR_TYPES.SCHEMA ]: [
@@ -46,7 +47,8 @@ export const ERRORS_EN = {
     "Unknown field '%0'",
     "'%0' is a structure and must be followed by a property",
     "'%0' is a primitive type and cannot be followed by other fields",
-    "invalid path encoding"
+    "Invalid path encoding",
+    "Unexpected wildcard"
   ],
 
   [ ERROR_TYPES.BLOCKCHAIN ]: [

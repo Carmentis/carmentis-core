@@ -1,0 +1,7 @@
+=== Internal proofs
+- Include the hash of the VB state in the VB radix tree
+--> So that the node can prove the current state without having to serve the entire VB.
+
+=== Accounts
+- Add a section for a public key renewal
+--> Allows a user to keep the same account with a new key pair if he/she suspects that its private key has been exposed.

@@ -1,8 +1,8 @@
 import { qrcode } from "./qrCodeGenerator.js";
-import { SCHEMAS } from "../constants/constants.js";
-import { schemaSerializer } from "../serializers/serializers.js";
-import * as base64 from "../util/base64.js";
-import * as uint8 from "../util/uint8.js";
+import { SCHEMAS } from "../../common/constants/constants.js";
+import { schemaSerializer } from "../../common/serializers/serializers.js";
+import * as base64 from "../../common/util/base64.js";
+import * as uint8 from "../../common/util/uint8.js";
 
 // ============================================================================================================================ //
 //  create()                                                                                                                    //

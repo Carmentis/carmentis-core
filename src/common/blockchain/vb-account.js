@@ -6,7 +6,7 @@ import { sectionError, accountError } from "../errors/error.js";
 //  accountVb                                                                                                                   //
 // ============================================================================================================================ //
 export class accountVb extends virtualBlockchain {
-  constructor(externalRef) {
+  constructor(externalRef = false) {
     super(ID.OBJ_ACCOUNT);
 
     this.state.payees = [];

@@ -505,6 +505,7 @@ export const WI_MESSAGES = {
     { name: "answer",     type: DATA.BINARY }
   ],
   [ WIMSG_GET_CONNECTION_INFO ]: [
+    { name: "qrId", type: DATA.BIN128 }
   ],
   [ WIMSG_ANSWER ]: [
     { name: "answerType", type: DATA.UINT8 },
@@ -513,6 +514,7 @@ export const WI_MESSAGES = {
   [ WIMSG_CONNECTION_INFO ]: [
   ],
   [ WIMSG_CONNECTION_ACCEPTED ]: [
+    { name: "qrId", type: DATA.BIN128 }
   ],
   [ WIMSG_FORWARDED_REQUEST ]: [
     { name: "requestType", type: DATA.UINT8 },

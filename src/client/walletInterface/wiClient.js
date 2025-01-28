@@ -1,6 +1,7 @@
 import { SCHEMAS } from "../../common/constants/constants.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
+import * as uint8 from "../../common/util/uint8.js";
 import * as clientSocket from "./wiClientSocket.js";
 import * as qrCode from "../qrCode/qrCode.js";
 import * as web from "../web/web.js";
@@ -21,10 +22,28 @@ export class wiClient {
     this.serverUrl = url;
   }
 
-  async authenticationByPublicKey() {
-    let challenge = crypto.getRandomBytes(32);
+  async authenticationByPublicKey(challengeString) {
+    let challenge;
 
-    return await this.request(SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, { challenge: challenge });
+    if(challengeString == undefined) {
+      challenge = crypto.getRandomBytes(32);
+      challengeString = uint8.toHexa(challenge);
+    }
+    else {
+      challenge = uint8.fromHexa(challengeString);
+    }
+
+    let answer = await this.request(SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, { challenge: challenge });
+
+    if(!crypto.secp256k1.verify(answer.publicKey, challenge, answer.signature)) {
+      throw "invalid signature";
+    }
+
+    return {
+      challenge: challengeString,
+      publicKey: answer.publicKey,
+      signature: answer.signature
+    };
   }
 
   async request(type, object) {
@@ -39,26 +58,38 @@ export class wiClient {
       withToken  : 0
     };
 
-    this.socket = clientSocket.getSocket(this.serverUrl, onConnect.bind(this), onData.bind(this));
+    let _this = this;
 
-    this.socket.sendMessage(SCHEMAS.WIMSG_REQUEST, reqObject);
+    return new Promise(function(resolve, reject) {
+      console.log("[client] opening socket with", _this.serverUrl);
+      _this.socket = clientSocket.getSocket(_this.serverUrl, onConnect.bind(_this), onData.bind(_this));
 
-    function onConnect() {
-      console.log("[client] connected");
-    }
+      _this.socket.sendMessage(SCHEMAS.WIMSG_REQUEST, reqObject);
 
-    function onData(id, object) {
-      console.log("[client] incoming data", id, object);
+      function onConnect() {
+        console.log("[client] connected");
+      }
 
-      switch(id) {
-        case SCHEMAS.WIMSG_UPDATE_QR: {
-          let qr = qrCode.create(object.qrId, object.timestamp, this.serverUrl);
+      function onData(id, object) {
+        console.log("[client] incoming data", id, object);
 
-          this.qrElement.setAttribute("qrData", qr.data);
-          this.qrElement.html(qr.imageTag);
-          break;
+        switch(id) {
+          case SCHEMAS.WIMSG_UPDATE_QR: {
+            let qr = qrCode.create(object.qrId, object.timestamp, _this.serverUrl);
+
+            _this.qrElement.setAttribute("qrData", qr.data);
+            _this.qrElement.html(qr.imageTag);
+            break;
+          }
+
+          case SCHEMAS.WIMSG_FORWARDED_ANSWER: {
+            let answerObject = schemaSerializer.decode(SCHEMAS.WI_ANSWERS[object.answerType], object.answer);
+
+            resolve(answerObject);
+            break;
+          }
         }
       }
-    }
+    });
   }
 }

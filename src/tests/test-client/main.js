@@ -37,7 +37,10 @@ async function authentication() {
 
   wiClient.attachQrCodeContainer("output");
   wiClient.setServerUrl("http://localhost:3005");
-  wiClient.authenticationByPublicKey();
+
+  let answer = await wiClient.authenticationByPublicKey("FFAA7FC3FA1D8D74546427AD2C28BBBF127B6072344E494FF8D5E575B6BC3D0E");
+
+  console.log("authenticationByPublicKey", answer);
 }
 
 async function scanQRCode() {

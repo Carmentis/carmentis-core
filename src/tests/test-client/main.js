@@ -30,10 +30,20 @@ const {
   appLedgerVb
 } = Carmentis.blockchain;
 
-async function authentication() {
-  let el = document.getElementById("output");
+let wiClient;
 
-  console.log(el);
+async function authentication() {
+  wiClient = new Carmentis.wiClient;
+
+  wiClient.attachQrCodeContainer("output");
+  wiClient.setServerUrl("http://localhost:3005");
+  wiClient.authenticationByPublicKey();
+}
+
+async function scanQRCode() {
+  let qrData = wiClient.getQrData("output");
+
+  console.log(qrData);
 }
 
 async function tokenIssuance() {

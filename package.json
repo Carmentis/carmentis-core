@@ -5,9 +5,9 @@
   "author": "Carmentis SAS",
   "scripts": {
     "clean": "rimraf dist && rimraf types",
-    "build:client": "tsc && rollup --config rollup.config.client.js",
-    "build:server": "tsc && rollup --config rollup.config.server.js",
-    "build": "npm run build:client && npm run build:server"
+    "build:client": "rollup --config rollup.config.client.js",
+    "build:server": "rollup --config rollup.config.server.js",
+    "build": "tsc && npm run build:client && npm run build:server"
   },
   "exports": {
     "./client": {
@@ -26,8 +26,12 @@
   "types": "dist/server/index.d.ts",
   "typesVersions": {
     "*": {
-      "client": ["dist/client/index.d.ts"],
-      "server": ["dist/server/index.d.ts"]
+      "client": [
+        "dist/client/index.d.ts"
+      ],
+      "server": [
+        "dist/server/index.d.ts"
+      ]
     }
   },
   "files": [
@@ -54,7 +58,6 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
   }
 }

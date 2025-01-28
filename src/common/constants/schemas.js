@@ -460,10 +460,77 @@ export const ORACLE_DEFINITION = [
 // ============================================================================================================================ //
 //  Wallet interface                                                                                                            //
 // ============================================================================================================================ //
-export const WI_MAX_SERVER_URL_LENGTH = 120;
+export const WI_MAX_SERVER_URL_LENGTH = 100;
 
 export const WI_QR_CODE = [
   { name: "qrId",      type: DATA.BIN128 },
   { name: "timestamp", type: DATA.UINT48 },
   { name: "serverUrl", type: DATA.STRING, size: WI_MAX_SERVER_URL_LENGTH }
 ];
+
+// client -> server
+export const WIMSG_REQUEST             = 0x0;
+
+// server -> client
+export const WIMSG_UPDATE_QR           = 0x1;
+export const WIMSG_CONNECTION_TOKEN    = 0x2;
+export const WIMSG_FORWARDED_ANSWER    = 0x3;
+
+// wallet -> server
+export const WIMSG_GET_CONNECTION_INFO = 0x4;
+export const WIMSG_ANSWER              = 0x5;
+
+// server -> wallet
+export const WIMSG_CONNECTION_INFO     = 0x6;
+export const WIMSG_CONNECTION_ACCEPTED = 0x7;
+export const WIMSG_FORWARDED_REQUEST   = 0x8;
+
+export const WI_MESSAGES = {
+  [ WIMSG_REQUEST ]: [
+    { name: "requestType", type: DATA.UINT8 },
+    { name: "request",     type: DATA.BINARY },
+    { name: "deviceId",    type: DATA.BIN128 },
+    { name: "withToken",   type: DATA.UINT8 },
+    { name: "token",       type: DATA.BIN256, condition: parent => parent.withToken }
+  ],
+  [ WIMSG_UPDATE_QR ]: [
+    { name: "qrId",      type: DATA.BIN128 },
+    { name: "timestamp", type: DATA.UINT48 }
+  ],
+  [ WIMSG_CONNECTION_TOKEN ]: [
+    { name: "token", type: DATA.BIN256 }
+  ],
+  [ WIMSG_FORWARDED_ANSWER ]: [
+    { name: "answerType", type: DATA.UINT8 },
+    { name: "answer",     type: DATA.BINARY }
+  ],
+  [ WIMSG_GET_CONNECTION_INFO ]: [
+  ],
+  [ WIMSG_ANSWER ]: [
+    { name: "answerType", type: DATA.UINT8 },
+    { name: "answer",     type: DATA.BINARY }
+  ],
+  [ WIMSG_CONNECTION_INFO ]: [
+  ],
+  [ WIMSG_CONNECTION_ACCEPTED ]: [
+  ],
+  [ WIMSG_FORWARDED_REQUEST ]: [
+    { name: "requestType", type: DATA.UINT8 },
+    { name: "request",     type: DATA.BINARY }
+  ]
+};
+
+export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x0;
+
+export const WI_REQUESTS = {
+  [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
+    { name: "challenge", type: DATA.BIN256 }
+  ]
+};
+
+export const WI_ANSWERS = {
+  [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
+    { name: "publicKey", type: DATA.PUB_KEY },
+    { name: "signature", type: DATA.SIGNATURE }
+  ]
+};

@@ -1,4 +1,5 @@
-//import { WI } from "#core/constants/constants.js";
+import * as base64 from "../../common/util/base64.js";
+import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
 
 let io;
 
@@ -6,6 +7,7 @@ let io;
 //  setIo()                                                                                                                     //
 // ============================================================================================================================ //
 export function setIo(module) {
+  console.log("setIo", module);
   io = module;
 }
 
@@ -22,18 +24,20 @@ export function getSocket(endpoint, connectCallback, dataCallback) {
     }
   });
 
-  socket.on("data", dataCallback);
+  socket.on("data", onData);
 
-  socket.sendMessage = async function(msgId, obj = {}) {
-    let arg = { id: msgId, data: obj };
+  socket.sendMessage = async function(msgId, object = {}) {
+    let binary = schemaSerializer.encodeMessage(msgId, object, SCHEMAS.WI_MESSAGES),
+        b64 = base64.encodeBinary(binary, base64.BASE64);
 
-//    if(msgId & WI.MSG_ACK) {
-//      return await new Promise(function(resolve) {
-//        socket.emit("data", arg, answer => resolve(answer));
-//      });
-//    }
+    socket.emit("data", b64);
+  }
 
-    socket.emit("data", arg);
+  function onData(message) {
+    let binary = base64.decodeBinary(message, base64.BASE64),
+        [ id, object ] = schemaSerializer.decodeMessage(binary, SCHEMAS.WI_MESSAGES);
+
+    dataCallback(id, object);
   }
 
   return socket;

@@ -5,3 +5,6 @@
 === Accounts
 - Add a section for a public key renewal
 --> Allows a user to keep the same account with a new key pair if he/she suspects that its private key has been exposed.
+
+== Virtual blockchains
+- Add a method to load the n-th microblock.

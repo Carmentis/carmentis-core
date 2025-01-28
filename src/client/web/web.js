@@ -83,8 +83,29 @@ export function elementToObject(el) {
       return obj;
     },
 
+    setAttribute: function(key, value = "1") {
+      el.setAttribute(key, value);
+      return obj;
+    },
+
+    getAttribute: function(key) {
+      return el.getAttribute(key);
+    },
+
+    html: function(html) {
+      el.innerHTML = html;
+      return obj;
+    },
+
     click: function(callback) {
       setListener("click", callback);
+      return obj;
+    },
+
+    clear: function() {
+      while(el.firstChild){
+        el.removeChild(el.firstChild);
+      }
       return obj;
     },
 

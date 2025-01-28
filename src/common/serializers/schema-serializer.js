@@ -7,9 +7,9 @@ import { schemaError } from "../errors/error.js";
 // ============================================================================================================================ //
 //  encodeMessage()                                                                                                             //
 // ============================================================================================================================ //
-export function encodeMessage(id, object) {
+export function encodeMessage(id, object, collection = SCHEMAS.MESSAGES) {
   return encode(
-    SCHEMAS.MESSAGES[id],
+    collection[id],
     object,
     {
       header: id
@@ -20,11 +20,11 @@ export function encodeMessage(id, object) {
 // ============================================================================================================================ //
 //  decodeMessage()                                                                                                             //
 // ============================================================================================================================ //
-export function decodeMessage(array) {
+export function decodeMessage(array, collection = SCHEMAS.MESSAGES) {
   let id = array[0];
 
   let object = decode(
-    SCHEMAS.MESSAGES[id],
+    collection[id],
     array,
     {
       ptr: 1

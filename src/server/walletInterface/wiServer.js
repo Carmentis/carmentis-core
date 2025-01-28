@@ -9,7 +9,7 @@ export class wiServer {
   }
 
   onConnect(socket) {
-    console.log("connection", socket);
+    console.log("connection");
 
     socket.on("data", onData);
 

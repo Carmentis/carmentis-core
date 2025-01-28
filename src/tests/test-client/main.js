@@ -41,9 +41,10 @@ async function authentication() {
 }
 
 async function scanQRCode() {
-  let qrData = wiClient.getQrData("output");
+  let qrData = wiClient.getQrData("output"),
+      iframe = document.getElementById("walletIframe").contentWindow;
 
-  console.log(qrData);
+  iframe.postMessage({ carmentisMessage: true, qrData: qrData }, "*");
 }
 
 async function tokenIssuance() {

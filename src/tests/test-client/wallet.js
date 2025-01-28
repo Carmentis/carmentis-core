@@ -1,7 +1,17 @@
 let wiWallet;
 
-async function scanQRCode() {
-  let qrData = wiClient.getQrData("output");
+window.addEventListener(
+  "message",
+  (event) => {
+    if(event.data.carmentisMessage) {
+      processQrCode(event.data.qrData);
+    }
+  },
+  false,
+);
+
+function processQrCode(qrData) {
+  console.log("processQrCode", qrData);
 
   wiWallet = new Carmentis.wiWallet;
 

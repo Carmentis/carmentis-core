@@ -10,18 +10,16 @@ window.addEventListener(
   false,
 );
 
-function processQrCode(qrData) {
+async function processQrCode(qrData) {
   console.log("processQrCode", qrData);
 
   let privateKey = Carmentis.crypto.generateKey256();
 
-  wiWallet = new Carmentis.wiWallet(privateKey, uiCallback);
+  wiWallet = new Carmentis.wiWallet(privateKey);
 
-  wiWallet.processQrCode(qrData);
-}
+  let req = await wiWallet.getRequestInfoFromQrCode(qrData);
 
-async function uiCallback(type, object) {
-  console.log("uiCallback", type, object);
+  console.log("getRequestInfoFromQrCode", req);
 
-  return true;
+  wiWallet.approveRequestExecution(req);
 }

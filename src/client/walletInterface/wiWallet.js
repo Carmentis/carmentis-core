@@ -5,50 +5,59 @@ import * as clientSocket from "./wiClientSocket.js";
 import * as qrCode from "../qrCode/qrCode.js";
 
 export class wiWallet {
-  constructor(privateKey, uiCallback = async _ => _) {
+  constructor(privateKey) {
     this.privateKey = privateKey;
     this.publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
-    this.uiCallback = uiCallback;
   }
 
-  processQrCode(qrData) {
+  async getRequestInfoFromQrCode(qrData) {
     let data = qrCode.decode(qrData),
-        serverUrl = data.serverUrl.trim();
+        serverUrl = data.serverUrl.trim(),
+        _this = this;
 
-    console.log("[wallet] opening socket with", serverUrl);
-    this.socket = clientSocket.getSocket(serverUrl, onConnect.bind(this), onData.bind(this));
+    return new Promise(function (resolve, reject) {
+      console.log("[wallet] opening socket with", serverUrl);
+      _this.socket = clientSocket.getSocket(serverUrl, onConnect.bind(_this), onData.bind(_this));
 
-    function onConnect() {
-      console.log("[wallet] connected");
-      this.socket.sendMessage(SCHEMAS.WIMSG_CONNECTION_ACCEPTED, { qrId: data.qrId });
-    }
+      function onConnect() {
+        console.log("[wallet] connected");
+        _this.socket.sendMessage(SCHEMAS.WIMSG_CONNECTION_ACCEPTED, { qrId: data.qrId });
+      }
 
-    async function onData(id, object) {
-      console.log("[wallet] incoming data", id, object);
+      async function onData(id, object) {
+        console.log("[wallet] incoming data", id, object);
 
-      switch(id) {
-        case SCHEMAS.WIMSG_FORWARDED_REQUEST: {
-          let requestObject = schemaSerializer.decode(SCHEMAS.WI_REQUESTS[object.requestType], object.request);
+        switch(id) {
+          case SCHEMAS.WIMSG_FORWARDED_REQUEST: {
+            let requestObject = schemaSerializer.decode(SCHEMAS.WI_REQUESTS[object.requestType], object.request);
 
-          let uiAnswer = await this.uiCallback(object.requestType, requestObject);
+            let req = {
+              type: object.requestType,
+              object: requestObject
+            };
 
-          switch(object.requestType) {
-            case SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY: {
-              let signature = crypto.secp256k1.sign(this.privateKey, requestObject.challenge);
-
-              let answerObject = {
-                publicKey: this.publicKey,
-                signature: signature
-              };
-
-              let answer = schemaSerializer.encode(SCHEMAS.WI_ANSWERS[SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY], answerObject);
-
-              this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, { answerType: SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, answer: answer });
-              break;
-            }
+            resolve(req);
+            break;
           }
-          break;
         }
+      }
+    });
+  }
+
+  approveRequestExecution(req) {
+    switch(req.type) {
+      case SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY: {
+        let signature = crypto.secp256k1.sign(this.privateKey, req.object.challenge);
+
+        let answerObject = {
+          publicKey: this.publicKey,
+          signature: signature
+        };
+
+        let answer = schemaSerializer.encode(SCHEMAS.WI_ANSWERS[SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY], answerObject);
+
+        this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, { answerType: SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, answer: answer });
+        break;
       }
     }
   }

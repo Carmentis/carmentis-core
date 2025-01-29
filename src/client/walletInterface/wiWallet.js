@@ -10,6 +10,12 @@ export class wiWallet {
     this.publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
   }
 
+  /**
+   * Processes QR code data to establish a socket connection and manage requests.
+   *
+   * @param {string} qrData The encoded data from the QR code, typically containing server information and an identifier.
+   * @return {Promise<{requestType:number, request: Uint8Array}>} A promise that resolves to an object containing information about the request, with a `type` and the parsed `object`.
+   */
   async getRequestInfoFromQrCode(qrData) {
     let data = qrCode.decode(qrData),
         serverUrl = data.serverUrl.trim(),

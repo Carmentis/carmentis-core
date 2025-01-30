@@ -10,6 +10,12 @@ export class wiClient {
   constructor() {
   }
 
+  /**
+   * Attaches a QR code container element by its ID.
+   *
+   * @param {string} id - The ID of the HTML element to be used as the QR code container.
+   * @return {void} This method does not return a value.
+   */
   attachQrCodeContainer(id) {
     this.qrElement = web.get("#" + id);
   }
@@ -22,6 +28,17 @@ export class wiClient {
     this.serverUrl = url;
   }
 
+  /**
+   * Authenticates using a public key based mechanism by verifying the digital signature of a challenge.
+   *
+   * @param {string} challengeString - An optional hexadecimal string representing the challenge.
+   *                                    If not provided, a random challenge will be generated.
+   * @return {Promise<Object>} A promise that resolves to an object containing:
+   *                           - challenge: The hexadecimal representation of the challenge.
+   *                           - publicKey: The public key used in the authentication process.
+   *                           - signature: The digital signature verifying the challenge.
+   * @throws {Error} If the public key signature verification fails.
+   */
   async authenticationByPublicKey(challengeString) {
     let challenge;
 

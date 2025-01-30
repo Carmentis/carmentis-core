@@ -7,6 +7,14 @@ import * as uint8 from "../../common/util/uint8.js";
 // ============================================================================================================================ //
 //  create()                                                                                                                    //
 // ============================================================================================================================ //
+/**
+ * Generates a QR code with the given parameters and returns an object containing the QR image tag and data.
+ *
+ * @param {string} qrId - The unique identifier for the QR code.
+ * @param {number} timestamp - The timestamp indicating when the QR code was created.
+ * @param {string} serverUrl - The server URL to be included in the QR code data.
+ * @return {Object} An object containing the `imageTag` (QR code image as a string) and `data` (QR code data string).
+ */
 export function create(qrId, timestamp, serverUrl) {
   let data = schemaSerializer.encode(
     SCHEMAS.WI_QR_CODE,
@@ -35,6 +43,12 @@ export function create(qrId, timestamp, serverUrl) {
 // ============================================================================================================================ //
 //  decode()                                                                                                                    //
 // ============================================================================================================================ //
+/**
+ * Decodes a QR code string into an object using a specific schema.
+ *
+ * @param {string} qrData - The QR code data string to decode.
+ * @return {Object|boolean} Returns the decoded object if successful, or `false` if decoding fails.
+ */
 export function decode(qrData) {
   let match = qrData.match(/^carmentis:([\w-]+)$/);
 

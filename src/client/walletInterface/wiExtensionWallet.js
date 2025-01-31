@@ -17,12 +17,6 @@ export class wiExtensionWallet extends wiWallet {
   approveRequestExecution(req) {
     let answer = this.processRequest(req);
 
-    window.parent.postMessage(
-      {
-        data: answer,
-        from: "CarmentisWallet"
-      },
-      "*"
-    );
+    return answer;
   }
 }

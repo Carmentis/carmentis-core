@@ -27,6 +27,7 @@ console.log(socket);
   socket.on("connect_error", err => console.error(err));
 
   socket.on("data", onData);
+  socket.on("connect_error", err => console.error("Connection error", err));
 
   socket.sendMessage = async function(msgId, object = {}) {
     let binary = schemaSerializer.encodeMessage(msgId, object, SCHEMAS.WI_MESSAGES),

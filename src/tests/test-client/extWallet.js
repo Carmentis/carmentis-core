@@ -15,5 +15,13 @@ function processMessage(data) {
 
   console.log("getRequestFromMessage", req);
 
-  wiWallet.approveRequestExecution(req);
+  let answer = wiWallet.approveRequestExecution(req);
+
+  window.parent.postMessage(
+    {
+      data: answer,
+      from: "CarmentisWallet"
+    },
+    "*"
+  );
 }

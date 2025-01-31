@@ -25,9 +25,8 @@ export class wiClient {
     }
   }
 
-  attachExtensionButton(id, target = window) {
+  attachExtensionButton(id) {
     this.buttonElement = web.get("#" + id);
-    this.buttonTarget = target;
 
     if(!this.buttonElement) {
       throw `Button '${id}' not found`;
@@ -100,13 +99,12 @@ export class wiClient {
       _this.buttonElement.el.addEventListener("click", sendRequestToExtension);
 
       function sendRequestToExtension() {
-        let message = {
-          data: {
-            requestType: type,
-            request: request
-          },
-          from: "CarmentisClient"
-        };
+        if(window.carmentisWallet == undefined) {
+          console.warn("The Carmentis extension is not installed.");
+          return;
+        }
+
+        _this.socket.disconnect();
 
         window.addEventListener(
           "message",
@@ -115,15 +113,18 @@ export class wiClient {
               let object = event.data.data,
                   answerObject = schemaSerializer.decode(SCHEMAS.WI_ANSWERS[object.answerType], object.answer);
 
-              _this.socket.disconnect();
-
               resolve(answerObject);
             }
           },
           false
         );
 
-        _this.buttonTarget.postMessage(message, "*");
+        let message = {
+          requestType: type,
+          request: request
+        };
+
+        window.carmentisWallet.openPopup(message);
       }
 
       function onConnect() {

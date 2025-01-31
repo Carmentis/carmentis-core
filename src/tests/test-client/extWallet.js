@@ -1,12 +1,8 @@
-window.addEventListener(
-  "message",
-  (event) => {
-    if(event.data.from == "CarmentisClient") {
-      processMessage(event.data.data);
-    }
-  },
-  false,
-);
+window.carmentisWallet = {
+  openPopup(data) {
+    processMessage(data);
+  }
+}
 
 function processMessage(data) {
   console.log("processMessage", data);

@@ -26,7 +26,8 @@ export const ERRORS_EN = {
     "Field '%0' is an enumeration: its value must be a string",
     "Undefined enumeration %0",
     "Value '%0' of field '%1' does not belong to enumeration '%2'",
-    "Invalid stream: inconsistent length (pointer = %0 / length = %1)"
+    "Invalid stream: inconsistent length (pointer = %0 / length = %1)",
+    "Field '%0' is not assigned to any subsection"
   ],
 
   [ ERROR_TYPES.SECTION ]: [
@@ -35,8 +36,7 @@ export const ERRORS_EN = {
     "External definition not provided for section with ID '%0'",
     "Public field '%0' cannot be assigned to a private subsection",
     "Inconsistent Merkle root hash in subsection with ID 0x%0 (expected: %1 / computed: %2)",
-    "Key not found: ID=0x%0",
-    "'%0' not assign to any subsection"
+    "Key not found: ID=0x%0"
   ],
 
   [ ERROR_TYPES.PATH ]: [
@@ -100,5 +100,9 @@ export const ERRORS_EN = {
 
   [ ERROR_TYPES.ORACLE ]: [
     "Organization is not declared"
+  ],
+
+  [ ERROR_TYPES.WI ]: [
+    "Invalid signature"
   ]
 };

@@ -42,6 +42,7 @@ export class appUserError      extends CarmentisError { constructor(...arg) { su
 export class applicationError  extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.APPLICATION,  ...arg); } }
 export class appLedgerError    extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.APP_LEDGER,   ...arg); } }
 export class oracleError       extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.ORACLE,       ...arg); } }
+export class wiError           extends CarmentisError { constructor(...arg) { super(ERROR_TYPES.WI,           ...arg); } }
 
 export function cryptoErrorHandler(e) {
   throw e.isCarmentisError ?

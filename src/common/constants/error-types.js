@@ -14,3 +14,4 @@ export const APP_USER     = 0x09;
 export const APPLICATION  = 0x0A;
 export const APP_LEDGER   = 0x0B;
 export const ORACLE       = 0x0C;
+export const WI           = 0x0D;

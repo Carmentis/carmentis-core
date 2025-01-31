@@ -31,7 +31,8 @@ export function processCatchedError(err) {
         id  : err.id,
         arg : err.arg.map(String)
       }
-    }
+    },
+    SCHEMAS.NODE_MESSAGES
   );
 }
 
@@ -62,7 +63,7 @@ export async function checkIncomingMicroblock(mb) {
 //  incomingMicroblockAnswer()                                                                                                  //
 // ============================================================================================================================ //
 export function incomingMicroblockAnswer() {
-  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_OK, {});
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_OK, {}, SCHEMAS.NODE_MESSAGES);
 }
 
 // ============================================================================================================================ //
@@ -164,7 +165,7 @@ async function processMicroblock(context, mb, apply) {
 export async function getMicroblock(hash) {
   let mb = await loadMicroblockData(hash);
 
-  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_MICROBLOCK, mb);
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_MICROBLOCK, mb, SCHEMAS.NODE_MESSAGES);
 }
 
 // ============================================================================================================================ //
@@ -178,7 +179,7 @@ export async function getMicroblocks(list) {
     mbList.push(obj.content);
   }
 
-  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_MICROBLOCKS, { list: mbList });
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_MICROBLOCKS, { list: mbList }, SCHEMAS.NODE_MESSAGES);
 }
 
 // ============================================================================================================================ //
@@ -189,7 +190,8 @@ export async function getVbContent(vbHash) {
 
   return schemaSerializer.encodeMessage(
     SCHEMAS.MSG_ANS_VB_CONTENT,
-    vbContent
+    vbContent,
+    SCHEMAS.NODE_MESSAGES
   );
 }
 
@@ -201,7 +203,8 @@ export async function getAccountState(accountHash) {
 
   return schemaSerializer.encodeMessage(
     SCHEMAS.MSG_ANS_ACCOUNT_STATE,
-    state
+    state,
+    SCHEMAS.NODE_MESSAGES
   );
 }
 
@@ -213,7 +216,8 @@ export async function getAccountHistory(accountHash, lastHistoryHash, maxRecords
 
   return schemaSerializer.encodeMessage(
     SCHEMAS.MSG_ANS_ACCOUNT_HISTORY,
-    history
+    history,
+    SCHEMAS.NODE_MESSAGES
   );
 }
 
@@ -225,7 +229,8 @@ export async function getAccountByPublicKey(publicKey) {
 
   return schemaSerializer.encodeMessage(
     SCHEMAS.MSG_ANS_ACCOUNT_BY_PUBLIC_KEY,
-    { accountHash: accountHash }
+    { accountHash: accountHash },
+    SCHEMAS.NODE_MESSAGES
   );
 }
 

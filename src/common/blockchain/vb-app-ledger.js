@@ -18,7 +18,7 @@ export class appLedgerVb extends virtualBlockchain {
 
   async prepareUserApproval(object) {
     if(object.appLedgerId) {
-      await this.load(appLedgerId);
+      await this.load(object.appLedgerId);
     }
 
     let appVb = new applicationVb();
@@ -259,6 +259,10 @@ export class appLedgerVb extends virtualBlockchain {
             object.channelKey
           );
         }
+        break;
+      }
+
+      case SECTIONS.APP_LEDGER_SUBSCRIPTION: {
         break;
       }
 

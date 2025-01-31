@@ -36,16 +36,17 @@ async function authentication() {
   wiClient = new Carmentis.wiClient;
 
   wiClient.attachQrCodeContainer("output");
+  wiClient.attachExtensionButton("openExtension", document.getElementById("extWalletIframe").contentWindow);
   wiClient.setServerUrl("http://localhost:3005");
 
   let answer = await wiClient.authenticationByPublicKey("FFAA7FC3FA1D8D74546427AD2C28BBBF127B6072344E494FF8D5E575B6BC3D0E");
 
-  console.log("authenticationByPublicKey", answer);
+  console.log("resolved authenticationByPublicKey promise", answer);
 }
 
 async function scanQRCode() {
   let qrData = wiClient.getQrData("output"),
-      iframe = document.getElementById("walletIframe").contentWindow;
+      iframe = document.getElementById("appWalletIframe").contentWindow;
 
   iframe.postMessage({ carmentisMessage: true, qrData: qrData }, "*");
 }

@@ -48,8 +48,8 @@ export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new 
   }
 
   ruleSets.forEach(rule => {
-    let keyId = rule.subId & 0xFFFF,
-        type = rule.subId >> 16,
+    let keyId = rule.subId & 0xFFFFFF,
+        type = rule.subId >>> 24,
         isProvable = !!(type & DATA.SUB_PROVABLE),
         hasAccessRules = !!(type & DATA.SUB_ACCESS_RULES);
 
@@ -58,9 +58,10 @@ export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new 
     }
 
     let subsection = {
-      type    : type,
-      keyType : rule.subId >> 8 & 0xFF,
-      keyIndex: rule.subId & 0xFF
+      type     : type,
+      keyType  : rule.subId >> 16 & 0xFF,
+      keyIndex0: rule.subId >> 8 & 0xFF,
+      keyIndex1: rule.subId & 0xFF
     };
 
     context.subId = rule.subId;
@@ -127,8 +128,8 @@ export function decode(height, sectionNdx, vbType, serializedSection, keyRing = 
     let isPrivate = !!(subsection.type & DATA.SUB_PRIVATE),
         isProvable = !!(subsection.type & DATA.SUB_PROVABLE),
         hasAccessRules = !!(subsection.type & DATA.SUB_ACCESS_RULES),
-        keyId = subsection.keyType << 8 | subsection.keyIndex,
-        subId = subsection.type << 16 | keyId;
+        keyId = subsection.keyType << 16 | subsection.keyIndex0 << 8 | subsection.keyIndex1,
+        subId = (subsection.type << 24 | keyId) >>> 0;
 
     let serializedData;
 
@@ -225,7 +226,7 @@ function getRuleSetsFromSection(section) {
   section.subsections.forEach(subsection => {
     if(subsection.type & DATA.SUB_ACCESS_RULES) {
       ruleSets.push({
-        subId: subsection.type << 16 | subsection.keyType << 8 | subsection.keyIndex,
+        subId: (subsection.type << 24 | subsection.keyType << 16 | subsection.keyIndex0 << 8 | subsection.keyIndex1) >>> 0,
         accessRules: subsection.accessRules
       });
     }
@@ -256,10 +257,6 @@ function getFlattenedFields(def, ruleSets) {
         let isPublic = !(item.type & DATA.PRIVATE),
             [ subId, modifiers ] = getSubsection(newPath, isPublic, ruleSets);
 
-        if(subId == -1) {
-          throw new sectionError(ERRORS.SECTION_NO_SUBSECTION, newName.join("."));
-        }
-
         hasPublicData |= isPublic;
 
         list.push({
@@ -281,7 +278,7 @@ function getFlattenedFields(def, ruleSets) {
 }
 
 // ============================================================================================================================ //
-//  getSubsection()                                                                                                            //
+//  getSubsection()                                                                                                             //
 // ============================================================================================================================ //
 function getSubsection(fieldPath, isPublic, ruleSets) {
   let subId = isPublic ? 0 : -1,

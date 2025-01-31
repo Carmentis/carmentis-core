@@ -17,8 +17,8 @@ export function getRuleSets(sectionDef) {
   let subSet = new Set,
       rules = [];
 
-  sectionDef.subsections.forEach(([ str, type, keyId, keyIndex ]) => {
-    let subId = type << 16 | keyId << 8 | keyIndex;
+  sectionDef.subsections.forEach(([ str, type, keyId, keyIndex0, keyIndex1 ]) => {
+    let subId = (type << 24 | keyId << 16 | keyIndex0 << 8 | keyIndex1) >>> 0;
 
     if(subSet.has(subId)) {
       throw new pathError(ERRORS.PATH_DUPLICATE_RULE, util.hexa(subId, 5));

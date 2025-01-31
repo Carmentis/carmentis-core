@@ -1,7 +1,8 @@
 export * from "../common/common.js";
 export * as web from "./web/web.js";
 export { wiClient } from "./walletInterface/wiClient.js";
-export { wiWallet } from "./walletInterface/wiWallet.js";
+export { wiApplicationWallet } from "./walletInterface/wiApplicationWallet.js";
+export { wiExtensionWallet } from "./walletInterface/wiExtensionWallet.js";
 
 import * as network from "../common/network/network.js";
 import * as browserNetworkInterface from "./network/browserNetworkInterface.js";

@@ -7,7 +7,7 @@ import { schemaError } from "../errors/error.js";
 // ============================================================================================================================ //
 //  encodeMessage()                                                                                                             //
 // ============================================================================================================================ //
-export function encodeMessage(id, object, collection = SCHEMAS.MESSAGES) {
+export function encodeMessage(id, object, collection) {
   return encode(
     collection[id],
     object,
@@ -20,7 +20,7 @@ export function encodeMessage(id, object, collection = SCHEMAS.MESSAGES) {
 // ============================================================================================================================ //
 //  decodeMessage()                                                                                                             //
 // ============================================================================================================================ //
-export function decodeMessage(array, collection = SCHEMAS.MESSAGES) {
+export function decodeMessage(array, collection) {
   let id = array[0];
 
   let object = decode(
@@ -116,7 +116,7 @@ export function encode(schema, object, context = {}) {
       encodeSchema(def.schema, node, path);
     }
     else {
-      if(checkFieldAccess(context, index)) {
+      if(checkFieldAccess(context, index, name)) {
         if(def.type & DATA.ENUM) {
           encodeEnumeration(def, node, name);
         }
@@ -199,6 +199,8 @@ export function decode(schema, array, context = {}, object = {}) {
   function decodeNode(def, path, referenceNode, parentNode, propertyName) {
     let node = null;
 
+    let name = path.join(".");
+
     if(def.condition && !def.condition(referenceNode)) {
       return;
     }
@@ -236,7 +238,7 @@ export function decode(schema, array, context = {}, object = {}) {
       decodeSchema(def.schema, node, path);
     }
     else {
-      if(checkFieldAccess(context, index)) {
+      if(checkFieldAccess(context, index, name)) {
         if(def.type & DATA.ENUM) {
           node = decodeEnumeration(def);
         }
@@ -291,6 +293,14 @@ console.log(stream, stream.getPointer(), array, array.length);
 // ============================================================================================================================ //
 //  checkFieldAccess()                                                                                                          //
 // ============================================================================================================================ //
-function checkFieldAccess(context, index) {
-  return !context.flattenedFields || context.flattenedFields[index].subId == context.subId;
+function checkFieldAccess(context, index, name) {
+  if(!context.flattenedFields) {
+    return true;
+  }
+
+  if(context.flattenedFields[index].subId == -1) {
+    throw new schemaError(ERRORS.SCHEMA_NO_SUBSECTION, name);
+  }
+
+  return context.flattenedFields[index].subId == context.subId;
 }

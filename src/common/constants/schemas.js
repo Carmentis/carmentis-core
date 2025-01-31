@@ -137,7 +137,7 @@ export const ACCOUNT_BLOCK_REFERENCE = [
 ];
 
 // ============================================================================================================================ //
-//  Network messages                                                                                                            //
+//  Node network messages                                                                                                       //
 // ============================================================================================================================ //
 export const MSG_GET_CHAIN_STATUS          = 0x00;
 export const MSG_GET_BLOCK_LIST            = 0x01;
@@ -187,7 +187,7 @@ export const MSG_NAMES = {
   [ MSG_SEND_MICROBLOCK           ]: "SEND_MICROBLOCK",
 };
 
-export const MESSAGES = {
+export const NODE_MESSAGES = {
   // -------------------------------------------------------------------------------------------------------------------------- //
   //  retrieving data from a node                                                                                               //
   // -------------------------------------------------------------------------------------------------------------------------- //
@@ -340,6 +340,67 @@ export const MESSAGES = {
 };
 
 // ============================================================================================================================ //
+//  Application <-> operator network messages                                                                                   //
+// ============================================================================================================================ //
+export const MSG_PREPARE_USER_APPROVAL     = 0x00;
+export const MSG_INVOKE_ORACLE             = 0x01;
+
+export const MSG_ANS_PREPARE_USER_APPROVAL = 0x80;
+export const MSG_ANS_INVOKE_ORACLE         = 0x81;
+
+export const APP_OP_MESSAGES = {
+  [ MSG_PREPARE_USER_APPROVAL ] : [
+  ],
+  [ MSG_INVOKE_ORACLE ] : [
+    { name: "oracleId",    type: DATA.HASH },
+    { name: "serviceName", type: DATA.STRING },
+    { name: "request",     type: DATA.BINARY }
+  ]
+};
+
+// ============================================================================================================================ //
+//  Operator <-> operator network messages                                                                                      //
+// ============================================================================================================================ //
+export const MSG_SUBMIT_ORACLE_REQUEST      = 0x00;
+export const MSG_CONFIRM_ORACLE_REQUEST     = 0x01;
+export const MSG_ORACLE_ANSWER              = 0x02;
+
+export const MSG_ANS_SUBMIT_ORACLE_REQUEST  = 0x80;
+export const MSG_ANS_CONFIRM_ORACLE_REQUEST = 0x01;
+
+export const OP_OP_MESSAGES = {
+  // initial oracle request submission
+  [ MSG_SUBMIT_ORACLE_REQUEST ] : [
+    { name: "organizationId", type: DATA.HASH },
+    { name: "oracleId",       type: DATA.HASH },
+    { name: "serviceName",    type: DATA.STRING },
+    { name: "request",        type: DATA.BINARY },
+    { name: "signature",      type: DATA.SIGNATURE }
+  ],
+  // oracle request confirmation with payment reference
+  [ MSG_CONFIRM_ORACLE_REQUEST ] : [
+    { name: "requestId",         type: DATA.HASH },
+    { name: "paymentMicroblock", type: DATA.HASH }
+  ],
+  // oracle answer
+  [ MSG_ORACLE_ANSWER ] : [
+    { name: "requestId", type: DATA.HASH },
+    { name: "answer",    type: DATA.BINARY },
+    { name: "signature", type: DATA.SIGNATURE }
+  ],
+
+  // answer to initial oracle request submission
+  [ MSG_ANS_SUBMIT_ORACLE_REQUEST ] : [
+    { name: "requestId", type: DATA.HASH },
+    { name: "price",     type: DATA.UINT48 }
+  ],
+  // answer to oracle request confirmation
+  [ MSG_ANS_CONFIRM_ORACLE_REQUEST ] : [
+    { name: "redirect", type: DATA.STRING }
+  ]
+};
+
+// ============================================================================================================================ //
 //  Sections                                                                                                                    //
 // ============================================================================================================================ //
 export const ACCESS_RULE = [
@@ -360,7 +421,8 @@ export const PROVABLE_DATA = [
 export const SUBSECTION = [
   { name: "type",           type: DATA.UINT8 },
   { name: "keyType",        type: DATA.UINT8, condition: parent => parent.type & DATA.SUB_PRIVATE },
-  { name: "keyIndex",       type: DATA.UINT8, condition: parent => parent.type & DATA.SUB_PRIVATE },
+  { name: "keyIndex0",      type: DATA.UINT8, condition: parent => parent.type & DATA.SUB_PRIVATE },
+  { name: "keyIndex1",      type: DATA.UINT8, condition: parent => parent.type & DATA.SUB_PRIVATE },
   { name: "accessRules",    type: DATA.OBJECT | DATA.ARRAY, schema: ACCESS_RULE, condition: parent => parent.type & DATA.SUB_ACCESS_RULES },
   { name: "merkleRootHash", type: DATA.HASH, condition: parent => parent.type & DATA.SUB_PROVABLE },
   { name: "data",           type: DATA.BINARY }

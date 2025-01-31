@@ -8,7 +8,6 @@ let io;
 //  setIo()                                                                                                                     //
 // ============================================================================================================================ //
 export function setIo(module) {
-  console.log("setIo", module);
   io = module;
 }
 
@@ -17,13 +16,15 @@ export function setIo(module) {
 // ============================================================================================================================ //
 export function getSocket(endpoint, connectCallback, dataCallback) {
   let socket = io(endpoint);
-
+console.log(socket);
   socket.on("connect", () => {
     if(!socket.connectionInitiated) {
       socket.connectionInitiated = true;
       connectCallback(socket);
     }
   });
+
+  socket.on("connect_error", err => console.error(err));
 
   socket.on("data", onData);
 

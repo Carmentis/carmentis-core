@@ -1,3 +1,4 @@
+import { wiWallet } from "./wiWallet.js";
 import { SCHEMAS } from "../../common/constants/constants.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
@@ -5,45 +6,59 @@ import * as clientSocket from "./wiClientSocket.js";
 import * as qrCode from "../qrCode/qrCode.js";
 import {CarmentisError} from "../../common/errors/error.js";
 
-export class wiWallet {
+export class wiApplicationWallet extends wiWallet {
   constructor(privateKey) {
-    this.privateKey = privateKey;
-    this.publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
+    super(privateKey);
   }
 
-  decodeRequest(object) {
-    let requestObject = schemaSerializer.decode(SCHEMAS.WI_REQUESTS[object.requestType], object.request);
-
-    let req = {
-      type: object.requestType,
-      object: requestObject
-    };
-
-    return req;
+  /**
+   * Decodes the given QR code data and extracts relevant information.
+   *
+   * @param {string} qrData - The raw QR code data to be decoded and processed.
+   * @return {{
+   *     qrId: Uint8Array,
+   *     serverUrl: string,
+   *     timestamp: number,
+   * }} Returns an object containing the extracted data.
+   */
+  static extractDataFromQrCode(qrData) {
+    const data = qrCode.decode(qrData);
+    data.serverUrl = data.serverUrl.trim();
+    return data;
   }
 
-  processRequest(req) {
-    switch(req.type) {
-      case SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY: {
-        let signature = crypto.secp256k1.sign(this.privateKey, req.object.challenge);
+  /**
+   * Establishes a connection to a server via a socket and processes incoming data.
+   *
+   * @param {Uint8Array} qrId - The unique identifier for the connection, typically represented as a QR code ID.
+   * @param {string} serverUrl - The URL of the server to connect to.
+   * @return {Promise<{type: number, object: any}>} A promise that resolves with the processed request object. The resolved object contains the `type` of the request and the decoded `object` associated with it.
+   */
+  async obtainDataFromServer(serverUrl, qrId) {
+    let _this = this;
 
-        let answerObject = {
-          publicKey: this.publicKey,
-          signature: signature
-        };
+    return new Promise(function (resolve, reject) {
+      console.log("[wallet] opening socket with", serverUrl);
+      _this.socket = clientSocket.getSocket(serverUrl, onConnect.bind(_this), onData.bind(_this));
 
-        let answer = schemaSerializer.encode(SCHEMAS.WI_ANSWERS[SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY], answerObject);
+      function onConnect() {
+        console.log("[wallet] connected");
+        _this.socket.sendMessage(SCHEMAS.WIMSG_CONNECTION_ACCEPTED, { qrId: qrId });
+      }
 
-        return {
-          answerType: SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY,
-          answer: answer
+      async function onData(id, object) {
+        console.log("[wallet] incoming data", id, object);
+
+        switch(id) {
+          case SCHEMAS.WIMSG_FORWARDED_REQUEST: {
+            let req = this.decodeRequest(object);
+
+            resolve(req);
+            break;
+          }
         }
       }
-      default: {
-        throw `Unknown request type: ${req.type}`;
-        break;
-      }
-    }
+    });
   }
 
   /**
@@ -55,26 +70,10 @@ export class wiWallet {
    * @param {Object} req.object.challenge - The challenge
    * @return {void} Does not return any value but may send a message or log a warning based on the request type.
    */
-  approveRequestExecution( req) {
-    switch(req.type) {
-      case SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY: {
-        let signature = crypto.secp256k1.sign(this.privateKey, req.object.challenge);
+  approveRequestExecution(req) {
+    let res = this.processRequest(req);
 
-        let answerObject = {
-          publicKey: this.publicKey,
-          signature: signature
-        };
-
-        let answer = schemaSerializer.encode(SCHEMAS.WI_ANSWERS[SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY], answerObject);
-
-        this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, { answerType: SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, answer: answer });
-        break;
-      }
-      default: {
-        console.warn(`Unknown request type: ${req.type}`)
-        break;
-      }
-    }
+    this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, res);
   }
 
   /**

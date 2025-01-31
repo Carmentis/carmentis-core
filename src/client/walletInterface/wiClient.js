@@ -1,10 +1,11 @@
-import { SCHEMAS } from "../../common/constants/constants.js";
+import { ERRORS, SCHEMAS } from "../../common/constants/constants.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
 import * as uint8 from "../../common/util/uint8.js";
 import * as clientSocket from "./wiClientSocket.js";
 import * as qrCode from "../qrCode/qrCode.js";
 import * as web from "../web/web.js";
+import { wiError } from "../../common/errors/error.js";
 
 export class wiClient {
   constructor() {
@@ -18,6 +19,19 @@ export class wiClient {
    */
   attachQrCodeContainer(id) {
     this.qrElement = web.get("#" + id);
+
+    if(!this.qrElement) {
+      throw `Container '${id}' not found`;
+    }
+  }
+
+  attachExtensionButton(id, target = window) {
+    this.buttonElement = web.get("#" + id);
+    this.buttonTarget = target;
+
+    if(!this.buttonElement) {
+      throw `Button '${id}' not found`;
+    }
   }
 
   getQrData(id) {
@@ -53,7 +67,7 @@ export class wiClient {
     let answer = await this.request(SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, { challenge: challenge });
 
     if(!crypto.secp256k1.verify(answer.publicKey, challenge, answer.signature)) {
-      throw "invalid signature";
+      throw new wiError(ERRORS.WI_INVALID_SIGNATURE);
     }
 
     return {
@@ -82,6 +96,35 @@ export class wiClient {
       _this.socket = clientSocket.getSocket(_this.serverUrl, onConnect.bind(_this), onData.bind(_this));
 
       _this.socket.sendMessage(SCHEMAS.WIMSG_REQUEST, reqObject);
+
+      _this.buttonElement.el.addEventListener("click", sendRequestToExtension);
+
+      function sendRequestToExtension() {
+        let message = {
+          data: {
+            requestType: type,
+            request: request
+          },
+          from: "CarmentisClient"
+        };
+
+        window.addEventListener(
+          "message",
+          (event) => {
+            if(event.data.from == "CarmentisWallet") {
+              let object = event.data.data,
+                  answerObject = schemaSerializer.decode(SCHEMAS.WI_ANSWERS[object.answerType], object.answer);
+
+              _this.socket.disconnect();
+
+              resolve(answerObject);
+            }
+          },
+          false
+        );
+
+        _this.buttonTarget.postMessage(message, "*");
+      }
 
       function onConnect() {
         console.log("[client] connected");

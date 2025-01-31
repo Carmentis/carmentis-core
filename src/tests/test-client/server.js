@@ -10,9 +10,14 @@ http.createServer((req, res) => {
       res.write(fs.readFileSync("./index.html"));
       break;
     }
-    case "/wallet.html": {
+    case "/appWallet.html": {
       res.writeHead(200, { "Content-Type": "text/html" });
-      res.write(fs.readFileSync("./wallet.html"));
+      res.write(fs.readFileSync("./appWallet.html"));
+      break;
+    }
+    case "/extWallet.html": {
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.write(fs.readFileSync("./extWallet.html"));
       break;
     }
     case "/carmentis-sdk.js": {
@@ -25,9 +30,14 @@ http.createServer((req, res) => {
       res.write(fs.readFileSync("./main.js"));
       break;
     }
-    case "/wallet.js": {
+    case "/appWallet.js": {
       res.writeHead(200, { "Content-Type": "text/javascript" });
-      res.write(fs.readFileSync("./wallet.js"));
+      res.write(fs.readFileSync("./appWallet.js"));
+      break;
+    }
+    case "/extWallet.js": {
+      res.writeHead(200, { "Content-Type": "text/javascript" });
+      res.write(fs.readFileSync("./extWallet.js"));
       break;
     }
   }

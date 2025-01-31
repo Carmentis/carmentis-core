@@ -64,10 +64,10 @@ async function runTests() {
 
     accountVbHash = await accountTest();
     await blockchainQueryTest(accountVbHash);
-    //organization = await organizationTest();
-    //appId = await applicationTest(organization);
-    //oracleId = await oracleTest(organization, appId);
-    //await appLedgerTest(organization, appId);
+    organization = await organizationTest();
+    appId = await applicationTest(organization);
+    oracleId = await oracleTest(organization, appId);
+    await appLedgerTest(organization, appId);
   }
   catch(e) {
     console.error(e);
@@ -456,6 +456,7 @@ async function appLedgerTest(organization, appId) {
       },
       permissions: {
         mainChannel: [ "senderDocument.*" ],
+//      mainChannel: [ "senderDocument.senderEmail" ], // in order to test missing permission
 //      fileChannel: [ "senderDocument.file" ]
       },
       author: "fileSign",

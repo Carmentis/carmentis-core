@@ -15,8 +15,8 @@ export function initialize(intf) {
 // ============================================================================================================================ //
 //  sendMessage()                                                                                                               //
 // ============================================================================================================================ //
-export async function sendMessage(url, schemaId, object) {
-  let data = schemaSerializer.encodeMessage(schemaId, object),
+export async function sendMessage(url, schemaId, object, collection) {
+  let data = schemaSerializer.encodeMessage(schemaId, object, collection),
       b64 = base64.encodeBinary(data, base64.BASE64);
 
   return new Promise(function(resolve, reject) {
@@ -32,7 +32,7 @@ export async function sendMessage(url, schemaId, object) {
         let responseObject = JSON.parse(answer),
             binary = base64.decodeBinary(responseObject.response, base64.BASE64);
 
-        let [ id, object ] = schemaSerializer.decodeMessage(binary);
+        let [ id, object ] = schemaSerializer.decodeMessage(binary, collection);
 
         if(id == SCHEMAS.MSG_ANS_ERROR) {
           let error = new CarmentisError(object.error.type | ERROR_TYPES.REMOTE_ERROR, object.error.id, ...object.error.arg);

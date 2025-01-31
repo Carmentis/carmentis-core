@@ -30,6 +30,7 @@ export const SCHEMA_INVALID_ENUM    = 0x02;
 export const SCHEMA_UNDEFINED_ENUM  = 0x03;
 export const SCHEMA_NOT_IN_ENUM     = 0x04;
 export const SCHEMA_INVALID_STREAM  = 0x05;
+export const SCHEMA_NO_SUBSECTION   = 0x06;
 
 // SECTION
 export const SECTION_INVALID_OBJECT_ID = 0x00;
@@ -38,7 +39,6 @@ export const SECTION_NO_EXTERNAL_DEF   = 0x02;
 export const SECTION_PUBLIC_TO_PRIVATE = 0x03;
 export const SECTION_BAD_MERKLE_HASH   = 0x04;
 export const SECTION_KEY_NOT_FOUND     = 0x05;
-export const SECTION_NO_SUBSECTION     = 0x06;
 
 // PATH
 export const PATH_DUPLICATE_RULE      = 0x00;
@@ -96,3 +96,6 @@ export const APP_LEDGER_UNKNOWN_MESSAGE   = 0x06;
 
 // ORACLE
 export const ORACLE_MISSING_ORG = 0x00;
+
+// WALLET INTERFACE
+export const WI_INVALID_SIGNATURE = 0x00;

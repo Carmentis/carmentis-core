@@ -35,6 +35,15 @@ export function sign(privateKey, data) {
 // ============================================================================================================================ //
 //  verify()                                                                                                                    //
 // ============================================================================================================================ //
+
+/**
+ * Verifies a digital signature using the secp256k1 algorithm.
+ *
+ * @param {string} publicKey - The public key in hexadecimal format used for verification.
+ * @param {Uint8Array} data - The original data to be verified.
+ * @param {string} signature - The digital signature in hexadecimal format to verify.
+ * @return {boolean} Returns true if the signature is valid, false otherwise.
+ */
 export function verify(publicKey, data, signature) {
   try {
     let hash = sha256(data);

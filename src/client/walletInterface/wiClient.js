@@ -47,7 +47,11 @@ export class wiClient {
    *
    * @param {string} challengeString - An optional hexadecimal string representing the challenge.
    *                                    If not provided, a random challenge will be generated.
-   * @return {Promise<Object>} A promise that resolves to an object containing:
+   * @return {Promise<{
+   *     challenge: string,
+   *     signature: string,
+   *     publicKey: string,
+   * }>} A promise that resolves to an object containing:
    *                           - challenge: The hexadecimal representation of the challenge.
    *                           - publicKey: The public key used in the authentication process.
    *                           - signature: The digital signature verifying the challenge.
@@ -64,12 +68,14 @@ export class wiClient {
       challenge = uint8.fromHexa(challengeString);
     }
 
+    console.log("[wiClient] performing the authentication request...")
     let answer = await this.request(SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, { challenge: challenge });
 
     if(!crypto.secp256k1.verify(answer.publicKey, challenge, answer.signature)) {
       throw new wiError(ERRORS.WI_INVALID_SIGNATURE);
     }
 
+    console.log("[wiClient] Obtained response:", answer)
     return {
       challenge: challengeString,
       publicKey: answer.publicKey,
@@ -110,7 +116,8 @@ export class wiClient {
         window.addEventListener(
           "message",
           (event) => {
-            if(event.data.from == "CarmentisWallet") {
+            console.log('[wiClient] received answer:', event);
+            if(event.data.from == "carmentis/walletResponse") {
               let object = event.data.data,
                   binary = base64.decodeBinary(object.answer, base64.BASE64),
                   answerObject = schemaSerializer.decode(SCHEMAS.WI_ANSWERS[object.answerType], binary);

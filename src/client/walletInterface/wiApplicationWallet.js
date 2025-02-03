@@ -51,7 +51,7 @@ export class wiApplicationWallet extends wiWallet {
 
         switch(id) {
           case SCHEMAS.WIMSG_FORWARDED_REQUEST: {
-            let req = this.decodeRequest(object);
+            let req = this.decodeRequest(object.requestType, object.request);
 
             resolve(req);
             break;

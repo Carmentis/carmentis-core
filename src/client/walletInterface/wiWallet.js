@@ -11,11 +11,11 @@ export class wiWallet {
     this.publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
   }
 
-  decodeRequest(object) {
-    let requestObject = schemaSerializer.decode(SCHEMAS.WI_REQUESTS[object.requestType], object.request);
+  decodeRequest(requestType, request) {
+    let requestObject = schemaSerializer.decode(SCHEMAS.WI_REQUESTS[requestType], request);
 
     let req = {
-      type: object.requestType,
+      type: requestType,
       object: requestObject
     };
 

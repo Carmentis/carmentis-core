@@ -1,6 +1,7 @@
 import { ERRORS, SCHEMAS } from "../../common/constants/constants.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
+import * as base64 from "../../common/util/base64.js";
 import * as uint8 from "../../common/util/uint8.js";
 import * as clientSocket from "./wiClientSocket.js";
 import * as qrCode from "../qrCode/qrCode.js";
@@ -121,7 +122,7 @@ export class wiClient {
 
         let message = {
           requestType: type,
-          request: request
+          request: base64.encodeBinary(request, base64.BASE64)
         };
 
         window.carmentisWallet.openPopup(message);

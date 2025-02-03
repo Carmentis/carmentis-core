@@ -10,9 +10,8 @@ export class wiExtensionWallet extends wiWallet {
   }
 
   getRequestFromMessage(messageData) {
-    messageData.request = base64.decodeBinary(messageData.request, base64.BASE64);
-
-    let requestObject = this.decodeRequest(messageData);
+    let request = base64.decodeBinary(messageData.request, base64.BASE64),
+        requestObject = this.decodeRequest(messageData.requestType, request);
 
     return requestObject;
   }
@@ -20,8 +19,9 @@ export class wiExtensionWallet extends wiWallet {
   approveRequestExecution(req) {
     let object = this.processRequest(req);
 
-    object.answer = base64.encodeBinary(object.answer, base64.BASE64);
-
-    return object;
+    return {
+      answerType: object.answerType,
+      answer: base64.encodeBinary(object.answer, base64.BASE64)
+    };
   }
 }

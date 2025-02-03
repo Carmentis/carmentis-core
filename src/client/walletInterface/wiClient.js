@@ -112,7 +112,8 @@ export class wiClient {
           (event) => {
             if(event.data.from == "CarmentisWallet") {
               let object = event.data.data,
-                  answerObject = schemaSerializer.decode(SCHEMAS.WI_ANSWERS[object.answerType], object.answer);
+                  binary = base64.decodeBinary(object.answer, base64.BASE64),
+                  answerObject = schemaSerializer.decode(SCHEMAS.WI_ANSWERS[object.answerType], binary);
 
               resolve(answerObject);
             }

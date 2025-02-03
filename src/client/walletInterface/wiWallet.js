@@ -3,7 +3,6 @@ import * as crypto from "../../common/crypto/crypto.js";
 import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
 import * as clientSocket from "./wiClientSocket.js";
 import * as qrCode from "../qrCode/qrCode.js";
-import * as base64 from "../../common/util/base64.js";
 import {CarmentisError} from "../../common/errors/error.js";
 
 export class wiWallet {
@@ -13,8 +12,7 @@ export class wiWallet {
   }
 
   decodeRequest(object) {
-    let binary = base64.decodeBinary(object.request, base64.BASE64),
-        requestObject = schemaSerializer.decode(SCHEMAS.WI_REQUESTS[object.requestType], binary);
+    let requestObject = schemaSerializer.decode(SCHEMAS.WI_REQUESTS[object.requestType], object.request);
 
     let req = {
       type: object.requestType,

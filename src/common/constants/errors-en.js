@@ -67,7 +67,8 @@ export const ERRORS_EN = {
     "Maximum microblock size exceeded",
     "Microblock timestamp too far in the past",
     "Microblock timestamp too far in the future",
-    "Invalid protocol version: expecting '%0', got '%1'"
+    "Invalid protocol version: expecting '%0', got '%1'",
+    "Key not found: ID=0x%0"
   ],
 
   [ ERROR_TYPES.ACCOUNT ]: [
@@ -95,7 +96,8 @@ export const ERRORS_EN = {
     "Duplicate channel '%0'",
     "Unknown actor '%0'",
     "Unknown channel '%0'",
-    "Unknown message '%0'"
+    "Unknown message '%0'",
+    "Actor '%0' has already subscribed"
   ],
 
   [ ERROR_TYPES.ORACLE ]: [

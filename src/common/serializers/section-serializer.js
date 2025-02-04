@@ -54,7 +54,7 @@ export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new 
         hasAccessRules = !!(type & DATA.SUB_ACCESS_RULES);
 
     if(!keyRing.has(keyId)) {
-      throw new sectionError(ERRORS.SECTION_KEY_NOT_FOUND, util.hexa(keyId, 4));
+      throw new sectionError(ERRORS.SECTION_KEY_NOT_FOUND, util.hexa(keyId, 6));
     }
 
     let subsection = {

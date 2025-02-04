@@ -68,6 +68,7 @@ export const BLOCKCHAIN_MB_TOO_LARGE         = 0x0C;
 export const BLOCKCHAIN_MB_TOO_FAR_PAST      = 0x0D;
 export const BLOCKCHAIN_MB_TOO_FAR_FUTURE    = 0x0E;
 export const BLOCKCHAIN_BAD_PROTOCOL_VERSION = 0x0F;
+export const BLOCKCHAIN_KEY_NOT_FOUND        = 0x10;
 
 // ACCOUNT
 export const ACCOUNT_BAD_ISSUANCE_AMOUNT = 0x00;
@@ -86,13 +87,14 @@ export const ACCOUNT_ALREADY_EXISTS      = 0x0A;
 export const APPLICATION_MISSING_ORG = 0x00;
 
 // APP LEDGER
-export const APP_LEDGER_BAD_ACTOR_ID      = 0x00;
-export const APP_LEDGER_BAD_CHANNEL_ID    = 0x01;
-export const APP_LEDGER_DUPLICATE_ACTOR   = 0x02;
-export const APP_LEDGER_DUPLICATE_CHANNEL = 0x03;
-export const APP_LEDGER_UNKNOWN_ACTOR     = 0x04;
-export const APP_LEDGER_UNKNOWN_CHANNEL   = 0x05;
-export const APP_LEDGER_UNKNOWN_MESSAGE   = 0x06;
+export const APP_LEDGER_BAD_ACTOR_ID       = 0x00;
+export const APP_LEDGER_BAD_CHANNEL_ID     = 0x01;
+export const APP_LEDGER_DUPLICATE_ACTOR    = 0x02;
+export const APP_LEDGER_DUPLICATE_CHANNEL  = 0x03;
+export const APP_LEDGER_UNKNOWN_ACTOR      = 0x04;
+export const APP_LEDGER_UNKNOWN_CHANNEL    = 0x05;
+export const APP_LEDGER_UNKNOWN_MESSAGE    = 0x06;
+export const APP_LEDGER_ALREADY_SUBSCRIBED = 0x07;
 
 // ORACLE
 export const ORACLE_MISSING_ORG = 0x00;

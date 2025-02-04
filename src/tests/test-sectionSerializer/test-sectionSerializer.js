@@ -1,7 +1,7 @@
 import * as sectionSerializer from "../../common/serializers/section-serializer.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import { ID, SECTIONS } from "../../common/constants/constants.js";
-import { KEY_INDEX, EXTERNAL_APP_DEF } from "./data.js";
+import { KEY_ID0, KEY_ID1, EXTERNAL_APP_DEF } from "./data.js";
 import { log, outcome } from "../logger.js";
 
 export async function run() {
@@ -42,8 +42,8 @@ export async function run() {
   let keyA = crypto.generateKey256(),
       keyB = crypto.generateKey256();
 
-  keyRing.set(KEY_INDEX << 8 | 0, keyA);
-  keyRing.set(KEY_INDEX << 8 | 1, keyB);
+  keyRing.set(KEY_ID0 << 16 | 0 << 8 | 0, keyA);
+  keyRing.set(KEY_ID1 << 16 | 0 << 8 | 0, keyB);
 
   let externalDef = EXTERNAL_APP_DEF;
 
@@ -81,10 +81,10 @@ export async function run() {
     keyRing = new Map;
 
     if(n & 1) {
-      keyRing.set(KEY_INDEX << 8 | 0, keyA);
+      keyRing.set(KEY_ID0 << 16 | 0 << 8 | 0, keyA);
     }
     if(n & 2) {
-      keyRing.set(KEY_INDEX << 8 | 1, keyB);
+      keyRing.set(KEY_ID1 << 16 | 0 << 8 | 0, keyB);
     }
 
     unserialized = sectionSerializer.decode(
@@ -97,8 +97,12 @@ export async function run() {
       new Uint8Array()
     );
 
-    //console.log(unserialized);
+    let success = JSON.stringify(unserialized.object) == JSON.stringify(EXPECTED[n]);
 
-    outcome(`External schema / key combination #${n}`, 50, JSON.stringify(unserialized.object) == JSON.stringify(EXPECTED[n]));
+    if(!success) {
+      console.log(unserialized);
+    }
+
+    outcome(`External schema / key combination #${n}`, 50, success);
   }
 }

@@ -16,38 +16,41 @@ export class appLedgerVb extends virtualBlockchain {
     this.state.channelId = 0;
   }
 
-  async prepareUserApproval(object) {
+  isEndorserSubscribed(endorserName) {
+    let endorser = this.state.actors.find(actor => actor.name == endorserName);
+
+    return !!(endorser && endorser.subscribed);
+  }
+
+  setEndorserActorPublicKey(publicKey) {
+    this.endorserActorPublicKey = publicKey;
+  }
+
+  async generateDataSections(object) {
     if(object.appLedgerId) {
       await this.load(object.appLedgerId);
     }
 
-    let appVb = new applicationVb();
-
-    await appVb.load(object.applicationId);
-
-    let appDef = await appVb.findSection(
-      SECTIONS.APP_DEFINITION,
-      section => section.version == object.version
-    );
-
     if(this.getHeight() == 1) {
+      // genesis -> declare the application with its version
       await this.addDeclaration({
         applicationId: object.applicationId,
         version: object.version
       });
     }
     else if(this.state.version != object.version) {
+      // declare application version update
       await this.addVersionUpdate({
         version: object.version
       });
     }
 
+    // add new actors
     for(let actor of object.actors) {
       await this.addActor(actor);
     }
 
-    let authorId = this.getActorByName(object.author);
-
+    // add new channels
     for(let channel of object.channels) {
       await this.addChannel({
         name: channel.name,
@@ -55,22 +58,47 @@ export class appLedgerVb extends virtualBlockchain {
       });
     }
 
-    for(let actorName of Object.keys(object.channelInvitations)) {
-      for(let channelName of object.channelInvitations[actorName]) {
-        let channelId = this.getChannelByName(channelName),
-            guestId = this.getActorByName(actorName);
+    // get author and endorser IDs
+    let authorId = this.getActorByName(object.author),
+        endorserId = this.getActorByName(object.approval.endorser);
 
-        await this.addChannelInvitation(channelId, authorId, guestId);
-      }
-    }
-
+    // is the application owner already subscribed?
     if(!this.state.actors[authorId].subscribed) {
-      await this.addSubscription({
+      await this.addActorSubscription({
         actorId  : authorId,
         actorType: DATA.ACTOR_APP_OWNER
       });
     }
 
+    // is the endorser already subscribed?
+    if(!this.state.actors[endorserId].subscribed) {
+      await this.addActorSubscription({
+        actorId  : endorserId,
+        actorType: DATA.ACTOR_END_USER,
+        publicKey: this.endorserActorPublicKey
+      });
+    }
+
+    // add new invitations
+    for(let actorName of Object.keys(object.channelInvitations)) {
+      for(let channelName of object.channelInvitations[actorName]) {
+        let channelId = this.getChannelByName(channelName),
+            guestId = this.getActorByName(actorName),
+            theirPublicKey = this.getActorPublicKey(guestId);
+
+        let sharedKey = this.getSharedKey(
+          this.getKey(SECTIONS.KEY_USER, 0, 0),
+          theirPublicKey
+        );
+
+        await this.addChannelInvitation(channelId, authorId, guestId);
+      }
+    }
+
+    // load the application definition
+    await this.loadApplicationDefinition();
+
+    // turn the permissions into subsections
     let subsections = [];
 
     Object.keys(object.permissions).forEach(channelName => {
@@ -85,24 +113,38 @@ export class appLedgerVb extends virtualBlockchain {
       ]);
     });
 
+    // write channel data
     await this.addChannelData(
       object.fields,
       {
-        ...appDef.definition,
+        ...this.appDef.definition,
         subsections: subsections
       }
     );
 
+    // add author
     await this.addAuthor({
       authorId: authorId
     });
 
-    await this.addApprover({
-      approverId: this.getActorByName(object.approval.approver),
-      messageId : this.getMessageByName(appDef, object.approval.message)
+    // add endorser
+    await this.addEndorser({
+      endorserId: endorserId,
+      messageId : this.getMessageByName(object.approval.message)
     });
 
     this.updateGas();
+  }
+
+  async loadApplicationDefinition() {
+    let appVb = new applicationVb();
+
+    await appVb.load(this.state.applicationId);
+
+    this.appDef = await appVb.findSection(
+      SECTIONS.APP_DEFINITION,
+      section => section.version == object.version
+    );
   }
 
   async addDeclaration(object) {
@@ -142,8 +184,8 @@ export class appLedgerVb extends virtualBlockchain {
     await this.addSection(SECTIONS.APP_LEDGER_CHANNEL_INVITATION, object);
   }
 
-  async addSubscription(object) {
-    await this.addSection(SECTIONS.APP_LEDGER_SUBSCRIPTION, object);
+  async addActorSubscription(object) {
+    await this.addSection(SECTIONS.APP_LEDGER_ACTOR_SUBSCRIPTION, object);
   }
 
   async addChannelData(object, externalDef) {
@@ -156,8 +198,12 @@ export class appLedgerVb extends virtualBlockchain {
     await this.addSection(SECTIONS.APP_LEDGER_AUTHOR, object);
   }
 
-  async addApprover(object) {
-    await this.addSection(SECTIONS.APP_LEDGER_APPROVER, object);
+  async addEndorser(object) {
+    await this.addSection(SECTIONS.APP_LEDGER_ENDORSER, object);
+  }
+
+  getActorPublicKey(actorId) {
+    console.log("getActorPublicKey", actorId, this.state.actors);
   }
 
   getActorByName(name) {
@@ -180,8 +226,8 @@ export class appLedgerVb extends virtualBlockchain {
     return id;
   }
 
-  getMessageByName(appDef, name) {
-    let id = appDef.definition.messages.findIndex(msg => msg.name == name);
+  getMessageByName(name) {
+    let id = this.appDef.definition.messages.findIndex(msg => msg.name == name);
 
     if(id == -1) {
       throw new appLedgerError(ERRORS.APP_LEDGER_UNKNOWN_MESSAGE, name);
@@ -190,12 +236,12 @@ export class appLedgerVb extends virtualBlockchain {
     return id;
   }
 
-  async signAsApprover() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_USER, 0), SECTIONS.APP_LEDGER_APPROVER_SIGNATURE);
+  async signAsEndorser() {
+    await this.addSignature(this.getKey(SECTIONS.KEY_USER, 0, 0), SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE);
   }
 
   async signAsAuthor() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_OPERATOR, 0), SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE);
+    await this.addSignature(this.getKey(SECTIONS.KEY_OPERATOR, 0, 0), SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE);
   }
 
   async updateState(mb, ndx, sectionId, object) {
@@ -256,13 +302,35 @@ export class appLedgerVb extends virtualBlockchain {
           this.setKey(
             SECTIONS.KEY_CHANNEL,
             object.channelId,
+            0,
             object.channelKey
           );
         }
         break;
       }
 
-      case SECTIONS.APP_LEDGER_SUBSCRIPTION: {
+      case SECTIONS.APP_LEDGER_ACTOR_SUBSCRIPTION: {
+        let actor = this.state.actors[object.actorId];
+
+        if(!actor) {
+          throw new appLedgerError(ERRORS.APP_LEDGER_BAD_ACTOR_ID, object.actorId);
+        }
+        if(actor.subscribed) {
+          throw new appLedgerError(ERRORS.APP_LEDGER_ALREADY_SUBSCRIBED, actor.name);
+        }
+
+        actor.subscribed = 1;
+
+        switch(actor.actorType) {
+          case DATA.ACTOR_ORGANIZATION: {
+            actor.organizationId = object.organizationId;
+            break;
+          }
+          case DATA.ACTOR_END_USER: {
+            actor.publicKey = object.publicKey;
+            break;
+          }
+        }
         break;
       }
 

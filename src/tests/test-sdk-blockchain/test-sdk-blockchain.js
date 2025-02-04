@@ -430,43 +430,51 @@ async function appLedgerTest(organization, appId) {
 
   vb = new appLedgerVb();
 
-  await vb.prepareUserApproval(
-    {
-      applicationId: appId,
-      version: 1,
-      fields: fields,
-      actors: actors,
-      channels: [
-        {
-          name: "mainChannel",
-          keyOwner: "fileSign"
-        },
-//      {
-//        name: "fileChannel",
-//        keyOwner: "sender"
-//      }
+  let approvalObject = {
+    applicationId: appId,
+    version: 1,
+    fields: fields,
+    actors: actors,
+    channels: [
+      {
+        name: "mainChannel",
+        keyOwner: "fileSign"
+      },
+//    {
+//      name: "fileChannel",
+//      keyOwner: "sender"
+//    }
+    ],
+    channelInvitations: {
+      sender: [
+        "mainChannel"
       ],
-      channelInvitations: {
-        sender: [
-          "mainChannel"
-        ],
-        recipient: [
-          "mainChannel"
-        ]
-      },
-      permissions: {
-        mainChannel: [ "senderDocument.*" ],
-//      mainChannel: [ "senderDocument.senderEmail" ], // in order to test missing permission
-//      fileChannel: [ "senderDocument.file" ]
-      },
-      author: "fileSign",
-      approval: {
-        approver      : "sender",
-        requiredFields: [ "senderDocument.file" ],
-        message       : "fileSent"
-      }
+      recipient: [
+        "mainChannel"
+      ]
+    },
+    permissions: {
+      mainChannel: [ "senderDocument.*" ],
+//    fileChannel: [ "senderDocument.file" ]
+    },
+    author: "fileSign",
+    approval: {
+      endorser      : "sender",
+      requiredFields: [ "senderDocument.file" ],
+      message       : "fileSent"
     }
-  );
+  };
+
+  let endorserActorPublicKey;
+
+  if(!vb.isEndorserSubscribed("sender")) {
+    let endorserActorPrivateKey = crypto.generateKey256();
+
+    endorserActorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(endorserActorPrivateKey);
+    vb.setEndorserActorPublicKey(endorserActorPublicKey);
+  }
+
+  await vb.generateDataSections(approvalObject);
 
   vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();

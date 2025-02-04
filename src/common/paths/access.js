@@ -17,8 +17,8 @@ export function getRuleSets(sectionDef) {
   let subSet = new Set,
       rules = [];
 
-  sectionDef.subsections.forEach(([ str, type, keyId, keyIndex0, keyIndex1 ]) => {
-    let subId = (type << 24 | keyId << 16 | keyIndex0 << 8 | keyIndex1) >>> 0;
+  sectionDef.subsections.forEach(sub => {
+    let subId = (sub.type << 24 | sub.keyId << 16 | sub.keyIndex0 << 8 | sub.keyIndex1) >>> 0;
 
     if(subSet.has(subId)) {
       throw new pathError(ERRORS.PATH_DUPLICATE_RULE, util.hexa(subId, 5));
@@ -26,7 +26,7 @@ export function getRuleSets(sectionDef) {
 
     subSet.add(subId);
 
-    let accessRules = parseRuleSet(sectionDef, str.split(","), false);
+    let accessRules = parseRuleSet(sectionDef, sub.rule.split(","), false);
 
     rules.push({
       subId: subId,

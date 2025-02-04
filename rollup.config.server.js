@@ -22,7 +22,15 @@ export default [
             resolve(), // resolve 3rd-party module imports
             commonjs(), // converts CommonJS to ESM
             json() // supports JSON imports
-        ]
+        ],
+        onLog(level, log, handler) {
+          if(log.code == "MISSING_EXPORT") {
+            handler("error", log); // turn missing exports into errors
+          }
+          else {
+            handler(level, log); // use the default handler for anything else
+          }
+        }
     },
     // Build for TypeScript definitions
     {

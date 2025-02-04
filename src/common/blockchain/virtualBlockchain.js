@@ -25,11 +25,11 @@ export class virtualBlockchain extends blockchainCore {
 
     switch(this.constructor.role) {
       case ROLES.OPERATOR: {
-        this.setKey(SECTIONS.KEY_OPERATOR, 0, this.constructor.rootKey);
+        this.setKey(SECTIONS.KEY_OPERATOR, 0, 0, this.constructor.rootKey);
         break;
       }
       case ROLES.USER: {
-        this.setKey(SECTIONS.KEY_USER, 0, this.constructor.rootKey);
+        this.setKey(SECTIONS.KEY_USER, 0, 0, this.constructor.rootKey);
         break;
       }
     }
@@ -93,12 +93,18 @@ export class virtualBlockchain extends blockchainCore {
     return crypto.ecdh.getSharedKey(myPrivateKey, theirPublicKey);
   }
 
-  setKey(type, index, key) {
-    return this.keyRing.set(type << 8 | index, key);
+  setKey(type, index0, index1, key) {
+    return this.keyRing.set(type << 16 | index0 << 8 | index1, key);
   }
 
-  getKey(type, index) {
-    return this.keyRing.get(type << 8 | index);
+  getKey(type, index0, index1) {
+    let keyId = type << 16 | index0 << 8 | index1;
+
+    if(!this.keyRing.has(keyId)) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_KEY_NOT_FOUND, util.hexa(keyId, 6));
+    }
+
+    return this.keyRing.get(keyId);
   }
 
   getHeight() {

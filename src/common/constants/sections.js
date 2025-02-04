@@ -59,7 +59,13 @@ const ACCOUNT = {
       { name: "privateReference", type: DATA.STRING | DATA.PRIVATE | DATA.OPTIONAL }
     ],
     subsections: [
-      [ "privateReference", DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, KEY_PAYER_PAYEE, 0 ]
+      {
+        rule     : "privateReference",
+        type     : DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
+        keyId    : KEY_PAYER_PAYEE,
+        keyIndex0: 0,
+        keyIndex1: 0
+      }
     ]
   },
   [ ACCOUNT_SIGNATURE ]: {
@@ -196,18 +202,18 @@ export const APP_LEDGER_VERSION_UPDATE     = 1;
 export const APP_LEDGER_ACTOR_CREATION     = 2;
 export const APP_LEDGER_CHANNEL_CREATION   = 3;
 export const APP_LEDGER_CHANNEL_INVITATION = 4;
-export const APP_LEDGER_SUBSCRIPTION       = 5;
+export const APP_LEDGER_ACTOR_SUBSCRIPTION = 5;
 export const APP_LEDGER_CHANNEL_DATA       = 6 | DATA.EXTERNAL_SCHEMA;
 export const APP_LEDGER_ORACLE_DATA        = 7;
 export const APP_LEDGER_AUTHOR             = 8;
-export const APP_LEDGER_APPROVER           = 9;
-export const APP_LEDGER_APPROVER_SIGNATURE = 10;
+export const APP_LEDGER_ENDORSER           = 9;
+export const APP_LEDGER_ENDORSER_SIGNATURE = 10;
 export const APP_LEDGER_AUTHOR_SIGNATURE   = 11;
 
 export const APP_LEDGER_STRUCTURE = new RegExp(
   `^(<${APP_LEDGER_DECLARATION}>|<${APP_LEDGER_VERSION_UPDATE}>|<${APP_LEDGER_ACTOR_CREATION}>|<${APP_LEDGER_CHANNEL_CREATION}>|<${APP_LEDGER_CHANNEL_INVITATION}>|` +
-  `<${APP_LEDGER_SUBSCRIPTION}>|<${APP_LEDGER_CHANNEL_DATA}>|<${APP_LEDGER_ORACLE_DATA}>|<${APP_LEDGER_AUTHOR}>|<${APP_LEDGER_APPROVER}>)+` +
-  `(<${APP_LEDGER_APPROVER_SIGNATURE}>)?<${APP_LEDGER_AUTHOR_SIGNATURE}>$`
+  `<${APP_LEDGER_ACTOR_SUBSCRIPTION}>|<${APP_LEDGER_CHANNEL_DATA}>|<${APP_LEDGER_ORACLE_DATA}>|<${APP_LEDGER_AUTHOR}>|<${APP_LEDGER_ENDORSER}>)+` +
+  `(<${APP_LEDGER_ENDORSER_SIGNATURE}>)?<${APP_LEDGER_AUTHOR_SIGNATURE}>$`
 );
 
 const APP_LEDGER = {
@@ -248,16 +254,22 @@ const APP_LEDGER = {
       { name: "channelKey", type: DATA.AES_KEY | DATA.PRIVATE }
     ],
     subsections: [
-      [ "channelKey", DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, 127, 0 ]
+      {
+        rule     : "channelKey",
+        type     : DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
+        keyId    : KEY_CHANNEL,
+        keyIndex0: 0,
+        keyIndex1: 0
+      }
     ]
   },
-  [ APP_LEDGER_SUBSCRIPTION ]: {
-    label: "APP_LEDGER_SUBSCRIPTION",
+  [ APP_LEDGER_ACTOR_SUBSCRIPTION ]: {
+    label: "APP_LEDGER_ACTOR_SUBSCRIPTION",
     fields: [
       { name: "actorId",        type: DATA.UINT8 },
       { name: "actorType",      type: DATA.UINT8 },
       { name: "organizationId", type: DATA.UINT8, condition: parent => parent.actorType == DATA.ACTOR_ORGANIZATION },
-      { name: "publicKey",      type: DATA.UINT8, condition: parent => parent.actorType == DATA.ACTOR_END_USER }
+      { name: "publicKey",      type: DATA.PUB_KEY, condition: parent => parent.actorType == DATA.ACTOR_END_USER }
     ]
   },
   [ APP_LEDGER_CHANNEL_DATA ]: {
@@ -274,15 +286,15 @@ const APP_LEDGER = {
       { name: "authorId", type: DATA.UINT8 }
     ]
   },
-  [ APP_LEDGER_APPROVER ]: {
-    label: "APP_LEDGER_APPROVER",
+  [ APP_LEDGER_ENDORSER ]: {
+    label: "APP_LEDGER_ENDORSER",
     fields: [
-      { name: "approverId", type: DATA.UINT8 },
+      { name: "endorserId", type: DATA.UINT8 },
       { name: "messageId",  type: DATA.UINT16 }
     ]
   },
-  [ APP_LEDGER_APPROVER_SIGNATURE ]: {
-    label: "APP_LEDGER_APPROVER_SIGNATURE",
+  [ APP_LEDGER_ENDORSER_SIGNATURE ]: {
+    label: "APP_LEDGER_ENDORSER_SIGNATURE",
     fields: [
       { name: "signature", type: DATA.SIGNATURE }
     ]

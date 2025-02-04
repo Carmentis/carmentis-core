@@ -7,8 +7,10 @@ import {CarmentisError} from "../../common/errors/error.js";
 
 export class wiWallet {
   constructor(privateKey) {
-    this.privateKey = privateKey;
-    this.publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
+    if (privateKey) {
+      this.privateKey = privateKey;
+      this.publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
+    }
   }
 
   decodeRequest(requestType, request) {

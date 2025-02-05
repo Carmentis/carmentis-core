@@ -29,12 +29,16 @@ export class microblock extends blockchainCore {
   }
 
   create(height, previousHash) {
+    let timestamp = Math.floor(Date.now() / 1000);
+
     if(height == 1) {
+      let seed = crypto.getRandomBytes(16);
+
       previousHash = uint8.toHexa(
         uint8.from(
           this.vbType,
           new Uint8Array(15),
-          crypto.getRandomBytes(16)
+          seed
         )
       );
     }
@@ -45,7 +49,7 @@ export class microblock extends blockchainCore {
         protocolVersion: PROTOCOL.VERSION,
         height         : height,
         previousHash   : previousHash,
-        timestamp      : Math.floor(Date.now() / 1000),
+        timestamp      : timestamp,
         gas            : 0,
         gasPrice       : ECO.TOKEN
       },
@@ -81,8 +85,14 @@ export class microblock extends blockchainCore {
     return this.object.body.sections.length;
   }
 
-  sign(privateKey) {
-    this.updateGas(SECTIONS.SIGNATURE_SECTION_SIZE);
+  sign(privateKey, includeGas) {
+    if(includeGas) {
+      this.updateGas(SECTIONS.SIGNATURE_SECTION_SIZE);
+    }
+    else {
+      this.object.header.gas = 0;
+      this.object.header.gasPrice = 0;
+    }
 
     let binary = schemaSerializer.encode(
       SCHEMAS.MICROBLOCK,
@@ -92,12 +102,17 @@ export class microblock extends blockchainCore {
     return crypto.secp256k1.sign(privateKey, binary);
   }
 
-  verifySignature(publicKey, signature) {
+  verifySignature(publicKey, signature, includeGas, ignoredSections) {
     let header = { ...this.object.header };
+
+    if(!includeGas) {
+      header.gas = 0;
+      header.gasPrice = 0;
+    }
 
     let object = {
       header: header,
-      body: { sections: this.object.body.sections.slice(0, -1) }
+      body: { sections: this.object.body.sections.slice(0, -ignoredSections) }
     };
 
     let binary = schemaSerializer.encode(
@@ -123,13 +138,17 @@ export class microblock extends blockchainCore {
     return this.sections.map(section => `<${section.id}>`).join("");
   }
 
-  finalize(gasPrice) {
-    if(gasPrice < ECO.MINIMUM_GAS_PRICE || gasPrice > ECO.MAXIMUM_GAS_PRICE) {
-      console.log(gasPrice);
-      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS_PRICE);
+  finalize(includeGas, gasPrice) {
+    if(includeGas) {
+      if(gasPrice < ECO.MINIMUM_GAS_PRICE || gasPrice > ECO.MAXIMUM_GAS_PRICE) {
+        throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS_PRICE);
+      }
+      this.object.header.gasPrice = gasPrice;
     }
-
-    this.object.header.gasPrice = gasPrice;
+    else {
+      this.object.header.gas = 0;
+      this.object.header.gasPrice = 0;
+    }
 
     this.binary = schemaSerializer.encode(
       SCHEMAS.MICROBLOCK,
@@ -140,7 +159,7 @@ export class microblock extends blockchainCore {
       throw new blockchainError(ERRORS.BLOCKCHAIN_MB_TOO_LARGE);
     }
 
-    if(this.object.header.gas != this.constructor.computeGas(this.binary.length)) {
+    if(includeGas && this.object.header.gas != this.constructor.computeGas(this.binary.length)) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS);
     }
 

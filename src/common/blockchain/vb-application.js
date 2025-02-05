@@ -57,7 +57,7 @@ export class applicationVb extends virtualBlockchain {
   }
 
   async sign() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_OPERATOR, 0, 0), SECTIONS.APP_SIGNATURE);
+    await this.addSignature(this.getKey(SECTIONS.KEY_ROOT, 0, 0), SECTIONS.APP_SIGNATURE);
   }
 
   async updateState(mb, ndx, sectionId, object) {

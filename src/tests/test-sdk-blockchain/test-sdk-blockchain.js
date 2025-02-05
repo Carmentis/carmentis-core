@@ -476,8 +476,9 @@ async function appLedgerTest(organization, appId) {
 
   await vb.generateDataSections(approvalObject);
 
-  vb.setGasPrice(ECO.TOKEN);
-  mb = await vb.publish();
+  let data = vb.getMicroblockData();
+
+  console.log(data);
 }
 
 async function oracleTest(organization) {

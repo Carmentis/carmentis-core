@@ -1,7 +1,4 @@
-import { DATA } from "../../common/constants/constants.js";
-
-export const KEY_ID0 = 100;
-export const KEY_ID1 = 101;
+import { DATA, SECTIONS } from "../../common/constants/constants.js";
 
 export const EXTERNAL_APP_DEF = {
   fields: [
@@ -12,9 +9,8 @@ export const EXTERNAL_APP_DEF = {
     { name: "website",     type: DATA.STRING | DATA.PRIVATE }
   ],
   subsections: [
-    {
-      rule: "*",             type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, keyId: KEY_ID0, keyIndex0: 0, keyIndex1: 0 },
-    { rule: "countryCode",   type: DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES, keyId: KEY_ID1, keyIndex0: 0, keyIndex1: 0 },
-    { rule: "city, address", type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, keyId: KEY_ID1, keyIndex0: 0, keyIndex1: 0 }
+    { rule: "*",             type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL, keyIndex0: 1, keyIndex1: 0 },
+    { rule: "countryCode",   type: DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL, keyIndex0: 2, keyIndex1: 0 },
+    { rule: "city, address", type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL, keyIndex0: 2, keyIndex1: 0 }
   ]
 };

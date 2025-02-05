@@ -14,24 +14,16 @@ const MODIFIER = {
 //  getRuleSets()                                                                                                               //
 // ============================================================================================================================ //
 export function getRuleSets(sectionDef) {
-  let subSet = new Set,
-      rules = [];
-
-  sectionDef.subsections.forEach(sub => {
-    let subId = (sub.type << 24 | sub.keyId << 16 | sub.keyIndex0 << 8 | sub.keyIndex1) >>> 0;
-
-    if(subSet.has(subId)) {
-      throw new pathError(ERRORS.PATH_DUPLICATE_RULE, util.hexa(subId, 5));
-    }
-
-    subSet.add(subId);
+  let rules = sectionDef.subsections.map((sub, index) => {
+    let subId = (sub.type << 24 | sub.keyId << 16 | index) >>> 0;
 
     let accessRules = parseRuleSet(sectionDef, sub.rule.split(","), false);
 
-    rules.push({
+    return {
       subId: subId,
+      keyIndices: [ sub.keyIndex0, sub.keyIndex1],
       accessRules: accessRules
-    });
+    };
   });
 
   rules.sort((a, b) => a.subId - b.subId);

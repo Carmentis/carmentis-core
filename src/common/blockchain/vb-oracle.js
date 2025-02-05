@@ -24,7 +24,7 @@ export class oracleVb extends virtualBlockchain {
   }
 
   async sign() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_OPERATOR, 0), SECTIONS.ORACLE_SIGNATURE);
+    await this.addSignature(this.getKey(SECTIONS.KEY_ROOT, 0), SECTIONS.ORACLE_SIGNATURE);
   }
 
   async getOrganizationVb() {

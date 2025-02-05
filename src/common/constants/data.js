@@ -125,7 +125,7 @@ export const ACTOR_APP_OWNER    = 0;
 export const ACTOR_ORGANIZATION = 1;
 export const ACTOR_END_USER     = 2;
 
-export const ACTOR_NAME = [
+export const ACTOR_TYPES = [
   "applicationOwner",
   "organization",
   "endUser"

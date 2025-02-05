@@ -40,7 +40,6 @@ export const ERRORS_EN = {
   ],
 
   [ ERROR_TYPES.PATH ]: [
-    "Access rules for subsection with ID 0x%0 are defined more than once",
     "Invalid syntax for access rule '%0'",
     "Unknown modifier '%0'",
     "Modifier '%0' not allowed in access rule '%1'",
@@ -91,6 +90,7 @@ export const ERRORS_EN = {
 
   [ ERROR_TYPES.APP_LEDGER ]: [
     "Invalid actor id %0",
+    "Invalid actor type '%0' (should be one of 'applicationOwner', 'organization' or 'endUser')",
     "Invalid channel id %0",
     "Duplicate actor '%0'",
     "Duplicate channel '%0'",

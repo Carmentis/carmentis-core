@@ -41,15 +41,14 @@ export const SECTION_BAD_MERKLE_HASH   = 0x04;
 export const SECTION_KEY_NOT_FOUND     = 0x05;
 
 // PATH
-export const PATH_DUPLICATE_RULE      = 0x00;
-export const PATH_INVALID_RULE        = 0x01;
-export const PATH_UNKNOWN_MODIFIER    = 0x02;
-export const PATH_UNEXPECTED_MODIFIER = 0x03;
-export const PATH_UNKNOWN_FIELD       = 0x04;
-export const PATH_INCOMPLETE_STRUCT   = 0x05;
-export const PATH_NOT_A_STRUCT        = 0x06;
-export const PATH_INVALID_ENCODING    = 0x07;
-export const PATH_UNEXPECTED_WILDCARD = 0x08;
+export const PATH_INVALID_RULE        = 0x00;
+export const PATH_UNKNOWN_MODIFIER    = 0x01;
+export const PATH_UNEXPECTED_MODIFIER = 0x02;
+export const PATH_UNKNOWN_FIELD       = 0x03;
+export const PATH_INCOMPLETE_STRUCT   = 0x04;
+export const PATH_NOT_A_STRUCT        = 0x05;
+export const PATH_INVALID_ENCODING    = 0x06;
+export const PATH_UNEXPECTED_WILDCARD = 0x07;
 
 // BLOCKCHAIN
 export const BLOCKCHAIN_NO_ROOT_KEY          = 0x00;
@@ -88,13 +87,14 @@ export const APPLICATION_MISSING_ORG = 0x00;
 
 // APP LEDGER
 export const APP_LEDGER_BAD_ACTOR_ID       = 0x00;
-export const APP_LEDGER_BAD_CHANNEL_ID     = 0x01;
-export const APP_LEDGER_DUPLICATE_ACTOR    = 0x02;
-export const APP_LEDGER_DUPLICATE_CHANNEL  = 0x03;
-export const APP_LEDGER_UNKNOWN_ACTOR      = 0x04;
-export const APP_LEDGER_UNKNOWN_CHANNEL    = 0x05;
-export const APP_LEDGER_UNKNOWN_MESSAGE    = 0x06;
-export const APP_LEDGER_ALREADY_SUBSCRIBED = 0x07;
+export const APP_LEDGER_BAD_ACTOR_TYPE     = 0x01;
+export const APP_LEDGER_BAD_CHANNEL_ID     = 0x02;
+export const APP_LEDGER_DUPLICATE_ACTOR    = 0x03;
+export const APP_LEDGER_DUPLICATE_CHANNEL  = 0x04;
+export const APP_LEDGER_UNKNOWN_ACTOR      = 0x05;
+export const APP_LEDGER_UNKNOWN_CHANNEL    = 0x06;
+export const APP_LEDGER_UNKNOWN_MESSAGE    = 0x07;
+export const APP_LEDGER_ALREADY_SUBSCRIBED = 0x08;
 
 // ORACLE
 export const ORACLE_MISSING_ORG = 0x00;

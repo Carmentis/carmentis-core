@@ -7,10 +7,11 @@ export const SIGNATURE_SECTION_SIZE = 69;
 // ============================================================================================================================ //
 //  Key types                                                                                                                   //
 // ============================================================================================================================ //
-export const KEY_OPERATOR    = 0x00;
-export const KEY_USER        = 0x01;
+export const KEY_ROOT        = 0x00;
+export const KEY_ACTOR       = 0x01;
 export const KEY_PAYER_PAYEE = 0x02;
-export const KEY_CHANNEL     = 0x03;
+export const KEY_INVITATION  = 0x03;
+export const KEY_CHANNEL     = 0x04;
 
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
@@ -63,8 +64,8 @@ const ACCOUNT = {
         rule     : "privateReference",
         type     : DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
         keyId    : KEY_PAYER_PAYEE,
-        keyIndex0: 0,
-        keyIndex1: 0
+        keyIndex0: parent => parent.payeeId,
+        keyIndex1: parent => 0
       }
     ]
   },
@@ -257,9 +258,9 @@ const APP_LEDGER = {
       {
         rule     : "channelKey",
         type     : DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
-        keyId    : KEY_CHANNEL,
-        keyIndex0: 0,
-        keyIndex1: 0
+        keyId    : KEY_INVITATION,
+        keyIndex0: parent => parent.hostId,
+        keyIndex1: parent => parent.guestId
       }
     ]
   },

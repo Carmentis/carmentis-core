@@ -15,23 +15,30 @@ export const ERROR = [
 // ============================================================================================================================ //
 export const VB_STATES = {
   [ ID.OBJ_ACCOUNT ] : [
+    { name: "genesisSeed", type: DATA.HASH },
     { name: "publicKey",   type: DATA.PUB_KEY | DATA.OPTIONAL },
     { name: "payees",      type: DATA.HASH | DATA.ARRAY },
     { name: "nextPayeeId", type: DATA.UINT8 }
   ],
   [ ID.OBJ_VALIDATOR_NODE ] : [
+    { name: "genesisSeed", type: DATA.HASH }
   ],
   [ ID.OBJ_ORGANIZATION ] : [
-    { name: "publicKey", type: DATA.PUB_KEY | DATA.OPTIONAL }
+    { name: "genesisSeed", type: DATA.HASH },
+    { name: "publicKey",   type: DATA.PUB_KEY | DATA.OPTIONAL }
   ],
   [ ID.OBJ_APP_USER ] : [
+    { name: "genesisSeed", type: DATA.HASH }
   ],
   [ ID.OBJ_APPLICATION ] : [
+    { name: "genesisSeed",    type: DATA.HASH },
     { name: "organizationId", type: DATA.HASH }
   ],
   [ ID.OBJ_APP_LEDGER ] : [
+    { name: "genesisSeed", type: DATA.HASH }
   ],
   [ ID.OBJ_ORACLE ] : [
+    { name: "genesisSeed", type: DATA.HASH }
   ]
 };
 

@@ -48,20 +48,26 @@ export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new 
   }
 
   ruleSets.forEach(rule => {
-    let keyId = rule.subId & 0xFFFFFF,
-        type = rule.subId >>> 24,
-        isProvable = !!(type & DATA.SUB_PROVABLE),
-        hasAccessRules = !!(type & DATA.SUB_ACCESS_RULES);
+    let ruleType = rule.subId >>> 24,
+        keyType = rule.subId >> 16 & 0xFF,
+        isProvable = !!(ruleType & DATA.SUB_PROVABLE),
+        hasAccessRules = !!(ruleType & DATA.SUB_ACCESS_RULES);
+
+    let [ keyIndex0, keyIndex1 ] = rule.keyIndices.map(item =>
+      typeof item == "function" ? item(sectionObject.object): item
+    );
+
+    let keyId = keyType << 16 | keyIndex0 << 8 | keyIndex1;
 
     if(!keyRing.has(keyId)) {
       throw new sectionError(ERRORS.SECTION_KEY_NOT_FOUND, util.hexa(keyId, 6));
     }
 
     let subsection = {
-      type     : type,
-      keyType  : rule.subId >> 16 & 0xFF,
-      keyIndex0: rule.subId >> 8 & 0xFF,
-      keyIndex1: rule.subId & 0xFF
+      type     : ruleType,
+      keyType  : keyType,
+      keyIndex0: keyIndex0,
+      keyIndex1: keyIndex1
     };
 
     context.subId = rule.subId;
@@ -175,7 +181,7 @@ export function decode(height, sectionNdx, vbType, serializedSection, keyRing = 
 // ============================================================================================================================ //
 function getSubKey(key, height, sectionNdx, subsectionNdx) {
   let info = uint8.from(
-    1,
+    crypto.derive.PREFIX_SUBSECTION_KEY,
     util.intToByteArray(height, 6),
     sectionNdx,
     subsectionNdx
@@ -183,7 +189,7 @@ function getSubKey(key, height, sectionNdx, subsectionNdx) {
 
   let subKey = uint8.toHexa(crypto.derive.deriveBitsFromKey(key, info, 256));
 
-  info[0] = 2;
+  info[0] = crypto.derive.PREFIX_SUBSECTION_IV;
 
   let subIv = crypto.derive.deriveBitsFromKey(key, info, 128);
 

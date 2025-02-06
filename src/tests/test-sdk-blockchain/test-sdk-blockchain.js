@@ -426,10 +426,6 @@ async function appLedgerTest(organization, appId) {
     }
   ];
 
-  let vb, mb;
-
-  vb = new appLedgerVb();
-
   let approvalObject = {
     applicationId: appId,
     version: 1,
@@ -465,12 +461,18 @@ async function appLedgerTest(organization, appId) {
     }
   };
 
-  let endorserActorPublicKey;
+  let vb, mb;
 
-  if(!vb.isEndorserSubscribed("sender")) {
-    let endorserActorPrivateKey = crypto.generateKey256();
+  vb = new appLedgerVb();
 
-    endorserActorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(endorserActorPrivateKey);
+  if(approvalObject.appLedgerId) {
+    await vb.load(approvalObject.appLedgerId);
+  }
+
+  if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
+    let endorserActorPrivateKey = crypto.generateKey256(),
+        endorserActorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(endorserActorPrivateKey);
+
     vb.setEndorserActorPublicKey(endorserActorPublicKey);
   }
 

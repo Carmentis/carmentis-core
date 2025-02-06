@@ -78,12 +78,18 @@ async function scanQRCode() {
 }
 
 async function dataApproval() {
-  fetch(
-    "http://localhost:8080/dataApproval", {
-    method: "POST",
-    body: JSON.stringify({}),
-    headers: {
-      "Content-type": "application/json; charset=UTF-8"
+  const response = await fetch(
+    "http://localhost:8080/dataApproval",
+    {
+      method: "POST",
+      body: JSON.stringify({}),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      }
     }
-  });
+  );
+
+  const data = await response.json();
+
+  console.log(data);
 }

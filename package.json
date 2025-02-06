@@ -1,7 +1,7 @@
 {
   "name": "@cmts-dev/carmentis-sdk",
   "type": "module",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": "Carmentis SAS",
   "scripts": {
     "clean": "rimraf dist && rimraf types",

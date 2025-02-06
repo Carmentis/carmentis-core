@@ -29,11 +29,7 @@ export class appLedgerVb extends virtualBlockchain {
     this.endorserActorPublicKey = publicKey;
   }
 
-  async generateDataSections(object, processInvitation = true) {
-    if(object.appLedgerId) {
-      await this.load(object.appLedgerId);
-    }
-
+  async generateDataSections(object) {
     if(this.getHeight() == 1) {
       // genesis -> declare the application with its version
       await this.addDeclaration({
@@ -81,7 +77,7 @@ export class appLedgerVb extends virtualBlockchain {
     }
 
     // is the endorser already subscribed?
-    if(processInvitation && !this.state.actors[endorserId].subscribed) {
+    if(!this.state.actors[endorserId].subscribed) {
       await this.addActorSubscription({
         actorId  : endorserId,
         actorType: DATA.ACTOR_END_USER,
@@ -95,18 +91,16 @@ export class appLedgerVb extends virtualBlockchain {
         let channelId = this.getChannelByName(channelName),
             guestId = this.getActorByName(actorName);
 
-        if(processInvitation) {
-          let theirPublicKey = this.getActorPublicKey(guestId);
+        let theirPublicKey = this.getActorPublicKey(guestId);
 
-          let invitationKey = this.getSharedKey(
-            uint8.fromHexa(this.getKey(SECTIONS.KEY_ACTOR, 0, 0)),
-            uint8.fromHexa(theirPublicKey)
-          );
+        let invitationKey = this.getSharedKey(
+          uint8.fromHexa(this.getKey(SECTIONS.KEY_ACTOR, 0, 0)),
+          uint8.fromHexa(theirPublicKey)
+        );
 
-          this.setKey(SECTIONS.KEY_INVITATION, authorId, guestId, invitationKey);
+        this.setKey(SECTIONS.KEY_INVITATION, authorId, guestId, invitationKey);
 
-          await this.addChannelInvitation(channelId, authorId, guestId);
-        }
+        await this.addChannelInvitation(channelId, authorId, guestId);
       }
     }
 

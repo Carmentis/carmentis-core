@@ -597,12 +597,19 @@ export const WIRQ_DATA_APPROVAL      = 0x1;
 export const WI_REQUESTS = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
     { name: "challenge", type: DATA.BIN256 }
+  ],
+  [ WIRQ_DATA_APPROVAL ]: [
+    { name: "dataId",    type: DATA.BIN256 },
+    { name: "challenge", type: DATA.BIN256 }
   ]
 };
 
 export const WI_ANSWERS = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
     { name: "publicKey", type: DATA.PUB_KEY },
+    { name: "signature", type: DATA.SIGNATURE }
+  ],
+  [ WIRQ_DATA_APPROVAL ]: [
     { name: "signature", type: DATA.SIGNATURE }
   ]
 };

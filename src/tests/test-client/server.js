@@ -34,14 +34,14 @@ http.createServer(processRequest)
     console.log(`App is running at http://localhost:${PORT}`);
   });
 
-function processRequest(req, res) {
+async function processRequest(req, res) {
   switch(req.method) {
     case "POST": {
-      processPost(req, res);
+      await processPost(req, res);
       break;
     }
     case "GET": {
-      processGet(req, res);
+      await processGet(req, res);
       break;
     }
   }
@@ -51,7 +51,7 @@ function processRequest(req, res) {
 async function processPost(req, res) {
   switch(req.url) {
     case "/dataApproval": {
-      await processDataApproval();
+      await processDataApproval(res);
       break;
     }
   }
@@ -97,7 +97,7 @@ function processGet(req, res) {
   }
 }
 
-async function processDataApproval() {
+async function processDataApproval(res) {
   let organization = await publishOrganization(ORG_PRIVATE_KEY),
       applicationId = await publishApplication(organization);
 
@@ -160,10 +160,15 @@ async function processDataApproval() {
     }
   };
 
-  await operatorQuery(
+  let answer = await operatorQuery(
     "prepareUserApproval",
     approvalObject
   );
+
+  console.log(answer);
+
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.write(JSON.stringify(answer));
 }
 
 async function publishOrganization(orgPrivateKey) {

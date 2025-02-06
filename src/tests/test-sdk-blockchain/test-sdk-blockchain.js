@@ -476,9 +476,10 @@ async function appLedgerTest(organization, appId) {
 
   await vb.generateDataSections(approvalObject);
 
-  let data = vb.getMicroblockData();
+  mb = vb.getMicroblockData();
 
-  console.log(data);
+  console.log(mb);
+  console.log(vb.currentMicroblock.binary);
 }
 
 async function oracleTest(organization) {

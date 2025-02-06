@@ -9,18 +9,18 @@ function processMessage(data) {
 
   let privateKey = Carmentis.crypto.generateKey256();
 
-  let wiWallet = new Carmentis.wiExtensionWallet(privateKey);
+  let wiWallet = new Carmentis.wiExtensionWallet();
 
   let req = wiWallet.getRequestFromMessage(data);
 
   console.log("getRequestFromMessage", req);
 
-  let answer = wiWallet.approveRequestExecution(req);
+  let answer = wiWallet.approveRequestExecution(privateKey, req);
 
   window.parent.postMessage(
     {
       data: answer,
-      from: "CarmentisWallet"
+      from: "carmentis/walletResponse"
     },
     "*"
   );

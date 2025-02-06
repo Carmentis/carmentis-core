@@ -4,6 +4,7 @@ import * as uint8 from "../util/uint8.js";
 export const PREFIX_SUBSECTION_KEY = 0x01;
 export const PREFIX_SUBSECTION_IV  = 0x02;
 export const PREFIX_ACTOR_KEY      = 0x03;
+export const PREFIX_CHANNEL_KEY    = 0x04;
 
 // ============================================================================================================================ //
 //  deriveBitsPbkdf2()                                                                                                          //

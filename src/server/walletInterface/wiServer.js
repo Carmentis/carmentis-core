@@ -14,12 +14,9 @@ export class wiServer {
   }
 
   onConnect(socket) {
-    console.log("connection");
-
     socket.on("data", onData);
 
     socket.on("disconnect", _ => {
-      console.log("disconnected");
     });
 
     function onData(message) {

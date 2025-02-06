@@ -32,25 +32,6 @@ const {
 
 let wiClient;
 
-async function authentication() {
-  wiClient = new Carmentis.wiClient;
-
-  wiClient.attachQrCodeContainer("output");
-  wiClient.attachExtensionButton("openExtension");
-  wiClient.setServerUrl("http://localhost:3005");
-
-  let answer = await wiClient.authenticationByPublicKey("FFAA7FC3FA1D8D74546427AD2C28BBBF127B6072344E494FF8D5E575B6BC3D0E");
-
-  console.log("resolved authenticationByPublicKey promise", answer);
-}
-
-async function scanQRCode() {
-  let qrData = wiClient.getQrData("output"),
-      iframe = document.getElementById("appWalletIframe").contentWindow;
-
-  iframe.postMessage({ carmentisMessage: true, qrData: qrData }, "*");
-}
-
 async function tokenIssuance() {
   blockchainCore.setDbInterface(memoryDb);
   blockchainCore.setNode(NODE_URL);
@@ -75,4 +56,34 @@ async function tokenIssuance() {
 
   vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
+}
+
+async function authentication() {
+  wiClient = new Carmentis.wiClient;
+
+  wiClient.attachQrCodeContainer("output");
+  wiClient.attachExtensionButton("openExtension");
+  wiClient.setServerUrl("http://localhost:3005");
+
+  let answer = await wiClient.authenticationByPublicKey("FFAA7FC3FA1D8D74546427AD2C28BBBF127B6072344E494FF8D5E575B6BC3D0E");
+
+  console.log("resolved authenticationByPublicKey promise", answer);
+}
+
+async function scanQRCode() {
+  let qrData = wiClient.getQrData("output"),
+      iframe = document.getElementById("appWalletIframe").contentWindow;
+
+  iframe.postMessage({ carmentisMessage: true, qrData: qrData }, "*");
+}
+
+async function dataApproval() {
+  fetch(
+    "http://localhost:8080/dataApproval", {
+    method: "POST",
+    body: JSON.stringify({}),
+    headers: {
+      "Content-type": "application/json; charset=UTF-8"
+    }
+  });
 }

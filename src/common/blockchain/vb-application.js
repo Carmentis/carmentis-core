@@ -21,8 +21,9 @@ export class applicationVb extends virtualBlockchain {
   }
 
   async addDefinition(object) {
-    message.encodeMessages(object.definition);
-    await this.addSection(SECTIONS.APP_DEFINITION, object);
+    let def = message.encodeMessages(object);
+
+    await this.addSection(SECTIONS.APP_DEFINITION, def);
   }
 
   async getOrganizationVb() {
@@ -50,7 +51,7 @@ export class applicationVb extends virtualBlockchain {
     );
 
     if(object) {
-      message.decodeMessages(object.definition);
+      message.decodeMessages(object);
     }
 
     return object;

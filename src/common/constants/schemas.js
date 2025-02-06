@@ -592,6 +592,7 @@ export const WI_MESSAGES = {
 };
 
 export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x0;
+export const WIRQ_DATA_APPROVAL      = 0x1;
 
 export const WI_REQUESTS = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [

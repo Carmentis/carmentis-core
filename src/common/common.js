@@ -7,4 +7,8 @@ export * as base64 from "./util/base64.js";
 export * as merkle from './trees/merkle.js'
 
 import * as dataUtils from "./util/data.js";
-export const utils = { data: dataUtils }
+import * as uint8 from './util/uint8.js'
+export const utils = {
+    data: dataUtils,
+    encoding: uint8
+}

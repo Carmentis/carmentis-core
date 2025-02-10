@@ -54,6 +54,9 @@ export class wiWallet {
     );
   }
 
+  /**
+   * Get the approval data from the operator, given the corresponding data identifier.
+   */
   getApprovalData(privateKey, object) {
   }
 }

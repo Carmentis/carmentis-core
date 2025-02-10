@@ -5,13 +5,11 @@ import { pathError } from "../errors/error.js";
 // ============================================================================================================================ //
 //  encodeMessages()                                                                                                            //
 // ============================================================================================================================ //
-export function encodeMessages(object) {
-  let copy = { ...object };
+export function encodeMessages(appDef) {
+  let copy = { ...appDef };
 
-  copy.definition = { ...copy.definition };
-
-  copy.definition.messages = copy.definition.messages.map(msg => {
-    let [ texts, fields ] = encodeMessage(object.definition, msg.content);
+  copy.messages = copy.messages.map(msg => {
+    let [ texts, fields ] = encodeMessage(appDef, msg.content);
 
     return {
       name  : msg.name,
@@ -26,9 +24,9 @@ export function encodeMessages(object) {
 // ============================================================================================================================ //
 //  decodeMessages()                                                                                                            //
 // ============================================================================================================================ //
-export function decodeMessages(object) {
-  for(let msg of object.definition.messages) {
-    msg.content = decodeMessage(object.definition, msg.texts, msg.fields);
+export function decodeMessages(appDef) {
+  for(let msg of appDef.messages) {
+    msg.content = decodeMessage(appDef, msg.texts, msg.fields);
 
     delete msg.texts;
     delete msg.fields;

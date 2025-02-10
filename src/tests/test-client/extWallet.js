@@ -15,7 +15,7 @@ function processMessage(data) {
 
   console.log("getRequestFromMessage", req);
 
-  let answer = wiWallet.approveRequestExecution(privateKey, req);
+  let answer = wiWallet.signAuthenticationByPublicKey(privateKey, req.object);
 
   window.parent.postMessage(
     {

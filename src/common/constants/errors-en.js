@@ -97,11 +97,14 @@ export const ERRORS_EN = {
     "Unknown actor '%0'",
     "Unknown channel '%0'",
     "Unknown message '%0'",
-    "Actor '%0' has already subscribed"
+    "Actor '%0' is already subscribed to this application ledger",
+    "Actor '%0' cannot be invited (this actor is not yet subscribed to this application ledger)"
   ],
 
   [ ERROR_TYPES.ORACLE ]: [
-    "Organization is not declared"
+    "Organization is not declared",
+    "Unable to load service '%0'",
+    "Invalid request signature"
   ],
 
   [ ERROR_TYPES.WI ]: [

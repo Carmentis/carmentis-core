@@ -2,12 +2,17 @@ import * as http from "http";
 import * as fs from "fs";
 
 import { APP_V1 } from "../test-sdk-blockchain/app-v1.js";
+import { ORACLE } from "../test-sdk-blockchain/oracle.js";
 
 import * as sdk from "../../server/sdk.js";
 import * as memoryDb from "../memoryDb.js";
 
-const ORG_PRIVATE_KEY = "2B76D9AADC974CCE240359C5585997A32C05927C121F393F4AF04B9FD6B4C56A";
-const NODE_URL = "http://127.0.0.1:3000";
+const APP_PRIVATE_KEY    = "2B76D9AADC974CCE240359C5585997A32C05927C121F393F4AF04B9FD6B4C56A";
+const ORACLE_PRIVATE_KEY = "ADDA4B6E6072FC8E31815C4F0E24D6668CAC6BAE5536D9192D671AC79CC23B24";
+
+const NODE_URL            = "http://localhost:3000";
+const APP_OPERATOR_URL    = "http://localhost:3005";
+const ORACLE_OPERATOR_URL = "http://localhost:3006";
 
 const { ECO } = sdk.constants;
 
@@ -29,6 +34,8 @@ const PORT = 8080;
 const OPERATOR_HOSTNAME = "localhost";
 const OPERATOR_PORT = 3005;
 
+let applicationId, oracleId;
+
 http.createServer(processRequest)
   .listen(PORT, () => {
     console.log(`App is running at http://localhost:${PORT}`);
@@ -49,58 +56,95 @@ async function processRequest(req, res) {
 }
 
 async function processPost(req, res) {
+  let answer;
+
+  console.log("received POST request " + req.url);
+
   switch(req.url) {
+    case "/genesis": {
+      answer = await genesis(res);
+      break;
+    }
+    case "/publishObjects": {
+      answer = await publishObjects(res);
+      break;
+    }
     case "/dataApproval": {
-      await processDataApproval(res);
+      answer = await processDataApproval(res);
+      break;
+    }
+    case "/oracleRequest": {
+      answer = await processOracleRequest(res);
       break;
     }
   }
+
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.write(JSON.stringify(answer));
 }
 
 function processGet(req, res) {
-  switch(req.url) {
-    case "/": {
+  let url = req.url;
+
+  if(url == "/") {
+    url = "/index.html";
+  }
+
+  let ext = url.split(".").pop();
+
+  switch(ext) {
+    case "html": {
       res.writeHead(200, { "Content-Type": "text/html" });
-      res.write(fs.readFileSync("./index.html"));
+      res.write(fs.readFileSync("." + url));
       break;
     }
-    case "/appWallet.html": {
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.write(fs.readFileSync("./appWallet.html"));
-      break;
-    }
-    case "/extWallet.html": {
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.write(fs.readFileSync("./extWallet.html"));
-      break;
-    }
-    case "/carmentis-sdk.js": {
+    case "js": {
       res.writeHead(200, { "Content-Type": "text/javascript" });
-      res.write(fs.readFileSync("../../../dist/client/index.js"));
-      break;
-    }
-    case "/main.js": {
-      res.writeHead(200, { "Content-Type": "text/javascript" });
-      res.write(fs.readFileSync("./main.js"));
-      break;
-    }
-    case "/appWallet.js": {
-      res.writeHead(200, { "Content-Type": "text/javascript" });
-      res.write(fs.readFileSync("./appWallet.js"));
-      break;
-    }
-    case "/extWallet.js": {
-      res.writeHead(200, { "Content-Type": "text/javascript" });
-      res.write(fs.readFileSync("./extWallet.js"));
+      res.write(fs.readFileSync(url == "/carmentis-sdk.js" ? "../../../dist/client/index.js" : "." + url));
       break;
     }
   }
 }
 
-async function processDataApproval(res) {
-  let organization = await publishOrganization(ORG_PRIVATE_KEY),
-      applicationId = await publishApplication(organization);
+async function genesis() {
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode(NODE_URL);
 
+  let vb, mb, transfer, answer;
+
+  let issuerPrivateKey = crypto.generateKey256(),
+      issuerPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(issuerPrivateKey),
+      buyerPrivateKey = crypto.generateKey256(),
+      buyerPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(buyerPrivateKey);
+
+  blockchainCore.setUser(ROLES.USER, issuerPrivateKey);
+
+  vb = new accountVb();
+
+  await vb.addTokenIssuance({
+    issuerPublicKey: issuerPublicKey,
+    amount: ECO.INITIAL_OFFER
+  });
+
+  await vb.sign();
+
+  vb.setGasPrice(ECO.TOKEN);
+  mb = await vb.publish();
+
+  return {};
+}
+
+async function publishObjects(res) {
+  let appOrganization = await publishApplicationOrganization(APP_PRIVATE_KEY),
+      oracleOrganization = await publishOracleOrganization(ORACLE_PRIVATE_KEY);
+
+  applicationId = await publishApplication(appOrganization);
+  oracleId = await publishOracle(oracleOrganization);
+
+  return {};
+}
+
+async function processDataApproval(res) {
   let fields = {
     transactionId: "FS1234",
     senderDocument: {
@@ -144,9 +188,6 @@ async function processDataApproval(res) {
     channelInvitations: {
       sender: [
         "mainChannel"
-      ],
-      recipient: [
-        "mainChannel"
       ]
     },
     permissions: {
@@ -154,9 +195,8 @@ async function processDataApproval(res) {
     },
     author: "fileSign",
     approval: {
-      endorser      : "sender",
-      requiredFields: [ "senderDocument.file" ],
-      message       : "fileSent"
+      endorser: "sender",
+      message : "fileSent"
     }
   };
 
@@ -167,11 +207,28 @@ async function processDataApproval(res) {
 
   console.log(answer);
 
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.write(JSON.stringify(answer));
+  return answer;
 }
 
-async function publishOrganization(orgPrivateKey) {
+async function processOracleRequest(res) {
+  let requestObject = {
+    oracleId: oracleId,
+    service: "verifyEmail",
+    data: {
+      publicKey: "55AA".repeat(16),
+      email: "foo@bar.com"
+    }
+  };
+
+  let answer = await operatorQuery(
+    "initiateOracleRequest",
+    requestObject
+  );
+
+  return {};
+}
+
+async function publishApplicationOrganization(orgPrivateKey) {
   let orgPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(orgPrivateKey);
 
   blockchainCore.setDbInterface(memoryDb);
@@ -189,12 +246,51 @@ async function publishOrganization(orgPrivateKey) {
   await vb.addDescription({
     name: "Carmentis SAS",
     city: "Paris",
-    countryCode: "UK",
+    countryCode: "FR",
     website: "www.carmentis.io"
   });
 
   await vb.addServer({
-    endpoint: "https://foo.bar"
+    endpoint: APP_OPERATOR_URL
+  });
+
+  await vb.sign();
+
+  vb.setGasPrice(ECO.TOKEN);
+
+  mb = await vb.publish();
+
+  return {
+    id: mb.hash,
+    publicKey : orgPublicKey,
+    privateKey: orgPrivateKey
+  };
+}
+
+async function publishOracleOrganization(orgPrivateKey) {
+  let orgPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(orgPrivateKey);
+
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode(NODE_URL);
+  blockchainCore.setUser(ROLES.OPERATOR, orgPrivateKey);
+
+  let vb, mb;
+
+  vb = new organizationVb();
+
+  await vb.addPublicKey({
+    publicKey: orgPublicKey
+  });
+
+  await vb.addDescription({
+    name: "Acme",
+    city: "Paris",
+    countryCode: "FR",
+    website: "www.acme.io"
+  });
+
+  await vb.addServer({
+    endpoint: ORACLE_OPERATOR_URL
   });
 
   await vb.sign();
@@ -220,12 +316,36 @@ async function publishApplication(organization) {
   vb = new applicationVb();
 
   await vb.addDeclaration({ organizationId: organization.id });
-
   await vb.addDescription(APP_V1.description);
 
   await vb.addDefinition({
     version: 1,
     definition: APP_V1.definition
+  });
+
+  await vb.sign();
+
+  vb.setGasPrice(ECO.TOKEN);
+  mb = await vb.publish();
+
+  return mb.hash;
+}
+
+async function publishOracle(organization) {
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode(NODE_URL);
+  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
+
+  let vb, mb;
+
+  vb = new oracleVb();
+
+  await vb.addDeclaration({ organizationId: organization.id });
+  await vb.addDescription(ORACLE.description);
+
+  await vb.addDefinition({
+    version: 1,
+    definition: ORACLE.definition
   });
 
   await vb.sign();

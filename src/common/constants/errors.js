@@ -95,9 +95,12 @@ export const APP_LEDGER_UNKNOWN_ACTOR      = 0x05;
 export const APP_LEDGER_UNKNOWN_CHANNEL    = 0x06;
 export const APP_LEDGER_UNKNOWN_MESSAGE    = 0x07;
 export const APP_LEDGER_ALREADY_SUBSCRIBED = 0x08;
+export const APP_LEDGER_CANNOT_INVITE      = 0x09;
 
 // ORACLE
-export const ORACLE_MISSING_ORG = 0x00;
+export const ORACLE_MISSING_ORG           = 0x00;
+export const ORACLE_UNKNOWN_SERVICE       = 0x01;
+export const ORACLE_BAD_REQUEST_SIGNATURE = 0x02;
 
 // WALLET INTERFACE
 export const WI_INVALID_SIGNATURE = 0x00;

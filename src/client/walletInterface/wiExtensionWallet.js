@@ -7,7 +7,7 @@ import * as crypto from "../../common/crypto/crypto.js";
 
 export class wiExtensionWallet extends wiWallet {
   constructor() {
-    super(undefined);
+    super();
   }
 
   /**
@@ -26,22 +26,14 @@ export class wiExtensionWallet extends wiWallet {
   }
 
   /**
-   * Approves the execution of a given request by processing it and returning an encoded response.
-   *
-   * @param {string} privateKey - The private key used for the approval process.
-   * @param {Object} req - The request to be processed.
-   * @return {Object} An object containing the encoded response.
-   * @return {string} return.answerType - The type of the answer generated after processing the request.
-   * @return {string} return.answer - The base64 encoded binary representation of the processed answer.
+   * Formats an answer, using the extension wallet format.
    */
-  approveRequestExecution(privateKey, req) {
-    this.privateKey = privateKey;
-    this.publicKey =  crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
-    let object = this.processRequest(req);
+  formatAnswer(answerType, object) {
+    let answer = schemaSerializer.encode(SCHEMAS.WI_ANSWERS[answerType], object);
 
     return {
-      answerType: object.answerType,
-      answer: base64.encodeBinary(object.answer, base64.BASE64)
+      answerType: answerType,
+      answer: base64.encodeBinary(answer, base64.BASE64)
     };
   }
 }

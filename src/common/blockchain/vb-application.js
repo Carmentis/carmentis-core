@@ -21,9 +21,11 @@ export class applicationVb extends virtualBlockchain {
   }
 
   async addDefinition(object) {
-    let def = message.encodeMessages(object);
+    let copy = { ...object };
 
-    await this.addSection(SECTIONS.APP_DEFINITION, def);
+    copy.definition = message.encodeMessages(copy.definition);
+
+    await this.addSection(SECTIONS.APP_DEFINITION, copy);
   }
 
   async getOrganizationVb() {
@@ -51,10 +53,11 @@ export class applicationVb extends virtualBlockchain {
     );
 
     if(object) {
-      message.decodeMessages(object);
+      message.decodeMessages(object.definition);
+      return object.definition;
     }
 
-    return object;
+    return undefined;
   }
 
   async sign() {

@@ -1,6 +1,8 @@
-import { ERRORS, ID, SECTIONS } from "../constants/constants.js";
+import { ERRORS, ID, SCHEMAS, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { organizationVb } from "./vb-organization.js";
+import * as crypto from "../crypto/crypto.js";
+import * as schemaSerializer from "../serializers/schema-serializer.js";
 import { sectionError, oracleError } from "../errors/error.js";
 
 // ============================================================================================================================ //
@@ -37,6 +39,94 @@ export class oracleVb extends virtualBlockchain {
     await vb.load(this.state.organizationId);
 
     return vb;
+  }
+
+  async getDefinition(version) {
+    let object;
+
+    object = await this.findSection(
+      SECTIONS.ORACLE_DEFINITION,
+      object => version == undefined || object.version == version
+    );
+
+    if(object) {
+      return object.definition;
+    }
+
+    return undefined;
+  }
+
+  async encodeServiceRequest(version, serviceName, dataObject, organizationId, privateKey) {
+    let definition = await this.getDefinition(version),
+        service = definition && definition.services.find(obj => obj.name == serviceName);
+
+    if(!service) {
+      throw new oracleError(ERRORS.ORACLE_UNKNOWN_SERVICE, serviceName);
+    }
+
+    let data = schemaSerializer.encode(
+      service.request,
+      dataObject,
+      {
+        structures: definition.structures,
+        enumerations: definition.enumerations
+      }
+    );
+
+    let body = {
+      organizationId: organizationId,
+      oracleId      : this.id,
+      serviceName   : serviceName,
+      data          : data
+    };
+
+    let encodedBody = schemaSerializer.encode(
+      SCHEMAS.ORACLE_REQUEST_BODY,
+      body
+    );
+
+    let request = {
+      body: encodedBody,
+      signature: crypto.secp256k1.sign(privateKey, encodedBody)
+    };
+
+    return request;
+  }
+
+  static decodeServiceRequestBody(body) {
+    return schemaSerializer.decode(
+      SCHEMAS.ORACLE_REQUEST_BODY,
+      body
+    );
+  }
+
+  async decodeServiceRequest(version, serviceName, request) {
+    let definition = await this.getDefinition(version),
+        service = definition && definition.services.find(obj => obj.name == serviceName);
+
+    if(!service) {
+      throw new oracleError(ERRORS.ORACLE_UNKNOWN_SERVICE, serviceName);
+    }
+
+    let body = this.constructor.decodeServiceRequestBody(request.body);
+
+    let senderVb = new organizationVb();
+    await senderVb.load(body.organizationId);
+
+    if(!crypto.secp256k1.verify(senderVb.state.publicKey, request.body, request.signature)) {
+      throw new oracleError(ERRORS.ORACLE_BAD_REQUEST_SIGNATURE);
+    }
+
+    body.data = schemaSerializer.decode(
+      service.request,
+      body.data,
+      {
+        structures: definition.structures,
+        enumerations: definition.enumerations
+      }
+    );
+
+    return body;
   }
 
   async updateState(mb, ndx, sectionId, object) {

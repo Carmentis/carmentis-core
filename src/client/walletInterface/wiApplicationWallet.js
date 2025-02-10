@@ -7,8 +7,8 @@ import * as qrCode from "../qrCode/qrCode.js";
 import {CarmentisError} from "../../common/errors/error.js";
 
 export class wiApplicationWallet extends wiWallet {
-  constructor(privateKey) {
-    super(privateKey);
+  constructor() {
+    super();
   }
 
   /**
@@ -62,44 +62,18 @@ export class wiApplicationWallet extends wiWallet {
   }
 
   /**
-   * Processes and approves an execution request based on its type. Specifically handles requests related to authentication by public key.
-   *
-   * @param {Object} req - The request object containing the type and necessary data for execution.
-   * @param {number} req.type - The type of the request to process.
-   * @param {Object} req.object - The additional data required to process the request, such as a challenge for public key authentication.
-   * @param {Object} req.object.challenge - The challenge
-   * @return {void} Does not return any value but may send a message or log a warning based on the request type.
+   * Formats an answer, using the application wallet format.
    */
-  approveRequestExecution(req) {
-    let res = this.processRequest(req);
+  formatAnswer(answerType, object) {
+    let answer = schemaSerializer.encode(SCHEMAS.WI_ANSWERS[answerType], object);
 
-    this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, res);
+    return {
+      answerType: answerType,
+      answer: answer
+    };
   }
 
-  /**
-   * Approves an authentication request by generating a response using a private key and challenge.
-   *
-   * @param {string} serverUrl - The server.
-   * @param {string} challenge - The challenge provided for the authentication process.
-   * @return {Promise<void>} Resolves when the authentication approval process is completed.
-   */
-  async approveAuthenticationRequest(serverUrl, challenge) {
-    let answer = schemaSerializer.encode(SCHEMAS.WI_ANSWERS[SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY], {
-      publicKey: crypto.secp256k1.publicKeyFromPrivateKey(this.privateKey),
-      signature: crypto.secp256k1.sign(this.privateKey, challenge)
-    });
-
-
-    this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, { answerType: SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, answer: answer });
-    /*
-    return new Promise(function (resolve, reject) {
-      console.log("[wallet] opening socket with", serverUrl);
-      const socket = clientSocket.getSocket(serverUrl, onConnect.bind(this), undefined);
-
-      function onConnect() {
-        console.log("[wallet] connected");
-        socket.sendMessage(SCHEMAS.WIMSG_ANSWER, { answerType: SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, answer: answer });
-      }
-    });*/
+  sendAnswer(answer) {
+    this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, answer);
   }
 }

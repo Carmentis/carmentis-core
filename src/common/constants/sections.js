@@ -78,7 +78,7 @@ const ACCOUNT = {
 };
 
 // ============================================================================================================================ //
-//  Account                                                                                                                     //
+//  Node                                                                                                                        //
 // ============================================================================================================================ //
 export const NODE_DECLARATION = 0;
 export const NODE_SIGNATURE   = 1;
@@ -233,6 +233,7 @@ const APP_LEDGER = {
     label: "APP_LEDGER_ACTOR_CREATION",
     fields: [
       { name: "id",   type: DATA.UINT8 },
+      { name: "type", type: DATA.UINT8 },
       { name: "name", type: DATA.STRING }
     ]
   },

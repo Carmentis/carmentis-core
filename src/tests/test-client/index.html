@@ -6,10 +6,12 @@
   <script type="text/javascript" src="extWallet.js"></script>
 </head>
 <body>
-  <button onclick="tokenIssuance()">Token issuance</button>
+  <button onclick="genesis()">Genesis</button>
+  <button class="genesisRequired" onclick="publishObjects()">Publish objects</button>
   <button onclick="authentication()">Authentication</button>
+  <button class="publicationRequired" onclick="oracleRequest()">Oracle request</button>
+  <button class="publicationRequired" onclick="dataApproval()">Data approval</button>
   <button onclick="scanQRCode()">Scan QR code</button>
-  <button onclick="dataApproval()">Data approval</button>
   <hr>
   <div id="output"></div>
   <button id="openExtension">Open extension</button>

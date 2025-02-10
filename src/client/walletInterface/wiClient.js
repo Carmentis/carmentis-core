@@ -69,6 +69,7 @@ export class wiClient {
     }
 
     console.log("[wiClient] performing the authentication request...")
+
     let answer = await this.request(SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, { challenge: challenge });
 
     if(!crypto.secp256k1.verify(answer.publicKey, challenge, answer.signature)) {
@@ -76,13 +77,13 @@ export class wiClient {
     }
 
     console.log("[wiClient] Obtained response:", answer)
+
     return {
       challenge: challengeString,
       publicKey: answer.publicKey,
       signature: answer.signature
     };
   }
-
 
   /**
    * Retrieves the email information by sending a request using a predefined schema.
@@ -93,9 +94,27 @@ export class wiClient {
     let answer = await this.request(SCHEMAS.WIRQ_GET_EMAIL, {});
 
     console.log("[wiClient] Obtained response:", answer)
+
     return {
       email: answer.email,
     };
+  }
+
+  /**
+   * Data approval process.
+   *
+   * @param {string} dataId - The data identifier returned by the operator server.
+   *
+   * @return {Promise<{
+   *     signature: string
+   * }>} A promise that resolves to an object containing:
+   *                           - signature: The digital signature of the microblock.
+   * @throws {Error} If the process fails.
+   */
+  async getApprovalData(dataId) {
+    let answer = await this.request(SCHEMAS.WIRQ_DATA_APPROVAL, { dataId: uint8.fromHexa(dataId) });
+
+    return answer;
   }
 
   async request(type, object) {

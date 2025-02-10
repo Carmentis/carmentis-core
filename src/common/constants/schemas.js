@@ -347,25 +347,6 @@ export const NODE_MESSAGES = {
 };
 
 // ============================================================================================================================ //
-//  Application <-> operator network messages                                                                                   //
-// ============================================================================================================================ //
-export const MSG_PREPARE_USER_APPROVAL     = 0x00;
-export const MSG_INVOKE_ORACLE             = 0x01;
-
-export const MSG_ANS_PREPARE_USER_APPROVAL = 0x80;
-export const MSG_ANS_INVOKE_ORACLE         = 0x81;
-
-export const APP_OP_MESSAGES = {
-  [ MSG_PREPARE_USER_APPROVAL ] : [
-  ],
-  [ MSG_INVOKE_ORACLE ] : [
-    { name: "oracleId",    type: DATA.HASH },
-    { name: "serviceName", type: DATA.STRING },
-    { name: "request",     type: DATA.BINARY }
-  ]
-};
-
-// ============================================================================================================================ //
 //  Operator <-> operator network messages                                                                                      //
 // ============================================================================================================================ //
 export const MSG_SUBMIT_ORACLE_REQUEST      = 0x00;
@@ -375,14 +356,19 @@ export const MSG_ORACLE_ANSWER              = 0x02;
 export const MSG_ANS_SUBMIT_ORACLE_REQUEST  = 0x80;
 export const MSG_ANS_CONFIRM_ORACLE_REQUEST = 0x01;
 
+export const ORACLE_REQUEST_BODY = [
+  { name: "organizationId", type: DATA.HASH },
+  { name: "oracleId",       type: DATA.HASH },
+  { name: "serviceName",    type: DATA.STRING },
+  { name: "data",           type: DATA.BINARY }
+];
+
 export const OP_OP_MESSAGES = {
   // initial oracle request submission
+  // 'body' is the serialization of the ORACLE_REQUEST_BODY schema
   [ MSG_SUBMIT_ORACLE_REQUEST ] : [
-    { name: "organizationId", type: DATA.HASH },
-    { name: "oracleId",       type: DATA.HASH },
-    { name: "serviceName",    type: DATA.STRING },
-    { name: "request",        type: DATA.BINARY },
-    { name: "signature",      type: DATA.SIGNATURE }
+    { name: "body",      type: DATA.BINARY },
+    { name: "signature", type: DATA.SIGNATURE }
   ],
   // oracle request confirmation with payment reference
   [ MSG_CONFIRM_ORACLE_REQUEST ] : [
@@ -601,8 +587,7 @@ export const WI_REQUESTS = {
   ],
   [ WIRQ_GET_EMAIL ]: [],
   [ WIRQ_DATA_APPROVAL ]: [
-    { name: "dataId",    type: DATA.BIN256 },
-    { name: "challenge", type: DATA.BIN256 }
+    { name: "dataId", type: DATA.BIN256 }
   ]
 };
 

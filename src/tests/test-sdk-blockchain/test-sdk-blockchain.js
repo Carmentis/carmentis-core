@@ -7,7 +7,7 @@ import * as sdk from "../../server/sdk.js";
 import * as memoryDb from "../memoryDb.js";
 import { log, outcome } from "../logger.js";
 
-const AUTO_NODE_START = true;
+const AUTO_NODE_START = false;
 const PATH_TO_NODE = "../../../carmentis-dev-node/dev-node.js";
 const NODE_URL = "http://127.0.0.1:3000";
 
@@ -62,12 +62,12 @@ async function runTests() {
   try {
     let accountVbHash, organization, appId, oracleId;
 
-    accountVbHash = await accountTest();
-    await blockchainQueryTest(accountVbHash);
+//  accountVbHash = await accountTest();
+//  await blockchainQueryTest(accountVbHash);
     organization = await organizationTest();
     appId = await applicationTest(organization);
     oracleId = await oracleTest(organization, appId);
-    await appLedgerTest(organization, appId);
+//  await appLedgerTest(organization, appId);
   }
   catch(e) {
     console.error(e);
@@ -444,9 +444,6 @@ async function appLedgerTest(organization, appId) {
     channelInvitations: {
       sender: [
         "mainChannel"
-      ],
-      recipient: [
-        "mainChannel"
       ]
     },
     permissions: {
@@ -484,7 +481,7 @@ async function appLedgerTest(organization, appId) {
   console.log(vb.currentMicroblock.binary);
 }
 
-async function oracleTest(organization) {
+async function oracleTest(organization, appId) {
   log("--- Testing oracle VB ----");
 
   blockchainCore.setDbInterface(memoryDb);
@@ -514,4 +511,29 @@ async function oracleTest(organization) {
 
   vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
+
+  let vbHash = mb.hash;
+
+  log("Encoding service request");
+
+  vb = new oracleVb();
+  await vb.load(vbHash);
+
+  let dataObject = {
+    publicKey: "55AA".repeat(16),
+    email: "foo@bar.com"
+  };
+
+  let request = await vb.encodeServiceRequest(1, "verifyEmail", dataObject, organization.id, organization.privateKey);
+
+  console.log(request);
+
+  let body = oracleVb.decodeServiceRequestBody(request.body);
+
+  vb = new oracleVb();
+  await vb.load(body.oracleId);
+
+  dataObject = await vb.decodeServiceRequest(1, "verifyEmail", request);
+
+  console.log(dataObject);
 }

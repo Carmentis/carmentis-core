@@ -1,4 +1,6 @@
-const NODE_URL = "http://127.0.0.1:3000";
+const NODE_URL = "http://localhost:3000";
+const APP_OPERATOR_URL = "http://localhost:3005";
+
 const { ECO, SCHEMAS } = Carmentis.constants;
 
 const db = {
@@ -32,30 +34,28 @@ const {
 
 let wiClient;
 
-async function tokenIssuance() {
-  blockchainCore.setDbInterface(memoryDb);
-  blockchainCore.setNode(NODE_URL);
+addEventListener("DOMContentLoaded", initialize);
 
-  let vb, mb, transfer, answer;
+function initialize() {
+  document.querySelectorAll(".genesisRequired, .publicationRequired").forEach(el =>
+    el.setAttribute("disabled", "")
+  );
+}
 
-  let issuerPrivateKey = Carmentis.crypto.generateKey256(),
-      issuerPublicKey = Carmentis.crypto.secp256k1.publicKeyFromPrivateKey(issuerPrivateKey),
-      buyerPrivateKey = Carmentis.crypto.generateKey256(),
-      buyerPublicKey = Carmentis.crypto.secp256k1.publicKeyFromPrivateKey(buyerPrivateKey);
+async function genesis() {
+  await postQuery("genesis");
 
-  blockchainCore.setUser(ROLES.USER, issuerPrivateKey);
+  document.querySelectorAll(".genesisRequired").forEach(el =>
+    el.removeAttribute("disabled")
+  );
+}
 
-  vb = new accountVb();
+async function publishObjects() {
+  await postQuery("publishObjects");
 
-  await vb.addTokenIssuance({
-    issuerPublicKey: issuerPublicKey,
-    amount: ECO.INITIAL_OFFER
-  });
-
-  await vb.sign();
-
-  vb.setGasPrice(ECO.TOKEN);
-  mb = await vb.publish();
+  document.querySelectorAll(".publicationRequired").forEach(el =>
+    el.removeAttribute("disabled")
+  );
 }
 
 async function authentication() {
@@ -63,11 +63,32 @@ async function authentication() {
 
   wiClient.attachQrCodeContainer("output");
   wiClient.attachExtensionButton("openExtension");
-  wiClient.setServerUrl("http://localhost:3005");
+  wiClient.setServerUrl(APP_OPERATOR_URL);
 
   let answer = await wiClient.authenticationByPublicKey("FFAA7FC3FA1D8D74546427AD2C28BBBF127B6072344E494FF8D5E575B6BC3D0E");
 
   console.log("resolved authenticationByPublicKey promise", answer);
+}
+
+async function oracleRequest() {
+  await postQuery("oracleRequest");
+}
+
+async function dataApproval() {
+  let answer = await postQuery("dataApproval"),
+      dataId = answer.data.dataId;
+
+  console.log(answer);
+
+  wiClient = new Carmentis.wiClient;
+
+  wiClient.attachQrCodeContainer("output");
+  wiClient.attachExtensionButton("openExtension");
+  wiClient.setServerUrl(APP_OPERATOR_URL);
+
+  answer = await wiClient.getApprovalData(dataId);
+
+  console.log("resolved getApprovalData promise", answer);
 }
 
 async function scanQRCode() {
@@ -77,19 +98,17 @@ async function scanQRCode() {
   iframe.postMessage({ carmentisMessage: true, qrData: qrData }, "*");
 }
 
-async function dataApproval() {
+async function postQuery(method, object = {}) {
   const response = await fetch(
-    "http://localhost:8080/dataApproval",
+    "http://localhost:8080/" + method,
     {
       method: "POST",
-      body: JSON.stringify({}),
+      body: JSON.stringify(object),
       headers: {
         "Content-type": "application/json; charset=UTF-8"
       }
     }
   );
 
-  const data = await response.json();
-
-  console.log(data);
+  return await response.json();
 }

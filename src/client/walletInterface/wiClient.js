@@ -83,6 +83,21 @@ export class wiClient {
     };
   }
 
+
+  /**
+   * Retrieves the email information by sending a request using a predefined schema.
+   *
+   * @return {Promise<{email: string}>} A promise that resolves to an object containing the email address.
+   */
+  async getEmail() {
+    let answer = await this.request(SCHEMAS.WIRQ_GET_EMAIL, {});
+
+    console.log("[wiClient] Obtained response:", answer)
+    return {
+      email: answer.email,
+    };
+  }
+
   async request(type, object) {
     console.log("[client] request", type, object);
 

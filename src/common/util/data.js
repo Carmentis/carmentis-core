@@ -131,7 +131,7 @@ export function extractType(type) {
 export function getObjectIndex(type) {
     if (isPrimitive(type)) throw new Error('Cannot compute the index of an object for a primitive type.')
     // TODO use the constant
-    return type & 0x03FF // type  & constants.MSK_OBJECT_INDEX
+    return type & constants.MSK_OBJECT_INDEX // type  & constants.MSK_OBJECT_INDEX
 }
 
 /**
@@ -183,9 +183,10 @@ export function createType(properties) {
 
     // handle the mask if primitive
     if ( isPrimitive(type) && properties.maskable ) {
+        console.log("6(maskable).", type)
         type |= MASKABLE;
     }
 
-    console.log("6(result).", type)
+    console.log("7(result).", type)
     return type;
 }

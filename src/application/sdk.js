@@ -1,6 +1,4 @@
 import * as common from "../common/common.js";
-const http = require("http");
-const https = require("https");
 const { URL } = require("url");
 
 const PREPARE_USER_APPROVAL_PATH = "/prepareUserApproval"
@@ -57,16 +55,35 @@ export async function getRecordInformationFromOperator(dataId) {
 /**
  * Sends a POST request to the specified operator URL with the provided data.
  *
- * @param {string} fullUrl - The full URL of the operator to query.
+ * @param {string} path - The path to query.
  * @param {Object} data - The data payload to send with the POST request.
  * @return {Promise<{success: boolean, error: string, data: any}>} A promise that resolves with the parsed JSON response from the operator.
  * @throws {Error} If the operator URL is not set in the configuration.
  */
-async function queryOperator(fullUrl, data) {
+async function queryOperator(path, data) {
     // reject if the provided operator configuration is missing
     if (config.operatorUrl === undefined) {
         throw new Error('The operator URL is missing: Please use setOperatorUrl("your url") before to query the operator')
     }
+    const fullUrl = `${config.operatorUrl}${path}`;
+    return new Promise(function (resolve, reject) {
+        fetch(fullUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(async (response) => {
+            console.log("Receiving data:", response)
+            if (response.ok) {
+                const data = await response.json()
+                resolve(data)
+            } else {
+                reject(response.statusText)
+            }
+        }).catch(reject)
+    });
+    /*
     return new Promise(function(resolve, reject) {
         let options = {
             url: fullUrl,
@@ -78,15 +95,24 @@ async function queryOperator(fullUrl, data) {
 
         const url = new URL(fullUrl);
         const httpModule = url.protocol === "https:" ? https : http;
+        console.log(`-> ${fullUrl}`, options)
         let req = httpModule.request(options, res => {
             res.on("data", answer => {
-                let obj = JSON.parse(answer.toString());
-                resolve(obj === {} ? undefined : obj);
+                const response = answer.toString();
+                console.log("Receiving data:", response)
+                try {
+                    let obj = JSON.parse(response);
+                    resolve(obj === {} ? undefined : obj);
+                } catch (e) {
+                    console.error(e)
+                    reject(e)
+                }
             });
         });
 
         req.on("error", answer => {
             console.error(answer);
+            console.log("Receiving error")
             reject(answer);
         });
 
@@ -95,6 +121,8 @@ async function queryOperator(fullUrl, data) {
         );
         req.end();
     });
+
+     */
 }
 
 // ============================================================================================================================ //

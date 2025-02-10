@@ -94,15 +94,22 @@ export class wiWallet {
 
 
     this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, { answerType: SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, answer: answer });
-    /*
-    return new Promise(function (resolve, reject) {
-      console.log("[wallet] opening socket with", serverUrl);
-      const socket = clientSocket.getSocket(serverUrl, onConnect.bind(this), undefined);
+  }
 
-      function onConnect() {
-        console.log("[wallet] connected");
-        socket.sendMessage(SCHEMAS.WIMSG_ANSWER, { answerType: SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, answer: answer });
-      }
-    });*/
+
+  /**
+   * Approves a request to get an email by encoding it with the defined schema
+   * and sending the encoded message through the socket.
+   *
+   * @param {string} email - The email address to be approved and processed.
+   * @return {Promise<void>} A promise that resolves when the message is successfully sent through the socket.
+   */
+  async approveGetEmailRequest(email) {
+    let answer = schemaSerializer.encode(SCHEMAS.WI_ANSWERS[SCHEMAS.WIRQ_GET_EMAIL], {
+      email: email
+    });
+
+
+    this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, { answerType: SCHEMAS.WIRQ_GET_EMAIL, answer: answer });
   }
 }

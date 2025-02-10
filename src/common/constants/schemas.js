@@ -593,11 +593,13 @@ export const WI_MESSAGES = {
 
 export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x0;
 export const WIRQ_DATA_APPROVAL      = 0x1;
+export const WIRQ_GET_EMAIL      = 0x2;
 
 export const WI_REQUESTS = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
     { name: "challenge", type: DATA.BIN256 }
   ],
+  [ WIRQ_GET_EMAIL ]: [],
   [ WIRQ_DATA_APPROVAL ]: [
     { name: "dataId",    type: DATA.BIN256 },
     { name: "challenge", type: DATA.BIN256 }
@@ -608,6 +610,9 @@ export const WI_ANSWERS = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
     { name: "publicKey", type: DATA.PUB_KEY },
     { name: "signature", type: DATA.SIGNATURE }
+  ],
+  [ WIRQ_GET_EMAIL ]: [
+    { name: "email", type: DATA.STRING }
   ],
   [ WIRQ_DATA_APPROVAL ]: [
     { name: "signature", type: DATA.SIGNATURE }

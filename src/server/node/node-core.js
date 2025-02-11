@@ -37,6 +37,27 @@ export function processCatchedError(err) {
 }
 
 // ============================================================================================================================ //
+//  getChainStatus()                                                                                                            //
+// ============================================================================================================================ //
+export async function getChainStatus() {
+  let data = {
+    lastBlockHeight : 0,
+    timeToNextBlock : 0,
+    nSection        : 0,
+    nMicroblock     : 0,
+    nAccountVb      : 0,
+    nValidatorNodeVb: 0,
+    nOrganizationVb : 0,
+    nAppUserVb      : 0,
+    nApplicationVb  : 0,
+    nAppLedgerVb    : 0,
+    nOracleVb       : 0
+  };
+
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_CHAIN_STATUS, data, SCHEMAS.NODE_MESSAGES);
+}
+
+// ============================================================================================================================ //
 //  checkIncomingMicroblock()                                                                                                   //
 // ============================================================================================================================ //
 export async function checkIncomingMicroblock(mb) {

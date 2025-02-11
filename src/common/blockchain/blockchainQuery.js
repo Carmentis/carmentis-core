@@ -4,6 +4,20 @@ import { blockchainCore } from "./blockchainCore.js";
 
 export class blockchainQuery extends blockchainCore {
   /**
+   * Retrieves the status of the blockchain.
+   *
+   * @return {Promise} A promise that resolves to an object matching the schema MSG_ANS_CHAIN_STATUS.
+   */
+  static async getChainStatus() {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_CHAIN_STATUS,
+      {}
+    );
+
+    return answer;
+  }
+
+  /**
    * Retrieves the content of a microblock identified by its hash.
    *
    * @param {string} hash - The hash of the microblock to be retrieved.

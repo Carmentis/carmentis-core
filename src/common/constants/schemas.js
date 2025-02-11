@@ -260,15 +260,17 @@ export const NODE_MESSAGES = {
     { name: "data", type: DATA.BINARY }
   ],
   [ MSG_ANS_CHAIN_STATUS ] : [
-    { name: "lastBlockId",     type: DATA.UINT48 },
-    { name: "timeToNextBlock", type: DATA.UINT16 },
-    { name: "nSection",        type: DATA.UINT48 },
-    { name: "nMicroblock",     type: DATA.UINT48 },
-    { name: "nOrganization",   type: DATA.UINT48 },
-    { name: "nValidationNode", type: DATA.UINT48 },
-    { name: "nAppUser",        type: DATA.UINT48 },
-    { name: "nApplication",    type: DATA.UINT48 },
-    { name: "nAppLedger",      type: DATA.UINT48 }
+    { name: "lastBlockHeight",  type: DATA.UINT48 },
+    { name: "timeToNextBlock",  type: DATA.UINT16 },
+    { name: "nSection",         type: DATA.UINT48 },
+    { name: "nMicroblock",      type: DATA.UINT48 },
+    { name: "nAccountVb",       type: DATA.UINT48 },
+    { name: "nValidatorNodeVb", type: DATA.UINT48 },
+    { name: "nOrganizationVb",  type: DATA.UINT48 },
+    { name: "nAppUserVb",       type: DATA.UINT48 },
+    { name: "nApplicationVb",   type: DATA.UINT48 },
+    { name: "nAppLedgerVb",     type: DATA.UINT48 },
+    { name: "nOracleVb",        type: DATA.UINT48 }
   ],
   [ MSG_ANS_BLOCK_LIST ] : [
     {

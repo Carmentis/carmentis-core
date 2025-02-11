@@ -9,7 +9,7 @@ import { log, outcome } from "../logger.js";
 
 const AUTO_NODE_START = false;
 const PATH_TO_NODE = "../../../carmentis-dev-node/dev-node.js";
-const NODE_URL = "http://127.0.0.1:3000";
+const NODE_URL = "http://localhost:3000";
 
 const { ECO } = sdk.constants;
 
@@ -62,8 +62,8 @@ async function runTests() {
   try {
     let accountVbHash, organization, appId, oracleId;
 
-//  accountVbHash = await accountTest();
-//  await blockchainQueryTest(accountVbHash);
+    accountVbHash = await accountTest();
+    await blockchainQueryTest(accountVbHash);
     organization = await organizationTest();
     appId = await applicationTest(organization);
     oracleId = await oracleTest(organization, appId);
@@ -219,7 +219,19 @@ function showAccountHistory(accountHash, list) {
 async function blockchainQueryTest(vbHash) {
   log("--- Testing blockchainQuery methods ----");
 
-  let content = await blockchainQuery.getMicroblock(vbHash);
+  blockchainCore.setNode(NODE_URL);
+
+  let content;
+
+  console.log("Retrieving chain status");
+
+  content = await blockchainQuery.getChainStatus();
+
+  console.log(content);
+
+  console.log("Retrieving raw microblock");
+
+  content = await blockchainQuery.getMicroblock(vbHash);
 
   console.log(content);
 

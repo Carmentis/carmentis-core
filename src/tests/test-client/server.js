@@ -7,6 +7,8 @@ import { ORACLE } from "../test-sdk-blockchain/oracle.js";
 import * as sdk from "../../server/sdk.js";
 import * as memoryDb from "../memoryDb.js";
 
+const PORT = 8080;
+
 const APP_PRIVATE_KEY    = "2B76D9AADC974CCE240359C5585997A32C05927C121F393F4AF04B9FD6B4C56A";
 const ORACLE_PRIVATE_KEY = "ADDA4B6E6072FC8E31815C4F0E24D6668CAC6BAE5536D9192D671AC79CC23B24";
 
@@ -29,10 +31,6 @@ const {
 } = sdk.blockchain;
 
 const crypto = sdk.crypto;
-
-const PORT = 8080;
-const OPERATOR_HOSTNAME = "localhost";
-const OPERATOR_PORT = 3005;
 
 let applicationId, oracleId;
 
@@ -141,6 +139,11 @@ async function publishObjects(res) {
   applicationId = await publishApplication(appOrganization);
   oracleId = await publishOracle(oracleOrganization);
 
+  await operatorQuery(
+    APP_OPERATOR_URL + "/setOrganizationId",
+    { organizationId: appOrganization.id }
+  );
+
   return {};
 }
 
@@ -201,7 +204,7 @@ async function processDataApproval(res) {
   };
 
   let answer = await operatorQuery(
-    "prepareUserApproval",
+    APP_OPERATOR_URL + "/prepareUserApproval",
     approvalObject
   );
 
@@ -221,7 +224,7 @@ async function processOracleRequest(res) {
   };
 
   let answer = await operatorQuery(
-    "initiateOracleRequest",
+    APP_OPERATOR_URL + "/initiateOracleRequest",
     requestObject
   );
 
@@ -356,12 +359,14 @@ async function publishOracle(organization) {
   return mb.hash;
 }
 
-async function operatorQuery(method, data) {
+async function operatorQuery(url, data) {
+  let urlObj = new URL(url);
+
   return new Promise(function(resolve, reject) {
     let options = {
-      hostname: OPERATOR_HOSTNAME,
-      port    : OPERATOR_PORT,
-      path    : "/" + method,
+      hostname: urlObj.hostname,
+      port    : urlObj.port,
+      path    : urlObj.pathname,
       method  : "POST"
     };
 

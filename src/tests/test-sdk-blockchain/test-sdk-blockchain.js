@@ -67,7 +67,7 @@ async function runTests() {
     organization = await organizationTest();
     appId = await applicationTest(organization);
     oracleId = await oracleTest(organization, appId);
-//  await appLedgerTest(organization, appId);
+    await appLedgerTest(organization, appId);
   }
   catch(e) {
     console.error(e);
@@ -524,16 +524,16 @@ async function oracleTest(organization, appId) {
     email: "foo@bar.com"
   };
 
-  let request = await vb.encodeServiceRequest(1, "verifyEmail", dataObject, organization.id, organization.privateKey);
+  let data = await vb.encodeServiceRequest(1, "verifyEmail", dataObject, organization.id, organization.privateKey);
 
-  console.log(request);
+  console.log(data);
 
-  let body = oracleVb.decodeServiceRequestBody(request.body);
+  let body = oracleVb.decodeServiceRequestBody(data.request.body);
 
   vb = new oracleVb();
   await vb.load(body.oracleId);
 
-  dataObject = await vb.decodeServiceRequest(1, "verifyEmail", request);
+  dataObject = await vb.decodeServiceRequest(1, "verifyEmail", data.request);
 
   console.log(dataObject);
 }

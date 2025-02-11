@@ -144,6 +144,11 @@ export const ACCOUNT_BLOCK_REFERENCE = [
 ];
 
 // ============================================================================================================================ //
+//  Error message                                                                                                               //
+// ============================================================================================================================ //
+export const MSG_ANS_ERROR = 0xFF;
+
+// ============================================================================================================================ //
 //  Node network messages                                                                                                       //
 // ============================================================================================================================ //
 export const MSG_GET_CHAIN_STATUS          = 0x00;
@@ -174,10 +179,7 @@ export const MSG_ANS_ACCOUNT_STATE         = 0x8B;
 export const MSG_ANS_ACCOUNT_HISTORY       = 0x8C;
 export const MSG_ANS_ACCOUNT_BY_PUBLIC_KEY = 0x8D;
 export const MSG_ANS_ACCEPT_MICROBLOCK     = 0x8E;
-export const MSG_ANS_CONSUMPTION           = 0x8F;
-export const MSG_ANS_ANCHORING             = 0x90;
-
-export const MSG_ANS_ERROR                 = 0xFF;
+export const MSG_ANS_ANCHORING             = 0x8F;
 
 export const MSG_NAMES = {
   [ MSG_GET_CHAIN_STATUS          ]: "GET_CHAIN_STATUS",
@@ -191,7 +193,7 @@ export const MSG_NAMES = {
   [ MSG_GET_ACCOUNT_STATE         ]: "GET_ACCOUNT_STATE",
   [ MSG_GET_ACCOUNT_HISTORY       ]: "GET_ACCOUNT_HISTORY",
   [ MSG_GET_ACCOUNT_BY_PUBLIC_KEY ]: "GET_ACCOUNT_BY_PUBLIC_KEY",
-  [ MSG_SEND_MICROBLOCK           ]: "SEND_MICROBLOCK",
+  [ MSG_SEND_MICROBLOCK           ]: "SEND_MICROBLOCK"
 };
 
 export const NODE_MESSAGES = {
@@ -331,11 +333,6 @@ export const NODE_MESSAGES = {
   [ MSG_ANS_ACCOUNT_BY_PUBLIC_KEY ] : [
     { name: "accountHash", type: DATA.HASH }
   ],
-  [ MSG_ANS_CONSUMPTION ] : [
-    { name: "appLedgers", type: DATA.UINT48 },
-    { name: "records",    type: DATA.UINT48 },
-    { name: "bytes",      type: DATA.UINT48 }
-  ],
   [ MSG_ANS_ANCHORING ] : [
     { name: "block",  type: DATA.UINT48 },
     { name: "index",  type: DATA.UINT32 },
@@ -390,6 +387,10 @@ export const OP_OP_MESSAGES = {
   // answer to oracle request confirmation
   [ MSG_ANS_CONFIRM_ORACLE_REQUEST ] : [
     { name: "redirect", type: DATA.STRING }
+  ],
+
+  [ MSG_ANS_ERROR ] : [
+    { name: "error", type: DATA.OBJECT, schema: ERROR }
   ]
 };
 
@@ -579,7 +580,7 @@ export const WI_MESSAGES = {
 
 export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x0;
 export const WIRQ_DATA_APPROVAL      = 0x1;
-export const WIRQ_GET_EMAIL      = 0x2;
+export const WIRQ_GET_EMAIL          = 0x2;
 
 export const WI_REQUESTS = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [

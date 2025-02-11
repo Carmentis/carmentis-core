@@ -90,7 +90,16 @@ export class oracleVb extends virtualBlockchain {
       signature: crypto.secp256k1.sign(privateKey, encodedBody)
     };
 
-    return request;
+    let ownerVb = new organizationVb();
+
+    await ownerVb.load(this.state.organizationId);
+
+    let server = await ownerVb.getServer();
+
+    return {
+      endpoint: server.endpoint,
+      request: request
+    };
   }
 
   static decodeServiceRequestBody(body) {

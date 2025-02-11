@@ -287,7 +287,7 @@ export class blockchainCore {
   }
 
   static async nodeQuery(schemaId, object) {
-    let answer = await network.sendMessage(this.nodeUrl, schemaId, object, SCHEMAS.NODE_MESSAGES);
+    let answer = await network.sendMessageToNode(this.nodeUrl, schemaId, object);
 
     return answer;
   }

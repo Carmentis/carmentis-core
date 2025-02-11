@@ -171,7 +171,8 @@ const APPLICATION = {
       { name: "name",        type: DATA.STRING },
       { name: "logoUrl",     type: DATA.STRING },
       { name: "homepageUrl", type: DATA.STRING },
-      { name: "rootDomain",  type: DATA.STRING }
+      { name: "rootDomain",  type: DATA.STRING },
+      { name: "description", type: DATA.STRING }
     ]
   },
   [ APP_DEFINITION ]: {

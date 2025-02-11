@@ -5,7 +5,8 @@ export const APP_V2 = {
     "name": "FileSign",
     "logoUrl": "https://sign.testapps.carmentis.io/assets/img/logo.png",
     "homepageUrl": "https://sign.testapps.carmentis.io?id={{ID}}&version={{VERSION}}",
-    "rootDomain": "sign.testapps.carmentis.io"
+    "rootDomain": "sign.testapps.carmentis.io",
+    "description": "The best way to sign files"
   },
   "definition": {
     "fields": [

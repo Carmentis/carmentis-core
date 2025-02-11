@@ -13,9 +13,23 @@ export function initialize(intf) {
 }
 
 // ============================================================================================================================ //
+//  sendMessageToNode()                                                                                                         //
+// ============================================================================================================================ //
+export async function sendMessageToNode(url, schemaId, object) {
+  return await sendMessage(url, schemaId, object, SCHEMAS.NODE_MESSAGES);
+}
+
+// ============================================================================================================================ //
+//  sendMessageToOperator()                                                                                                     //
+// ============================================================================================================================ //
+export async function sendMessageToOperator(url, schemaId, object) {
+  return await sendMessage(url.replace(/\/?$/, "/operatorMessage"), schemaId, object, SCHEMAS.OP_OP_MESSAGES);
+}
+
+// ============================================================================================================================ //
 //  sendMessage()                                                                                                               //
 // ============================================================================================================================ //
-export async function sendMessage(url, schemaId, object, collection) {
+async function sendMessage(url, schemaId, object, collection) {
   let data = schemaSerializer.encodeMessage(schemaId, object, collection),
       b64 = base64.encodeBinary(data, base64.BASE64);
 

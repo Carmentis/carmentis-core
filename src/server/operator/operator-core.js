@@ -1,13 +1,18 @@
+import { SCHEMAS } from "../../common/constants/constants.js";
+import { schemaSerializer } from "../../common/serializers/serializers.js";
 import { blockchainCore, ROLES, appLedgerVb, oracleVb } from "../../common/blockchain/blockchain.js";
 import * as crypto from "../../common/crypto/crypto.js";
+import * as network from "../../common/network/network.js";
 import * as uint8 from "../../common/util/uint8.js";
+import { CarmentisError } from "../../common/errors/error.js";
 
-const dataCache = new Map();
+const approvalData = new Map();
+const oracleData = new Map();
 
 export class operatorCore {
   constructor(nodeUrl, organizationId, privateKey) {
     blockchainCore.setNode(nodeUrl);
-    blockchainCore.setUser(ROLES.OPERATOR, operatorPrivateKey);
+    blockchainCore.setUser(ROLES.OPERATOR, privateKey);
 
     this.privateKey = privateKey;
     this.organizationId = organizationId;
@@ -21,17 +26,46 @@ export class operatorCore {
 
       await vb.load(requestObject.oracleId);
 
-      let request = await vb.encodeServiceRequest(
+      let data = await vb.encodeServiceRequest(
         requestObject.version,
         requestObject.service,
         requestObject.data,
         this.organizationId,
         this.privateKey
       );
+
+      console.log("data", data);
+
+      let answer = await network.sendMessageToOperator(
+        data.endpoint,
+        SCHEMAS.MSG_SUBMIT_ORACLE_REQUEST,
+        data.request
+      );
+
+      return this.clientSuccess({
+      });
     }
     catch(e) {
-      return this.error(e);
+      return this.clientError(e);
     }
+  }
+
+  async receivedOracleRequest(requestObject) {
+    console.log("receivedOracleRequest", requestObject);
+
+    let requestId = uint8.toHexa(crypto.getRandomBytes(32)),
+        price = 1;
+
+    let answer = {
+      requestId: requestId,
+      price: price
+    };
+
+    return schemaSerializer.encodeMessage(
+      SCHEMAS.MSG_ANS_SUBMIT_ORACLE_REQUEST,
+      answer,
+      SCHEMAS.OP_OP_MESSAGES
+    );
   }
 
   async confirmOracleRequest(confirmationObject) {
@@ -68,26 +102,48 @@ export class operatorCore {
             dataId: dataId
           };
 
-      dataCache.set(dataId, object);
+      approvalData.set(dataId, object);
 
-      return {
-        success: true,
-        error: "",
-        data: {
-          dataId: dataId
-        }
-      };
+      return this.clientSuccess({
+        dataId: dataId
+      });
     }
     catch(e) {
-      return this.error(e);
+      return this.clientError(e);
     }
   }
 
-  error(e) {
+  clientSuccess(data) {
+    return {
+      success: true,
+      error: "",
+      data: data
+    };
+  }
+
+  clientError(e) {
     return {
       success: false,
       error: e.toString(),
       data: {}
     };
+  }
+
+  processCatchedError(err) {
+    if(!(err instanceof CarmentisError)) {
+      err = new globalError(ERRORS.GLOBAL_INTERNAL_ERROR, err.stack || [ err.toString() ]);
+    }
+
+    return schemaSerializer.encodeMessage(
+      SCHEMAS.MSG_ANS_ERROR,
+      {
+        error: {
+          type: err.type,
+          id  : err.id,
+          arg : err.arg.map(String)
+        }
+      },
+      SCHEMAS.OP_OP_MESSAGES
+    );
   }
 }

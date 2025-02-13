@@ -1,10 +1,13 @@
 import * as http from "http";
+import * as https from "https";
 
 // ============================================================================================================================ //
 //  postRequest()                                                                                                               //
 // ============================================================================================================================ //
 export function postRequest(url, data, callback) {
   let urlObj = new URL(url);
+
+  let httpModule = urlObj.protocol == "https:" ? https : http;
 
   let options = {
     hostname: urlObj.hostname,
@@ -17,7 +20,7 @@ export function postRequest(url, data, callback) {
     }
   };
 
-  let req = http.request(options, res => {
+  let req = httpModule.request(options, res => {
     res.on("data", answer => {
       callback(true, answer);
     });

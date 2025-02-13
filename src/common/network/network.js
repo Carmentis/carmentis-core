@@ -41,21 +41,29 @@ async function sendMessage(url, schemaId, object, collection) {
 
     networkInterface.postRequest(url, JSON.stringify({ data: b64 }), callback, headers);
 
+    function handleBinaryDecoding(responseObject) {
+
+    }
+
     function callback(success, answer) {
       if(success) {
-        let responseObject = JSON.parse(answer),
-            binary = base64.decodeBinary(responseObject.response, base64.BASE64);
-
-        let [ id, object ] = schemaSerializer.decodeMessage(binary, collection);
-
-        if(id == SCHEMAS.MSG_ANS_ERROR) {
-          let error = new CarmentisError(object.error.type | ERROR_TYPES.REMOTE_ERROR, object.error.id, ...object.error.arg);
-
-          reject(error);
+        try {
+          let responseObject = JSON.parse(answer);
+          let binary = base64.decodeBinary(responseObject.response, base64.BASE64);
+          let [ id, object ] = schemaSerializer.decodeMessage(binary, collection);
+          if(id == SCHEMAS.MSG_ANS_ERROR) {
+            let error = new CarmentisError(object.error.type | ERROR_TYPES.REMOTE_ERROR, object.error.id, ...object.error.arg);
+            reject(error);
+          }
+          else {
+            resolve(object);
+          }
+        } catch (e) {
+          console.error("An error has occurred during the response handling:", e)
+          console.error("Received answer:", answer.toString())
+          reject(answer)
         }
-        else {
-          resolve(object);
-        }
+
       }
       else {
         console.error(answer);

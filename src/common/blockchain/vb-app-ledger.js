@@ -209,11 +209,17 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   async addChannelInvitation(channelId, hostId, guestId) {
+    let key = this.getKey(
+      SECTIONS.KEY_CHANNEL,
+      channelId,
+      0
+    );
+
     let object = {
       channelId : channelId,
       hostId    : hostId,
       guestId   : guestId,
-      channelKey: this.state.channels[channelId].key
+      channelKey: key
     };
 
     await this.addSection(SECTIONS.APP_LEDGER_CHANNEL_INVITATION, object);
@@ -244,7 +250,14 @@ export class appLedgerVb extends virtualBlockchain {
       uint8.fromHexa(this.state.genesisSeed)
     );
 
-    this.state.channels[channelId].key = uint8.toHexa(crypto.derive.deriveBitsFromKey(this.rootKey, info, 256));
+    let key = uint8.toHexa(crypto.derive.deriveBitsFromKey(this.rootKey, info, 256));
+
+    this.setKey(
+      SECTIONS.KEY_CHANNEL,
+      channelId,
+      0,
+      key
+    );
   }
 
   async getActorPublicKey(actorId) {
@@ -364,7 +377,7 @@ export class appLedgerVb extends virtualBlockchain {
         if(object.channelId >= this.state.channelId) {
           throw new appLedgerError(ERRORS.APP_LEDGER_BAD_CHANNEL_ID, object.channelId);
         }
-        if(!this.constructor.isNode()) {
+        if(object.channelKey) {
           this.setKey(
             SECTIONS.KEY_CHANNEL,
             object.channelId,

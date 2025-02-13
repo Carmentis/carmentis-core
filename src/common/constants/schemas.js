@@ -583,12 +583,16 @@ export const WI_MESSAGES = {
 export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x0;
 export const WIRQ_DATA_APPROVAL      = 0x1;
 export const WIRQ_GET_EMAIL          = 0x2;
+export const WIRQ_GET_USER_DATA          = 0x3;
 
 export const WI_REQUESTS = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
     { name: "challenge", type: DATA.BIN256 }
   ],
   [ WIRQ_GET_EMAIL ]: [],
+  [ WIRQ_GET_USER_DATA ]: [
+    { name: "requiredData", type: DATA.ARRAY | DATA.STRING }
+  ],
   [ WIRQ_DATA_APPROVAL ]: [
     { name: "dataId", type: DATA.BIN256 }
   ]
@@ -604,5 +608,8 @@ export const WI_ANSWERS = {
   ],
   [ WIRQ_DATA_APPROVAL ]: [
     { name: "signature", type: DATA.SIGNATURE }
-  ]
+  ],
+  [ WIRQ_GET_USER_DATA ]: [
+    { name: "userData", type: DATA.OBJECT }
+  ],
 };

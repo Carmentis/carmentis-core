@@ -54,6 +54,17 @@ export class wiWallet {
     );
   }
 
+  async approveGetUserDataRequest(userData) {
+    let answerObject = {
+      userData
+    };
+
+    return this.formatAnswer(
+        SCHEMAS.WIRQ_GET_USER_DATA,
+        answerObject
+    );
+  }
+
   /**
    * Get the approval data from the operator, given the corresponding data identifier.
    */

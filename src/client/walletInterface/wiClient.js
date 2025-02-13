@@ -101,6 +101,23 @@ export class wiClient {
   }
 
   /**
+   * Retrieves user data based on the provided required data.
+   *
+   * @param {Object} requiredData - The data required to request user information.
+   * @return {Promise<Object>} A promise that resolves to an object containing the user's email.
+   */
+  async getUserData(requiredData) {
+    let answer = await this.request(SCHEMAS.WIRQ_GET_USER_DATA, {requiredData});
+
+    console.log("[wiClient] Obtained response:", answer)
+
+    return {
+      userData: answer.userData
+    };
+  }
+
+
+  /**
    * Data approval process.
    *
    * @param {string} dataId - The data identifier returned by the operator server.

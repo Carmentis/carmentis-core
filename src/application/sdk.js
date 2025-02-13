@@ -31,6 +31,7 @@ export function setOperatorUrl(operatorUrl) {
 /**
  * Prepares the user approval process by sending the given data to the specified endpoint.
  *
+ * @param applicationId The unique identifier of the application on the blockchain (see in workspace).
  * @param {Object} data - The data to be sent for preparing user approval.
  * @returns {Promise<{
  *     success: boolean,
@@ -38,8 +39,34 @@ export function setOperatorUrl(operatorUrl) {
  *     data: {dataId: string} | undefined
  * }>} A promise that resolves with the response from the endpoint.
  */
-export async function sendPrepareUserApprovalToOperator(data) {
-    return queryOperator(PREPARE_USER_APPROVAL_PATH, data)
+export async function sendInitialPrepareUserApprovalToOperator(applicationId, data) {
+    return queryOperator(PREPARE_USER_APPROVAL_PATH, {
+        applicationId: applicationId,
+        appLedgerVirtualBlockchainId: undefined,
+        data: data
+    })
+}
+
+/**
+ * Prepares the user approval process by sending the given data to the specified endpoint.
+ *
+ * The appLedgerVirtualBlockchainId indicates the chain the transaction is happened, useful to continue a transaction.
+ *
+ * @param applicationId The unique identifier of the application on the blockchain (see in workspace).
+ * @param appLedgerVirtualBlockchainId The unique identifier of the app ledger. To be used only to continue on the same transaction.
+ * @param {Object} data - The data to be sent for preparing user approval.
+ * @returns {Promise<{
+ *     success: boolean,
+ *     error: string,
+ *     data: {dataId: string} | undefined
+ * }>} A promise that resolves with the response from the endpoint.
+ */
+export async function sendSubsequentPrepareUserApprovalToOperator(applicationId, appLedgerVirtualBlockchainId, data) {
+    return queryOperator(PREPARE_USER_APPROVAL_PATH, {
+        applicationId: applicationId,
+        appLedgerVirtualBlockchainId: appLedgerVirtualBlockchainId,
+        data: data
+    })
 }
 
 /**
@@ -83,46 +110,6 @@ async function queryOperator(path, data) {
             }
         }).catch(reject)
     });
-    /*
-    return new Promise(function(resolve, reject) {
-        let options = {
-            url: fullUrl,
-            method  : "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        };
-
-        const url = new URL(fullUrl);
-        const httpModule = url.protocol === "https:" ? https : http;
-        console.log(`-> ${fullUrl}`, options)
-        let req = httpModule.request(options, res => {
-            res.on("data", answer => {
-                const response = answer.toString();
-                console.log("Receiving data:", response)
-                try {
-                    let obj = JSON.parse(response);
-                    resolve(obj === {} ? undefined : obj);
-                } catch (e) {
-                    console.error(e)
-                    reject(e)
-                }
-            });
-        });
-
-        req.on("error", answer => {
-            console.error(answer);
-            console.log("Receiving error")
-            reject(answer);
-        });
-
-        req.write(
-            JSON.stringify(data)
-        );
-        req.end();
-    });
-
-     */
 }
 
 // ============================================================================================================================ //

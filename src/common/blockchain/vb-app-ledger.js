@@ -25,8 +25,8 @@ export class appLedgerVb extends virtualBlockchain {
     return !!(endorser && endorser.subscribed);
   }
 
-  setEndorserActorPublicKey(publicKey) {
-    this.endorserActorPublicKey = publicKey;
+  setEndorserActorPublicKey(actorPublicKey) {
+    this.endorserActorPublicKey = actorPublicKey;
   }
 
   async generateDataSections(object) {
@@ -109,23 +109,10 @@ export class appLedgerVb extends virtualBlockchain {
     }
 
     // load the application definition
-    await this.loadApplicationDefinition(object.version);
+    await this.loadApplicationDefinition(this.state.version);
 
     // turn the permissions into subsections
-    let subsections = [];
-
-    Object.keys(object.permissions).forEach(channelName => {
-      let rule = object.permissions[channelName].join(","),
-          channelId = this.getChannelByName(channelName);
-
-      subsections.push({
-        rule     : rule,
-        type     : DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES,
-        keyId    : SECTIONS.KEY_CHANNEL,
-        keyIndex0: channelId,
-        keyIndex1: 0
-      });
-    });
+    let subsections = this.convertPermissionsToSubsections(object.permissions);
 
     // write channel data
     await this.addChannelData(
@@ -170,6 +157,25 @@ export class appLedgerVb extends virtualBlockchain {
       SECTIONS.APP_DEFINITION,
       section => section.version == version
     );
+  }
+
+  convertPermissionsToSubsections(permissions) {
+    let subsections = [];
+
+    Object.keys(permissions).forEach(channelName => {
+      let rule = permissions[channelName].join(","),
+          channelId = this.getChannelByName(channelName);
+
+      subsections.push({
+        rule     : rule,
+        type     : DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES,
+        keyId    : SECTIONS.KEY_CHANNEL,
+        keyIndex0: channelId,
+        keyIndex1: 0
+      });
+    });
+
+    return subsections;
   }
 
   async addDeclaration(object) {
@@ -438,6 +444,15 @@ export class appLedgerVb extends virtualBlockchain {
         break;
       }
     }
+  }
+
+  async getExternalDefinition(sectionObject) {
+    if(sectionObject.id == SECTIONS.APP_LEDGER_CHANNEL_DATA) {
+      await this.loadApplicationDefinition(this.state.version);
+
+      return this.appDef.definition;
+    }
+    return null;
   }
 
   checkStructure(pattern) {

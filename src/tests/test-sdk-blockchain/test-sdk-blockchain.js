@@ -1,5 +1,6 @@
 import { APP_V1 } from "./app-v1.js";
 import { APP_V2 } from "./app-v2.js";
+import { APPROVAL_MONO_CHANNEL, APPROVAL_MULTI_CHANNEL } from "./approval.js";
 import { ORACLE } from "./oracle.js";
 
 import { spawn } from "child_process";
@@ -15,6 +16,7 @@ const { ECO } = sdk.constants;
 
 const {
   blockchainCore,
+  blockchainManager,
   blockchainQuery,
   microblock,
   ROLES,
@@ -74,6 +76,9 @@ async function runTests() {
   }
 }
 
+// ============================================================================================================================ //
+//  Account                                                                                                                     //
+// ============================================================================================================================ //
 async function accountTest() {
   log("--- Testing account VB ----");
 
@@ -216,6 +221,9 @@ function showAccountHistory(accountHash, list) {
   console.log();
 }
 
+// ============================================================================================================================ //
+//  blockchainQuery                                                                                                             //
+// ============================================================================================================================ //
 async function blockchainQueryTest(vbHash) {
   log("--- Testing blockchainQuery methods ----");
 
@@ -238,8 +246,17 @@ async function blockchainQueryTest(vbHash) {
   let mb = new microblock(sdk.constants.ID.OBJ_ACCOUNT);
   await mb.load(content, vbHash);
   console.log(mb);
+
+  console.log("Retrieving accounts");
+
+  content = await blockchainQuery.getAccounts();
+
+  console.log(content);
 }
 
+// ============================================================================================================================ //
+//  Organization                                                                                                                //
+// ============================================================================================================================ //
 async function organizationTest() {
   log("--- Testing organization VB ----");
 
@@ -339,6 +356,9 @@ async function organizationTest() {
   };
 }
 
+// ============================================================================================================================ //
+//  Application                                                                                                                 //
+// ============================================================================================================================ //
 async function applicationTest(organization) {
   log("--- Testing application VB ----");
 
@@ -402,97 +422,9 @@ async function applicationTest(organization) {
   return vbHash;
 }
 
-async function appLedgerTest(organization, appId) {
-  log("--- Testing app ledger VB ----");
-
-  blockchainCore.setDbInterface(memoryDb);
-  blockchainCore.setNode(NODE_URL);
-  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
-
-  let fields = {
-    transactionId: "FS1234",
-    senderDocument: {
-      file: {
-        name  : "test.txt",
-        size  : 123,
-        crc32 : "A0A1A2A3",
-        sha256: "AA55".repeat(16)
-      },
-      senderEmail   : "foo@carmentis.io",
-      recipientEmail: "bar@carmentis.io"
-    }
-  };
-
-  let actors = [
-    {
-      name: "fileSign",
-      type: "applicationOwner"
-    },
-    {
-      name: "sender",
-      type: "endUser"
-    },
-    {
-      name: "recipient",
-      type: "endUser"
-    }
-  ];
-
-  let approvalObject = {
-    applicationId: appId,
-    version: 1,
-    fields: fields,
-    actors: actors,
-    channels: [
-      {
-        name: "mainChannel",
-        keyOwner: "fileSign"
-      },
-//    {
-//      name: "fileChannel",
-//      keyOwner: "sender"
-//    }
-    ],
-    channelInvitations: {
-      sender: [
-        "mainChannel"
-      ]
-    },
-    permissions: {
-      mainChannel: [ "senderDocument.*" ],
-//    fileChannel: [ "senderDocument.file" ]
-    },
-    author: "fileSign",
-    approval: {
-      endorser      : "sender",
-      requiredFields: [ "senderDocument.file" ],
-      message       : "fileSent"
-    }
-  };
-
-  let vb, mb;
-
-  vb = new appLedgerVb();
-
-  if(approvalObject.appLedgerId) {
-    await vb.load(approvalObject.appLedgerId);
-  }
-
-  if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
-    let endorserActorPrivateKey = crypto.generateKey256(),
-        endorserActorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(endorserActorPrivateKey);
-
-    vb.setEndorserActorPublicKey(endorserActorPublicKey);
-  }
-
-  await vb.generateDataSections(approvalObject);
-
-  mb = vb.getMicroblockData();
-
-  console.log(mb);
-  console.log(vb.currentMicroblock.binary);
-}
-
+// ============================================================================================================================ //
+//  Oracle                                                                                                                      //
+// ============================================================================================================================ //
 async function oracleTest(organization, appId) {
   log("--- Testing oracle VB ----");
 
@@ -548,4 +480,98 @@ async function oracleTest(organization, appId) {
   dataObject = await vb.decodeServiceRequest(1, "verifyEmail", data.request);
 
   console.log(dataObject);
+}
+
+// ============================================================================================================================ //
+//  App Ledger                                                                                                                  //
+// ============================================================================================================================ //
+async function appLedgerTest(organization, appId) {
+  log("--- Testing app ledger VB ----");
+
+  blockchainCore.setDbInterface(memoryDb);
+  blockchainCore.setNode(NODE_URL);
+  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
+
+  log("Generating microblock");
+
+  let fields = {
+    transactionId: "FS1234",
+    senderDocument: {
+      file: {
+        name  : "test.txt",
+        size  : 123,
+        crc32 : "A0A1A2A3",
+        sha256: "AA55".repeat(16)
+      },
+      senderEmail   : "foo@carmentis.io",
+      recipientEmail: "bar@carmentis.io"
+    }
+  };
+
+  let actors = [
+    {
+      name: "fileSign",
+      type: "applicationOwner"
+    },
+    {
+      name: "sender",
+      type: "endUser"
+    },
+    {
+      name: "recipient",
+      type: "endUser"
+    }
+  ];
+
+  let approvalObject = {
+    applicationId: appId,
+    version: 1,
+    fields: fields,
+    actors: actors,
+
+    ...APPROVAL_MULTI_CHANNEL,
+
+    author: "fileSign",
+
+    approval: {
+      endorser: "sender",
+      message : "fileSent"
+    }
+  };
+
+  let vb, mb;
+
+  vb = new appLedgerVb();
+
+  if(approvalObject.appLedgerId) {
+    await vb.load(approvalObject.appLedgerId);
+  }
+
+  let endorserActorPrivateKey = crypto.generateKey256(),
+      endorserActorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(endorserActorPrivateKey);
+
+  if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
+    vb.setEndorserActorPublicKey(endorserActorPublicKey);
+  }
+
+  await vb.generateDataSections(approvalObject);
+
+  mb = vb.getMicroblockData();
+
+  console.log(mb);
+
+  let binaryData = vb.currentMicroblock.binary;
+
+  log("Importing microblock");
+
+  blockchainCore.setUser(ROLES.USER, endorserActorPrivateKey);
+
+  let res = await blockchainManager.checkMicroblock(
+    vb.currentMicroblock.binary,
+    {
+      ignoreGas: true
+    }
+  );
+
+  console.log(res.vb.currentMicroblock.sections);
 }

@@ -102,15 +102,13 @@ export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new 
     subsectionNdx++;
   });
 
-  return schemaSerializer.encode(SCHEMAS.SECTION, section);
+  return section;
 }
 
 // ============================================================================================================================ //
 //  decode()                                                                                                                    //
 // ============================================================================================================================ //
-export function decode(height, sectionNdx, vbType, serializedSection, keyRing = new Map, externalDef) {
-  let section = schemaSerializer.decode(SCHEMAS.SECTION, serializedSection);
-
+export function decode(height, sectionNdx, vbType, section, keyRing = new Map, externalDef) {
   let sectionDef = getSectionDefinition(vbType, section.id, externalDef);
 
   let ruleSets;
@@ -127,6 +125,11 @@ export function decode(height, sectionNdx, vbType, serializedSection, keyRing = 
   let context = {
     flattenedFields: flattenedFields.list
   };
+
+  if(externalDef) {
+    context.structures = externalDef.structures;
+    context.enumerations = externalDef.enumerations;
+  }
 
   let object = {};
 

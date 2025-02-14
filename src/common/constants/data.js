@@ -1,5 +1,5 @@
 // primitive types
-export const OBJECT    = 0x00; // -> SCHEMA?
+export const OBJECT    = 0x00;
 export const INT       = 0x01;
 export const UINT      = 0x02;
 export const UINT8     = 0x03;
@@ -109,7 +109,7 @@ export const REF_NAME = [
 ];
 
 // section
-export const EXTERNAL_SCHEMA = 0x80;
+export const EXTERNAL_SCHEMA  = 0x80;
 
 export const SUB_PUBLIC       = 0x00;
 export const SUB_PRIVATE      = 0x01;

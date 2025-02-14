@@ -1,6 +1,7 @@
 import * as sectionSerializer from "../../common/serializers/section-serializer.js";
+import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
 import * as crypto from "../../common/crypto/crypto.js";
-import { ID, SECTIONS } from "../../common/constants/constants.js";
+import { ID, SCHEMAS, SECTIONS } from "../../common/constants/constants.js";
 import { EXTERNAL_APP_DEF } from "./data.js";
 import { log, outcome } from "../logger.js";
 
@@ -18,7 +19,7 @@ export async function run() {
     website: "www.carmentis.io"
   };
 
-  serialized = sectionSerializer.encode(
+  serialized = encode(
     123,
     0,
     ID.OBJ_ORGANIZATION,
@@ -29,7 +30,7 @@ export async function run() {
     keyRing
   );
 
-  unserialized = sectionSerializer.decode(
+  unserialized = decode(
     123,
     0,
     ID.OBJ_ORGANIZATION,
@@ -55,7 +56,7 @@ export async function run() {
     website: "www.carmentis.io"
   };
 
-  serialized = sectionSerializer.encode(
+  serialized = encode(
     123,
     0,
     ID.OBJ_APP_LEDGER,
@@ -87,7 +88,7 @@ export async function run() {
       keyRing.set(SECTIONS.KEY_CHANNEL << 16 | 2 << 8 | 0, keyB);
     }
 
-    unserialized = sectionSerializer.decode(
+    unserialized = decode(
       123,
       0,
       ID.OBJ_ORGANIZATION,
@@ -105,4 +106,16 @@ export async function run() {
 
     outcome(`External schema / key combination #${n}`, 50, success);
   }
+}
+
+function encode(...arg) {
+  let encoded = sectionSerializer.encode(...arg);
+
+  return schemaSerializer.encode(SCHEMAS.SECTION, encoded);
+}
+
+function decode(...arg) {
+  arg[3] = schemaSerializer.decode(SCHEMAS.SECTION, arg[3]);
+
+  return sectionSerializer.decode(...arg);
 }

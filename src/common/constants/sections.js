@@ -57,8 +57,9 @@ const ACCOUNT = {
       { name: "payeeId",          type: DATA.UINT8 },
       { name: "amount",           type: DATA.UINT48 },
       { name: "publicReference",  type: DATA.STRING | DATA.OPTIONAL },
-      { name: "privateReference", type: DATA.STRING | DATA.PRIVATE | DATA.OPTIONAL }
+      { name: "privateReference", type: DATA.STRING /*| DATA.PRIVATE*/ | DATA.OPTIONAL }
     ],
+/*
     subsections: [
       {
         rule     : "privateReference",
@@ -68,6 +69,7 @@ const ACCOUNT = {
         keyIndex1: parent => 0
       }
     ]
+*/
   },
   [ ACCOUNT_SIGNATURE ]: {
     label: "ACCOUNT_SIGNATURE",

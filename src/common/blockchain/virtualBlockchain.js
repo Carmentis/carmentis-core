@@ -1,6 +1,8 @@
-import { ID, ERRORS, SECTIONS, ECO } from "../constants/constants.js";
+import { ID, ERRORS, SCHEMAS, SECTIONS, ECO } from "../constants/constants.js";
 import { microblock } from "./microblock.js";
 import { blockchainCore, ROLES } from "./blockchainCore.js";
+import * as schemaSerializer from "../serializers/schema-serializer.js";
+import * as sectionSerializer from "../serializers/section-serializer.js";
 import * as crypto from "../crypto/crypto.js";
 import * as util from "../util/util.js";
 import * as uint8 from "../util/uint8.js";
@@ -45,33 +47,46 @@ export class virtualBlockchain extends blockchainCore {
 
     let microblocks = await this.constructor.loadMicroblocks(vbContent.list);
 
-    this.microblocks = microblocks.map(obj => {
+    for(let obj of microblocks) {
       let mb = new microblock(this.type);
 
       mb.load(obj.content, obj.hash);
-
-      return mb;
-    });
-
-    for(let mb of this.microblocks) {
       await this.processSections(mb);
+
+      this.microblocks.push(mb);
     }
   }
 
   async importCurrentMicroblock(binary, hash) {
     this.currentMicroblock = new microblock(this.type);
     this.currentMicroblock.load(binary, hash);
-    this.setGenesisSeed(this.currentMicroblock.object.header);
-
     await this.processSections(this.currentMicroblock);
+
+    this.setGenesisSeed(this.currentMicroblock.object.header);
   }
 
   async processSections(mb) {
-    for(let ndx in mb.sections) {
-      let section = mb.sections[ndx];
+    for(let sectionNdx in mb.object.body.sections) {
+      let serializedSection = mb.object.body.sections[sectionNdx],
+          sectionObject = schemaSerializer.decode(SCHEMAS.SECTION, serializedSection),
+          externalDef = await this.getExternalDefinition(sectionObject);
 
-      await this.updateState(mb, ndx, section.id, section.object);
+      let section = sectionSerializer.decode(
+        mb.object.header.height,
+        sectionNdx,
+        this.type,
+        sectionObject,
+        this.keyRing,
+        externalDef
+      );
+
+      mb.sections.push(section);
+      await this.updateState(mb, sectionNdx, section.id, section.object);
     }
+  }
+
+  async getExternalDefinition(sectionObject) {
+    return null;
   }
 
   createNewMicroblock() {
@@ -87,7 +102,7 @@ export class virtualBlockchain extends blockchainCore {
     if(mbHeader.height == 1) {
       this.state.genesisSeed = crypto.sha256(
         uint8.from(
-          util.intToByteArray(mbHeader.timestamp, 3),
+          util.intToByteArray(mbHeader.timestamp, 6),
           mbHeader.previousHash.slice(16)
         )
       );

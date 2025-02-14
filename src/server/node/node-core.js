@@ -4,10 +4,14 @@ import { blockchainCore, ROLES, blockchainManager, accountVb } from "../../commo
 import { CarmentisError, globalError, blockchainError } from "../../common/errors/error.js";
 import * as accounts from "../../common/accounts/accounts.js";
 
+let dbInterface;
+
 // ============================================================================================================================ //
 //  initialize()                                                                                                                //
 // ============================================================================================================================ //
 export function initialize(dbIntf, chainIntf) {
+  dbInterface = dbIntf;
+
   accounts.setDbInterface(dbIntf);
 
   blockchainCore.setDbInterface(dbIntf);
@@ -243,6 +247,19 @@ export async function getAccountHistory(accountHash, lastHistoryHash, maxRecords
 }
 
 // ============================================================================================================================ //
+//  getObjectList()                                                                                                             //
+// ============================================================================================================================ //
+export async function getObjectList(tableId) {
+  let list = await dbInterface.getKeys(tableId);
+
+  return schemaSerializer.encodeMessage(
+    SCHEMAS.MSG_ANS_OBJECT_LIST,
+    { list: list },
+    SCHEMAS.NODE_MESSAGES
+  );
+}
+
+// ============================================================================================================================ //
 //  getAccountByPublicKey()                                                                                                     //
 // ============================================================================================================================ //
 export async function getAccountByPublicKey(publicKey) {
@@ -309,6 +326,31 @@ async function microblockCallback(context, apply = false) {
     context.timestamp,
     apply
   );
+
+  if(!context.vb.microblocks.length) {
+    switch(context.vb.type) {
+      case ID.OBJ_ACCOUNT: {
+        await dbInterface.put(SCHEMAS.DB_ACCOUNTS, context.vb.id, 1);
+        break;
+      }
+      case ID.OBJ_VALIDATOR_NODE: {
+        await dbInterface.put(SCHEMAS.DB_VALIDATOR_NODES, context.vb.id, 1);
+        break;
+      }
+      case ID.OBJ_ORGANIZATION: {
+        await dbInterface.put(SCHEMAS.DB_ORGANIZATIONS, context.vb.id, 1);
+        break;
+      }
+      case ID.OBJ_APPLICATION: {
+        await dbInterface.put(SCHEMAS.DB_APPLICATIONS, context.vb.id, 1);
+        break;
+      }
+      case ID.OBJ_ORACLE: {
+        await dbInterface.put(SCHEMAS.DB_ORACLES, context.vb.id, 1);
+        break;
+      }
+    }
+  }
 }
 
 // ============================================================================================================================ //

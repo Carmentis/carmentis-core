@@ -2,6 +2,7 @@ import { SCHEMAS } from "../../common/constants/constants.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import * as base64 from "../../common/util/base64.js";
 import * as uint8 from "../../common/util/uint8.js";
+import * as util from "../../common/util/util.js";
 import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
 
 let requests = [],
@@ -63,7 +64,7 @@ export class wiServer {
     }
 
     function refreshQrCode(requestId) {
-      let timestamp = Math.floor(new Date() / 1000),
+      let timestamp = util.getCarmentisTimestamp(),
           qrId = crypto.getRandomBytes(16);
 
       qrIdentifiers.set(uint8.toHexa(qrId), requestId);

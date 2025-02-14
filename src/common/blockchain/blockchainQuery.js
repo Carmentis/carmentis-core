@@ -147,4 +147,34 @@ export class blockchainQuery extends blockchainCore {
 
     return answer.accountHash;
   }
+
+  static async getAccounts() {
+    let answer = await this.nodeQuery(SCHEMAS.MSG_GET_ACCOUNTS, {});
+
+    return answer.list;
+  }
+
+  static async getValidatorNodes() {
+    let answer = await this.nodeQuery(SCHEMAS.MSG_GET_VALIDATOR_NODES, {});
+
+    return answer.list;
+  }
+
+  static async getOrganizations() {
+    let answer = await this.nodeQuery(SCHEMAS.MSG_GET_ORGANIZATIONS, {});
+
+    return answer.list;
+  }
+
+  static async getApplications() {
+    let answer = await this.nodeQuery(SCHEMAS.MSG_GET_APPLICATIONS, {});
+
+    return answer.list;
+  }
+
+  static async getOracles() {
+    let answer = await this.nodeQuery(SCHEMAS.MSG_GET_ORACLES, {});
+
+    return answer.list;
+  }
 }

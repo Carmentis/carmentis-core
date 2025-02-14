@@ -9,6 +9,7 @@ import { applicationVb } from "./vb-application.js";
 import { appLedgerVb } from "./vb-app-ledger.js";
 import { oracleVb } from "./vb-oracle.js";
 import * as crypto from "../crypto/crypto.js";
+import * as util from "../util/util.js";
 import { blockchainError } from "../errors/error.js";
 
 const VB_CLASSES = {
@@ -22,7 +23,9 @@ const VB_CLASSES = {
 };
 
 export class blockchainManager extends blockchainCore {
-  static async checkMicroblock(mb, ts = new Date() / 1000) {
+  static async checkMicroblock(mb, options = {}) {
+    let ts = options.ts || util.getCarmentisTimestamp();
+
     let mbHash = crypto.sha256(mb),
         mbObject = schemaSerializer.decode(SCHEMAS.MICROBLOCK, mb),
         state;
@@ -39,7 +42,7 @@ export class blockchainManager extends blockchainCore {
       throw new blockchainError(ERRORS.BLOCKCHAIN_MB_TOO_FAR_FUTURE);
     }
 
-    if(mbObject.header.gas != this.computeGas(mb.length)) {
+    if(!options.ignoreGas && mbObject.header.gas != this.computeGas(mb.length)) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS);
     }
 

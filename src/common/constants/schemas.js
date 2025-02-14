@@ -52,6 +52,11 @@ export const DB_BLOCK                 = 0x3;
 export const DB_ACCOUNT_STATE         = 0x4;
 export const DB_ACCOUNT_HISTORY       = 0x5;
 export const DB_ACCOUNT_BY_PUBLIC_KEY = 0x6;
+export const DB_ACCOUNTS              = 0x7;
+export const DB_VALIDATOR_NODES       = 0x8;
+export const DB_ORGANIZATIONS         = 0x9;
+export const DB_APPLICATIONS          = 0xA;
+export const DB_ORACLES               = 0xB;
 
 export const DB = {
   // microblock meta information
@@ -163,6 +168,11 @@ export const MSG_GET_ACCOUNT_STATE         = 0x08;
 export const MSG_GET_ACCOUNT_HISTORY       = 0x09;
 export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY = 0x0A;
 export const MSG_SEND_MICROBLOCK           = 0x0B;
+export const MSG_GET_ACCOUNTS              = 0x0C;
+export const MSG_GET_VALIDATOR_NODES       = 0x0D;
+export const MSG_GET_ORGANIZATIONS         = 0x0E;
+export const MSG_GET_APPLICATIONS          = 0x0F;
+export const MSG_GET_ORACLES               = 0x10;
 
 export const MSG_ANS_OK                    = 0x80;
 export const MSG_ANS_HASH                  = 0x81;
@@ -180,6 +190,7 @@ export const MSG_ANS_ACCOUNT_HISTORY       = 0x8C;
 export const MSG_ANS_ACCOUNT_BY_PUBLIC_KEY = 0x8D;
 export const MSG_ANS_ACCEPT_MICROBLOCK     = 0x8E;
 export const MSG_ANS_ANCHORING             = 0x8F;
+export const MSG_ANS_OBJECT_LIST           = 0x90;
 
 export const MSG_NAMES = {
   [ MSG_GET_CHAIN_STATUS          ]: "GET_CHAIN_STATUS",
@@ -193,7 +204,12 @@ export const MSG_NAMES = {
   [ MSG_GET_ACCOUNT_STATE         ]: "GET_ACCOUNT_STATE",
   [ MSG_GET_ACCOUNT_HISTORY       ]: "GET_ACCOUNT_HISTORY",
   [ MSG_GET_ACCOUNT_BY_PUBLIC_KEY ]: "GET_ACCOUNT_BY_PUBLIC_KEY",
-  [ MSG_SEND_MICROBLOCK           ]: "SEND_MICROBLOCK"
+  [ MSG_SEND_MICROBLOCK           ]: "SEND_MICROBLOCK",
+  [ MSG_GET_ACCOUNTS              ]: "GET_ACCOUNTS",
+  [ MSG_GET_VALIDATOR_NODES       ]: "GET_VALIDATOR_NODES",
+  [ MSG_GET_ORGANIZATIONS         ]: "GET_ORGANIZATIONS",
+  [ MSG_GET_APPLICATIONS          ]: "GET_APPLICATIONS",
+  [ MSG_GET_ORACLES               ]: "GET_ORACLES"
 };
 
 export const NODE_MESSAGES = {
@@ -236,6 +252,16 @@ export const NODE_MESSAGES = {
   ],
   [ MSG_GET_ACCOUNT_BY_PUBLIC_KEY ] : [
     { name: "publicKey", type: DATA.PUB_KEY }
+  ],
+  [ MSG_GET_ACCOUNTS ] : [
+  ],
+  [ MSG_GET_VALIDATOR_NODES ] : [
+  ],
+  [ MSG_GET_ORGANIZATIONS ] : [
+  ],
+  [ MSG_GET_APPLICATIONS ] : [
+  ],
+  [ MSG_GET_ORACLES ] : [
   ],
 
   // -------------------------------------------------------------------------------------------------------------------------- //
@@ -339,6 +365,9 @@ export const NODE_MESSAGES = {
     { name: "block",  type: DATA.UINT48 },
     { name: "index",  type: DATA.UINT32 },
     { name: "offset", type: DATA.UINT32 }
+  ],
+  [ MSG_ANS_OBJECT_LIST ] : [
+    { name: "list", type: DATA.HASH | DATA.ARRAY }
   ],
   [ MSG_ANS_ERROR ] : [
     { name: "error", type: DATA.OBJECT, schema: ERROR }

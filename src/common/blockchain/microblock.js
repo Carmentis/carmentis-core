@@ -6,6 +6,7 @@ import * as crypto from "../crypto/crypto.js";
 import * as network from "../network/network.js";
 import * as keyValue from "../keyValue/keyValue.js";
 import * as uint8 from "../util/uint8.js";
+import * as util from "../util/util.js";
 import { blockchainError } from "../errors/error.js";
 
 const MAGIC = "CMTS";
@@ -22,14 +23,11 @@ export class microblock extends blockchainCore {
   load(binary, hash) {
     this.hash = hash;
     this.object = schemaSerializer.decode(SCHEMAS.MICROBLOCK, binary);
-
-    this.sections = this.object.body.sections.map((serializedSection, sectionNdx) =>
-      sectionSerializer.decode(this.object.header.height, sectionNdx, this.vbType, serializedSection)
-    )
+    this.sections = [];
   }
 
   create(height, previousHash) {
-    let timestamp = Math.floor(Date.now() / 1000);
+    let timestamp = util.getCarmentisTimestamp();
 
     if(height == 1) {
       let seed = crypto.getRandomBytes(16);
@@ -67,7 +65,7 @@ export class microblock extends blockchainCore {
       object: object
     };
 
-    let serializedSection = sectionSerializer.encode(
+    let section = sectionSerializer.encode(
       this.object.header.height,
       this.getSectionIndex(), 
       this.vbType,
@@ -76,6 +74,8 @@ export class microblock extends blockchainCore {
       externalDef,
       schemaInfo
     );
+
+    let serializedSection = schemaSerializer.encode(SCHEMAS.SECTION, section);
 
     this.object.body.sections.push(serializedSection);
     this.sections.push(sectionObject);

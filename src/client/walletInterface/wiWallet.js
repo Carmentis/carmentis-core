@@ -1,7 +1,7 @@
 import { SCHEMAS } from "../../common/constants/constants.js";
 import * as crypto from "../../common/crypto/crypto.js";
+import * as network from "../../common/network/network.js";
 import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
-import {CarmentisError} from "../../common/errors/error.js";
 
 export class wiWallet {
   constructor() {
@@ -60,14 +60,25 @@ export class wiWallet {
     };
 
     return this.formatAnswer(
-        SCHEMAS.WIRQ_GET_USER_DATA,
-        answerObject
+      SCHEMAS.WIRQ_GET_USER_DATA,
+      answerObject
     );
   }
 
   /**
    * Get the approval data from the operator, given the corresponding data identifier.
    */
-  getApprovalData(privateKey, object) {
+  async getApprovalData(privateKey, object) {
+    console.log("wiWallet.getApprovalData", object);
+
+    let publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
+
+    let answer = await network.sendWalletToOperatorMessage(
+      object.serverUrl,
+      SCHEMAS.MSG_APPROVAL_HANDSHAKE,
+      {
+        dataId: object.dataId
+      }
+    );
   }
 }

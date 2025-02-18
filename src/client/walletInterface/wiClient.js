@@ -10,6 +10,11 @@ import { wiError } from "../../common/errors/error.js";
 
 export class wiClient {
   constructor() {
+    window.addEventListener(
+      "message",
+      event => this.messageCallback && this.messageCallback(event),
+      false
+    );
   }
 
   /**
@@ -27,11 +32,22 @@ export class wiClient {
   }
 
   attachExtensionButton(id) {
-    this.buttonElement = web.get("#" + id);
+    if(this.buttonAttached) {
+      throw `Extension button already attached`;
+    }
 
-    if(!this.buttonElement) {
+    let buttonElement = web.get("#" + id);
+
+    if(!buttonElement) {
       throw `Button '${id}' not found`;
     }
+
+    buttonElement.el.addEventListener(
+      "click",
+      _ => this.buttonCallback && this.buttonCallback()
+    );
+
+    this.buttonAttached = true;
   }
 
   getQrData(id) {
@@ -70,7 +86,12 @@ export class wiClient {
 
     console.log("[wiClient] performing the authentication request...")
 
-    let answer = await this.request(SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, { challenge: challenge });
+    let answer = await this.request(
+      SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY,
+      {
+        challenge: challenge
+      }
+    );
 
     if(!crypto.secp256k1.verify(answer.publicKey, challenge, answer.signature)) {
       throw new wiError(ERRORS.WI_INVALID_SIGNATURE);
@@ -91,7 +112,10 @@ export class wiClient {
    * @return {Promise<{email: string}>} A promise that resolves to an object containing the email address.
    */
   async getEmail() {
-    let answer = await this.request(SCHEMAS.WIRQ_GET_EMAIL, {});
+    let answer = await this.request(
+      SCHEMAS.WIRQ_GET_EMAIL,
+      {}
+    );
 
     console.log("[wiClient] Obtained response:", answer)
 
@@ -107,7 +131,12 @@ export class wiClient {
    * @return {Promise<Object>} A promise that resolves to an object containing the user's email.
    */
   async getUserData(requiredData) {
-    let answer = await this.request(SCHEMAS.WIRQ_GET_USER_DATA, {requiredData});
+    let answer = await this.request(
+      SCHEMAS.WIRQ_GET_USER_DATA,
+      {
+        requiredData
+      }
+    );
 
     console.log("[wiClient] Obtained response:", answer)
 
@@ -129,7 +158,13 @@ export class wiClient {
    * @throws {Error} If the process fails.
    */
   async getApprovalData(dataId) {
-    let answer = await this.request(SCHEMAS.WIRQ_DATA_APPROVAL, { dataId: uint8.fromHexa(dataId) });
+    let answer = await this.request(
+      SCHEMAS.WIRQ_DATA_APPROVAL,
+      {
+        dataId: uint8.fromHexa(dataId),
+        serverUrl: this.serverUrl
+      }
+    );
 
     return answer;
   }
@@ -153,8 +188,7 @@ export class wiClient {
       _this.socket = clientSocket.getSocket(_this.serverUrl, onConnect.bind(_this), onData.bind(_this));
 
       _this.socket.sendMessage(SCHEMAS.WIMSG_REQUEST, reqObject);
-
-      _this.buttonElement.el.addEventListener("click", sendRequestToExtension);
+      _this.buttonCallback = sendRequestToExtension;
 
       function sendRequestToExtension() {
         if(window.carmentisWallet == undefined) {
@@ -164,20 +198,17 @@ export class wiClient {
 
         _this.socket.disconnect();
 
-        window.addEventListener(
-          "message",
-          (event) => {
-            console.log('[wiClient] received answer:', event);
-            if(event.data.from == "carmentis/walletResponse") {
-              let object = event.data.data,
-                  binary = base64.decodeBinary(object.answer, base64.BASE64),
-                  answerObject = schemaSerializer.decode(SCHEMAS.WI_ANSWERS[object.answerType], binary);
+        _this.messageCallback = event => {
+          console.log("[wiClient] received answer:", event);
 
-              resolve(answerObject);
-            }
-          },
-          false
-        );
+          if(event.data.from == "carmentis/walletResponse") {
+            let object = event.data.data,
+                binary = base64.decodeBinary(object.answer, base64.BASE64),
+                answerObject = schemaSerializer.decode(SCHEMAS.WI_ANSWERS[object.answerType], binary);
+
+            resolve(answerObject);
+          }
+        };
 
         let message = {
           requestType: type,

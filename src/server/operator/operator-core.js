@@ -36,17 +36,17 @@ export class operatorCore {
 
       console.log("data", data);
 
-      let answer = await network.sendMessageToOperator(
+      let answer = await network.sendOperatorToOperatorMessage(
         data.endpoint,
         SCHEMAS.MSG_SUBMIT_ORACLE_REQUEST,
         data.request
       );
 
-      return this.clientSuccess({
+      return this.successAnswer({
       });
     }
     catch(e) {
-      return this.clientError(e);
+      return this.errorAnswer(e);
     }
   }
 
@@ -85,8 +85,6 @@ export class operatorCore {
         vb = new appLedgerVb();
       }
 
-      let endorserActorPublicKey;
-
       if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
         // if the endorser does not yet belong to the ledger, create a random actor public key while waiting for the real one
         let endorserActorPrivateKey = crypto.generateKey256(),
@@ -95,29 +93,40 @@ export class operatorCore {
         vb.setEndorserActorPublicKey(endorserActorPublicKey);
       }
 
+      // this will throw an exception if 'approvalObject' is inconsistent
       await vb.generateDataSections(approvalObject, false);
 
       let mb = vb.getMicroblockData();
 
       console.log(mb);
 
-      let dataId = uint8.toHexa(crypto.getRandomBytes(32)),
-          object = {
-            dataId: dataId
-          };
+      // save 'approvalObject' associated to a random data ID and return this ID to the client
+      let dataId = uint8.toHexa(crypto.getRandomBytes(32));
 
-      approvalData.set(dataId, object);
+      approvalData.set(dataId, approvalObject);
 
-      return this.clientSuccess({
+      return this.successAnswer({
         dataId: dataId
       });
     }
     catch(e) {
-      return this.clientError(e);
+      return this.errorAnswer(e);
     }
   }
 
-  clientSuccess(data) {
+  approvalHandshake(handshakeObject) {
+    try {
+      let dataId = uint8.toHexa(handshakeObject.dataId),
+          approvalObject = approvalData.get(dataId);
+
+      console.log("approvalHandshake", dataId, approvalObject);
+    }
+    catch(e) {
+      return this.errorAnswer(e);
+    }
+  }
+
+  successAnswer(data) {
     return {
       success: true,
       error: "",
@@ -125,7 +134,7 @@ export class operatorCore {
     };
   }
 
-  clientError(e) {
+  errorAnswer(e) {
     return {
       success: false,
       error: e.toString(),

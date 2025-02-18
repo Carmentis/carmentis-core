@@ -2,6 +2,7 @@ import { ERRORS, DATA, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { organizationVb } from "./vb-organization.js";
 import { applicationVb } from "./vb-application.js";
+import * as recordManager from "./recordManager.js";
 import * as crypto from "../crypto/crypto.js";
 import * as util from "../util/util.js";
 import * as uint8 from "../util/uint8.js";
@@ -122,12 +123,16 @@ export class appLedgerVb extends virtualBlockchain {
     this.updateGas();
   }
 
-  getApprovalMessage(height) {
-    let mb = this.getMicroblock(height),
-        endorserSection = mb.findSection(SECTIONS.APP_LEDGER_ENDORSER),
-        messageDef = this.appDef.definition.messages[endorserSection.messageId];
+  getRecord(height) {
+    return recordManager.getRecord(this, height);
+  }
 
-    console.log("getApprovalMessage", endorserSection.messageId, JSON.stringify(messageDef));
+  flattenRecord(record) {
+    return recordManager.flattenRecord(this, record);
+  }
+
+  getApprovalMessage(height) {
+    return recordManager.getApprovalMessage(this, height);
   }
 
   async loadApplicationDefinition(version) {

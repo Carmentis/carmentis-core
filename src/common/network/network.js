@@ -20,10 +20,17 @@ export async function sendMessageToNode(url, schemaId, object) {
 }
 
 // ============================================================================================================================ //
-//  sendMessageToOperator()                                                                                                     //
+//  sendOperatorToOperatorMessage()                                                                                             //
 // ============================================================================================================================ //
-export async function sendMessageToOperator(url, schemaId, object) {
+export async function sendOperatorToOperatorMessage(url, schemaId, object) {
   return await sendMessage(url.replace(/\/?$/, "/operatorMessage"), schemaId, object, SCHEMAS.OP_OP_MESSAGES);
+}
+
+// ============================================================================================================================ //
+//  sendWalletToOperatorMessage()                                                                                               //
+// ============================================================================================================================ //
+export async function sendWalletToOperatorMessage(url, schemaId, object) {
+  return await sendMessage(url.replace(/\/?$/, "/walletMessage"), schemaId, object, SCHEMAS.WALLET_OP_MESSAGES);
 }
 
 // ============================================================================================================================ //

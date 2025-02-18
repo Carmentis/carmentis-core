@@ -604,11 +604,16 @@ async function appLedgerTest(organization, appId) {
     console.log(JSON.stringify(section));
   });
 
-  let height, message;
+  let height, message, record;
 
   height = vb.getHeight();
 
   console.log("height", height);
 
+  record = vb.getRecord(height);
+  console.log(record);
+  console.log(vb.flattenRecord(record));
+
   message = vb.getApprovalMessage(height);
+  console.log(message);
 }

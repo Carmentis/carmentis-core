@@ -108,6 +108,9 @@ export const REF_NAME = [
   "previous"
 ];
 
+export const REF_MIN_REWIND = [ 0, 0, 1 ];
+export const REF_MAX_REWIND = [ 0, Infinity, Infinity ];
+
 // section
 export const EXTERNAL_SCHEMA  = 0x80;
 

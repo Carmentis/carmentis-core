@@ -37,6 +37,12 @@ let wiClient;
 addEventListener("DOMContentLoaded", initialize);
 
 function initialize() {
+  wiClient = new Carmentis.wiClient;
+
+  wiClient.attachQrCodeContainer("output");
+  wiClient.attachExtensionButton("openExtension");
+  wiClient.setServerUrl(APP_OPERATOR_URL);
+
   document.querySelectorAll(".genesisRequired, .publicationRequired").forEach(el =>
     el.setAttribute("disabled", "")
   );
@@ -59,12 +65,6 @@ async function publishObjects() {
 }
 
 async function authentication() {
-  wiClient = new Carmentis.wiClient;
-
-  wiClient.attachQrCodeContainer("output");
-  wiClient.attachExtensionButton("openExtension");
-  wiClient.setServerUrl(APP_OPERATOR_URL);
-
   let answer = await wiClient.authenticationByPublicKey("FFAA7FC3FA1D8D74546427AD2C28BBBF127B6072344E494FF8D5E575B6BC3D0E");
 
   console.log("resolved authenticationByPublicKey promise", answer);
@@ -79,12 +79,6 @@ async function dataApproval() {
       dataId = answer.data.dataId;
 
   console.log(answer);
-
-  wiClient = new Carmentis.wiClient;
-
-  wiClient.attachQrCodeContainer("output");
-  wiClient.attachExtensionButton("openExtension");
-  wiClient.setServerUrl(APP_OPERATOR_URL);
 
   answer = await wiClient.getApprovalData(dataId);
 

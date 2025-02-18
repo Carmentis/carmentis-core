@@ -363,10 +363,10 @@ async function accountSectionCallback(context, sectionId, object, apply) {
 
       await accounts.tokenTransfer(
         {
-          type: ECO.BK_SENT_ISSUANCE,
+          type        : ECO.BK_SENT_ISSUANCE,
           payerAccount: null,
           payeeAccount: context.vb.id,
-          amount: object.amount
+          amount      : object.amount
         },
         {
           mbHash: context.mb.hash,
@@ -386,10 +386,10 @@ async function accountSectionCallback(context, sectionId, object, apply) {
 
       await accounts.tokenTransfer(
         {
-          type: ECO.BK_SALE,
+          type        : ECO.BK_SALE,
           payerAccount: object.sellerAccount,
           payeeAccount: context.vb.id,
-          amount: object.amount
+          amount      : object.amount
         },
         {
           mbHash: context.mb.hash,
@@ -405,14 +405,12 @@ async function accountSectionCallback(context, sectionId, object, apply) {
     }
 
     case SECTIONS.ACCOUNT_TRANSFER: {
-      let payeeAccount = context.vb.state.payees[object.payeeId];
-
       await accounts.tokenTransfer(
         {
-          type: ECO.BK_SENT_PAYMENT,
+          type        : ECO.BK_SENT_PAYMENT,
           payerAccount: context.vb.id,
-          payeeAccount: payeeAccount,
-          amount: object.amount
+          payeeAccount: object.account,
+          amount      : object.amount
         },
         {
           mbHash: context.mb.hash,

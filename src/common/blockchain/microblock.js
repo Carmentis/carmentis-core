@@ -59,18 +59,18 @@ export class microblock extends blockchainCore {
     this.sections = [];
   }
 
-  addSection(sectionId, object, keyRing, externalDef, schemaInfo) {
+  async addSection(sectionId, object, keyManager, externalDef, schemaInfo) {
     let sectionObject = {
       id: sectionId,
       object: object
     };
 
-    let section = sectionSerializer.encode(
+    let section = await sectionSerializer.encode(
       this.object.header.height,
       this.getSectionIndex(), 
       this.vbType,
       sectionObject,
-      keyRing,
+      keyManager,
       externalDef,
       schemaInfo
     );
@@ -79,6 +79,14 @@ export class microblock extends blockchainCore {
 
     this.object.body.sections.push(serializedSection);
     this.sections.push(sectionObject);
+  }
+
+  findSection(id, callback = _ => true) {
+    let section = this.sections.find(section =>
+      section.id == id && callback(section.object)
+    );
+
+    return section ? section.object : null;
   }
 
   getSectionIndex() {

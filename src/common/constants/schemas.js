@@ -16,9 +16,7 @@ export const ERROR = [
 export const VB_STATES = {
   [ ID.OBJ_ACCOUNT ] : [
     { name: "genesisSeed", type: DATA.HASH },
-    { name: "publicKey",   type: DATA.PUB_KEY | DATA.OPTIONAL },
-    { name: "payees",      type: DATA.HASH | DATA.ARRAY },
-    { name: "nextPayeeId", type: DATA.UINT8 }
+    { name: "publicKey",   type: DATA.PUB_KEY | DATA.OPTIONAL }
   ],
   [ ID.OBJ_VALIDATOR_NODE ] : [
     { name: "genesisSeed", type: DATA.HASH }
@@ -445,9 +443,7 @@ export const PROVABLE_DATA = [
 
 export const SUBSECTION = [
   { name: "type",           type: DATA.UINT8 },
-  { name: "keyType",        type: DATA.UINT8, condition: parent => parent.type & DATA.SUB_PRIVATE },
-  { name: "keyIndex0",      type: DATA.UINT8, condition: parent => parent.type & DATA.SUB_PRIVATE },
-  { name: "keyIndex1",      type: DATA.UINT8, condition: parent => parent.type & DATA.SUB_PRIVATE },
+  { name: "keyId",          type: DATA.UINT16, condition: parent => parent.type & DATA.SUB_PRIVATE },
   { name: "accessRules",    type: DATA.OBJECT | DATA.ARRAY, schema: ACCESS_RULE, condition: parent => parent.type & DATA.SUB_ACCESS_RULES },
   { name: "merkleRootHash", type: DATA.HASH, condition: parent => parent.type & DATA.SUB_PROVABLE },
   { name: "data",           type: DATA.BINARY }

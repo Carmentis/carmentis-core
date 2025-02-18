@@ -278,7 +278,6 @@ export function decode(schema, array, context = {}, object = {}) {
   decodeSchema(schema, object);
 
   if(stream.getPointer() != array.length) {
-console.log(stream, stream.getPointer(), array, array.length);
     throw new schemaError(ERRORS.SCHEMA_INVALID_STREAM, stream.getPointer(), array.length);
   }
 

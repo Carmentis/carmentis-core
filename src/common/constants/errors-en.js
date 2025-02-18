@@ -67,18 +67,17 @@ export const ERRORS_EN = {
     "Microblock timestamp too far in the past",
     "Microblock timestamp too far in the future",
     "Invalid protocol version: expecting '%0', got '%1'",
-    "Key not found: ID=0x%0"
+    "Unable to retrieve microblock at height %0"
   ],
 
   [ ERROR_TYPES.ACCOUNT ]: [
     "Invalid amount for token issuance",
     "Invalid public key for token issuance",
-    "Unknown account %0",
+    "Unknown account '%0'",
     "A public key is already attached to this account",
     "No public key is attached to this account",
     "This public key is already attached to another account",
     "This public key is not attached to any account",
-    "Payee ID %0 is undefined",
     "Insufficient funds",
     "Invalid payee account %0",
     "Buyer account %0 already exists"

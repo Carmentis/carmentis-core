@@ -1,5 +1,6 @@
 import { ERRORS, DATA, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
+import { organizationVb } from "./vb-organization.js";
 import { applicationVb } from "./vb-application.js";
 import * as crypto from "../crypto/crypto.js";
 import * as util from "../util/util.js";
@@ -10,13 +11,12 @@ import { sectionError, appLedgerError } from "../errors/error.js";
 //  appLedgerVb                                                                                                                 //
 // ============================================================================================================================ //
 export class appLedgerVb extends virtualBlockchain {
-  constructor() {
-    super(ID.OBJ_APP_LEDGER);
+  constructor(id) {
+    super(ID.OBJ_APP_LEDGER, id);
 
+    this.channelKeys = new Map();
     this.state.actors = [];
-    this.state.actorId = 0;
     this.state.channels = [];
-    this.state.channelId = 0;
   }
 
   isEndorserSubscribed(endorserName) {
@@ -44,9 +44,6 @@ export class appLedgerVb extends virtualBlockchain {
       });
     }
 
-    // set our actor key
-    this.setActorKey();
-
     // add new actors
     for(let actor of object.actors) {
       await this.addActor(actor.name, actor.type);
@@ -56,13 +53,6 @@ export class appLedgerVb extends virtualBlockchain {
     for(let channel of object.channels) {
       await this.addChannel(channel.name, channel.keyOwner);
     }
-
-    // load the channel keys
-    Object.keys(object.permissions).forEach(channelName => {
-      let channelId = this.getChannelByName(channelName);
-
-      this.setChannelKey(channelId);
-    });
 
     // get author and endorser IDs
     let authorId = this.getActorByName(object.author),
@@ -86,9 +76,11 @@ export class appLedgerVb extends virtualBlockchain {
     }
 
     // add new invitations
+    await this.updateMyIdentity();
+
     for(let actorName of Object.keys(object.channelInvitations)) {
       let guestId = this.getActorByName(actorName),
-          guestPublicKey = await this.getActorPublicKey(guestId);
+          guestPublicKey = await this.getActorPublicKey(this.state.actors[guestId]);
 
       if(!guestPublicKey) {
         throw new appLedgerError(ERRORS.APP_LEDGER_CANNOT_INVITE, actorName);
@@ -96,13 +88,6 @@ export class appLedgerVb extends virtualBlockchain {
 
       for(let channelName of object.channelInvitations[actorName]) {
         let channelId = this.getChannelByName(channelName);
-
-        let invitationKey = this.getSharedKey(
-          uint8.fromHexa(this.getKey(SECTIONS.KEY_ACTOR, 0, 0)),
-          uint8.fromHexa(guestPublicKey)
-        );
-
-        this.setKey(SECTIONS.KEY_INVITATION, authorId, guestId, invitationKey);
 
         await this.addChannelInvitation(channelId, authorId, guestId);
       }
@@ -137,21 +122,18 @@ export class appLedgerVb extends virtualBlockchain {
     this.updateGas();
   }
 
-  setActorKey() {
-    let info = uint8.from(
-      crypto.derive.PREFIX_ACTOR_KEY,
-      uint8.fromHexa(this.state.genesisSeed)
-    );
+  getApprovalMessage(height) {
+    let mb = this.getMicroblock(height),
+        endorserSection = mb.findSection(SECTIONS.APP_LEDGER_ENDORSER),
+        messageDef = this.appDef.definition.messages[endorserSection.messageId];
 
-    let actorKey = uint8.toHexa(crypto.derive.deriveBitsFromKey(this.rootKey, info, 256));
-
-    this.setKey(SECTIONS.KEY_ACTOR, 0, 0, actorKey);
+    console.log("getApprovalMessage", endorserSection.messageId, JSON.stringify(messageDef));
   }
 
   async loadApplicationDefinition(version) {
-    let appVb = new applicationVb();
+    let appVb = new applicationVb(this.state.applicationId);
 
-    await appVb.load(this.state.applicationId);
+    await appVb.load();
 
     this.appDef = await appVb.findSection(
       SECTIONS.APP_DEFINITION,
@@ -167,11 +149,9 @@ export class appLedgerVb extends virtualBlockchain {
           channelId = this.getChannelByName(channelName);
 
       subsections.push({
-        rule     : rule,
-        type     : DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES,
-        keyId    : SECTIONS.KEY_CHANNEL,
-        keyIndex0: channelId,
-        keyIndex1: 0
+        rule : rule,
+        type : DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES,
+        keyId: SECTIONS.KEY_CHANNEL | channelId
       });
     });
 
@@ -194,7 +174,7 @@ export class appLedgerVb extends virtualBlockchain {
     }
 
     let actorObject = {
-      id: this.state.actorId,
+      id: this.state.actors.length,
       type: typeId,
       name: name
     };
@@ -206,7 +186,7 @@ export class appLedgerVb extends virtualBlockchain {
     let keyOwnerId = this.getActorByName(keyOwner);
 
     let channelObject = {
-      id: this.state.channelId,
+      id: this.state.channels.length,
       keyOwnerId: keyOwnerId,
       name: name
     };
@@ -215,17 +195,13 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   async addChannelInvitation(channelId, hostId, guestId) {
-    let key = this.getKey(
-      SECTIONS.KEY_CHANNEL,
-      channelId,
-      0
-    );
+    let channelKey = await this.getChannelKey(channelId);
 
     let object = {
       channelId : channelId,
       hostId    : hostId,
       guestId   : guestId,
-      channelKey: key
+      channelKey: channelKey
     };
 
     await this.addSection(SECTIONS.APP_LEDGER_CHANNEL_INVITATION, object);
@@ -249,29 +225,76 @@ export class appLedgerVb extends virtualBlockchain {
     await this.addSection(SECTIONS.APP_LEDGER_ENDORSER, object);
   }
 
-  setChannelKey(channelId) {
+  async getChannelKey(channelId) {
+    if(!this.channelKeys.has(channelId)) {
+      let channelKey;
+
+      if(this.state.channels[channelId].keyOwnerId == this.myId) {
+        // we are the key owner of this channel
+        channelKey = this.createChannelKey(channelId);
+      }
+      else {
+        // we are not the key owner of this channel: have we been invited to join?
+        let invitationRef = this.state.actors[this.myId].invitations.find(obj => obj.channelId == channelId);
+
+        if(!invitationRef) {
+          return null;
+        }
+
+        let mb = this.getMicroblock(invitationRef.height);
+
+        let section = mb.findSection(
+          SECTIONS.APP_LEDGER_CHANNEL_INVITATION,
+          obj => obj.channelId == channelId && obj.guestId == this.myId
+        );
+
+        channelKey = section.channelKey;
+      }
+
+      this.channelKeys.set(channelId, channelKey);
+    }
+    return this.channelKeys.get(channelId);
+  }
+
+  createChannelKey(channelId) {
     let info = uint8.from(
       crypto.derive.PREFIX_CHANNEL_KEY,
       channelId,
       uint8.fromHexa(this.state.genesisSeed)
     );
 
-    let key = uint8.toHexa(crypto.derive.deriveBitsFromKey(this.rootKey, info, 256));
-
-    this.setKey(
-      SECTIONS.KEY_CHANNEL,
-      channelId,
-      0,
-      key
-    );
+    return uint8.toHexa(crypto.derive.deriveBitsFromKey(this.constructor.rootPrivateKey, info, 256));
   }
 
-  async getActorPublicKey(actorId) {
-    let actor = this.state.actors[actorId];
+  async identifyMyself(id) {
+    let actor = this.state.actors[id],
+        publicKey = await this.getActorPublicKey(actor);
 
+    if(actor.type == DATA.ACTOR_END_USER && publicKey == this.myActorPublicKey) {
+      this.myPublicKey = publicKey;
+      this.myPrivateKey = this.myActorPrivateKey;
+      this.myId = id;
+      return true;
+    }
+
+    if(actor.type != DATA.ACTOR_END_USER && publicKey == this.constructor.rootPublicKey) {
+      this.myPublicKey = publicKey;
+      this.myPrivateKey = this.constructor.rootPrivateKey;
+      this.myId = id;
+      return true;
+    }
+
+    return false;
+  }
+
+  async getActorPublicKey(actor) {
     switch(actor.type) {
       case DATA.ACTOR_APP_OWNER: {
-        return await this.getOrganizationKey(this.state.organizationId);
+        let appVb = new applicationVb(this.state.applicationId);
+
+        await appVb.load();
+
+        return await this.getOrganizationKey(appVb.state.organizationId);
       }
       case DATA.ACTOR_ORGANIZATION: {
         return await this.getOrganizationKey(actor.organizationId);
@@ -283,11 +306,11 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   async getOrganizationKey(orgId) {
-    let appVb = new applicationVb();
+    let orgVb = new organizationVb(orgId);
 
-    await appVb.load(orgId);
+    await orgVb.load();
 
-    return appVb.state.publicKey;
+    return orgVb.state.publicKey;
   }
 
   getActorByName(name) {
@@ -321,11 +344,83 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   async signAsEndorser() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_ACTOR, 0, 0), SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE);
+    await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE);
   }
 
   async signAsAuthor() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_ACTOR, 0, 0), SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE);
+    await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE);
+  }
+
+  static deriveActorKeyPair(privateKey, genesisSeed) {
+    let info = uint8.from(
+      crypto.derive.PREFIX_ACTOR_KEY,
+      uint8.fromHexa(genesisSeed)
+    );
+
+    let actorPrivateKey = uint8.toHexa(crypto.derive.deriveBitsFromKey(privateKey, info, 256)),
+        actorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(actorPrivateKey);
+
+    return {
+      privateKey: actorPrivateKey,
+      publicKey: actorPublicKey
+    };
+  }
+
+  async updateMyIdentity() {
+    // if not already done, define our actor key pair (even if we're not an end-user)
+    if(!this.myActorPrivateKey) {
+      let keyPair = this.constructor.deriveActorKeyPair(this.constructor.rootPrivateKey, this.state.genesisSeed);
+
+      this.myActorPrivateKey = keyPair.privateKey;
+      this.myActorPublicKey = keyPair.publicKey;
+    }
+
+    // test whether we're already a subscribed actor in this ledger
+    if(this.myId == undefined) {
+      for(let id in this.state.actors) {
+        if(await this.identifyMyself(+id)) {
+          break;
+        }
+      }
+    }
+  }
+
+  async keyManager(keyId, index, object) {
+    await this.updateMyIdentity();
+
+    switch(keyId) {
+      case SECTIONS.KEY_INVITATION: {
+        let theirId;
+
+        switch(this.myId) {
+          case object.hostId: {
+            // we are the host -> use the public key of the guest
+            theirId = object.guestId;
+            break;
+          }
+          case object.guestId: {
+            // we are the guest -> use the public key of the host
+            theirId = object.hostId;
+            break;
+          }
+          default: {
+            // we are not involved in this invitation
+            return null;
+          }
+        }
+
+        let theirPublicKey = await this.getActorPublicKey(this.state.actors[theirId]);
+
+        return this.getSharedKey(
+          this.myPrivateKey,
+          theirPublicKey
+        );
+      }
+      case SECTIONS.KEY_CHANNEL: {
+        return await this.getChannelKey(index);
+      }
+    }
+    return null;
   }
 
   async updateState(mb, ndx, sectionId, object) {
@@ -342,7 +437,7 @@ export class appLedgerVb extends virtualBlockchain {
       }
 
       case SECTIONS.APP_LEDGER_ACTOR_CREATION: {
-        if(object.id != this.state.actorId) {
+        if(object.id != this.state.actors.length) {
           throw new appLedgerError(ERRORS.APP_LEDGER_BAD_ACTOR_ID, object.id);
         }
         if(this.state.actors.indexOf(object.name) != -1) {
@@ -352,15 +447,14 @@ export class appLedgerVb extends virtualBlockchain {
         this.state.actors.push({
           name: object.name,
           type: object.type,
+          invitations: [],
           subscribed: 0
         });
-
-        this.state.actorId++;
         break;
       }
 
       case SECTIONS.APP_LEDGER_CHANNEL_CREATION: {
-        if(object.id != this.state.channelId) {
+        if(object.id != this.state.channels.length) {
           throw new appLedgerError(ERRORS.APP_LEDGER_BAD_CHANNEL_ID, object.id);
         }
         if(this.state.channels.indexOf(object.name) != -1) {
@@ -371,26 +465,24 @@ export class appLedgerVb extends virtualBlockchain {
           name: object.name,
           keyOwnerId: object.keyOwnerId
         });
-
-        this.state.channelId++;
         break;
       }
 
       case SECTIONS.APP_LEDGER_CHANNEL_INVITATION: {
-        if(object.actorId >= this.state.actorId) {
-          throw new appLedgerError(ERRORS.APP_LEDGER_BAD_ACTOR_ID, object.actorId);
+        if(!this.state.actors[object.hostId]) {
+          throw new appLedgerError(ERRORS.APP_LEDGER_BAD_ACTOR_ID, object.hostId);
         }
-        if(object.channelId >= this.state.channelId) {
+        if(!this.state.actors[object.guestId]) {
+          throw new appLedgerError(ERRORS.APP_LEDGER_BAD_ACTOR_ID, object.guestId);
+        }
+        if(!this.state.channels[object.channelId]) {
           throw new appLedgerError(ERRORS.APP_LEDGER_BAD_CHANNEL_ID, object.channelId);
         }
-        if(object.channelKey) {
-          this.setKey(
-            SECTIONS.KEY_CHANNEL,
-            object.channelId,
-            0,
-            object.channelKey
-          );
-        }
+
+        this.state.actors[object.guestId].invitations.push({
+          channelId: object.channelId,
+          height: mb.object.header.height
+        });
         break;
       }
 

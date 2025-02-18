@@ -97,6 +97,18 @@ export function getWriteStream(context = {}) {
     },
 
     // ------------------------------------------------------------------------------------------------------------------------ //
+    //  writeString()                                                                                                           //
+    // ------------------------------------------------------------------------------------------------------------------------ //
+    writeString: function(str, defSize) {
+      let bin = textEncoder.encode(str);
+
+      if(defSize == undefined) {
+        stream.writeVarUint(bin.length);
+      }
+      stream.writeArray(bin);
+    },
+
+    // ------------------------------------------------------------------------------------------------------------------------ //
     //  writeArray()                                                                                                            //
     // ------------------------------------------------------------------------------------------------------------------------ //
     writeArray: function(data) {
@@ -201,6 +213,16 @@ export function getReadStream(array, context = {}) {
     },
 
     // ------------------------------------------------------------------------------------------------------------------------ //
+    //  readString()                                                                                                            //
+    // ------------------------------------------------------------------------------------------------------------------------ //
+    readString: function(defSize) {
+      let size = defSize == undefined ? stream.readVarUint() : defSize,
+          array = stream.readArray(size);
+
+      return textEncoder.decode(array);
+    },
+
+    // ------------------------------------------------------------------------------------------------------------------------ //
     //  readArray()                                                                                                             //
     // ------------------------------------------------------------------------------------------------------------------------ //
     readArray: function(n) {
@@ -257,12 +279,7 @@ function encodeField(stream, def, item, name, context) {
       break;
     }
     case DATA.STRING: {
-      let bin = textEncoder.encode(item);
-
-      if(def.size == undefined) {
-        stream.writeVarUint(bin.length);
-      }
-      stream.writeArray(bin);
+      stream.writeString(item, def.size);
       break;
     }
     case DATA.TIMESTAMP: {
@@ -277,6 +294,13 @@ function encodeField(stream, def, item, name, context) {
     }
     case DATA.HASH: {
       stream.writeArray(uint8.fromHexa(item));
+      break;
+    }
+    case DATA.FILE: {
+      stream.writeString(item.name);
+      stream.writeUnsigned(item.size, 6);
+      stream.writeArray(uint8.fromHexa(item.crc32));
+      stream.writeArray(uint8.fromHexa(item.sha256));
       break;
     }
     case DATA.BINARY: {
@@ -339,14 +363,20 @@ function decodeField(stream, def, context) {
       break;
     }
     case DATA.STRING: {
-      let size = def.size == undefined ? stream.readVarUint() : def.size,
-          array = stream.readArray(size);
-
-      item = textEncoder.decode(array);
+      item = stream.readString(def.size);
       break;
     }
     case DATA.HASH: {
       item = uint8.toHexa(stream.readArray(32));
+      break;
+    }
+    case DATA.FILE: {
+      item = {
+        name  : stream.readString(),
+        size  : stream.readUnsigned(6),
+        crc32 : uint8.toHexa(stream.readArray(4)),
+        sha256: uint8.toHexa(stream.readArray(32))
+      }
       break;
     }
     case DATA.BINARY: {

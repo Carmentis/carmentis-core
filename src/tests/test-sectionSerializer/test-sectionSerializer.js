@@ -8,7 +8,14 @@ import { log, outcome } from "../logger.js";
 export async function run() {
   log("--- Testing sections ----");
 
-  let serialized, unserialized, keyRing, object;
+  let serialized,
+      unserialized,
+      object,
+      keyRing;
+
+  async function keyManager(keyId, index) {
+    return keyRing.get(keyId | index);
+  }
 
   keyRing = new Map;
 
@@ -19,7 +26,7 @@ export async function run() {
     website: "www.carmentis.io"
   };
 
-  serialized = encode(
+  serialized = await encode(
     123,
     0,
     ID.OBJ_ORGANIZATION,
@@ -27,15 +34,15 @@ export async function run() {
       id: SECTIONS.ORG_DESCRIPTION,
       object: object
     },
-    keyRing
+    keyManager
   );
 
-  unserialized = decode(
+  unserialized = await decode(
     123,
     0,
     ID.OBJ_ORGANIZATION,
     serialized,
-    keyRing
+    keyManager
   );
 
   outcome("Internal schema (public data)", 50, JSON.stringify(unserialized.object) == JSON.stringify(object));
@@ -43,8 +50,8 @@ export async function run() {
   let keyA = crypto.generateKey256(),
       keyB = crypto.generateKey256();
 
-  keyRing.set(SECTIONS.KEY_CHANNEL << 16 | 1 << 8 | 0, keyA);
-  keyRing.set(SECTIONS.KEY_CHANNEL << 16 | 2 << 8 | 0, keyB);
+  keyRing.set(SECTIONS.KEY_CHANNEL | 1, keyA);
+  keyRing.set(SECTIONS.KEY_CHANNEL | 2, keyB);
 
   let externalDef = EXTERNAL_APP_DEF;
 
@@ -56,7 +63,7 @@ export async function run() {
     website: "www.carmentis.io"
   };
 
-  serialized = encode(
+  serialized = await encode(
     123,
     0,
     ID.OBJ_APP_LEDGER,
@@ -64,7 +71,7 @@ export async function run() {
       id: SECTIONS.APP_LEDGER_CHANNEL_DATA,
       object: object
     },
-    keyRing,
+    keyManager,
     externalDef,
     new Uint8Array()
   );
@@ -82,18 +89,18 @@ export async function run() {
     keyRing = new Map;
 
     if(n & 1) {
-      keyRing.set(SECTIONS.KEY_CHANNEL << 16 | 1 << 8 | 0, keyA);
+      keyRing.set(SECTIONS.KEY_CHANNEL | 1, keyA);
     }
     if(n & 2) {
-      keyRing.set(SECTIONS.KEY_CHANNEL << 16 | 2 << 8 | 0, keyB);
+      keyRing.set(SECTIONS.KEY_CHANNEL | 2, keyB);
     }
 
-    unserialized = decode(
+    unserialized = await decode(
       123,
       0,
       ID.OBJ_ORGANIZATION,
       serialized,
-      keyRing,
+      keyManager,
       externalDef,
       new Uint8Array()
     );
@@ -108,14 +115,14 @@ export async function run() {
   }
 }
 
-function encode(...arg) {
-  let encoded = sectionSerializer.encode(...arg);
+async function encode(...arg) {
+  let encoded = await sectionSerializer.encode(...arg);
 
   return schemaSerializer.encode(SCHEMAS.SECTION, encoded);
 }
 
-function decode(...arg) {
+async function decode(...arg) {
   arg[3] = schemaSerializer.decode(SCHEMAS.SECTION, arg[3]);
 
-  return sectionSerializer.decode(...arg);
+  return await sectionSerializer.decode(...arg);
 }

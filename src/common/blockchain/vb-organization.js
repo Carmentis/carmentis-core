@@ -6,8 +6,8 @@ import { sectionError, organizationError } from "../errors/error.js";
 //  organizationVb                                                                                                              //
 // ============================================================================================================================ //
 export class organizationVb extends virtualBlockchain {
-  constructor() {
-    super(ID.OBJ_ORGANIZATION);
+  constructor(id) {
+    super(ID.OBJ_ORGANIZATION, id);
   }
 
   async addPublicKey(object) {
@@ -31,7 +31,7 @@ export class organizationVb extends virtualBlockchain {
   }
 
   async sign() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_ROOT, 0, 0), SECTIONS.ORG_SIGNATURE);
+    await this.addSignature(this.constructor.rootPrivateKey, SECTIONS.ORG_SIGNATURE);
   }
 
   async updateState(mb, ndx, sectionId, object) {

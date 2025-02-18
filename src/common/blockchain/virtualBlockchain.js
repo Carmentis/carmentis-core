@@ -12,30 +12,30 @@ import { blockchainError } from "../errors/error.js";
 //  virtualBlockchain                                                                                                           //
 // ============================================================================================================================ //
 export class virtualBlockchain extends blockchainCore {
-  constructor(type) {
+  constructor(type, id) {
     super();
 
     if(type !== undefined && !ID.OBJECT_NAME[type]) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_INVALID_VB_TYPE, type);
     }
 
+    this.id = id;
     this.type = type;
     this.microblocks = [];
     this.state = {};
-    this.currentMicroblock = null;
-    this.keyRing = new Map;
     this.gasPrice = 0;
-    this.setKey(SECTIONS.KEY_ROOT, 0, 0, this.constructor.rootKey);
+
+    if(!this.id) {
+      this.createNewMicroblock();
+    }
   }
 
-  async load(hash) {
-    if(!util.isHash(hash)) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_INVALID_VB_ID, hash);
+  async load() {
+    if(!util.isHash(this.id)) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_INVALID_VB_ID, this.id);
     }
 
-    this.id = hash;
-
-    let vbContent = await this.constructor.getVbContent(hash);
+    let vbContent = await this.constructor.getVbContent(this.id);
 
     if(this.type === undefined) {
       this.type = vbContent.type;
@@ -51,6 +51,7 @@ export class virtualBlockchain extends blockchainCore {
       let mb = new microblock(this.type);
 
       mb.load(obj.content, obj.hash);
+      this.setGenesisSeed(mb.object.header);
       await this.processSections(mb);
 
       this.microblocks.push(mb);
@@ -60,28 +61,35 @@ export class virtualBlockchain extends blockchainCore {
   async importCurrentMicroblock(binary, hash) {
     this.currentMicroblock = new microblock(this.type);
     this.currentMicroblock.load(binary, hash);
-    await this.processSections(this.currentMicroblock);
-
     this.setGenesisSeed(this.currentMicroblock.object.header);
+    await this.processSections(this.currentMicroblock);
   }
 
   async processSections(mb) {
     for(let sectionNdx in mb.object.body.sections) {
+      sectionNdx = +sectionNdx;
+
       let serializedSection = mb.object.body.sections[sectionNdx],
           sectionObject = schemaSerializer.decode(SCHEMAS.SECTION, serializedSection),
           externalDef = await this.getExternalDefinition(sectionObject);
 
-      let section = sectionSerializer.decode(
+      let section = await sectionSerializer.decode(
         mb.object.header.height,
         sectionNdx,
         this.type,
         sectionObject,
-        this.keyRing,
+        this.keyManager.bind(this),
         externalDef
       );
 
       mb.sections.push(section);
-      await this.updateState(mb, sectionNdx, section.id, section.object);
+
+      await this.updateState(
+        mb,
+        sectionNdx,
+        section.id,
+        section.object
+      );
     }
   }
 
@@ -113,18 +121,8 @@ export class virtualBlockchain extends blockchainCore {
     return crypto.ecdh.getSharedKey(myPrivateKey, theirPublicKey);
   }
 
-  setKey(type, index0, index1, key) {
-    return this.keyRing.set(type << 16 | index0 << 8 | index1, key);
-  }
-
-  getKey(type, index0, index1) {
-    let keyId = type << 16 | index0 << 8 | index1;
-
-    if(!this.keyRing.has(keyId)) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_KEY_NOT_FOUND, util.hexa(keyId, 6));
-    }
-
-    return this.keyRing.get(keyId);
+  async keyManager() {
+    return null;
   }
 
   getHeight() {
@@ -135,8 +133,21 @@ export class virtualBlockchain extends blockchainCore {
     if(!this.currentMicroblock) {
       this.createNewMicroblock();
     }
-    this.currentMicroblock.addSection(sectionId, object, this.keyRing, externalDef, schemaInfo);
-    await this.updateState(this.currentMicroblock, this.currentMicroblock.sections.length - 1, sectionId, object);
+
+    await this.currentMicroblock.addSection(
+      sectionId,
+      object,
+      this.keyManager.bind(this),
+      externalDef,
+      schemaInfo
+    );
+
+    await this.updateState(
+      this.currentMicroblock,
+      this.currentMicroblock.sections.length - 1,
+      sectionId,
+      object
+    );
   }
 
   async addSignature(privateKey, sectionId, includeGas = true) {
@@ -155,14 +166,12 @@ export class virtualBlockchain extends blockchainCore {
     this.currentMicroblock.updateGas();
   }
 
-  async findSection(id, callback = _ => true) {
+  async findSection(id, callback) {
     for(let n = this.microblocks.length; n--;) {
-      let section = this.microblocks[n].sections.find(section =>
-        section.id == id && callback(section.object)
-      );
+      let section = this.microblocks[n].findSection(id, callback);
 
       if(section) {
-        return section.object;
+        return section;
       }
     }
     return null;
@@ -184,6 +193,16 @@ export class virtualBlockchain extends blockchainCore {
     let mb = this.currentMicroblock.finalize(true, this.gasPrice);
 
     return Math.round(mb.header.gas * mb.header.gasPrice / 1000);
+  }
+
+  getMicroblock(height) {
+    let mb = [ ...this.microblocks, this.currentMicroblock ][height - 1];
+
+    if(!mb) {
+      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_NOT_FOUND, height);
+    }
+
+    return mb;
   }
 
   getMicroblockData() {

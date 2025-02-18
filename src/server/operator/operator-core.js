@@ -22,9 +22,9 @@ export class operatorCore {
     console.log("initiateOracleRequest", requestObject);
 
     try {
-      let vb = new oracleVb();
+      let vb = new oracleVb(requestObject.oracleId);
 
-      await vb.load(requestObject.oracleId);
+      await vb.load();
 
       let data = await vb.encodeServiceRequest(
         requestObject.version,
@@ -75,10 +75,14 @@ export class operatorCore {
     // Attempt to create all sections. The resulting microblock is ignored but this is a way to make sure that 'approvalObject'
     // is valid and consistent. We abort the request right away if it's not.
     try {
-      let vb = new appLedgerVb();
+      let vb;
 
       if(approvalObject.appLedgerId) {
-        await vb.load(approvalObject.appLedgerId);
+        vb = new appLedgerVb(approvalObject.appLedgerId);
+        await vb.load();
+      }
+      else {
+        vb = new appLedgerVb();
       }
 
       let endorserActorPublicKey;

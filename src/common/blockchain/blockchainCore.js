@@ -2,6 +2,7 @@ import { ECO, SCHEMAS, ERRORS } from "../constants/constants.js";
 import * as schemaSerializer from "../serializers/schema-serializer.js";
 import * as sectionSerializer from "../serializers/section-serializer.js";
 import * as network from "../network/network.js";
+import * as crypto from "../crypto/crypto.js";
 import { blockchainError } from "../errors/error.js";
 
 export const ROLES = {
@@ -15,18 +16,22 @@ export const MB_BATCH_SIZE = 10;
 
 export class blockchainCore {
   static role = ROLES.OBSERVER;
-  static rootKey = null;
+  static rootPrivateKey = null;
+  static rootPublicKey = null;
   static nodeUrl = null;
   static dbInterface = null;
   static chainInterface = null;
 
-  static setUser(role, rootKey) {
-    if(!rootKey && (role == ROLES.OPERATOR || role == ROLES.USER)) {
+  static setUser(role, rootPrivateKey) {
+    this.role = role;
+
+    if(rootPrivateKey) {
+      this.rootPrivateKey = rootPrivateKey;
+      this.rootPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(rootPrivateKey);
+    }
+    else if(role == ROLES.OPERATOR || role == ROLES.USER) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_NO_ROOT_KEY);
     }
-
-    this.role = role;
-    this.rootKey = rootKey;
   }
 
   static setNode(nodeUrl) {

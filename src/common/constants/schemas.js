@@ -639,6 +639,6 @@ export const WI_ANSWERS = {
     { name: "signature", type: DATA.SIGNATURE }
   ],
   [ WIRQ_GET_USER_DATA ]: [
-    { name: "userData", type: DATA.OBJECT }
+    { name: "userData", type: DATA.STRING | DATA.ARRAY }
   ],
 };

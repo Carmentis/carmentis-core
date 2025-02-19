@@ -14,14 +14,13 @@ const MODIFIER = {
 //  getRuleSets()                                                                                                               //
 // ============================================================================================================================ //
 export function getRuleSets(sectionDef) {
-  let rules = sectionDef.subsections.map((sub, index) => {
-    let subId = (sub.type << 24 | sub.keyId << 16 | index) >>> 0;
+  let rules = sectionDef.subsections.map(sub => {
+    let subId = sub.type << 16 | sub.keyId;
 
     let accessRules = parseRuleSet(sectionDef, sub.rule.split(","), false);
 
     return {
       subId: subId,
-      keyIndices: [ sub.keyIndex0, sub.keyIndex1],
       accessRules: accessRules
     };
   });

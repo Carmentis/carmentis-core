@@ -8,8 +8,8 @@ import { sectionError, applicationError } from "../errors/error.js";
 //  applicationVb                                                                                                               //
 // ============================================================================================================================ //
 export class applicationVb extends virtualBlockchain {
-  constructor() {
-    super(ID.OBJ_APPLICATION);
+  constructor(id) {
+    super(ID.OBJ_APPLICATION, id);
   }
 
   async addDeclaration(object) {
@@ -33,9 +33,9 @@ export class applicationVb extends virtualBlockchain {
       throw new applicationError(ERRORS.APPLICATION_MISSING_ORG);
     }
 
-    let vb = new organizationVb();
+    let vb = new organizationVb(this.state.organizationId);
 
-    await vb.load(this.state.organizationId);
+    await vb.load();
 
     return vb;
   }
@@ -61,15 +61,15 @@ export class applicationVb extends virtualBlockchain {
   }
 
   async sign() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_ROOT, 0, 0), SECTIONS.APP_SIGNATURE);
+    await this.addSignature(this.constructor.rootPrivateKey, SECTIONS.APP_SIGNATURE);
   }
 
   async updateState(mb, ndx, sectionId, object) {
     switch(sectionId) {
       case SECTIONS.APP_DECLARATION: {
-        let ownerVb = new organizationVb();
+        let ownerVb = new organizationVb(object.organizationId);
 
-        await ownerVb.load(object.organizationId);
+        await ownerVb.load();
 
         this.state.organizationId = object.organizationId;
         break;

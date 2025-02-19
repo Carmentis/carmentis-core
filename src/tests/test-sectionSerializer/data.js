@@ -9,8 +9,8 @@ export const EXTERNAL_APP_DEF = {
     { name: "website",     type: DATA.STRING | DATA.PRIVATE }
   ],
   subsections: [
-    { rule: "*",             type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL, keyIndex0: 1, keyIndex1: 0 },
-    { rule: "countryCode",   type: DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL, keyIndex0: 2, keyIndex1: 0 },
-    { rule: "city, address", type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL, keyIndex0: 2, keyIndex1: 0 }
+    { rule: "*",             type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL | 1 },
+    { rule: "countryCode",   type: DATA.SUB_PRIVATE | DATA.SUB_PROVABLE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL | 2 },
+    { rule: "city, address", type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES, keyId: SECTIONS.KEY_CHANNEL | 2 }
   ]
 };

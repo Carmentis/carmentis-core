@@ -6,8 +6,8 @@ import { sectionError, appUserError } from "../errors/error.js";
 //  appUserVb                                                                                                                   //
 // ============================================================================================================================ //
 export class appUserVb extends virtualBlockchain {
-  constructor() {
-    super(ID.OBJ_APP_USER);
+  constructor(id) {
+    super(ID.OBJ_APP_USER, id);
   }
 
   async updateState(mb, ndx, sectionId, object) {

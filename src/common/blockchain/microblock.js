@@ -49,7 +49,7 @@ export class microblock extends blockchainCore {
         previousHash   : previousHash,
         timestamp      : timestamp,
         gas            : 0,
-        gasPrice       : ECO.TOKEN
+        gasPrice       : 0
       },
       body: {
         sections: []
@@ -59,18 +59,18 @@ export class microblock extends blockchainCore {
     this.sections = [];
   }
 
-  addSection(sectionId, object, keyRing, externalDef, schemaInfo) {
+  async addSection(sectionId, object, keyManager, externalDef, schemaInfo) {
     let sectionObject = {
       id: sectionId,
       object: object
     };
 
-    let section = sectionSerializer.encode(
+    let section = await sectionSerializer.encode(
       this.object.header.height,
       this.getSectionIndex(), 
       this.vbType,
       sectionObject,
-      keyRing,
+      keyManager,
       externalDef,
       schemaInfo
     );
@@ -79,6 +79,14 @@ export class microblock extends blockchainCore {
 
     this.object.body.sections.push(serializedSection);
     this.sections.push(sectionObject);
+  }
+
+  findSection(id, callback = _ => true) {
+    let section = this.sections.find(section =>
+      section.id == id && callback(section.object)
+    );
+
+    return section ? section.object : null;
   }
 
   getSectionIndex() {
@@ -110,9 +118,18 @@ export class microblock extends blockchainCore {
       header.gasPrice = 0;
     }
 
+    // we sign all sections except the ones whose ID is included in 'ignoredSections'
+    // and except the last one, which is the signature section itself
+    let signedSections =
+      this.object.body.sections
+      .filter(section => !ignoredSections.includes(section[0]))
+      .slice(0, -1);
+
     let object = {
       header: header,
-      body: { sections: this.object.body.sections.slice(0, -ignoredSections) }
+      body: {
+        sections: signedSections
+      }
     };
 
     let binary = schemaSerializer.encode(
@@ -138,12 +155,11 @@ export class microblock extends blockchainCore {
     return this.sections.map(section => `<${section.id}>`).join("");
   }
 
-  finalize(includeGas, gasPrice) {
+  finalize(includeGas) {
     if(includeGas) {
-      if(gasPrice < ECO.MINIMUM_GAS_PRICE || gasPrice > ECO.MAXIMUM_GAS_PRICE) {
+      if(this.object.header.gasPrice < ECO.MINIMUM_GAS_PRICE || this.object.header.gasPrice > ECO.MAXIMUM_GAS_PRICE) {
         throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS_PRICE);
       }
-      this.object.header.gasPrice = gasPrice;
     }
     else {
       this.object.header.gas = 0;
@@ -168,7 +184,8 @@ export class microblock extends blockchainCore {
     return {
       hash: this.hash,
       header: this.object.header,
-      sections: this.sections
+      sections: this.sections,
+      binary: this.binary
     };
   }
 

@@ -77,17 +77,13 @@ export const MICROBLOCK_SECTION = {
     },
     {
       type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
-      keyType: 0x00,
-      keyIndex0: 0x00,
-      keyIndex1: 0x00,
+      keyId: 0x0000,
       accessRules: [ { path: [0] }, { path: [1, 255] } ],
       data: new Uint8Array(0)
     },
     {
       type: DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES | DATA.SUB_PROVABLE,
-      keyType: 0x00,
-      keyIndex0: 0x00,
-      keyIndex1: 0x00,
+      keyId: 0x0000,
       accessRules: [ { path: [0] }, { path: [1, 255] } ],
       merkleRootHash: new Uint8Array(32),
       data: new Uint8Array(0)

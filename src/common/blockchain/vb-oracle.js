@@ -9,8 +9,8 @@ import { sectionError, oracleError } from "../errors/error.js";
 //  oracleVb                                                                                                                    //
 // ============================================================================================================================ //
 export class oracleVb extends virtualBlockchain {
-  constructor() {
-    super(ID.OBJ_ORACLE);
+  constructor(id) {
+    super(ID.OBJ_ORACLE, id);
   }
 
   async addDeclaration(object) {
@@ -26,7 +26,7 @@ export class oracleVb extends virtualBlockchain {
   }
 
   async sign() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_ROOT, 0), SECTIONS.ORACLE_SIGNATURE);
+    await this.addSignature(this.constructor.rootPrivateKey, SECTIONS.ORACLE_SIGNATURE);
   }
 
   async getOrganizationVb() {
@@ -34,9 +34,9 @@ export class oracleVb extends virtualBlockchain {
       throw new oracleError(ERRORS.ORACLE_MISSING_ORG);
     }
 
-    let vb = new organizationVb();
+    let vb = new organizationVb(this.state.organizationId);
 
-    await vb.load(this.state.organizationId);
+    await vb.load();
 
     return vb;
   }
@@ -90,9 +90,9 @@ export class oracleVb extends virtualBlockchain {
       signature: crypto.secp256k1.sign(privateKey, encodedBody)
     };
 
-    let ownerVb = new organizationVb();
+    let ownerVb = new organizationVb(this.state.organizationId);
 
-    await ownerVb.load(this.state.organizationId);
+    await ownerVb.load();
 
     let server = await ownerVb.getServer();
 
@@ -119,8 +119,9 @@ export class oracleVb extends virtualBlockchain {
 
     let body = this.constructor.decodeServiceRequestBody(request.body);
 
-    let senderVb = new organizationVb();
-    await senderVb.load(body.organizationId);
+    let senderVb = new organizationVb(body.organizationId);
+
+    await senderVb.load();
 
     if(!crypto.secp256k1.verify(senderVb.state.publicKey, request.body, request.signature)) {
       throw new oracleError(ERRORS.ORACLE_BAD_REQUEST_SIGNATURE);
@@ -141,9 +142,9 @@ export class oracleVb extends virtualBlockchain {
   async updateState(mb, ndx, sectionId, object) {
     switch(sectionId) {
       case SECTIONS.ORACLE_DECLARATION: {
-        let ownerVb = new organizationVb();
+        let ownerVb = new organizationVb(object.organizationId);
 
-        await ownerVb.load(object.organizationId);
+        await ownerVb.load();
 
         this.state.organizationId = object.organizationId;
         break;

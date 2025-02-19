@@ -7,23 +7,22 @@ export const SIGNATURE_SECTION_SIZE = 69;
 // ============================================================================================================================ //
 //  Key types                                                                                                                   //
 // ============================================================================================================================ //
-export const KEY_ROOT        = 0x00;
-export const KEY_ACTOR       = 0x01;
-export const KEY_PAYER_PAYEE = 0x02;
-export const KEY_INVITATION  = 0x03;
-export const KEY_CHANNEL     = 0x04;
+export const KEY_ROOT        = 0x0000;
+export const KEY_ACTOR       = 0x0100;
+export const KEY_PAYER_PAYEE = 0x0200;
+export const KEY_INVITATION  = 0x0300;
+export const KEY_CHANNEL     = 0x0400;
 
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
-export const ACCOUNT_TOKEN_ISSUANCE    = 0;
-export const ACCOUNT_CREATION          = 1;
-export const ACCOUNT_PAYEE_DECLARATION = 2;
-export const ACCOUNT_TRANSFER          = 3;
-export const ACCOUNT_SIGNATURE         = 4;
+export const ACCOUNT_TOKEN_ISSUANCE = 0;
+export const ACCOUNT_CREATION       = 1;
+export const ACCOUNT_TRANSFER       = 2;
+export const ACCOUNT_SIGNATURE      = 3;
 
 export const ACCOUNT_STRUCTURE = new RegExp(
-  `^(<${ACCOUNT_TOKEN_ISSUANCE}>|<${ACCOUNT_CREATION}>|((<${ACCOUNT_PAYEE_DECLARATION}>)?<${ACCOUNT_TRANSFER}>)+)<${ACCOUNT_SIGNATURE}>$`
+  `^(<${ACCOUNT_TOKEN_ISSUANCE}>|<${ACCOUNT_CREATION}>|<${ACCOUNT_TRANSFER}>+)<${ACCOUNT_SIGNATURE}>$`
 );
 
 // TODO: staking, slashing, frozen tokens, burn
@@ -44,32 +43,21 @@ const ACCOUNT = {
       { name: "amount",         type: DATA.UINT48 }
     ]
   },
-  [ ACCOUNT_PAYEE_DECLARATION ]: {
-    label: "ACCOUNT_PAYEE_DECLARATION",
-    fields: [
-      { name: "id",      type: DATA.UINT8 },
-      { name: "account", type: DATA.HASH }
-    ]
-  },
   [ ACCOUNT_TRANSFER ]: {
     label: "ACCOUNT_TRANSFER",
     fields: [
-      { name: "payeeId",          type: DATA.UINT8 },
+      { name: "account",          type: DATA.HASH },
       { name: "amount",           type: DATA.UINT48 },
       { name: "publicReference",  type: DATA.STRING | DATA.OPTIONAL },
-      { name: "privateReference", type: DATA.STRING /*| DATA.PRIVATE*/ | DATA.OPTIONAL }
+      { name: "privateReference", type: DATA.STRING | DATA.PRIVATE | DATA.OPTIONAL }
     ],
-/*
     subsections: [
       {
-        rule     : "privateReference",
-        type     : DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
-        keyId    : KEY_PAYER_PAYEE,
-        keyIndex0: parent => parent.payeeId,
-        keyIndex1: parent => 0
+        rule : "privateReference",
+        type : DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
+        keyId: KEY_PAYER_PAYEE
       }
     ]
-*/
   },
   [ ACCOUNT_SIGNATURE ]: {
     label: "ACCOUNT_SIGNATURE",
@@ -258,11 +246,9 @@ const APP_LEDGER = {
     ],
     subsections: [
       {
-        rule     : "channelKey",
-        type     : DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
-        keyId    : KEY_INVITATION,
-        keyIndex0: parent => parent.hostId,
-        keyIndex1: parent => parent.guestId
+        rule : "channelKey",
+        type : DATA.SUB_PRIVATE | DATA.SUB_ACCESS_RULES,
+        keyId: KEY_INVITATION
       }
     ]
   },

@@ -9,7 +9,7 @@ import { sectionError } from "../errors/error.js";
 // ============================================================================================================================ //
 //  encode()                                                                                                                    //
 // ============================================================================================================================ //
-export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new Map, externalDef, schemaInfo) {
+export async function encode(height, sectionNdx, vbType, sectionObject, keyManager, externalDef, schemaInfo) {
   let sectionDef = getSectionDefinition(vbType, sectionObject.id, externalDef);
 
   let section = {
@@ -47,27 +47,21 @@ export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new 
     subsectionNdx++;
   }
 
-  ruleSets.forEach(rule => {
-    let ruleType = rule.subId >>> 24,
-        keyType = rule.subId >> 16 & 0xFF,
+  for(let rule of ruleSets) {
+    let ruleType = rule.subId >> 16,
+        keyId = rule.subId & 0xFFFF,
         isProvable = !!(ruleType & DATA.SUB_PROVABLE),
         hasAccessRules = !!(ruleType & DATA.SUB_ACCESS_RULES);
 
-    let [ keyIndex0, keyIndex1 ] = rule.keyIndices.map(item =>
-      typeof item == "function" ? item(sectionObject.object): item
-    );
+    let key = await keyManager(keyId & 0xFF00, keyId & 0x00FF, sectionObject.object);
 
-    let keyId = keyType << 16 | keyIndex0 << 8 | keyIndex1;
-
-    if(!keyRing.has(keyId)) {
-      throw new sectionError(ERRORS.SECTION_KEY_NOT_FOUND, util.hexa(keyId, 6));
+    if(!key) {
+      throw new sectionError(ERRORS.SECTION_KEY_NOT_FOUND, util.hexa(keyId, 4));
     }
 
     let subsection = {
-      type     : ruleType,
-      keyType  : keyType,
-      keyIndex0: keyIndex0,
-      keyIndex1: keyIndex1
+      type : ruleType,
+      keyId: keyId
     };
 
     context.subId = rule.subId;
@@ -93,14 +87,14 @@ export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new 
 
     let dataSchema = isProvable ? SCHEMAS.PROVABLE_DATA : SCHEMAS.PRIVATE_DATA,
         plainTextData = schemaSerializer.encode(dataSchema, dataObject),
-        [ subKey, subIv ] = getSubKey(keyRing.get(keyId), height, sectionNdx, subsectionNdx);
+        [ subKey, subIv ] = getSubKey(key, height, sectionNdx, subsectionNdx);
 
     let encryptedData = crypto.aes.encryptGcm(subKey, plainTextData, subIv);
 
     subsection.data = encryptedData;
     section.subsections.push(subsection);
     subsectionNdx++;
-  });
+  }
 
   return section;
 }
@@ -108,7 +102,7 @@ export function encode(height, sectionNdx, vbType, sectionObject, keyRing = new 
 // ============================================================================================================================ //
 //  decode()                                                                                                                    //
 // ============================================================================================================================ //
-export function decode(height, sectionNdx, vbType, section, keyRing = new Map, externalDef) {
+export async function decode(height, sectionNdx, vbType, section, keyManager, externalDef) {
   let sectionDef = getSectionDefinition(vbType, section.id, externalDef);
 
   let ruleSets;
@@ -133,21 +127,27 @@ export function decode(height, sectionNdx, vbType, section, keyRing = new Map, e
 
   let object = {};
 
-  section.subsections.forEach((subsection, subsectionNdx) => {
+  for(let subsectionNdx in section.subsections) {
+    subsectionNdx = +subsectionNdx;
+
+    let subsection = section.subsections[subsectionNdx];
+
     let isPrivate = !!(subsection.type & DATA.SUB_PRIVATE),
         isProvable = !!(subsection.type & DATA.SUB_PROVABLE),
         hasAccessRules = !!(subsection.type & DATA.SUB_ACCESS_RULES),
-        keyId = subsection.keyType << 16 | subsection.keyIndex0 << 8 | subsection.keyIndex1,
-        subId = (subsection.type << 24 | keyId) >>> 0;
+        keyId = subsection.keyId,
+        subId = subsection.type << 16 | keyId;
 
     let serializedData;
 
     if(isPrivate) {
-      if(!keyRing.has(keyId)) {
-        return;
+      let key = await keyManager(keyId & 0xFF00, keyId & 0x00FF, object);
+
+      if(!key) {
+        continue;
       }
 
-      let [ subKey, subIv ] = getSubKey(keyRing.get(keyId), height, sectionNdx, subsectionNdx);
+      let [ subKey, subIv ] = getSubKey(key, height, sectionNdx, subsectionNdx);
 
       let plainTextData = crypto.aes.decryptGcm(subKey, subsection.data, subIv);
 
@@ -171,7 +171,7 @@ export function decode(height, sectionNdx, vbType, section, keyRing = new Map, e
         throw new sectionError(ERRORS.SECTION_BAD_MERKLE_HASH, util.hexa(subId), subsection.merkleRootHash, context.merkleRootHash);
       }
     }
-  });
+  }
 
   return {
     id: section.id,
@@ -235,7 +235,7 @@ function getRuleSetsFromSection(section) {
   section.subsections.forEach(subsection => {
     if(subsection.type & DATA.SUB_ACCESS_RULES) {
       ruleSets.push({
-        subId: (subsection.type << 24 | subsection.keyType << 16 | subsection.keyIndex0 << 8 | subsection.keyIndex1) >>> 0,
+        subId: subsection.type << 16 | subsection.keyId,
         accessRules: subsection.accessRules
       });
     }

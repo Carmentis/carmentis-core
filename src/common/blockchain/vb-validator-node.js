@@ -6,8 +6,8 @@ import { sectionError, nodeError } from "../errors/error.js";
 //  validatorNodeVb                                                                                                             //
 // ============================================================================================================================ //
 export class validatorNodeVb extends virtualBlockchain {
-  constructor() {
-    super(ID.OBJ_VALIDATOR_NODE);
+  constructor(id) {
+    super(ID.OBJ_VALIDATOR_NODE, id);
   }
 
   async updateState(mb, ndx, sectionId, object) {

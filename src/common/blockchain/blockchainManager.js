@@ -65,13 +65,15 @@ export class blockchainManager extends blockchainCore {
       mbRecord.vbType = previousMb.vbType;
     }
 
-    let vb = this.getVbInstance(mbRecord.vbType);
+    let vb;
 
     if(mbObject.header.height == 1) {
+      vb = this.getVbInstance(mbRecord.vbType);
       vb.id = mbHash;
     }
     else {
-      await vb.load(mbRecord.vbHash);
+      vb = this.getVbInstance(mbRecord.vbType, mbRecord.vbHash);
+      await vb.load();
       vb.state = state;
     }
 
@@ -92,7 +94,7 @@ export class blockchainManager extends blockchainCore {
     };
   }
 
-  static getVbInstance(type) {
-    return new VB_CLASSES[type];
+  static getVbInstance(type, id) {
+    return new VB_CLASSES[type](id);
   }
 }

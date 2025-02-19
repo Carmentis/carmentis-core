@@ -6,11 +6,9 @@ import { sectionError, accountError } from "../errors/error.js";
 //  accountVb                                                                                                                   //
 // ============================================================================================================================ //
 export class accountVb extends virtualBlockchain {
-  constructor(externalRef = false) {
-    super(ID.OBJ_ACCOUNT);
+  constructor(id, externalRef = false) {
+    super(ID.OBJ_ACCOUNT, id);
 
-    this.state.payees = [];
-    this.state.nextPayeeId = 0;
     this.externalRef = externalRef;
   }
 
@@ -24,6 +22,7 @@ export class accountVb extends virtualBlockchain {
 
   createTransfer(payeeAccount, amount) {
     let object = {
+      account: payeeAccount,
       amount: amount
     };
 
@@ -32,27 +31,53 @@ export class accountVb extends virtualBlockchain {
       addPrivateReference: ref => object.privateReference = ref,
 
       commit: async () => {
-        object.payeeId = this.state.payees.indexOf(payeeAccount);
-
-        if(object.payeeId == -1) {
-          object.payeeId = this.state.nextPayeeId;
-
-          await this.addSection(
-            SECTIONS.ACCOUNT_PAYEE_DECLARATION,
-            {
-              id: object.payeeId,
-              account: payeeAccount
-            }
-          );
-        }
-
         await this.addSection(SECTIONS.ACCOUNT_TRANSFER, object);
       }
     };
   }
 
   async sign() {
-    await this.addSignature(this.getKey(SECTIONS.KEY_ROOT, 0, 0), SECTIONS.ACCOUNT_SIGNATURE);
+    await this.addSignature(this.constructor.rootPrivateKey, SECTIONS.ACCOUNT_SIGNATURE);
+  }
+
+  async keyManager(keyId, index, object) {
+    switch(keyId) {
+      case SECTIONS.KEY_PAYER_PAYEE: {
+        if(this.externalRef || this.constructor.isNode()) {
+          return null;
+        }
+
+        let payeeVb = new accountVb(object.account, true);
+
+        await payeeVb.load();
+
+        let payeePublicKey = payeeVb.state.publicKey,
+            theirPublicKey;
+
+        switch(this.constructor.rootPublicKey) {
+          case this.state.publicKey: {
+            // we are the owner of this account -> use the public key of the payee
+            theirPublicKey = payeePublicKey;
+            break;
+          }
+          case payeePublicKey: {
+            // we are the payee -> use the public key of this account
+            theirPublicKey = this.state.publicKey;
+            break;
+          }
+          default: {
+            // we are not involved in this transaction
+            return null;
+          }
+        }
+
+        return this.getSharedKey(
+          this.constructor.rootPrivateKey,
+          theirPublicKey
+        );
+      }
+    }
+    return null;
   }
 
   async updateState(mb, ndx, sectionId, object) {
@@ -76,34 +101,20 @@ export class accountVb extends virtualBlockchain {
         break;
       }
 
-      case SECTIONS.ACCOUNT_PAYEE_DECLARATION: {
-        this.state.payees[object.id] = object.account;
-        this.state.nextPayeeId = this.state.nextPayeeId + 1 & 0xFF;
-
-        if(!this.externalRef && !this.constructor.isNode()) {
-          let payeeVb = new accountVb(true);
-
-          await payeeVb.load(object.account);
-
-          this.setKey(
-            SECTIONS.KEY_PAYER_PAYEE,
-            object.id,
-            0,
-            this.getSharedKey(
-              this.getKey(SECTIONS.KEY_ROOT, 0, 0),
-              payeeVb.state.publicKey
-            )
-          );
-        }
-        break;
-      }
-
       case SECTIONS.ACCOUNT_TRANSFER: {
         if(!this.state.publicKey) {
           throw new accountError(ERRORS.ACCOUNT_KEY_UNDEFINED);
         }
-        if(!this.state.payees[object.payeeId]) {
-          throw new accountError(ERRORS.ACCOUNT_PAYEE_UNDEFINED, object.payeeId);
+
+        if(!this.externalRef && !this.constructor.isNode()) {
+          let payeeVb = new accountVb(object.account, true);
+
+          try {
+            await payeeVb.load();
+          }
+          catch(e) {
+            throw new accountError(ERRORS.ACCOUNT_UNKNOWN, object.account);
+          }
         }
         break;
       }
@@ -113,8 +124,9 @@ export class accountVb extends virtualBlockchain {
 
         if(creationSection) {
           // an account creation is signed by the seller
-          let sellerVb = new accountVb(true);
-          await sellerVb.load(creationSection.object.sellerAccount);
+          let sellerVb = new accountVb(creationSection.object.sellerAccount, true);
+
+          await sellerVb.load();
 
           this.verifySignature(mb, sellerVb.state.publicKey, object);
         }

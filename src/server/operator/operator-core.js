@@ -18,40 +18,40 @@ export class operatorCore {
     this.organizationId = organizationId;
   }
 
-  async initiateOracleRequest(requestObject) {
-    console.log("initiateOracleRequest", requestObject);
+  async initiateOracleRequest(req) {
+    console.log("initiateOracleRequest", req);
 
     try {
-      let vb = new oracleVb();
+      let vb = new oracleVb(req.oracleId);
 
-      await vb.load(requestObject.oracleId);
+      await vb.load();
 
       let data = await vb.encodeServiceRequest(
-        requestObject.version,
-        requestObject.service,
-        requestObject.data,
+        req.version,
+        req.service,
+        req.data,
         this.organizationId,
         this.privateKey
       );
 
       console.log("data", data);
 
-      let answer = await network.sendMessageToOperator(
+      let answer = await network.sendOperatorToOperatorMessage(
         data.endpoint,
         SCHEMAS.MSG_SUBMIT_ORACLE_REQUEST,
         data.request
       );
 
-      return this.clientSuccess({
+      return this.successAnswer({
       });
     }
     catch(e) {
-      return this.clientError(e);
+      return this.errorAnswer(e);
     }
   }
 
-  async receivedOracleRequest(requestObject) {
-    console.log("receivedOracleRequest", requestObject);
+  async receivedOracleRequest(req) {
+    console.log("receivedOracleRequest", req);
 
     let requestId = uint8.toHexa(crypto.getRandomBytes(32)),
         price = 1;
@@ -68,20 +68,14 @@ export class operatorCore {
     );
   }
 
-  async confirmOracleRequest(confirmationObject) {
+  async confirmOracleRequest(req) {
   }
 
   async prepareUserApproval(approvalObject) {
     // Attempt to create all sections. The resulting microblock is ignored but this is a way to make sure that 'approvalObject'
     // is valid and consistent. We abort the request right away if it's not.
     try {
-      let vb = new appLedgerVb();
-
-      if(approvalObject.appLedgerId) {
-        await vb.load(approvalObject.appLedgerId);
-      }
-
-      let endorserActorPublicKey;
+      let vb = await this.loadApplicationLedger(approvalObject.appLedgerId);
 
       if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
         // if the endorser does not yet belong to the ledger, create a random actor public key while waiting for the real one
@@ -91,29 +85,97 @@ export class operatorCore {
         vb.setEndorserActorPublicKey(endorserActorPublicKey);
       }
 
-      await vb.generateDataSections(approvalObject, false);
+      // this will throw an exception if 'approvalObject' is inconsistent
+      await vb.generateDataSections(approvalObject);
 
-      let mb = vb.getMicroblockData();
+      // save 'approvalObject' associated to a random data ID and return this ID to the client
+      let dataId = uint8.toHexa(crypto.getRandomBytes(32));
 
-      console.log(mb);
+      approvalData.set(dataId, { approvalObject });
 
-      let dataId = uint8.toHexa(crypto.getRandomBytes(32)),
-          object = {
-            dataId: dataId
-          };
-
-      approvalData.set(dataId, object);
-
-      return this.clientSuccess({
+      return this.successAnswer({
         dataId: dataId
       });
     }
     catch(e) {
-      return this.clientError(e);
+      return this.errorAnswer(e);
     }
   }
 
-  clientSuccess(data) {
+  async approvalHandshake(req) {
+    try {
+      let storedObject = approvalData.get(req.dataId);
+
+      if(!storedObject) {
+        throw "invalid data ID";
+      }
+
+      let { approvalObject } = storedObject;
+
+      let vb = await this.loadApplicationLedger(approvalObject.appLedgerId);
+
+      storedObject.vb = vb;
+
+      if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
+        return schemaSerializer.encodeMessage(
+          SCHEMAS.MSG_ANS_ACTOR_KEY_REQUIRED,
+          {
+            genesisSeed: vb.state.genesisSeed
+          },
+          SCHEMAS.WALLET_OP_MESSAGES
+        );
+      }
+
+      return await this.sendApprovalData(vb, approvalObject);
+    }
+    catch(e) {
+      console.error(e);
+    }
+  }
+
+  async approvalActorKey(req) {
+    try {
+      let storedObject = approvalData.get(req.dataId);
+
+      if(!storedObject) {
+        throw "invalid data ID";
+      }
+
+      if(!storedObject.vb) {
+        throw "actor key sent before handshake";
+      }
+
+      let { approvalObject, vb } = storedObject;
+
+      vb.setEndorserActorPublicKey(req.actorKey);
+
+      return await this.sendApprovalData(vb, approvalObject);
+    }
+    catch(e) {
+      console.error(e);
+    }
+  }
+
+  async sendApprovalData(vb, approvalObject) {
+    try {
+      await vb.generateDataSections(approvalObject);
+
+      let mb = vb.getMicroblockData();
+
+      return schemaSerializer.encodeMessage(
+        SCHEMAS.MSG_ANS_APPROVAL_DATA,
+        {
+          data: mb.binary
+        },
+        SCHEMAS.WALLET_OP_MESSAGES
+      );
+    }
+    catch(e) {
+      console.error(e);
+    }
+  }
+
+  successAnswer(data) {
     return {
       success: true,
       error: "",
@@ -121,7 +183,20 @@ export class operatorCore {
     };
   }
 
-  clientError(e) {
+  async loadApplicationLedger(id) {
+    let vb;
+
+    if(id) {
+      vb = new appLedgerVb(id);
+      await vb.load();
+    }
+    else {
+      vb = new appLedgerVb();
+    }
+    return vb;
+  }
+
+  errorAnswer(e) {
     return {
       success: false,
       error: e.toString(),

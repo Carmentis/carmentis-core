@@ -1,4 +1,5 @@
 import { SCHEMAS } from "../../common/constants/constants.js";
+import { appLedgerVb } from "../../common/blockchain/vb-app-ledger.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import * as network from "../../common/network/network.js";
 import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
@@ -69,16 +70,36 @@ export class wiWallet {
    * Get the approval data from the operator, given the corresponding data identifier.
    */
   async getApprovalData(privateKey, object) {
-    console.log("wiWallet.getApprovalData", object);
+    let publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey),
+        answer;
 
-    let publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey);
-
-    let answer = await network.sendWalletToOperatorMessage(
+    answer = await network.sendWalletToOperatorMessage(
       object.serverUrl,
       SCHEMAS.MSG_APPROVAL_HANDSHAKE,
       {
         dataId: object.dataId
       }
     );
+
+    if(network.getLastAnswerId() == SCHEMAS.MSG_ANS_ACTOR_KEY_REQUIRED) {
+      let keyPair = appLedgerVb.deriveActorKeyPair(privateKey, answer.genesisSeed);
+
+      answer = await network.sendWalletToOperatorMessage(
+        object.serverUrl,
+        SCHEMAS.MSG_ACTOR_KEY,
+        {
+          dataId: object.dataId,
+          actorKey: keyPair.publicKey
+        }
+      );
+    }
+
+    if(network.getLastAnswerId() != SCHEMAS.MSG_ANS_APPROVAL_DATA) {
+      throw "Failed to retrieve approval data from operator";
+    }
+
+    console.log("approval data", answer.data);
+
+    return answer.data;
   }
 }

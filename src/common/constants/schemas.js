@@ -375,11 +375,25 @@ export const NODE_MESSAGES = {
 // ============================================================================================================================ //
 //  Wallet <-> operator network messages                                                                                        //
 // ============================================================================================================================ //
-export const MSG_APPROVAL_HANDSHAKE = 0x00;
+export const MSG_APPROVAL_HANDSHAKE     = 0x00;
+export const MSG_ACTOR_KEY              = 0x01;
+
+export const MSG_ANS_ACTOR_KEY_REQUIRED = 0x80;
+export const MSG_ANS_APPROVAL_DATA      = 0x81;
 
 export const WALLET_OP_MESSAGES = {
   [ MSG_APPROVAL_HANDSHAKE ] : [
-    { name: "dataId", type: DATA.BIN256 }
+    { name: "dataId", type: DATA.HASH }
+  ],
+  [ MSG_ACTOR_KEY ] : [
+    { name: "dataId",   type: DATA.HASH },
+    { name: "actorKey", type: DATA.PUB_KEY }
+  ],
+  [ MSG_ANS_ACTOR_KEY_REQUIRED ] : [
+    { name: "genesisSeed", type: DATA.HASH }
+  ],
+  [ MSG_ANS_APPROVAL_DATA ] : [
+    { name: "data", type: DATA.BINARY }
   ],
   [ MSG_ANS_ERROR ] : [
     { name: "error", type: DATA.OBJECT, schema: ERROR }
@@ -394,7 +408,7 @@ export const MSG_CONFIRM_ORACLE_REQUEST     = 0x01;
 export const MSG_ORACLE_ANSWER              = 0x02;
 
 export const MSG_ANS_SUBMIT_ORACLE_REQUEST  = 0x80;
-export const MSG_ANS_CONFIRM_ORACLE_REQUEST = 0x01;
+export const MSG_ANS_CONFIRM_ORACLE_REQUEST = 0x81;
 
 export const ORACLE_REQUEST_BODY = [
   { name: "organizationId", type: DATA.HASH },
@@ -633,7 +647,7 @@ export const WI_REQUESTS = {
     { name: "requiredData", type: DATA.ARRAY | DATA.STRING }
   ],
   [ WIRQ_DATA_APPROVAL ]: [
-    { name: "dataId", type: DATA.BIN256 },
+    { name: "dataId", type: DATA.HASH },
     { name: "serverUrl", type: DATA.STRING }
   ]
 };

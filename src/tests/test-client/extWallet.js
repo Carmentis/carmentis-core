@@ -15,19 +15,20 @@ async function processMessage(data) {
 
   console.log("getRequestFromMessage", req);
 
-  let answer;
-
   switch(req.type) {
     case SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY: {
-      answer = wiWallet.signAuthenticationByPublicKey(privateKey, req.object);
+      let answer = wiWallet.signAuthenticationByPublicKey(privateKey, req.object);
+      postAnswer(answer);
       break;
     }
     case SCHEMAS.WIRQ_DATA_APPROVAL: {
-      answer = await wiWallet.getApprovalData(privateKey, req.object);
+      let res = await wiWallet.getApprovalData(privateKey, req.object);
       break;
     }
   }
+}
 
+function postAnswer(answer) {
   window.parent.postMessage(
     {
       data: answer,

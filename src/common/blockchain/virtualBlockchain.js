@@ -156,7 +156,7 @@ export class virtualBlockchain extends blockchainCore {
     await this.addSection(sectionId, { signature: signature });
   }
 
-  verifySignature(mb, publicKey, object, includeGas = true, ignoredSections = 1) {
+  verifySignature(mb, publicKey, object, includeGas = true, ignoredSections = []) {
     if(!mb.verifySignature(publicKey, object.signature, includeGas, ignoredSections)) {
       throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_SIGNATURE);
     }
@@ -182,7 +182,7 @@ export class virtualBlockchain extends blockchainCore {
   }
 
   setGasPrice(gasPrice) {
-    this.gasPrice = gasPrice;
+    this.currentMicroblock.object.header.gasPrice = gasPrice;
   }
 
   async computePrice() {
@@ -190,7 +190,7 @@ export class virtualBlockchain extends blockchainCore {
       throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_MB_STRUCTURE);
     }
 
-    let mb = this.currentMicroblock.finalize(true, this.gasPrice);
+    let mb = this.currentMicroblock.finalize(true);
 
     return Math.round(mb.header.gas * mb.header.gasPrice / 1000);
   }
@@ -206,7 +206,7 @@ export class virtualBlockchain extends blockchainCore {
   }
 
   getMicroblockData() {
-    let mb = this.currentMicroblock.finalize(false, 0);
+    let mb = this.currentMicroblock.finalize(false);
 
     return mb;
   }
@@ -216,7 +216,7 @@ export class virtualBlockchain extends blockchainCore {
       throw new blockchainError(ERRORS.BLOCKCHAIN_BAD_MB_STRUCTURE);
     }
 
-    let mb = this.currentMicroblock.finalize(true, this.gasPrice);
+    let mb = this.currentMicroblock.finalize(true);
 
     if(!this.microblocks.length) {
       this.id = mb.hash;

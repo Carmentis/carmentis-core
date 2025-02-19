@@ -103,9 +103,9 @@ async function accountTest() {
     amount: ECO.INITIAL_OFFER
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   log("Creating buyer account");
@@ -122,9 +122,9 @@ async function accountTest() {
     amount: 10 * ECO.TOKEN
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   let buyerAccountVbHash = mb.hash;
@@ -141,9 +141,9 @@ async function accountTest() {
   transfer.addPrivateReference("private ref");
   await transfer.commit();
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   for(let accountHash of [ rootAccountVbHash, buyerAccountVbHash ]) {
@@ -172,9 +172,9 @@ async function accountTest() {
   transfer.addPrivateReference("private ref");
   await transfer.commit();
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   log("Reading transaction as buyer");
@@ -317,9 +317,8 @@ async function organizationTest() {
     endpoint: "https://foo.bar"
   });
 
-  await vb.sign();
-
   vb.setGasPrice(ECO.TOKEN);
+  await vb.sign();
 
   let price = await vb.computePrice();
 
@@ -343,9 +342,9 @@ async function organizationTest() {
     website: "www.carmentis.io"
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   log(await vb.getDescription());
@@ -362,9 +361,9 @@ async function organizationTest() {
     website: "www.carmentis.io"
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   console.log(await vb.getDescription());
@@ -410,9 +409,9 @@ async function applicationTest(organization) {
     definition: APP_V1.definition
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   let vbHash = mb.hash;
@@ -433,9 +432,9 @@ async function applicationTest(organization) {
 
   console.log("Signing");
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   vb = new applicationVb(vbHash);
@@ -476,9 +475,9 @@ async function oracleTest(organization, appId) {
     definition: ORACLE.definition
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   let vbHash = mb.hash;
@@ -572,11 +571,11 @@ async function appLedgerTest(organization, appId) {
     await vb.load();
   }
 
-  let endorserActorPrivateKey = crypto.generateKey256(),
-      endorserActorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(endorserActorPrivateKey);
+  let endorserPrivateKey = crypto.generateKey256(),
+      endorserPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(endorserPrivateKey);
 
   if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
-    let keyPair = appLedgerVb.deriveActorKeyPair(endorserActorPrivateKey, vb.state.genesisSeed);
+    let keyPair = appLedgerVb.deriveActorKeyPair(endorserPrivateKey, vb.state.genesisSeed);
 
     vb.setEndorserActorPublicKey(keyPair.publicKey);
   }
@@ -589,18 +588,20 @@ async function appLedgerTest(organization, appId) {
 
   let binaryData = vb.currentMicroblock.binary;
 
-  log("Importing microblock");
+  log("Import of microblock by endorser");
 
-  blockchainCore.setUser(ROLES.USER, endorserActorPrivateKey);
+  blockchainCore.setUser(ROLES.USER, endorserPrivateKey);
 
   let res = await blockchainManager.checkMicroblock(
-    vb.currentMicroblock.binary,
+    binaryData,
     {
       ignoreGas: true
     }
   );
 
-  res.vb.currentMicroblock.sections.forEach(section => {
+  vb = res.vb;
+
+  vb.currentMicroblock.sections.forEach(section => {
     console.log(JSON.stringify(section));
   });
 
@@ -616,4 +617,28 @@ async function appLedgerTest(organization, appId) {
 
   message = vb.getApprovalMessage(height);
   console.log(message);
+
+  await vb.signAsEndorser();
+
+  mb = vb.getMicroblockData();
+
+  binaryData = vb.currentMicroblock.binary;
+
+  log("Import of microblock by operator");
+
+  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
+
+  res = await blockchainManager.checkMicroblock(
+    binaryData,
+    {
+      ignoreGas: true
+    }
+  );
+
+  vb = res.vb;
+
+  vb.setGasPrice(ECO.TOKEN);
+  await vb.signAsAuthor();
+
+  mb = await vb.publish();
 }

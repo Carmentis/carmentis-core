@@ -3,13 +3,21 @@ import * as schemaSerializer from "../serializers/schema-serializer.js";
 import * as base64 from "../util/base64.js";
 import { CarmentisError } from "../errors/error.js";
 
-let networkInterface;
+let networkInterface,
+    lastAnswerId;
 
 // ============================================================================================================================ //
 //  initialize()                                                                                                                //
 // ============================================================================================================================ //
 export function initialize(intf) {
   networkInterface = intf;
+}
+
+// ============================================================================================================================ //
+//  getLastAnswerId()                                                                                                           //
+// ============================================================================================================================ //
+export function getLastAnswerId() {
+  return lastAnswerId;
 }
 
 // ============================================================================================================================ //
@@ -58,6 +66,9 @@ async function sendMessage(url, schemaId, object, collection) {
           let responseObject = JSON.parse(answer);
           let binary = base64.decodeBinary(responseObject.response, base64.BASE64);
           let [ id, object ] = schemaSerializer.decodeMessage(binary, collection);
+
+          lastAnswerId = id;
+
           if(id == SCHEMAS.MSG_ANS_ERROR) {
             let error = new CarmentisError(object.error.type | ERROR_TYPES.REMOTE_ERROR, object.error.id, ...object.error.arg);
             reject(error);
@@ -65,7 +76,8 @@ async function sendMessage(url, schemaId, object, collection) {
           else {
             resolve(object);
           }
-        } catch (e) {
+        }
+        catch(e) {
           console.error("An error has occurred during the response handling:", e)
           console.error("Received answer:", answer.toString())
           reject(answer)

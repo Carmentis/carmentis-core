@@ -20,6 +20,21 @@ export class appLedgerVb extends virtualBlockchain {
     this.state.channels = [];
   }
 
+  static deriveActorKeyPair(privateKey, genesisSeed) {
+    let info = uint8.from(
+      crypto.derive.PREFIX_ACTOR_KEY,
+      uint8.fromHexa(genesisSeed)
+    );
+
+    let actorPrivateKey = uint8.toHexa(crypto.derive.deriveBitsFromKey(privateKey, info, 256)),
+        actorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(actorPrivateKey);
+
+    return {
+      privateKey: actorPrivateKey,
+      publicKey: actorPublicKey
+    };
+  }
+
   isEndorserSubscribed(endorserName) {
     let endorser = this.state.actors.find(actor => actor.name == endorserName);
 
@@ -231,6 +246,10 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   async getChannelKey(channelId) {
+    if(this.constructor.isNode()) {
+      return null;
+    }
+
     if(!this.channelKeys.has(channelId)) {
       let channelKey;
 
@@ -349,29 +368,18 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   async signAsEndorser() {
-    await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE);
+    await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, false);
   }
 
   async signAsAuthor() {
     await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE);
   }
 
-  static deriveActorKeyPair(privateKey, genesisSeed) {
-    let info = uint8.from(
-      crypto.derive.PREFIX_ACTOR_KEY,
-      uint8.fromHexa(genesisSeed)
-    );
-
-    let actorPrivateKey = uint8.toHexa(crypto.derive.deriveBitsFromKey(privateKey, info, 256)),
-        actorPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(actorPrivateKey);
-
-    return {
-      privateKey: actorPrivateKey,
-      publicKey: actorPublicKey
-    };
-  }
-
   async updateMyIdentity() {
+    if(this.constructor.isNode()) {
+      return;
+    }
+
     // if not already done, define our actor key pair (even if we're not an end-user)
     if(!this.myActorPrivateKey) {
       let keyPair = this.constructor.deriveActorKeyPair(this.constructor.rootPrivateKey, this.state.genesisSeed);
@@ -529,10 +537,18 @@ export class appLedgerVb extends virtualBlockchain {
       }
 
       case SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE: {
+        let endorserSection = mb.sections.find(section => section.id == SECTIONS.APP_LEDGER_ENDORSER),
+            publicKey = await this.getActorPublicKey(this.state.actors[endorserSection.object.endorserId]);
+
+        this.verifySignature(mb, publicKey, object, false, [ SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE ]);
         break;
       }
 
       case SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE: {
+        let authorSection = mb.sections.find(section => section.id == SECTIONS.APP_LEDGER_AUTHOR),
+            publicKey = await this.getActorPublicKey(this.state.actors[authorSection.object.authorId]);
+
+        this.verifySignature(mb, publicKey, object);
         break;
       }
 
@@ -553,6 +569,6 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   checkStructure(pattern) {
-    return SECTIONS.APP_STRUCTURE.test(pattern);
+    return SECTIONS.APP_LEDGER_STRUCTURE.test(pattern);
   }
 }

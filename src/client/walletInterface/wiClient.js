@@ -161,7 +161,7 @@ export class wiClient {
     let answer = await this.request(
       SCHEMAS.WIRQ_DATA_APPROVAL,
       {
-        dataId: uint8.fromHexa(dataId),
+        dataId: dataId,
         serverUrl: this.serverUrl
       }
     );

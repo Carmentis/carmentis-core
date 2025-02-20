@@ -35,7 +35,31 @@ async function processMessage(data) {
 
       let vb = res.vb;
 
-      console.log(vb);
+      let height, message, record;
+
+      height = vb.getHeight();
+
+      console.log("height", height);
+
+      record = vb.getRecord(height);
+      console.log(record);
+      console.log(vb.flattenRecord(record));
+
+      message = vb.getApprovalMessage(height);
+      console.log(message);
+
+      await vb.signAsEndorser();
+
+      mb = vb.getMicroblockData();
+
+      binaryData = vb.currentMicroblock.binary;
+
+      console.log(binaryData);
+/*
+      let answer = await wiWallet.sendSigneData(privateKey, binaryData);
+
+      postAnswer(answer);
+*/
       break;
     }
   }

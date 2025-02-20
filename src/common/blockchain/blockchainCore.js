@@ -1,4 +1,5 @@
 import { ECO, SCHEMAS, ERRORS } from "../constants/constants.js";
+import * as memoryDb from "./memoryDb.js";
 import * as schemaSerializer from "../serializers/schema-serializer.js";
 import * as sectionSerializer from "../serializers/section-serializer.js";
 import * as network from "../network/network.js";
@@ -12,14 +13,12 @@ export const ROLES = {
   USER    : 3
 };
 
-export const MB_BATCH_SIZE = 10;
-
 export class blockchainCore {
   static role = ROLES.OBSERVER;
   static rootPrivateKey = null;
   static rootPublicKey = null;
   static nodeUrl = null;
-  static dbInterface = null;
+  static dbInterface = memoryDb;
   static chainInterface = null;
 
   static setUser(role, rootPrivateKey) {

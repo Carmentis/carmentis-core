@@ -124,7 +124,14 @@ export const DB = {
   // key: public key hash
   [ DB_ACCOUNT_BY_PUBLIC_KEY ] : [
     { name: "accountHash", type: DATA.HASH }
-  ]
+  ],
+
+  // tables used as indexes
+  [ DB_ACCOUNTS        ]: [],
+  [ DB_VALIDATOR_NODES ]: [],
+  [ DB_ORGANIZATIONS   ]: [],
+  [ DB_APPLICATIONS    ]: [],
+  [ DB_ORACLES         ]: []
 };
 
 // ============================================================================================================================ //

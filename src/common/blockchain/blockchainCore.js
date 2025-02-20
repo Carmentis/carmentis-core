@@ -65,6 +65,29 @@ export class blockchainCore {
     return vb.type;
   }
 
+  static async getVbInfo(vbHash) {
+    let vb = await this.dbGet(SCHEMAS.DB_VB_INFO, vbHash);
+
+    if(!vb) {
+      if(this.isNode()) {
+        throw new blockchainError(ERRORS.BLOCKCHAIN_CANNOT_LOAD_VB, vbHash);
+      }
+
+      return await this.nodeQuery(
+        SCHEMAS.MSG_GET_VB_INFO,
+        {
+          vbHash: vbHash
+        }
+      );
+    }
+
+    return {
+      type: vb.type,
+      height: vb.height,
+      lastMicroblock: vb.lastMicroblockHash
+    }
+  }
+
   static async getVbContent(vbHash) {
     let vb = await this.dbGet(SCHEMAS.DB_VB_INFO, vbHash),
         list = vb && await this.getMicroblockList(vb.lastMicroblockHash, vbHash);

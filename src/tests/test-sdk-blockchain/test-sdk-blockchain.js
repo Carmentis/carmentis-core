@@ -8,7 +8,7 @@ import * as sdk from "../../server/sdk.js";
 import * as memoryDb from "../memoryDb.js";
 import { log, outcome } from "../logger.js";
 
-const AUTO_NODE_START = true;
+const AUTO_NODE_START = false;
 const PATH_TO_NODE = "../../../carmentis-dev-node/dev-node.js";
 const NODE_URL = "http://localhost:3000";
 
@@ -263,13 +263,26 @@ async function blockchainQueryTest(vbHash) {
   console.log("Retrieving chain status");
 
   content = await blockchainQuery.getChainStatus();
-
   console.log(content);
 
-  console.log("Retrieving raw microblock");
+  console.log("Retrieving info of existing VB", vbHash);
+
+  content = await blockchainQuery.getVirtualBlockchainInfo(vbHash);
+  console.log(content);
+
+  console.log("Retrieving info of non-existing VB");
+
+  try {
+    content = await blockchainQuery.getVirtualBlockchainInfo("55AA".repeat(16));
+    console.log(content);
+  }
+  catch(e) {
+    console.log(e);
+  }
+
+  console.log("Retrieving raw microblock", vbHash);
 
   content = await blockchainQuery.getMicroblock(vbHash);
-
   console.log(content);
 
   let mb = new microblock(sdk.constants.ID.OBJ_ACCOUNT);
@@ -279,7 +292,6 @@ async function blockchainQueryTest(vbHash) {
   console.log("Retrieving accounts");
 
   content = await blockchainQuery.getAccounts();
-
   console.log(content);
 }
 

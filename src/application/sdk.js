@@ -31,43 +31,35 @@ export function setOperatorUrl(operatorUrl) {
 /**
  * Prepares the user approval process by sending the given data to the specified endpoint.
  *
- * @param applicationId The unique identifier of the application on the blockchain (see in workspace).
- * @param {Object} data - The data to be sent for preparing user approval.
+ * @param {{
+ *             appLedgerId?: string,
+ *             applicationId: string,
+ *             version: number,
+ *             fields: any,
+ *             actors: {name: string, type: string}[],
+ *             channels: { name: string, keyOwner: string }[],
+ *             channelInvitations: Record<string, string[]>,
+ *             permissions: Record<string, string[]>,
+ *             author: string,
+ *             approval: {
+ *                 endorser: string,
+ *                 message : string,
+ *             }
+ *         }} data - The data to be sent for preparing user approval.
  * @returns {Promise<{
  *     success: boolean,
  *     error: string,
  *     data: {dataId: string} | undefined
  * }>} A promise that resolves with the response from the endpoint.
  */
-export async function sendInitialPrepareUserApprovalToOperator(applicationId, data) {
+export async function sendPrepareUserApprovalToOperator(data) {
     return queryOperator(PREPARE_USER_APPROVAL_PATH, {
-        applicationId: applicationId,
-        appLedgerVirtualBlockchainId: undefined,
+        applicationId: data.applicationId,
+        appLedgerVirtualBlockchainId: data.appLedgerId,
         data: data
     })
 }
 
-/**
- * Prepares the user approval process by sending the given data to the specified endpoint.
- *
- * The appLedgerVirtualBlockchainId indicates the chain the transaction is happened, useful to continue a transaction.
- *
- * @param applicationId The unique identifier of the application on the blockchain (see in workspace).
- * @param appLedgerVirtualBlockchainId The unique identifier of the app ledger. To be used only to continue on the same transaction.
- * @param {Object} data - The data to be sent for preparing user approval.
- * @returns {Promise<{
- *     success: boolean,
- *     error: string,
- *     data: {dataId: string} | undefined
- * }>} A promise that resolves with the response from the endpoint.
- */
-export async function sendSubsequentPrepareUserApprovalToOperator(applicationId, appLedgerVirtualBlockchainId, data) {
-    return queryOperator(PREPARE_USER_APPROVAL_PATH, {
-        applicationId: applicationId,
-        appLedgerVirtualBlockchainId: appLedgerVirtualBlockchainId,
-        data: data
-    })
-}
 
 /**
  * Fetches record information from the operator by querying a specific path.

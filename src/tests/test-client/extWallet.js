@@ -18,9 +18,11 @@ async function processMessage(data) {
   switch(req.type) {
     case SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY: {
       let answer = wiWallet.signAuthenticationByPublicKey(privateKey, req.object);
+
       postAnswer(answer);
       break;
     }
+
     case SCHEMAS.WIRQ_DATA_APPROVAL: {
       let binaryData = await wiWallet.getApprovalData(privateKey, req.object);
 
@@ -48,18 +50,11 @@ async function processMessage(data) {
       message = vb.getApprovalMessage(height);
       console.log(message);
 
-      await vb.signAsEndorser();
+      let signature = await vb.signAsEndorser();
 
-      mb = vb.getMicroblockData();
-
-      binaryData = vb.currentMicroblock.binary;
-
-      console.log(binaryData);
-/*
-      let answer = await wiWallet.sendSigneData(privateKey, binaryData);
+      let answer = await wiWallet.sendApprovalSignature(privateKey, req.object, signature);
 
       postAnswer(answer);
-*/
       break;
     }
   }

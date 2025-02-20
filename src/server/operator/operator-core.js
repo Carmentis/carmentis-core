@@ -156,6 +156,40 @@ export class operatorCore {
     }
   }
 
+  async approvalSignature(req, gasPrice) {
+    try {
+      let storedObject = approvalData.get(req.dataId);
+
+      if(!storedObject) {
+        throw "invalid data ID";
+      }
+
+      let { approvalObject, vb } = storedObject;
+
+      await vb.addEndorserSignature(req.signature);
+
+      vb.setGasPrice(gasPrice);
+      await vb.signAsAuthor();
+
+      let mb = await vb.publish();
+
+      approvalData.delete(req.dataId);
+
+      return schemaSerializer.encodeMessage(
+        SCHEMAS.MSG_ANS_APPROVAL_SIGNATURE,
+        {
+          vbHash: vb.id,
+          mbHash: mb.hash,
+          height: mb.header.height
+        },
+        SCHEMAS.WALLET_OP_MESSAGES
+      );
+    }
+    catch(e) {
+      console.error(e);
+    }
+  }
+
   async sendApprovalData(vb, approvalObject) {
     try {
       await vb.generateDataSections(approvalObject);

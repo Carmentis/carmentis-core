@@ -68,7 +68,7 @@ export class wiWallet {
   }
 
   /**
-   * Get the approval data from the operator, given the corresponding data identifier.
+   * Gets the approval data identified by object.dataId, from the operator at object.serverUrl.
    */
   async getApprovalData(privateKey, object) {
     let publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey),
@@ -99,8 +99,32 @@ export class wiWallet {
       throw "Failed to retrieve approval data from operator";
     }
 
-    console.log("approval data", answer.data);
-
     return answer.data;
+  }
+
+  /**
+   * Sends the signature of the approval data identified by object.dataId to the operator at object.serverUrl.
+   * Returns the answer to be sent to the client, which consists of { vbHash, mbHash, height }.
+   */
+  async sendApprovalSignature(privateKey, object, signature) {
+    let answer = await network.sendWalletToOperatorMessage(
+      object.serverUrl,
+      SCHEMAS.MSG_APPROVAL_SIGNATURE,
+      {
+        dataId: object.dataId,
+        signature: signature
+      }
+    );
+
+    let answerObject = {
+      vbHash: answer.vbHash,
+      mbHash: answer.mbHash,
+      height: answer.height
+    };
+
+    return this.formatAnswer(
+      SCHEMAS.WIRQ_DATA_APPROVAL,
+      answerObject
+    );
   }
 }

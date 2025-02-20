@@ -368,11 +368,18 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   async signAsEndorser() {
-    await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, false);
+    return await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, false);
+  }
+
+  async addEndorserSignature(signature) {
+    await this.addSection(
+      SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE,
+      { signature: signature }
+    );
   }
 
   async signAsAuthor() {
-    await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE);
+    return await this.addSignature(this.myPrivateKey, SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE);
   }
 
   async updateMyIdentity() {

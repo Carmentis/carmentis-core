@@ -37,7 +37,7 @@ export class accountVb extends virtualBlockchain {
   }
 
   async sign() {
-    await this.addSignature(this.constructor.rootPrivateKey, SECTIONS.ACCOUNT_SIGNATURE);
+    return await this.addSignature(this.constructor.rootPrivateKey, SECTIONS.ACCOUNT_SIGNATURE);
   }
 
   async keyManager(keyId, index, object) {

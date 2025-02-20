@@ -384,9 +384,11 @@ export const NODE_MESSAGES = {
 // ============================================================================================================================ //
 export const MSG_APPROVAL_HANDSHAKE     = 0x00;
 export const MSG_ACTOR_KEY              = 0x01;
+export const MSG_APPROVAL_SIGNATURE     = 0x02;
 
 export const MSG_ANS_ACTOR_KEY_REQUIRED = 0x80;
 export const MSG_ANS_APPROVAL_DATA      = 0x81;
+export const MSG_ANS_APPROVAL_SIGNATURE = 0x82;
 
 export const WALLET_OP_MESSAGES = {
   [ MSG_APPROVAL_HANDSHAKE ] : [
@@ -396,11 +398,20 @@ export const WALLET_OP_MESSAGES = {
     { name: "dataId",   type: DATA.HASH },
     { name: "actorKey", type: DATA.PUB_KEY }
   ],
+  [ MSG_APPROVAL_SIGNATURE ] : [
+    { name: "dataId",    type: DATA.HASH },
+    { name: "signature", type: DATA.SIGNATURE }
+  ],
   [ MSG_ANS_ACTOR_KEY_REQUIRED ] : [
     { name: "genesisSeed", type: DATA.HASH }
   ],
   [ MSG_ANS_APPROVAL_DATA ] : [
     { name: "data", type: DATA.BINARY }
+  ],
+  [ MSG_ANS_APPROVAL_SIGNATURE ] : [
+    { name: "vbHash", type: DATA.HASH },
+    { name: "mbHash", type: DATA.HASH },
+    { name: "height", type: DATA.UINT48 }
   ],
   [ MSG_ANS_ERROR ] : [
     { name: "error", type: DATA.OBJECT, schema: ERROR }
@@ -668,7 +679,9 @@ export const WI_ANSWERS = {
     { name: "email", type: DATA.STRING }
   ],
   [ WIRQ_DATA_APPROVAL ]: [
-    { name: "signature", type: DATA.SIGNATURE }
+    { name: "vbHash", type: DATA.HASH },
+    { name: "mbHash", type: DATA.HASH },
+    { name: "height", type: DATA.UINT48 }
   ],
   [ WIRQ_GET_USER_DATA ]: [
     { name: "userData", type: DATA.STRING | DATA.ARRAY }

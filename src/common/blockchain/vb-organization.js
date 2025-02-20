@@ -31,7 +31,7 @@ export class organizationVb extends virtualBlockchain {
   }
 
   async sign() {
-    await this.addSignature(this.constructor.rootPrivateKey, SECTIONS.ORG_SIGNATURE);
+    return await this.addSignature(this.constructor.rootPrivateKey, SECTIONS.ORG_SIGNATURE);
   }
 
   async updateState(mb, ndx, sectionId, object) {

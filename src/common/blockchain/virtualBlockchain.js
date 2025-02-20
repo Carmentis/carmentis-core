@@ -154,6 +154,8 @@ export class virtualBlockchain extends blockchainCore {
     let signature = this.currentMicroblock.sign(privateKey, includeGas);
 
     await this.addSection(sectionId, { signature: signature });
+
+    return signature;
   }
 
   verifySignature(mb, publicKey, object, includeGas = true, ignoredSections = []) {

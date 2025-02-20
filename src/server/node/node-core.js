@@ -208,6 +208,19 @@ export async function getMicroblocks(list) {
 }
 
 // ============================================================================================================================ //
+//  getVbInfo()                                                                                                                 //
+// ============================================================================================================================ //
+export async function getVbInfo(vbHash) {
+  let vbInfo = await blockchainCore.getVbInfo(vbHash);
+
+  return schemaSerializer.encodeMessage(
+    SCHEMAS.MSG_ANS_VB_INFO,
+    vbInfo,
+    SCHEMAS.NODE_MESSAGES
+  );
+}
+
+// ============================================================================================================================ //
 //  getVbContent()                                                                                                              //
 // ============================================================================================================================ //
 export async function getVbContent(vbHash) {
@@ -330,23 +343,23 @@ async function microblockCallback(context, apply = false) {
   if(!context.vb.microblocks.length) {
     switch(context.vb.type) {
       case ID.OBJ_ACCOUNT: {
-        await dbInterface.put(SCHEMAS.DB_ACCOUNTS, context.vb.id, 1);
+        await blockchainManager.dbPut(SCHEMAS.DB_ACCOUNTS, context.vb.id, {});
         break;
       }
       case ID.OBJ_VALIDATOR_NODE: {
-        await dbInterface.put(SCHEMAS.DB_VALIDATOR_NODES, context.vb.id, 1);
+        await blockchainManager.dbPut(SCHEMAS.DB_VALIDATOR_NODES, context.vb.id, {});
         break;
       }
       case ID.OBJ_ORGANIZATION: {
-        await dbInterface.put(SCHEMAS.DB_ORGANIZATIONS, context.vb.id, 1);
+        await blockchainManager.dbPut(SCHEMAS.DB_ORGANIZATIONS, context.vb.id, {});
         break;
       }
       case ID.OBJ_APPLICATION: {
-        await dbInterface.put(SCHEMAS.DB_APPLICATIONS, context.vb.id, 1);
+        await blockchainManager.dbPut(SCHEMAS.DB_APPLICATIONS, context.vb.id, {});
         break;
       }
       case ID.OBJ_ORACLE: {
-        await dbInterface.put(SCHEMAS.DB_ORACLES, context.vb.id, 1);
+        await blockchainManager.dbPut(SCHEMAS.DB_ORACLES, context.vb.id, {});
         break;
       }
     }

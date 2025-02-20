@@ -10,18 +10,9 @@ const db = {
   [ SCHEMAS.DB_BLOCK           ]: new Map()
 };
 
-const memoryDb = {
-  async put(tableId, key, value) {
-    db[tableId].set(key, value);
-    return true;
-  },
-  async get(tableId, key) {
-    return db[tableId].get(key);
-  }
-};
-
 const {
   blockchainCore,
+  blockchainManager,
   blockchainQuery,
   microblock,
   ROLES,
@@ -31,6 +22,8 @@ const {
   oracleVb,
   appLedgerVb
 } = Carmentis.blockchain;
+
+blockchainCore.setNode(NODE_URL);
 
 let wiClient;
 

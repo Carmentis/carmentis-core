@@ -124,9 +124,9 @@ async function genesis() {
     amount: ECO.INITIAL_OFFER
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   return {};
@@ -257,9 +257,8 @@ async function publishApplicationOrganization(orgPrivateKey) {
     endpoint: APP_OPERATOR_URL
   });
 
-  await vb.sign();
-
   vb.setGasPrice(ECO.TOKEN);
+  await vb.sign();
 
   mb = await vb.publish();
 
@@ -296,9 +295,8 @@ async function publishOracleOrganization(orgPrivateKey) {
     endpoint: ORACLE_OPERATOR_URL
   });
 
-  await vb.sign();
-
   vb.setGasPrice(ECO.TOKEN);
+  await vb.sign();
 
   mb = await vb.publish();
 
@@ -326,9 +324,9 @@ async function publishApplication(organization) {
     definition: APP_V1.definition
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   return mb.hash;
@@ -351,9 +349,9 @@ async function publishOracle(organization) {
     definition: ORACLE.definition
   });
 
+  vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
 
-  vb.setGasPrice(ECO.TOKEN);
   mb = await vb.publish();
 
   return mb.hash;

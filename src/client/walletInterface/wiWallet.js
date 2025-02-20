@@ -1,4 +1,5 @@
 import { SCHEMAS } from "../../common/constants/constants.js";
+import { blockchainManager } from "../../common/blockchain/blockchainManager.js";
 import { appLedgerVb } from "../../common/blockchain/vb-app-ledger.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import * as network from "../../common/network/network.js";

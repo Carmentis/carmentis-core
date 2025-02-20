@@ -22,7 +22,20 @@ async function processMessage(data) {
       break;
     }
     case SCHEMAS.WIRQ_DATA_APPROVAL: {
-      let res = await wiWallet.getApprovalData(privateKey, req.object);
+      let binaryData = await wiWallet.getApprovalData(privateKey, req.object);
+
+      blockchainCore.setUser(ROLES.USER, privateKey);
+
+      let res = await blockchainManager.checkMicroblock(
+        binaryData,
+        {
+          ignoreGas: true
+        }
+      );
+
+      let vb = res.vb;
+
+      console.log(vb);
       break;
     }
   }

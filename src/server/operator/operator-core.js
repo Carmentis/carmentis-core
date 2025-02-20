@@ -1,10 +1,10 @@
-import { ERRORS, SCHEMAS } from "../../common/constants/constants.js";
+import { SCHEMAS } from "../../common/constants/constants.js";
 import { schemaSerializer } from "../../common/serializers/serializers.js";
 import { blockchainCore, ROLES, appLedgerVb, oracleVb } from "../../common/blockchain/blockchain.js";
 import * as crypto from "../../common/crypto/crypto.js";
 import * as network from "../../common/network/network.js";
 import * as uint8 from "../../common/util/uint8.js";
-import { CarmentisError, globalError } from "../../common/errors/error.js";
+import { CarmentisError } from "../../common/errors/error.js";
 
 const approvalData = new Map();
 const oracleData = new Map();
@@ -204,7 +204,7 @@ export class operatorCore {
     };
   }
 
-  static processCatchedError(err) {
+  processCatchedError(err) {
     if(!(err instanceof CarmentisError)) {
       err = new globalError(ERRORS.GLOBAL_INTERNAL_ERROR, err.stack || [ err.toString() ]);
     }

@@ -80,7 +80,8 @@ function parseFieldReference(appDef, fieldRef) {
   let m = fieldRef.match(/^(this|last|previous)\.((\w+)(\.\w+)*)$/);
 
   if(!m) {
-    throw errorHeader + `invalid format`;
+    //throw errorHeader + `invalid format`;
+    throw  `invalid format`;
   }
 
   return {

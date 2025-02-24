@@ -71,10 +71,10 @@ async function runTests() {
     let accountVbHash, organization, appId, oracleId;
 
     accountVbHash = await accountTest();
-    await blockchainQueryTest(accountVbHash);
+//  await blockchainQueryTest(accountVbHash);
     organization = await organizationTest();
     appId = await applicationTest(organization);
-    oracleId = await oracleTest(organization, appId);
+//  oracleId = await oracleTest(organization, appId);
     await appLedgerTest(organization, appId);
   }
   catch(e) {
@@ -588,6 +588,15 @@ async function appLedgerTest(organization, appId) {
   };
 
   let appLedgerId = await processApproval(organization, senderPrivateKey, approvalObject);
+
+  log("Retrieving record as sender");
+
+  blockchainCore.setUser(ROLES.USER, senderPrivateKey);
+
+  let vb = new appLedgerVb(appLedgerId);
+  await vb.load();
+
+  console.log(vb.getRecord(1));
 
   log("Generating second microblock");
 

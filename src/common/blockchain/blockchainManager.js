@@ -95,6 +95,14 @@ export class blockchainManager extends blockchainCore {
 
     await vb.importCurrentMicroblock(mb, mbHash);
 
+    // TODO: Must be improved.
+    if(!this.isNode()) {
+      for(let mb of vb.microblocks) {
+        mb.sections = [];
+        await vb.processSections(mb, false);
+      }
+    }
+
     let vbRecord = {
       height            : mbObject.header.height,
       type              : mbRecord.vbType,

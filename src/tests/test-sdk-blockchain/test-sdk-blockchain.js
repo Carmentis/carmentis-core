@@ -538,7 +538,7 @@ async function appLedgerTest(organization, appId) {
       recipientPrivateKey = crypto.generateKey256(),
       recipientPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(recipientPrivateKey);
 
-  let fields, actors, approvalObject;
+  let fields, actors, approvalObject, vb;
 
   log("Generating first microblock");
 
@@ -593,7 +593,7 @@ async function appLedgerTest(organization, appId) {
 
   blockchainCore.setUser(ROLES.USER, senderPrivateKey);
 
-  let vb = new appLedgerVb(appLedgerId);
+  vb = new appLedgerVb(appLedgerId);
   await vb.load();
 
   console.log(vb.getRecord(1));
@@ -627,6 +627,36 @@ async function appLedgerTest(organization, appId) {
   };
 
   await processApproval(organization, recipientPrivateKey, approvalObject);
+
+  log("Retrieving both records as recipient");
+
+  blockchainCore.setUser(ROLES.USER, recipientPrivateKey);
+
+  vb = new appLedgerVb(appLedgerId);
+  await vb.load();
+
+  console.log(vb.getRecord(1));
+  console.log(vb.getRecord(2));
+
+  log("Retrieving both records as sender");
+
+  blockchainCore.setUser(ROLES.USER, senderPrivateKey);
+
+  vb = new appLedgerVb(appLedgerId);
+  await vb.load();
+
+  console.log(vb.getRecord(1));
+  console.log(vb.getRecord(2));
+
+  log("Retrieving both records as John Doe");
+
+  blockchainCore.setUser(ROLES.USER, "55AA".repeat(16));
+
+  vb = new appLedgerVb(appLedgerId);
+  await vb.load();
+
+  console.log(vb.getRecord(1));
+  console.log(vb.getRecord(2));
 }
 
 // ============================================================================================================================ //

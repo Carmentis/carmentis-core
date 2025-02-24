@@ -141,7 +141,7 @@ export async function prepareProposal(height, ts, txs) {
 //  processProposal()                                                                                                           //
 // ============================================================================================================================ //
 export async function processProposal(height, ts, proposalTxs) {
-  if (proposalTxs.length !== 0) {
+  if(proposalTxs.length !== 0) {
     console.log(`Checking proposal with ${proposalTxs.length} microblock(s)`);
   }
 
@@ -163,6 +163,8 @@ export async function processProposal(height, ts, proposalTxs) {
 //  finalizeBlock()                                                                                                             //
 // ============================================================================================================================ //
 export async function finalizeBlock(height, ts, txs) {
+  console.log(`Finalizing block ${height}`);
+
   let context = initializeContext(height, ts);
 
   for(let mbData of txs) {

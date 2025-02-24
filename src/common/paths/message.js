@@ -85,6 +85,7 @@ function parseFieldReference(appDef, fieldRef) {
   }
 
   return {
+    name: m[2], // TODO: temporary; the path should be enough
     type: DATA.REF_NAME.indexOf(m[1]),
     path: path.encode(appDef, m[2], false)
   };

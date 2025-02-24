@@ -1,4 +1,4 @@
-export const APPROVAL_MONO_CHANNEL = {
+export const APPROVAL_STEP1_MONO_CHANNEL = {
   channels: [
     {
       name: "mainChannel",
@@ -15,7 +15,18 @@ export const APPROVAL_MONO_CHANNEL = {
   }
 };
 
-export const APPROVAL_MULTI_CHANNEL = {
+export const APPROVAL_STEP2_MONO_CHANNEL = {
+  channelInvitations: {
+    recipient: [
+      "mainChannel"
+    ]
+  },
+  permissions: {
+    mainChannel: [ "recipientAnswer.*" ],
+  }
+};
+
+export const APPROVAL_STEP1_MULTI_CHANNEL = {
   channels: [
     {
       name: "mainChannel",
@@ -38,4 +49,7 @@ export const APPROVAL_MULTI_CHANNEL = {
     senderChannel: [ "senderDocument.senderEmail" ],
     recipientChannel: [ "senderDocument.recipientEmail" ],
   }
+};
+
+export const APPROVAL_STEP2_MULTI_CHANNEL = {
 };

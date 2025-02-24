@@ -33,7 +33,26 @@ export const VB_STATES = {
     { name: "organizationId", type: DATA.HASH }
   ],
   [ ID.OBJ_APP_LEDGER ] : [
-    { name: "genesisSeed", type: DATA.HASH }
+    { name: "genesisSeed", type: DATA.HASH },
+    { name: "actors", type: DATA.OBJECT | DATA.ARRAY, schema:
+      [
+        { name: "name",        type: DATA.STRING },
+        { name: "type",        type: DATA.UINT8 },
+        { name: "invitations", type: DATA.OBJECT | DATA.ARRAY, schema:
+          [
+            { name: "channelId", type: DATA.UINT16 },
+            { name: "height",    type: DATA.UINT48 }
+          ]
+        },
+        { name: "subscribed", type: DATA.UINT8 }
+      ]
+    },
+    { name: "channels", type: DATA.OBJECT | DATA.ARRAY, schema:
+      [
+        { name: "name",       type: DATA.STRING },
+        { name: "keyOwnerId", type: DATA.UINT16 }
+      ]
+    }
   ],
   [ ID.OBJ_ORACLE ] : [
     { name: "genesisSeed", type: DATA.HASH }

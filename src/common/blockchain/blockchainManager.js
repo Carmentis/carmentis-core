@@ -57,12 +57,28 @@ export class blockchainManager extends blockchainCore {
       mbRecord.vbType = parseInt(mbObject.header.previousHash.slice(0, 2), 16);
     }
     else {
-      let previousMb = await this.dbGet(SCHEMAS.DB_MICROBLOCK_INFO, mbObject.header.previousHash);
-      let vbInfo = await this.dbGet(SCHEMAS.DB_VB_INFO, previousMb.vbHash);
+      // TODO:
+      // The state *SHOULD* be retrieved from the chain rather than re-computed.
+      // But this part must be fixed to be compatible with the wallet, which stores
+      // neither DB_MICROBLOCK_INFO nor DB_VB_INFO in its database.
+      if(this.isNode()) {
+        let previousMb = await this.dbGet(SCHEMAS.DB_MICROBLOCK_INFO, mbObject.header.previousHash);
+        let vbInfo = await this.dbGet(SCHEMAS.DB_VB_INFO, previousMb.vbHash);
 
-      state = schemaSerializer.decode(SCHEMAS.VB_STATES[previousMb.vbType], vbInfo.state)
-      mbRecord.vbHash = previousMb.vbHash;
-      mbRecord.vbType = previousMb.vbType;
+        state = schemaSerializer.decode(SCHEMAS.VB_STATES[previousMb.vbType], vbInfo.state)
+        mbRecord.vbHash = previousMb.vbHash;
+        mbRecord.vbType = previousMb.vbType;
+      }
+      else {
+        let previousMb = await this.nodeQuery(
+          SCHEMAS.MSG_GET_MICROBLOCK,
+          {
+            mbHash: mbObject.header.previousHash
+          }
+        );
+        mbRecord.vbHash = previousMb.vbHash;
+        mbRecord.vbType = previousMb.type;
+      }
     }
 
     let vb;
@@ -74,7 +90,7 @@ export class blockchainManager extends blockchainCore {
     else {
       vb = this.getVbInstance(mbRecord.vbType, mbRecord.vbHash);
       await vb.load();
-      vb.state = state;
+//    vb.state = state;
     }
 
     await vb.importCurrentMicroblock(mb, mbHash);

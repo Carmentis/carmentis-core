@@ -6,6 +6,7 @@ import * as recordManager from "./recordManager.js";
 import * as crypto from "../crypto/crypto.js";
 import * as util from "../util/util.js";
 import * as uint8 from "../util/uint8.js";
+import * as path from "../paths/path.js";
 import { sectionError, appLedgerError } from "../errors/error.js";
 
 // ============================================================================================================================ //
@@ -46,6 +47,9 @@ export class appLedgerVb extends virtualBlockchain {
   }
 
   async generateDataSections(object) {
+    object.actors = object.actors || [];
+    object.channels = object.channels || [];
+
     if(this.getHeight() == 1) {
       // genesis -> declare the application with its version
       await this.addDeclaration({
@@ -159,6 +163,13 @@ export class appLedgerVb extends virtualBlockchain {
       SECTIONS.APP_DEFINITION,
       section => section.version == version
     );
+
+    // TODO: should be removed; the path should be enough
+    this.appDef.definition.messages.forEach(message => {
+      message.fields.forEach(field => {
+        field.name = path.decode(this.appDef.definition, field.path);
+      });
+    });
   }
 
   convertPermissionsToSubsections(permissions) {
@@ -259,7 +270,7 @@ export class appLedgerVb extends virtualBlockchain {
       }
       else {
         // we are not the key owner of this channel: have we been invited to join?
-        let invitationRef = this.state.actors[this.myId].invitations.find(obj => obj.channelId == channelId);
+        let invitationRef = this.myId && this.state.actors[this.myId].invitations.find(obj => obj.channelId == channelId);
 
         if(!invitationRef) {
           return null;
@@ -402,6 +413,10 @@ export class appLedgerVb extends virtualBlockchain {
           break;
         }
       }
+    }
+
+    if(this.myId == undefined) {
+      console.error("Failed to identify myself", this.myActorPublicKey, this.state);
     }
   }
 

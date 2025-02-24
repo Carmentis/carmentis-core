@@ -4,6 +4,8 @@ import { blockchainCore, ROLES, blockchainManager, accountVb } from "../../commo
 import { CarmentisError, globalError, blockchainError } from "../../common/errors/error.js";
 import * as accounts from "../../common/accounts/accounts.js";
 
+const FEES_ENABLED = false;
+
 let dbInterface;
 
 // ============================================================================================================================ //
@@ -75,22 +77,24 @@ export async function checkIncomingMicroblock(mbData) {
     console.log(`Belonging to VB ${res.vb.id}`);
   }
 
-  let payerAccount;
+  if(FEES_ENABLED) {
+    let payerAccount;
 
-  if(mb.payerAccount) {
-    payerAccount = mb.payerAccount;
+    if(mb.payerAccount) {
+      payerAccount = mb.payerAccount;
+    }
+    else if(mb.payerPublicKey) {
+      payerAccount = await accounts.loadAccountByPublicKey(mb.payerPublicKey);
+    }
+
+    if(!payerAccount) {
+      throw "Unable to find the payer account";
+    }
+
+    let fees = computeFees(mb);
+
+    console.log(`Fees: ${fees}, to be paid by ${payerAccount}`);
   }
-  else if(mb.payerPublicKey) {
-    payerAccount = await accounts.loadAccountByPublicKey(mb.payerPublicKey);
-  }
-
-  if(!payerAccount) {
-    throw "Unable to find the payer account";
-  }
-
-  let fees = computeFees(mb);
-
-  console.log(`Fees: ${fees}, to be paid by ${payerAccount}`);
 
   mb.sections.forEach((section, n) => {
     console.log(

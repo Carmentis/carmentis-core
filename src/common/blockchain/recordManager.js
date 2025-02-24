@@ -44,21 +44,30 @@ export function getApprovalMessage(vb, height) {
   for(let ndx in messageDef.fields) {
     let field = messageDef.fields[ndx],
         minRewind = DATA.REF_MIN_REWIND[field.type],
-        maxRewind = DATA.REF_MAX_REWIND[field.type];
+        maxRewind = DATA.REF_MAX_REWIND[field.type],
+        found = false;
 
     for(let rewind = minRewind; rewind <= maxRewind; rewind++) {
       let record = getRecord(vb, height - rewind),
           flatRecord = flattenRecord(vb, record);
 
       let match = flatRecord.find(obj =>
+        obj.name == field.name
+/*
         obj.path.length == field.path.length &&
         obj.path.every((v, i) => field.path[i] == v)
+*/
       );
 
       if(match) {
         fields.push({ ...match, height: height - rewind });
+        found = true;
         break;
       }
+    }
+    if(!found) {
+      console.log(messageDef);
+      throw `Field not found`;
     }
   }
 

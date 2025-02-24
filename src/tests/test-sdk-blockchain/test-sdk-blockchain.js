@@ -1,7 +1,13 @@
 import { APP_V1 } from "./app-v1.js";
 import { APP_V2 } from "./app-v2.js";
-import { APPROVAL_MONO_CHANNEL, APPROVAL_MULTI_CHANNEL } from "./approval.js";
 import { ORACLE } from "./oracle.js";
+
+import {
+  APPROVAL_STEP1_MONO_CHANNEL,
+  APPROVAL_STEP2_MONO_CHANNEL,
+  APPROVAL_STEP1_MULTI_CHANNEL,
+  APPROVAL_STEP2_MULTI_CHANNEL
+} from "./approval.js";
 
 import { spawn } from "child_process";
 import * as sdk from "../../server/sdk.js";
@@ -526,11 +532,17 @@ async function appLedgerTest(organization, appId) {
 
   blockchainCore.setDbInterface(memoryDb);
   blockchainCore.setNode(NODE_URL);
-  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
 
-  log("Generating microblock");
+  let senderPrivateKey = crypto.generateKey256(),
+      senderPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(senderPrivateKey),
+      recipientPrivateKey = crypto.generateKey256(),
+      recipientPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(recipientPrivateKey);
 
-  let fields = {
+  let fields, actors, approvalObject;
+
+  log("Generating first microblock");
+
+  fields = {
     transactionId: "FS1234",
     senderDocument: {
       file: {
@@ -544,7 +556,7 @@ async function appLedgerTest(organization, appId) {
     }
   };
 
-  let actors = [
+  actors = [
     {
       name: "fileSign",
       type: "applicationOwner"
@@ -559,13 +571,13 @@ async function appLedgerTest(organization, appId) {
     }
   ];
 
-  let approvalObject = {
+  approvalObject = {
     applicationId: appId,
     version: 1,
     fields: fields,
     actors: actors,
 
-    ...APPROVAL_MULTI_CHANNEL,
+    ...APPROVAL_STEP1_MONO_CHANNEL,
 
     author: "fileSign",
 
@@ -575,22 +587,63 @@ async function appLedgerTest(organization, appId) {
     }
   };
 
+  let appLedgerId = await processApproval(organization, senderPrivateKey, approvalObject);
+
+  log("Generating second microblock");
+
+  fields = {
+    transactionId: "FS1234",
+    recipientAnswer: {
+      status : "accepted",
+      comment: "Looks great!"
+    }
+  };
+
+  actors = [];
+
+  approvalObject = {
+    applicationId: appId,
+    appLedgerId: appLedgerId,
+    version: 1,
+    fields: fields,
+
+    ...APPROVAL_STEP2_MONO_CHANNEL,
+
+    author: "fileSign",
+
+    approval: {
+      endorser: "recipient",
+      message : "accept"
+    }
+  };
+
+  await processApproval(organization, recipientPrivateKey, approvalObject);
+}
+
+// ============================================================================================================================ //
+//  processApproval()                                                                                                           //
+// ============================================================================================================================ //
+async function processApproval(organization, endorserPrivateKey, approvalObject) {
+  blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
+
   let vb, mb;
 
   vb = new appLedgerVb(approvalObject.appLedgerId);
 
   if(approvalObject.appLedgerId) {
+    console.log("Loading VB", approvalObject.appLedgerId);
     await vb.load();
   }
 
-  let endorserPrivateKey = crypto.generateKey256(),
-      endorserPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(endorserPrivateKey);
-
   if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
+    console.log("Generating endorser actor key pair");
+
     let keyPair = appLedgerVb.deriveActorKeyPair(endorserPrivateKey, vb.state.genesisSeed);
 
     vb.setEndorserActorPublicKey(keyPair.publicKey);
   }
+
+  console.log("Invoking generateDataSections()");
 
   await vb.generateDataSections(approvalObject);
 
@@ -653,4 +706,6 @@ async function appLedgerTest(organization, appId) {
   await vb.signAsAuthor();
 
   mb = await vb.publish();
+
+  return vb.id;
 }

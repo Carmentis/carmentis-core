@@ -48,8 +48,7 @@ export function encode(schema, object, context = {}) {
   let stream = fieldSerializer.getWriteStream(),
       missingCounter = 8,
       missingPointer,
-      missingMask,
-      index = 0;
+      missingMask;
 
   let merkle;
 
@@ -99,24 +98,22 @@ export function encode(schema, object, context = {}) {
         stream.writeVarUint(node.length);
       }
 
-      let innerDef = { ...def },
-          indexBak = index;
+      let innerDef = { ...def };
 
       innerDef.type &= ~DATA.ARRAY;
 
       for(let i in node) {
-        index = indexBak;
         encodeNode(innerDef, node[i], [ ...path, i ], referenceNode);
       }
     }
     else if(def.type & DATA.STRUCT) {
       encodeSchema(context.structures[def.type & DATA.MSK_OBJECT_INDEX].properties, node, path);
     }
-    else if(def.type == DATA.OBJECT) {
+    else if((def.type & -1) == DATA.OBJECT) {
       encodeSchema(def.schema, node, path);
     }
     else {
-      if(checkFieldAccess(context, index, name)) {
+      if(checkFieldAccess(context, name)) {
         if(def.type & DATA.ENUM) {
           encodeEnumeration(def, node, name);
         }
@@ -127,7 +124,6 @@ export function encode(schema, object, context = {}) {
           merkle.add(stream.getLastFieldData());
         }
       }
-      index++;
     }
   }
 
@@ -184,8 +180,7 @@ export function decode(schema, array, context = {}, object = {}) {
 
   let stream = fieldSerializer.getReadStream(array, { ptr: context.ptr }),
       missingCounter = 8,
-      missingMask,
-      index = 0;
+      missingMask;
 
   let merkle;
 
@@ -222,10 +217,7 @@ export function decode(schema, array, context = {}, object = {}) {
       innerDef.type &= ~DATA.ARRAY;
       node = parentNode[propertyName] || [];
 
-      let indexBak = index;
-
       for(let i = 0; i < size; i++) {
-        index = indexBak;
         decodeNode(innerDef, [ ...path, i ], referenceNode, node, i);
       }
     }
@@ -233,12 +225,12 @@ export function decode(schema, array, context = {}, object = {}) {
       node = parentNode[propertyName] || {};
       decodeSchema(context.structures[def.type & DATA.MSK_OBJECT_INDEX].properties, node, path);
     }
-    else if(def.type == DATA.OBJECT) {
+    else if((def.type & -1) == DATA.OBJECT) {
       node = parentNode[propertyName] || {};
       decodeSchema(def.schema, node, path);
     }
     else {
-      if(checkFieldAccess(context, index, name)) {
+      if(checkFieldAccess(context, name)) {
         if(def.type & DATA.ENUM) {
           node = decodeEnumeration(def);
         }
@@ -249,7 +241,6 @@ export function decode(schema, array, context = {}, object = {}) {
           merkle.add(stream.getLastFieldData());
         }
       }
-      index++;
     }
 
     if(parentNode[propertyName] === undefined || parentNode[propertyName] === null) {
@@ -292,14 +283,18 @@ export function decode(schema, array, context = {}, object = {}) {
 // ============================================================================================================================ //
 //  checkFieldAccess()                                                                                                          //
 // ============================================================================================================================ //
-function checkFieldAccess(context, index, name) {
+function checkFieldAccess(context, name) {
   if(!context.flattenedFields) {
     return true;
   }
 
-  if(context.flattenedFields[index].subId == -1) {
+  name = name.replace(/\.\d+/g, "");
+
+  let flattenedField = context.flattenedFields.find(obj => obj.name == name);
+
+  if(!flattenedField) {
     throw new schemaError(ERRORS.SCHEMA_NO_SUBSECTION, name);
   }
 
-  return context.flattenedFields[index].subId == context.subId;
+  return flattenedField.subId == context.subId;
 }

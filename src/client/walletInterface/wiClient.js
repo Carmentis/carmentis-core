@@ -151,10 +151,7 @@ export class wiClient {
    *
    * @param {string} dataId - The data identifier returned by the operator server.
    *
-   * @return {Promise<{
-   *     signature: string
-   * }>} A promise that resolves to an object containing:
-   *                           - signature: The digital signature of the microblock.
+   * @return {Promise<{vbHash: string, mbHash: string, height: number}>} The hash of the block and chain where the block of the event is located.
    * @throws {Error} If the process fails.
    */
   async getApprovalData(dataId) {

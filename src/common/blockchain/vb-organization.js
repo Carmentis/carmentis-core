@@ -51,6 +51,7 @@ export class organizationVb extends virtualBlockchain {
 
       case SECTIONS.ORG_SIGNATURE: {
         this.verifySignature(mb, this.state.publicKey, object);
+        mb.payerPublicKey = this.state.publicKey;
         break;
       }
 

@@ -64,20 +64,38 @@ export async function getChainStatus() {
 // ============================================================================================================================ //
 //  checkIncomingMicroblock()                                                                                                   //
 // ============================================================================================================================ //
-export async function checkIncomingMicroblock(mb) {
+export async function checkIncomingMicroblock(mbData) {
   let context = initializeContext(),
-      res = await processMicroblock(context, mb, false);
+      res = await processMicroblock(context, mbData, false),
+      mb = res.vb.currentMicroblock;
 
-  console.log(`Received${res.vbRecord.height == 1 ? " genesis" : ""} microblock ${res.mbHash} (${mb.length} bytes)`);
+  console.log(`Received${res.vbRecord.height == 1 ? " genesis" : ""} microblock ${res.mbHash} (${mbData.length} bytes)`);
 
   if(res.vbRecord.height > 1) {
     console.log(`Belonging to VB ${res.vb.id}`);
   }
 
-  res.vb.currentMicroblock.sections.forEach((section, n) => {
+  let payerAccount;
+
+  if(mb.payerAccount) {
+    payerAccount = mb.payerAccount;
+  }
+  else if(mb.payerPublicKey) {
+    payerAccount = await accounts.loadAccountByPublicKey(mb.payerPublicKey);
+  }
+
+  if(!payerAccount) {
+    throw "Unable to find the payer account";
+  }
+
+  let fees = computeFees(mb);
+
+  console.log(`Fees: ${fees}, to be paid by ${payerAccount}`);
+
+  mb.sections.forEach((section, n) => {
     console.log(
       SECTIONS.DEF[res.vb.type][section.id].label,
-      `(${res.vb.currentMicroblock.object.body.sections[n].length} bytes)`
+      `(${mb.object.body.sections[n].length} bytes)`
     );
   });
 
@@ -98,10 +116,10 @@ export async function prepareProposal(height, ts, txs) {
   let context = initializeContext(height, ts),
       proposalTxs = [];
 
-  for(let mb of txs) {
+  for(let mbData of txs) {
     try {
-      await processMicroblock(context, mb, false);
-      proposalTxs.push(mb);
+      await processMicroblock(context, mbData, false);
+      proposalTxs.push(mbData);
     }
     catch(e) {
       console.error(e);
@@ -125,9 +143,9 @@ export async function processProposal(height, ts, proposalTxs) {
 
   let context = initializeContext(height, ts);
 
-  for(let mb of proposalTxs) {
+  for(let mbData of proposalTxs) {
     try {
-      await processMicroblock(context, mb, false);
+      await processMicroblock(context, mbData, false);
     }
     catch(e) {
       console.error(e);
@@ -143,8 +161,8 @@ export async function processProposal(height, ts, proposalTxs) {
 export async function finalizeBlock(height, ts, txs) {
   let context = initializeContext(height, ts);
 
-  for(let mb of txs) {
-    let res = await processMicroblock(context, mb, true);
+  for(let mbData of txs) {
+    let res = await processMicroblock(context, mbData, true);
 
     await blockchainManager.dbPut(SCHEMAS.DB_MICROBLOCK_INFO, res.mbHash, res.mbRecord);
     await blockchainManager.dbPut(SCHEMAS.DB_VB_INFO, res.mbRecord.vbHash, res.vbRecord);
@@ -166,8 +184,8 @@ function initializeContext(height, ts) {
 // ============================================================================================================================ //
 //  processMicroblock()                                                                                                         //
 // ============================================================================================================================ //
-async function processMicroblock(context, mb, apply) {
-  let res = await blockchainManager.checkMicroblock(mb),
+async function processMicroblock(context, mbData, apply) {
+  let res = await blockchainManager.checkMicroblock(mbData),
       sections = res.vb.currentMicroblock.sections;
 
   context.vb = res.vb;
@@ -322,7 +340,7 @@ async function sectionCallback(context, sectionId, object, apply = false) {
 //  microblockCallback()                                                                                                        //
 // ============================================================================================================================ //
 async function microblockCallback(context, apply = false) {
-  let fees = Math.floor(context.mb.object.header.gas * context.mb.object.header.gasPrice / 1000);
+  let fees = computeFees(context.mb);
 
   context.fees += fees;
 
@@ -364,6 +382,13 @@ async function microblockCallback(context, apply = false) {
       }
     }
   }
+}
+
+// ============================================================================================================================ //
+//  computeFees()                                                                                                               //
+// ============================================================================================================================ //
+function computeFees(mb) {
+  return Math.floor(mb.object.header.gas * mb.object.header.gasPrice / 1000);
 }
 
 // ============================================================================================================================ //

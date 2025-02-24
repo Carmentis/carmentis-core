@@ -122,9 +122,12 @@ export class wiWallet {
       height: answer.height
     };
 
-    return this.formatAnswer(
-      SCHEMAS.WIRQ_DATA_APPROVAL,
-      answerObject
-    );
+    return {
+      walletObject: answerObject,
+      clientAnswer: this.formatAnswer(
+        SCHEMAS.WIRQ_DATA_APPROVAL,
+        answerObject
+      )
+    }
   }
 }

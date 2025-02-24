@@ -73,12 +73,12 @@ export const ERRORS_EN = {
   [ ERROR_TYPES.ACCOUNT ]: [
     "Invalid amount for token issuance",
     "Invalid public key for token issuance",
-    "Unknown account '%0'",
+    "Unknown account %0",
     "A public key is already attached to this account",
     "No public key is attached to this account",
-    "This public key is already attached to another account",
-    "This public key is not attached to any account",
-    "Insufficient funds",
+    "The public key %0 is already attached to another account",
+    "The public key %0 is not attached to any account",
+    "Insufficient funds on account %0",
     "Invalid payee account %0",
     "Buyer account %0 already exists"
   ],

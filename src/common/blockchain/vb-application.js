@@ -87,6 +87,7 @@ export class applicationVb extends virtualBlockchain {
         let vb = await this.getOrganizationVb();
 
         this.verifySignature(mb, vb.state.publicKey, object);
+        mb.payerPublicKey = vb.state.publicKey;
         break;
       }
 

@@ -37,6 +37,8 @@ async function processMessage(data) {
 
       let vb = res.vb;
 
+      console.log("vb", vb);
+
       let height, message, record;
 
       height = vb.getHeight();
@@ -54,7 +56,9 @@ async function processMessage(data) {
 
       let answer = await wiWallet.sendApprovalSignature(privateKey, req.object, signature);
 
-      postAnswer(answer);
+      console.log(answer);
+
+      postAnswer(answer.clientAnswer);
       break;
     }
   }

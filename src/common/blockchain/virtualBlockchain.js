@@ -52,9 +52,11 @@ export class virtualBlockchain extends blockchainCore {
 
       mb.load(obj.content, obj.hash);
       this.setGenesisSeed(mb.object.header);
-      await this.processSections(mb);
-
       this.microblocks.push(mb);
+    }
+
+    for(let mb of this.microblocks) {
+      await this.processSections(mb);
     }
   }
 
@@ -65,7 +67,7 @@ export class virtualBlockchain extends blockchainCore {
     await this.processSections(this.currentMicroblock);
   }
 
-  async processSections(mb) {
+  async processSections(mb, updateState = true) {
     for(let sectionNdx in mb.object.body.sections) {
       sectionNdx = +sectionNdx;
 
@@ -84,12 +86,14 @@ export class virtualBlockchain extends blockchainCore {
 
       mb.sections.push(section);
 
-      await this.updateState(
-        mb,
-        sectionNdx,
-        section.id,
-        section.object
-      );
+      if(updateState) {
+        await this.updateState(
+          mb,
+          sectionNdx,
+          section.id,
+          section.object
+        );
+      }
     }
   }
 

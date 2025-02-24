@@ -416,7 +416,7 @@ export class appLedgerVb extends virtualBlockchain {
     }
 
     if(this.myId == undefined) {
-      console.error("Failed to identify myself", this.myActorPublicKey, this.state);
+      console.log("Notice: failed to identify myself");
     }
   }
 

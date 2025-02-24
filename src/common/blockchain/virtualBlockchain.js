@@ -58,6 +58,8 @@ export class virtualBlockchain extends blockchainCore {
     for(let mb of this.microblocks) {
       await this.processSections(mb);
     }
+
+    await this.reloadSections();
   }
 
   async importCurrentMicroblock(binary, hash) {
@@ -65,6 +67,18 @@ export class virtualBlockchain extends blockchainCore {
     this.currentMicroblock.load(binary, hash);
     this.setGenesisSeed(this.currentMicroblock.object.header);
     await this.processSections(this.currentMicroblock);
+
+    await this.reloadSections();
+  }
+
+  // TODO: Must be improved.
+  async reloadSections() {
+    if(!this.constructor.isNode()) {
+      for(let mb of this.microblocks) {
+        mb.sections = [];
+        await this.processSections(mb, false);
+      }
+    }
   }
 
   async processSections(mb, updateState = true) {

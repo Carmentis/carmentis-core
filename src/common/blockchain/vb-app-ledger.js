@@ -556,6 +556,7 @@ export class appLedgerVb extends virtualBlockchain {
             publicKey = await this.getActorPublicKey(this.state.actors[authorSection.object.authorId]);
 
         this.verifySignature(mb, publicKey, object);
+        mb.payerPublicKey = publicKey;
         break;
       }
 

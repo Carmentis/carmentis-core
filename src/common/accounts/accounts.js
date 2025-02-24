@@ -4,6 +4,8 @@ import * as crypto from "../crypto/crypto.js";
 import * as uint8 from "../util/uint8.js";
 import { accountError } from "../errors/error.js";
 
+export const FEES_ACCOUNT = "0".repeat(31) + "1";
+
 let dbInterface;
 
 // ============================================================================================================================ //
@@ -31,7 +33,7 @@ export async function tokenTransfer(transfer, chainReference, timestamp, apply) 
     payerBalance = payerState.balance;
 
     if(payerBalance < transfer.amount) {
-      throw new accountError(ERRORS.ACCOUNT_INSUFFICIENT_FUNDS);
+      throw new accountError(ERRORS.ACCOUNT_INSUFFICIENT_FUNDS, transfer.payerAccount);
     }
   }
 
@@ -190,7 +192,7 @@ export async function testPublicKeyAvailability(publicKey) {
   );
 
   if(accountHash) {
-    throw new accountError(ERRORS.ACCOUNT_KEY_ALREADY_IN_USE);
+    throw new accountError(ERRORS.ACCOUNT_KEY_ALREADY_IN_USE, publicKey);
   }
 }
 
@@ -219,7 +221,7 @@ export async function loadAccountByPublicKey(publicKey) {
   );
 
   if(!accountHash) {
-    throw new accountError(ERRORS.ACCOUNT_KEY_UNKNOWN);
+    throw new accountError(ERRORS.ACCOUNT_KEY_UNKNOWN, publicKey);
   }
 
   return accountHash;

@@ -9,9 +9,6 @@ import * as memoryDb from "../memoryDb.js";
 
 const PORT = 8080;
 
-const APP_PRIVATE_KEY    = "2B76D9AADC974CCE240359C5585997A32C05927C121F393F4AF04B9FD6B4C56A";
-const ORACLE_PRIVATE_KEY = "ADDA4B6E6072FC8E31815C4F0E24D6668CAC6BAE5536D9192D671AC79CC23B24";
-
 const NODE_URL            = "http://localhost:3000";
 const APP_OPERATOR_URL    = "http://localhost:3005";
 const ORACLE_OPERATOR_URL = "http://localhost:3006";
@@ -32,7 +29,10 @@ const {
 
 const crypto = sdk.crypto;
 
-let applicationId, oracleId;
+let rootAccount,
+    rootPrivateKey,
+    applicationId,
+    oracleId;
 
 http.createServer(processRequest)
   .listen(PORT, () => {
@@ -108,7 +108,7 @@ async function genesis() {
   blockchainCore.setDbInterface(memoryDb);
   blockchainCore.setNode(NODE_URL);
 
-  let vb, mb, transfer, answer;
+  let vb, mb, answer;
 
   let issuerPrivateKey = crypto.generateKey256(),
       issuerPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(issuerPrivateKey),
@@ -129,19 +129,42 @@ async function genesis() {
 
   mb = await vb.publish();
 
+  rootPrivateKey = issuerPrivateKey;
+  rootAccount = mb.hash;
+
   return {};
 }
 
 async function publishObjects(res) {
-  let appOrganization = await publishApplicationOrganization(APP_PRIVATE_KEY),
-      oracleOrganization = await publishOracleOrganization(ORACLE_PRIVATE_KEY);
+  let appOrganization = await publishOrganization(
+    APP_OPERATOR_URL,
+    {
+      name: "Carmentis SAS",
+      city: "Paris",
+      countryCode: "FR",
+      website: "www.carmentis.io"
+    }
+  );
+
+  let oracleOrganization = await publishOrganization(
+    ORACLE_OPERATOR_URL,
+    {
+      name: "Acme",
+      city: "Paris",
+      countryCode: "FR",
+      website: "www.acme.io"
+    }
+  );
 
   applicationId = await publishApplication(appOrganization);
   oracleId = await publishOracle(oracleOrganization);
 
   await operatorQuery(
-    APP_OPERATOR_URL + "/setOrganizationId",
-    { organizationId: appOrganization.id }
+    APP_OPERATOR_URL + "/setOrganization",
+    {
+      id: appOrganization.id,
+      privateKey: appOrganization.privateKey
+    }
   );
 
   return {};
@@ -231,14 +254,34 @@ async function processOracleRequest(res) {
   return {};
 }
 
-async function publishApplicationOrganization(orgPrivateKey) {
-  let orgPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(orgPrivateKey);
+async function publishOrganization(endpoint, description) {
+  let orgPrivateKey = crypto.generateKey256(),
+      orgPublicKey = crypto.secp256k1.publicKeyFromPrivateKey(orgPrivateKey);
+
+  console.log(`Creating organization ${description.name} with public key ${orgPublicKey}`);
 
   blockchainCore.setDbInterface(memoryDb);
   blockchainCore.setNode(NODE_URL);
-  blockchainCore.setUser(ROLES.OPERATOR, orgPrivateKey);
+  blockchainCore.setUser(ROLES.OPERATOR, rootPrivateKey);
 
   let vb, mb;
+
+  // buy tokens
+  vb = new accountVb();
+
+  await vb.create({
+    sellerAccount: rootAccount,
+    buyerPublicKey: orgPublicKey,
+    amount: 100 * ECO.TOKEN
+  });
+
+  vb.setGasPrice(ECO.TOKEN);
+  await vb.sign();
+
+  mb = await vb.publish();
+
+  // publish organization
+  blockchainCore.setUser(ROLES.OPERATOR, orgPrivateKey);
 
   vb = new organizationVb();
 
@@ -246,15 +289,10 @@ async function publishApplicationOrganization(orgPrivateKey) {
     publicKey: orgPublicKey
   });
 
-  await vb.addDescription({
-    name: "Carmentis SAS",
-    city: "Paris",
-    countryCode: "FR",
-    website: "www.carmentis.io"
-  });
+  await vb.addDescription(description);
 
   await vb.addServer({
-    endpoint: APP_OPERATOR_URL
+    endpoint: endpoint
   });
 
   vb.setGasPrice(ECO.TOKEN);

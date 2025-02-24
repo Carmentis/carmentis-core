@@ -102,6 +102,15 @@ export class operatorCore {
     }
   }
 
+  async getUserApprovalStatus(req) {
+    try {
+      let storedObject = approvalData.get(req.dataId);
+    }
+    catch(e) {
+      return this.errorAnswer(e);
+    }
+  }
+
   async approvalHandshake(req) {
     try {
       let storedObject = approvalData.get(req.dataId);

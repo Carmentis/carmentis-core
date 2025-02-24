@@ -129,10 +129,12 @@ export class accountVb extends virtualBlockchain {
           await sellerVb.load();
 
           this.verifySignature(mb, sellerVb.state.publicKey, object);
+          mb.payerAccount = creationSection.object.sellerAccount;
         }
         else {
           // everything else is signed by the account owner
           this.verifySignature(mb, this.state.publicKey, object);
+          mb.payerAccount = this.id;
         }
         break;
       }

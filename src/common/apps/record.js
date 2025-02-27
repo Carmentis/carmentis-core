@@ -1,5 +1,9 @@
 import { DATA, SECTIONS } from "../constants/constants.js";
+import * as structure from "./structure.js";
 
+// ============================================================================================================================ //
+//  getRecord()                                                                                                                 //
+// ============================================================================================================================ //
 export function getRecord(vb, height) {
   let mb = vb.getMicroblock(height),
       record = mb.findSection(SECTIONS.APP_LEDGER_CHANNEL_DATA);
@@ -7,6 +11,9 @@ export function getRecord(vb, height) {
   return record;
 }
 
+// ============================================================================================================================ //
+//  flattenRecord()                                                                                                             //
+// ============================================================================================================================ //
 export function flattenRecord(vb, record) {
   let definition = vb.appDef.definition,
       arr = [];
@@ -22,7 +29,7 @@ export function flattenRecord(vb, record) {
         arr.push({ name: newName.join("."), path: newPath, def: def, value: value });
       }
       else if(def.type & DATA.STRUCT) {
-        parse(definition.structures[def.type & DATA.MSK_OBJECT_INDEX].properties, value, newName, newPath);
+        parse(structure.getCollection(definition, def), value, newName, newPath);
       }
       else {
         arr.push({ name: newName.join("."), path: newPath, def: def, value: value });
@@ -35,6 +42,9 @@ export function flattenRecord(vb, record) {
   return arr;
 }
 
+// ============================================================================================================================ //
+//  getApprovalMessage()                                                                                                        //
+// ============================================================================================================================ //
 export function getApprovalMessage(vb, height) {
   let mb = vb.getMicroblock(height),
       endorserSection = mb.findSection(SECTIONS.APP_LEDGER_ENDORSER),

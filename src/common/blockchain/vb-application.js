@@ -1,7 +1,7 @@
 import { ERRORS, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { organizationVb } from "./vb-organization.js";
-import * as message from "../paths/message.js";
+import * as message from "../apps/message.js";
 import { sectionError, applicationError } from "../errors/error.js";
 
 // ============================================================================================================================ //

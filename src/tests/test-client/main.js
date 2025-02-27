@@ -6,8 +6,7 @@ const { ECO, SCHEMAS } = Carmentis.constants;
 const db = {
   [ SCHEMAS.DB_MICROBLOCK_INFO ]: new Map(),
   [ SCHEMAS.DB_MICROBLOCK_DATA ]: new Map(),
-  [ SCHEMAS.DB_VB_INFO         ]: new Map(),
-  [ SCHEMAS.DB_BLOCK           ]: new Map()
+  [ SCHEMAS.DB_VB_INFO         ]: new Map()
 };
 
 const {

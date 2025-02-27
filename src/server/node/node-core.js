@@ -3,8 +3,10 @@ import { schemaSerializer } from "../../common/serializers/serializers.js";
 import { blockchainCore, ROLES, blockchainManager, accountVb } from "../../common/blockchain/blockchain.js";
 import { CarmentisError, globalError, blockchainError } from "../../common/errors/error.js";
 import * as accounts from "../../common/accounts/accounts.js";
+import * as util from "../../common/util/util.js";
 
 const FEES_ENABLED = false;
+const CHAIN_STATUS_KEY = "CHAIN_STATUS";
 
 let dbInterface;
 
@@ -45,29 +47,114 @@ export function processCatchedError(err) {
 // ============================================================================================================================ //
 //  getChainStatus()                                                                                                            //
 // ============================================================================================================================ //
-export async function getChainStatus() {
+export async function getChainStatus(blockDelay) {
+  let obj = await loadChainStatus(),
+      now = util.getCarmentisTimestamp();
+
   let data = {
-    lastBlockHeight : 0,
-    timeToNextBlock : 0,
-    nSection        : 0,
-    nMicroblock     : 0,
-    nAccountVb      : 0,
-    nValidatorNodeVb: 0,
-    nOrganizationVb : 0,
-    nAppUserVb      : 0,
-    nApplicationVb  : 0,
-    nAppLedgerVb    : 0,
-    nOracleVb       : 0
+    lastBlockHeight : obj.height,
+    timeToNextBlock : Math.max(0, obj.lastBlockTs + blockDelay - now),
+    nSection        : obj.nSection,
+    nMicroblock     : obj.nMicroblock,
+    nAccountVb      : obj.objectCounters[ID.OBJ_ACCOUNT],
+    nValidatorNodeVb: obj.objectCounters[ID.OBJ_VALIDATOR_NODE],
+    nOrganizationVb : obj.objectCounters[ID.OBJ_ORGANIZATION],
+    nAppUserVb      : obj.objectCounters[ID.OBJ_APP_USER],
+    nApplicationVb  : obj.objectCounters[ID.OBJ_APPLICATION],
+    nAppLedgerVb    : obj.objectCounters[ID.OBJ_APP_LEDGER],
+    nOracleVb       : obj.objectCounters[ID.OBJ_ORACLE]
   };
 
   return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_CHAIN_STATUS, data, SCHEMAS.NODE_MESSAGES);
 }
 
 // ============================================================================================================================ //
+//  loadChainStatus()                                                                                                           //
+// ============================================================================================================================ //
+export async function loadChainStatus() {
+  let obj = await blockchainManager.dbGet(SCHEMAS.DB_CHAIN, CHAIN_STATUS_KEY);
+
+  if(!obj) {
+    obj = {
+      height: 0,
+      lastBlockTs: util.getCarmentisTimestamp(),
+      nMicroblock: 0,
+      nSection: 0,
+      objectCounters: Array(ID.N_OBJECTS).fill(0)
+    };
+  }
+
+  return obj;
+}
+
+// ============================================================================================================================ //
+//  getBlockList()                                                                                                              //
+// ============================================================================================================================ //
+export async function getBlockList(height, maxBlocks) {
+  let list = [];
+
+  while(height && maxBlocks--) {
+    list.push(await loadBlockInfo(height--));
+  }
+
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_BLOCK_LIST, { list: list }, SCHEMAS.NODE_MESSAGES);
+}
+
+// ============================================================================================================================ //
+//  getBlockInfo()                                                                                                              //
+// ============================================================================================================================ //
+export async function getBlockInfo(height) {
+  let data = await loadBlockInfo(height);
+
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_BLOCK_INFO, data, SCHEMAS.NODE_MESSAGES);
+}
+
+// ============================================================================================================================ //
+//  loadBlockInfo()                                                                                                             //
+// ============================================================================================================================ //
+async function loadBlockInfo(height) {
+  let data = await blockchainManager.dbGet(SCHEMAS.DB_BLOCK_INFO, height);
+
+  return {
+    height: height,
+    status: 0,
+    ...data
+  };
+}
+
+// ============================================================================================================================ //
+//  getBlockContent()                                                                                                           //
+// ============================================================================================================================ //
+export async function getBlockContent(height) {
+  let data = await loadBlockContent(height);
+
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_BLOCK_CONTENT, data, SCHEMAS.NODE_MESSAGES);
+}
+
+// ============================================================================================================================ //
+//  loadBlockContent()                                                                                                          //
+// ============================================================================================================================ //
+async function loadBlockContent(height) {
+  let info = await loadBlockInfo(height),
+      content = await blockchainManager.dbGet(SCHEMAS.DB_BLOCK_CONTENT, height);
+
+  return {
+    timestamp     : info.timestamp,
+    proposerNode  : info.proposerNode,
+    previousHash  : "0".repeat(64),
+    height        : height,
+    merkleRootHash: "0".repeat(64),
+    radixRootHash : "0".repeat(64),
+    chainId       : "CarmentisTestnet",
+    ...content
+  };
+}
+
+// ============================================================================================================================ //
 //  checkIncomingMicroblock()                                                                                                   //
 // ============================================================================================================================ //
 export async function checkIncomingMicroblock(mbData) {
-  let context = initializeContext(),
+  let context = await initializeContext(),
       res = await processMicroblock(context, mbData, false),
       mb = res.vb.currentMicroblock;
 
@@ -116,8 +203,8 @@ export function incomingMicroblockAnswer() {
 // ============================================================================================================================ //
 //  prepareProposal()                                                                                                           //
 // ============================================================================================================================ //
-export async function prepareProposal(height, ts, txs) {
-  let context = initializeContext(height, ts),
+export async function prepareProposal(ts, txs) {
+  let context = await initializeContext(ts),
       proposalTxs = [];
 
   for(let mbData of txs) {
@@ -140,12 +227,12 @@ export async function prepareProposal(height, ts, txs) {
 // ============================================================================================================================ //
 //  processProposal()                                                                                                           //
 // ============================================================================================================================ //
-export async function processProposal(height, ts, proposalTxs) {
+export async function processProposal(ts, proposalTxs) {
   if(proposalTxs.length !== 0) {
     console.log(`Checking proposal with ${proposalTxs.length} microblock(s)`);
   }
 
-  let context = initializeContext(height, ts);
+  let context = await initializeContext(ts);
 
   for(let mbData of proposalTxs) {
     try {
@@ -162,28 +249,59 @@ export async function processProposal(height, ts, proposalTxs) {
 // ============================================================================================================================ //
 //  finalizeBlock()                                                                                                             //
 // ============================================================================================================================ //
-export async function finalizeBlock(height, ts, txs) {
-  console.log(`Finalizing block ${height}`);
+export async function finalizeBlock(ts, txs) {
+  let context = await initializeContext(ts);
 
-  let context = initializeContext(height, ts);
+  console.log(`Finalizing block ${context.chainStatus.height + 1}`);
+
+  let mbList = [],
+      totalSize = 0;
 
   for(let mbData of txs) {
     let res = await processMicroblock(context, mbData, true);
 
     await blockchainManager.dbPut(SCHEMAS.DB_MICROBLOCK_INFO, res.mbHash, res.mbRecord);
     await blockchainManager.dbPut(SCHEMAS.DB_VB_INFO, res.mbRecord.vbHash, res.vbRecord);
+
+    totalSize += mbData.length;
+
+    mbList.push({
+      hash    : res.mbHash,
+      vbHash  : res.vb.id,
+      vbType  : res.vbRecord.type,
+      height  : res.vbRecord.height,
+      size    : mbData.length,
+      nSection: res.vb.currentMicroblock.sections.length
+    });
   }
+
+  context.chainStatus.height++;
+
+  let blockObject = {
+    hash        : "0".repeat(64),
+    timestamp   : ts,
+    proposerNode: "0".repeat(64),
+    size        : totalSize,
+    nMicroblock : mbList.length
+  };
+
+  await blockchainManager.dbPut(SCHEMAS.DB_BLOCK_INFO, context.chainStatus.height, blockObject);
+  await blockchainManager.dbPut(SCHEMAS.DB_BLOCK_CONTENT, context.chainStatus.height, { microblocks: mbList });
+  await blockchainManager.dbPut(SCHEMAS.DB_CHAIN, CHAIN_STATUS_KEY, context.chainStatus);
+
   return true;
 }
 
 // ============================================================================================================================ //
 //  initializeContext()                                                                                                         //
 // ============================================================================================================================ //
-function initializeContext(height, ts) {
+async function initializeContext(ts) {
   return {
-    height: height,
-    timestamp: ts,
-    fees: 0
+    timestamp  : ts,
+    chainStatus: await loadChainStatus(),
+    nMicroblock: 0,
+    nSection   : 0,
+    fees       : 0
   };
 }
 
@@ -196,6 +314,10 @@ async function processMicroblock(context, mbData, apply) {
 
   context.vb = res.vb;
   context.mb = res.vb.currentMicroblock;
+
+  context.chainStatus.nMicroblock++;
+  context.chainStatus.nSection += sections.length;
+  context.chainStatus.objectCounters[context.vb.type]++;
 
   for(let n in sections) {
     context.sectionIndex = +n;
@@ -363,6 +485,10 @@ async function microblockCallback(context, apply = false) {
     context.timestamp,
     apply
   );
+
+  if(!apply) {
+    return;
+  }
 
   if(!context.vb.microblocks.length) {
     switch(context.vb.type) {

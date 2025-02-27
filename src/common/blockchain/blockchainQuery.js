@@ -18,6 +18,59 @@ export class blockchainQuery extends blockchainCore {
   }
 
   /**
+   * Retrieves information about several blocks.
+   *
+   * @param {number} height - The height of the highest block to be retrieved.
+   * @param {number} maxBlocks - The maximum number of blocks to retrieve.
+   * @return {Promise} A promise that resolves to an object matching the schema MSG_ANS_BLOCK_LIST.
+   */
+  static async getBlockList(height, maxBlocks) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_BLOCK_LIST,
+      {
+        height: height,
+        maxBlocks: maxBlocks
+      }
+    );
+
+    return answer;
+  }
+
+  /**
+   * Retrieves information about a single block.
+   *
+   * @param {number} height - The height of the block to be retrieved.
+   * @return {Promise} A promise that resolves to an object matching the schema MSG_ANS_BLOCK_INFO.
+   */
+  static async getBlockInfo(height) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_BLOCK_INFO,
+      {
+        height: height
+      }
+    );
+
+    return answer;
+  }
+
+  /**
+   * Retrieves the content of a block.
+   *
+   * @param {number} height - The height of the block to be retrieved.
+   * @return {Promise} A promise that resolves to an object matching the schema MSG_ANS_BLOCK_CONTENT.
+   */
+  static async getBlockContent(height) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_BLOCK_CONTENT,
+      {
+        height: height
+      }
+    );
+
+    return answer;
+  }
+
+  /**
    * Retrieves the content of a microblock identified by its hash.
    *
    * @param {string} hash - The hash of the microblock to be retrieved.

@@ -11,7 +11,7 @@ import { fieldError } from "../errors/error.js";
 export function encodeSingle(def, item, context = {}) {
   let stream = getWriteStream();
 
-  stream.encode(def, item, context);
+  stream.encode(def, item);
 
   return stream.getContent();
 }
@@ -94,6 +94,13 @@ export function getWriteStream(context = {}) {
           value = Math.floor(value / 0x80);
         }
       }
+    },
+
+    // ------------------------------------------------------------------------------------------------------------------------ //
+    //  writeDecimal()                                                                                                          //
+    // ------------------------------------------------------------------------------------------------------------------------ //
+    writeDecimal: function(value) {
+      stream.writeVarInt(parseInt(value.replace(/\./, "").replace(/^0*/, ""), 10));
     },
 
     // ------------------------------------------------------------------------------------------------------------------------ //
@@ -213,6 +220,23 @@ export function getReadStream(array, context = {}) {
     },
 
     // ------------------------------------------------------------------------------------------------------------------------ //
+    //  readDecimal()                                                                                                           //
+    // ------------------------------------------------------------------------------------------------------------------------ //
+    readDecimal: function(scale) {
+      let value = stream.readVarInt().toString();
+
+      if(scale) {
+        let sign = value[0] == "-";
+
+        value = value.slice(+sign).padStart(scale + 1, "0");
+        value = value.slice(0, -scale) + "." + value.slice(-scale);
+        value = sign ? "-" + value : value;
+      }
+
+      return value;
+    },
+
+    // ------------------------------------------------------------------------------------------------------------------------ //
     //  readString()                                                                                                            //
     // ------------------------------------------------------------------------------------------------------------------------ //
     readString: function(defSize) {
@@ -282,14 +306,26 @@ function encodeField(stream, def, item, name, context) {
       stream.writeString(item, def.size);
       break;
     }
+    case DATA.FLOAT: {
+      stream.writeArray(new Uint8Array(new Float64Array([item]).buffer));
+      break;
+    }
+    case DATA.DECIMAL: {
+      stream.writeDecimal(item);
+      break;
+    }
+    case DATA.AMOUNT: {
+      stream.writeUnsigned(currency.encode(item.currency), 2);
+      stream.writeDecimal(item.value);
+      break;
+    }
     case DATA.TIMESTAMP: {
       stream.writeUnsigned(item / 0x100000000 & 0xFFFF, 2);
       stream.writeUnsigned(item / 0x10000 & 0xFFFF, 2);
       stream.writeUnsigned(item & 0xFFFF, 2);
       break;
     }
-    case DATA.AMOUNT: {
-      stream.writeUnsigned(currency.encode(item));
+    case DATA.DATE: {
       break;
     }
     case DATA.HASH: {
@@ -366,6 +402,33 @@ function decodeField(stream, def, context) {
       item = stream.readString(def.size);
       break;
     }
+    case DATA.FLOAT: {
+      item = new Float64Array(stream.readArray(8).buffer)[0];
+      break;
+    }
+    case DATA.DECIMAL: {
+      item = stream.readDecimal(def.scale);
+      break;
+    }
+    case DATA.AMOUNT: {
+      let currencyStr = currency.decode(stream.readUnsigned(2));
+
+      item = {
+        currency: currencyStr,
+        value: stream.readDecimal(currency.getScale(currencyStr))
+      };
+      break;
+    }
+    case DATA.TIMESTAMP: {
+      item =
+        stream.readUnsigned(2) * 0x100000000 +
+        stream.readUnsigned(2) * 0x10000 +
+        stream.readUnsigned(2);
+      break;
+    }
+    case DATA.DATE: {
+      break;
+    }
     case DATA.HASH: {
       item = uint8.toHexa(stream.readArray(32));
       break;
@@ -423,112 +486,143 @@ function decodeField(stream, def, context) {
 //  checkFieldType()                                                                                                            //
 // ============================================================================================================================ //
 function checkFieldType(item, def, name) {
-  let itemType = type.getType(item);
-
   switch(def.type & DATA.MSK_PRIMITIVE_TYPE) {
-    case DATA.INT      : { return isVarInt(); }
-    case DATA.UINT     : { return isVarUint(); }
-    case DATA.UINT8    : { return isUint(8); }
-    case DATA.UINT16   : { return isUint(16); }
-    case DATA.UINT24   : { return isUint(24); }
-    case DATA.UINT32   : { return isUint(32); }
-    case DATA.UINT48   : { return isUint(48); }
-    case DATA.STRING   : { return hasType(type.STRING) && checkSize(); }
-    case DATA.OBJECT   : { return hasType(type.OBJECT); }
-    case DATA.ARRAY    : { return hasType(type.ARRAY) && checkSize(); }
-    case DATA.HASH     : { return isHexa(64); }
-    case DATA.PUB_KEY  : { return isPublicKey(); }
-    case DATA.PRIV_KEY : { return isHexa(64); }
-    case DATA.AES_KEY  : { return isHexa(64); }
-    case DATA.SIGNATURE: { return isHexa(128); }
-    case DATA.BINARY   : { return hasType(type.UINT8) && checkSize(); }
-    case DATA.BIN128   : { return hasType(type.UINT8) && hasFixedSize(16); }
-    case DATA.BIN256   : { return hasType(type.UINT8) && hasFixedSize(32); }
-    case DATA.BIN264   : { return hasType(type.UINT8) && hasFixedSize(33); }
-    case DATA.BIN512   : { return hasType(type.UINT8) && hasFixedSize(64); }
+    case DATA.INT      : { return isVarInt(item); }
+    case DATA.UINT     : { return isVarUint(item); }
+    case DATA.UINT8    : { return isUint(item, 8); }
+    case DATA.UINT16   : { return isUint(item, 16); }
+    case DATA.UINT24   : { return isUint(item, 24); }
+    case DATA.UINT32   : { return isUint(item, 32); }
+    case DATA.UINT48   : { return isUint(item, 48); }
+    case DATA.STRING   : { return hasType(item, type.STRING) && checkSize(item, def); }
+    case DATA.FLOAT    : { return hasType(item, type.NUMBER); }
+    case DATA.DECIMAL  : { return isDecimal(item, def); }
+    case DATA.AMOUNT   : { return isAmount(item); }
+    case DATA.OBJECT   : { return hasType(item, type.OBJECT); }
+    case DATA.ARRAY    : { return hasType(item, type.ARRAY) && checkSize(item, def); }
+    case DATA.HASH     : { return isHexa(item, 64); }
+    case DATA.PUB_KEY  : { return isPublicKey(item); }
+    case DATA.PRIV_KEY : { return isHexa(item, 64); }
+    case DATA.AES_KEY  : { return isHexa(item, 64); }
+    case DATA.SIGNATURE: { return isHexa(item, 128); }
+    case DATA.BINARY   : { return hasType(item, type.UINT8) && checkSize(item, def); }
+    case DATA.BIN128   : { return hasType(item, type.UINT8) && hasFixedSize(item, 16); }
+    case DATA.BIN256   : { return hasType(item, type.UINT8) && hasFixedSize(item, 32); }
+    case DATA.BIN264   : { return hasType(item, type.UINT8) && hasFixedSize(item, 33); }
+    case DATA.BIN512   : { return hasType(item, type.UINT8) && hasFixedSize(item, 64); }
   }
 
-  function hasType(n) {
+  function hasType(item, n, suffix = "") {
+    let itemType = type.getType(item);
+
     if(itemType != n) {
-      throw new fieldError(ERRORS.FIELD_BAD_TYPE, name, type.NAME[itemType], type.NAME[n]);
+      throw new fieldError(ERRORS.FIELD_BAD_TYPE, name + suffix, type.NAME[itemType], type.NAME[n]);
     }
     return true;
   }
 
-  function isInt(unsigned) {
-    hasType(type.NUMBER);
+  function isInt(item, unsigned, suffix = "") {
+    hasType(item, type.NUMBER);
 
     if(item % 1 != 0) {
-      throw new fieldError(ERRORS.FIELD_NOT_INTEGER, name);
+      throw new fieldError(ERRORS.FIELD_NOT_INTEGER, name + suffix);
     }
     if(unsigned && item < 0) {
-      throw new fieldError(ERRORS.FIELD_NOT_UNSIGNED, name);
+      throw new fieldError(ERRORS.FIELD_NOT_UNSIGNED, name + suffix);
     }
     return true;
   }
 
-  function isVarInt() {
-    isInt(false);
+  function isVarInt(item, suffix = "") {
+    isInt(item, false);
 
     if(item < Number.MIN_SAFE_INTEGER || item > Number.MAX_SAFE_INTEGER) {
-      throw new fieldError(ERRORS.FIELD_OUT_OF_RANGE, name, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+      throw new fieldError(ERRORS.FIELD_OUT_OF_RANGE, name + suffix, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
     }
     return true;
   }
 
-  function isVarUint() {
-    isInt(true);
+  function isVarUint(item, suffix = "") {
+    isInt(item, true);
 
     if(item > Number.MAX_SAFE_INTEGER) {
-      throw new fieldError(ERRORS.FIELD_OUT_OF_RANGE, name, 0, Number.MAX_SAFE_INTEGER);
+      throw new fieldError(ERRORS.FIELD_OUT_OF_RANGE, name + suffix, 0, Number.MAX_SAFE_INTEGER);
     }
     return true;
   }
 
-  function isUint(w) {
-    isInt(true);
+  function isUint(item, w, suffix = "") {
+    isInt(item, true);
 
     if(item >= 2 ** w) {
-      throw new fieldError(ERRORS.FIELD_UINT_TOO_LARGE, name, 2 ** w - 1);
+      throw new fieldError(ERRORS.FIELD_UINT_TOO_LARGE, name + suffix, 2 ** w - 1);
     }
     return true;
   }
 
-  function checkSize() {
+  function checkSize(item, def, suffix = "") {
     if(def.size != undefined && item.length != def.size) {
-      throw new fieldError(ERRORS.FIELD_INVALID_SIZE, name, def.size);
+      throw new fieldError(ERRORS.FIELD_INVALID_SIZE, name + suffix, def.size);
     }
     if(item.length > def.maxSize) {
-      throw new fieldError(ERRORS.FIELD_SIZE_TOO_LARGE, name, def.maxSize);
+      throw new fieldError(ERRORS.FIELD_SIZE_TOO_LARGE, name + suffix, def.maxSize);
     }
     if(item.length < def.minSize) {
-      throw new fieldError(ERRORS.FIELD_SIZE_TOO_SMALL, name, def.minSize);
+      throw new fieldError(ERRORS.FIELD_SIZE_TOO_SMALL, name + suffix, def.minSize);
     }
     return true;
   }
 
-  function hasFixedSize(n) {
+  function hasFixedSize(item, n, suffix = "") {
     if(item.length != n) {
-      throw new fieldError(ERRORS.FIELD_INVALID_SIZE, name, n);
+      throw new fieldError(ERRORS.FIELD_INVALID_SIZE, name + suffix, n);
     }
     return true;
   }
 
-  function isPublicKey() {
-    isHexa(66);
+  function isPublicKey(item, suffix = "") {
+    isHexa(item, 66);
 
     if(!/^0(2|3)/.test(item)) {
-      throw new fieldError(ERRORS.FIELD_NOT_PUBLIC_KEY, name);
+      throw new fieldError(ERRORS.FIELD_NOT_PUBLIC_KEY, name + suffix);
     }
   }
 
-  function isHexa(size) {
-    hasType(type.STRING);
-    hasFixedSize(size);
+  function isHexa(item, size, suffix = "") {
+    hasType(item, type.STRING);
+    hasFixedSize(item, size);
 
     if(!/^[\dA-F]*$/.test(item)) {
-      throw new fieldError(ERRORS.FIELD_NOT_HEXA, name);
+      throw new fieldError(ERRORS.FIELD_NOT_HEXA, name + suffix);
     }
+    return true;
+  }
+
+  function isDecimal(item, def, suffix = "") {
+    hasType(item, type.STRING);
+
+    if(!/^-?(0|[1-9]\d*)(\.\d+)?$/.test(item)) {
+      throw new fieldError(ERRORS.FIELD_NOT_DECIMAL, name + suffix);
+    }
+    if((item + ".").match(/\.\d*/)[0].length - 1 != def.scale) {
+      throw new fieldError(ERRORS.FIELD_BAD_DECIMAL_PLACES, name + suffix, def.scale);
+    }
+    return true;
+  }
+
+  function isAmount(item, suffix = "") {
+    if(
+      !hasType(item, type.OBJECT) ||
+      !hasType(item.currency, type.STRING, ".currency") ||
+      !isDecimal(item.value, { scale: currency.getScale(item.currency) }, ".value")
+    ) {
+      throw new fieldError(ERRORS.FIELD_INVALID_AMOUNT, name + suffix);
+    }
+
+    if(!currency.isSupported(item.currency)) {
+      throw new fieldError(ERRORS.FIELD_INVALID_CURRENCY, name + suffix, item.currency);
+    }
+
     return true;
   }
 }

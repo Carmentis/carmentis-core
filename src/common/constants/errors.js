@@ -12,16 +12,20 @@ export const GLOBAL_INTERNAL_ERROR = 0x01;
 export const GLOBAL_CRYPTO_ERROR   = 0x02;
 
 // FIELD
-export const FIELD_BAD_TYPE       = 0x00;
-export const FIELD_OUT_OF_RANGE   = 0x01;
-export const FIELD_UINT_TOO_LARGE = 0x02;
-export const FIELD_INVALID_SIZE   = 0x03;
-export const FIELD_SIZE_TOO_LARGE = 0x04;
-export const FIELD_SIZE_TOO_SMALL = 0x05;
-export const FIELD_NOT_HEXA       = 0x06;
-export const FIELD_NOT_INTEGER    = 0x07;
-export const FIELD_NOT_UNSIGNED   = 0x08;
-export const FIELD_NOT_PUBLIC_KEY = 0x09;
+export const FIELD_BAD_TYPE           = 0x00;
+export const FIELD_OUT_OF_RANGE       = 0x01;
+export const FIELD_UINT_TOO_LARGE     = 0x02;
+export const FIELD_INVALID_SIZE       = 0x03;
+export const FIELD_SIZE_TOO_LARGE     = 0x04;
+export const FIELD_SIZE_TOO_SMALL     = 0x05;
+export const FIELD_NOT_HEXA           = 0x06;
+export const FIELD_NOT_INTEGER        = 0x07;
+export const FIELD_NOT_UNSIGNED       = 0x08;
+export const FIELD_NOT_DECIMAL        = 0x09;
+export const FIELD_BAD_DECIMAL_PLACES = 0x0A;
+export const FIELD_NOT_PUBLIC_KEY     = 0x0B;
+export const FIELD_INVALID_AMOUNT     = 0x0C;
+export const FIELD_INVALID_CURRENCY   = 0x0D;
 
 // SCHEMA
 export const SCHEMA_CANNOT_ENCODE   = 0x00;

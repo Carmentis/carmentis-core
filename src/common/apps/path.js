@@ -1,4 +1,5 @@
 import { DATA, ERRORS } from "../constants/constants.js";
+import * as structure from "./structure.js";
 import { pathError } from "../errors/error.js";
 
 // ============================================================================================================================ //
@@ -35,7 +36,7 @@ export function encode(def, pathStr, allowWildcard) {
       if(endOfList) {
         throw new pathError(ERRORS.PATH_INCOMPLETE_STRUCT, part);
       }
-      collection = def.structures[item.type & DATA.MSK_OBJECT_INDEX].properties;
+      collection = structure.getCollection(def, item);
     }
     else {
       if(!endOfList) {
@@ -63,7 +64,7 @@ export function decode(def, array) {
     path.push(item.name);
 
     if(item.type & DATA.STRUCT) {
-      collection = def.structures[item.type & DATA.MSK_OBJECT_INDEX].properties;
+      collection = structure.getCollection(def, item);
     }
   }
 

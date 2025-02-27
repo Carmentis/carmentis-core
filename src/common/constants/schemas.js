@@ -62,20 +62,58 @@ export const VB_STATES = {
 // ============================================================================================================================ //
 //  Database tables                                                                                                             //
 // ============================================================================================================================ //
-export const DB_MICROBLOCK_INFO       = 0x0;
-export const DB_MICROBLOCK_DATA       = 0x1;
-export const DB_VB_INFO               = 0x2;
-export const DB_BLOCK                 = 0x3;
-export const DB_ACCOUNT_STATE         = 0x4;
-export const DB_ACCOUNT_HISTORY       = 0x5;
-export const DB_ACCOUNT_BY_PUBLIC_KEY = 0x6;
-export const DB_ACCOUNTS              = 0x7;
-export const DB_VALIDATOR_NODES       = 0x8;
-export const DB_ORGANIZATIONS         = 0x9;
-export const DB_APPLICATIONS          = 0xA;
-export const DB_ORACLES               = 0xB;
+export const DB_CHAIN                 = 0x0;
+export const DB_BLOCK_INFO            = 0x1;
+export const DB_BLOCK_CONTENT         = 0x2;
+export const DB_MICROBLOCK_INFO       = 0x3;
+export const DB_MICROBLOCK_DATA       = 0x4;
+export const DB_VB_INFO               = 0x5;
+export const DB_ACCOUNT_STATE         = 0x6;
+export const DB_ACCOUNT_HISTORY       = 0x7;
+export const DB_ACCOUNT_BY_PUBLIC_KEY = 0x8;
+export const DB_ACCOUNTS              = 0x9;
+export const DB_VALIDATOR_NODES       = 0xA;
+export const DB_ORGANIZATIONS         = 0xB;
+export const DB_APPLICATIONS          = 0xC;
+export const DB_ORACLES               = 0xD;
 
 export const DB = {
+  // chain information
+  [ DB_CHAIN ] : [
+    { name: "height",         type: DATA.UINT48 },
+    { name: "lastBlockTs",    type: DATA.UINT48 },
+    { name: "nMicroblock",    type: DATA.UINT48 },
+    { name: "nSection",       type: DATA.UINT48 },
+    { name: "objectCounters", type: DATA.UINT48 | DATA.ARRAY, size: ID.N_OBJECTS }
+  ],
+
+  // block meta information
+  // key: block height
+  [ DB_BLOCK_INFO ] : [
+    { name: "hash",         type: DATA.HASH },
+    { name: "timestamp",    type: DATA.UINT48 },
+    { name: "proposerNode", type: DATA.HASH },
+    { name: "size",         type: DATA.UINT48 },
+    { name: "nMicroblock",  type: DATA.UINT48 }
+  ],
+
+  // block content
+  // key: block height
+  [ DB_BLOCK_CONTENT ] : [
+    {
+      name: "microblocks",
+      type: DATA.OBJECT | DATA.ARRAY,
+      schema: [
+        { name: "hash",     type: DATA.HASH },
+        { name: "vbHash",   type: DATA.HASH },
+        { name: "vbType",   type: DATA.UINT8 },
+        { name: "height",   type: DATA.UINT48 },
+        { name: "size",     type: DATA.UINT48 },
+        { name: "nSection", type: DATA.UINT48 }
+      ]
+    }
+  ],
+
   // microblock meta information
   // key: microblock hash
   [ DB_MICROBLOCK_INFO ] : [
@@ -99,23 +137,6 @@ export const DB = {
     { name: "type",               type: DATA.UINT8 },
     { name: "lastMicroblockHash", type: DATA.HASH },
     { name: "state",              type: DATA.BINARY }
-  ],
-
-  // block meta information
-  // key: block height
-  [ DB_BLOCK ] : [
-    {
-      name: "microBlock",
-      type: DATA.OBJECT | DATA.ARRAY,
-      schema: [
-        { name: "hash",     type: DATA.HASH },
-        { name: "vbHash",   type: DATA.HASH },
-        { name: "type",     type: DATA.UINT8 },
-        { name: "height",   type: DATA.UINT48 },
-        { name: "size",     type: DATA.UINT48 },
-        { name: "nSection", type: DATA.UINT48 }
-      ]
-    }
   ],
 
   // current state of an account
@@ -182,21 +203,22 @@ export const MSG_ANS_ERROR = 0xFF;
 // ============================================================================================================================ //
 export const MSG_GET_CHAIN_STATUS          = 0x00;
 export const MSG_GET_BLOCK_LIST            = 0x01;
-export const MSG_GET_BLOCK                 = 0x02;
-export const MSG_GET_VB_INFO               = 0x03;
-export const MSG_GET_VB_CONTENT            = 0x04;
-export const MSG_GET_MICROBLOCK            = 0x05;
-export const MSG_GET_MICROBLOCKS           = 0x06;
-export const MSG_GET_NEW_MICROBLOCKS       = 0x07;
-export const MSG_GET_ACCOUNT_STATE         = 0x08;
-export const MSG_GET_ACCOUNT_HISTORY       = 0x09;
-export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY = 0x0A;
-export const MSG_SEND_MICROBLOCK           = 0x0B;
-export const MSG_GET_ACCOUNTS              = 0x0C;
-export const MSG_GET_VALIDATOR_NODES       = 0x0D;
-export const MSG_GET_ORGANIZATIONS         = 0x0E;
-export const MSG_GET_APPLICATIONS          = 0x0F;
-export const MSG_GET_ORACLES               = 0x10;
+export const MSG_GET_BLOCK_INFO            = 0x02;
+export const MSG_GET_BLOCK_CONTENT         = 0x03;
+export const MSG_GET_VB_INFO               = 0x04;
+export const MSG_GET_VB_CONTENT            = 0x05;
+export const MSG_GET_MICROBLOCK            = 0x06;
+export const MSG_GET_MICROBLOCKS           = 0x07;
+export const MSG_GET_NEW_MICROBLOCKS       = 0x08;
+export const MSG_GET_ACCOUNT_STATE         = 0x09;
+export const MSG_GET_ACCOUNT_HISTORY       = 0x0A;
+export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY = 0x0B;
+export const MSG_SEND_MICROBLOCK           = 0x0C;
+export const MSG_GET_ACCOUNTS              = 0x0D;
+export const MSG_GET_VALIDATOR_NODES       = 0x0E;
+export const MSG_GET_ORGANIZATIONS         = 0x0F;
+export const MSG_GET_APPLICATIONS          = 0x10;
+export const MSG_GET_ORACLES               = 0x11;
 
 export const MSG_ANS_OK                    = 0x80;
 export const MSG_ANS_HASH                  = 0x81;
@@ -204,22 +226,24 @@ export const MSG_ANS_STRING                = 0x82;
 export const MSG_ANS_FILE                  = 0x83;
 export const MSG_ANS_CHAIN_STATUS          = 0x84;
 export const MSG_ANS_BLOCK_LIST            = 0x85;
-export const MSG_ANS_BLOCK                 = 0x86;
-export const MSG_ANS_VB_INFO               = 0x87;
-export const MSG_ANS_VB_CONTENT            = 0x88;
-export const MSG_ANS_MICROBLOCK            = 0x89;
-export const MSG_ANS_MICROBLOCKS           = 0x8A;
-export const MSG_ANS_ACCOUNT_STATE         = 0x8B;
-export const MSG_ANS_ACCOUNT_HISTORY       = 0x8C;
-export const MSG_ANS_ACCOUNT_BY_PUBLIC_KEY = 0x8D;
-export const MSG_ANS_ACCEPT_MICROBLOCK     = 0x8E;
-export const MSG_ANS_ANCHORING             = 0x8F;
-export const MSG_ANS_OBJECT_LIST           = 0x90;
+export const MSG_ANS_BLOCK_INFO            = 0x86;
+export const MSG_ANS_BLOCK_CONTENT         = 0x87;
+export const MSG_ANS_VB_INFO               = 0x88;
+export const MSG_ANS_VB_CONTENT            = 0x89;
+export const MSG_ANS_MICROBLOCK            = 0x8A;
+export const MSG_ANS_MICROBLOCKS           = 0x8B;
+export const MSG_ANS_ACCOUNT_STATE         = 0x8C;
+export const MSG_ANS_ACCOUNT_HISTORY       = 0x8D;
+export const MSG_ANS_ACCOUNT_BY_PUBLIC_KEY = 0x8E;
+export const MSG_ANS_ACCEPT_MICROBLOCK     = 0x8F;
+export const MSG_ANS_ANCHORING             = 0x90;
+export const MSG_ANS_OBJECT_LIST           = 0x91;
 
 export const MSG_NAMES = {
   [ MSG_GET_CHAIN_STATUS          ]: "GET_CHAIN_STATUS",
   [ MSG_GET_BLOCK_LIST            ]: "GET_BLOCK_LIST",
-  [ MSG_GET_BLOCK                 ]: "GET_BLOCK",
+  [ MSG_GET_BLOCK_INFO            ]: "GET_BLOCK_INFO",
+  [ MSG_GET_BLOCK_CONTENT         ]: "GET_BLOCK_CONTENT",
   [ MSG_GET_VB_INFO               ]: "GET_VB_INFO",
   [ MSG_GET_VB_CONTENT            ]: "GET_VB_CONTENT",
   [ MSG_GET_MICROBLOCK            ]: "GET_MICROBLOCK",
@@ -244,10 +268,13 @@ export const NODE_MESSAGES = {
     // no argument
   ],
   [ MSG_GET_BLOCK_LIST ] : [
-    { name: "firstBlockId", type: DATA.UINT48 },
-    { name: "maxRecords",   type: DATA.UINT16 }
+    { name: "height",    type: DATA.UINT48 },
+    { name: "maxBlocks", type: DATA.UINT16 }
   ],
-  [ MSG_GET_BLOCK ] : [
+  [ MSG_GET_BLOCK_INFO ] : [
+    { name: "height", type: DATA.UINT48 }
+  ],
+  [ MSG_GET_BLOCK_CONTENT ] : [
     { name: "height", type: DATA.UINT48 }
   ],
   [ MSG_GET_VB_INFO ] : [
@@ -327,28 +354,26 @@ export const NODE_MESSAGES = {
       name: "list",
       type: DATA.OBJECT | DATA.ARRAY,
       schema: [
-        { name: "id",          type: DATA.UINT48 },
-        { name: "status",      type: DATA.UINT8 },
-        { name: "timestamp",   type: DATA.UINT48 },
-        { name: "hash",        type: DATA.HASH },
-        { name: "node",        type: DATA.HASH },
-        { name: "size",        type: DATA.UINT48 },
-        { name: "nMicroblock", type: DATA.UINT48 }
+        { name: "height", type: DATA.UINT48 },
+        { name: "status", type: DATA.UINT8 },
+        ...DB[DB_BLOCK_INFO]
       ]
     }
   ],
-  [ MSG_ANS_BLOCK ] : [
-    { name: "header", type: DATA.OBJECT, schema: [
-        { name: "ts",             type: DATA.UINT48 },
-        { name: "nodeId",         type: DATA.BINARY, size: 20 },
-        { name: "previousHash",   type: DATA.HASH },
-        { name: "height",         type: DATA.UINT48 },
-        { name: "merkleRootHash", type: DATA.HASH },
-        { name: "radixRootHash",  type: DATA.HASH },
-        { name: "chainId",        type: DATA.STRING }
-      ]
-    },
-    DB_BLOCK[0]
+  [ MSG_ANS_BLOCK_INFO ] : [
+    { name: "height", type: DATA.UINT48 },
+    { name: "status", type: DATA.UINT8 },
+    ...DB[DB_BLOCK_INFO]
+  ],
+  [ MSG_ANS_BLOCK_CONTENT ] : [
+    { name: "timestamp",      type: DATA.UINT48 },
+    { name: "proposerNode",   type: DATA.HASH },
+    { name: "previousHash",   type: DATA.HASH },
+    { name: "height",         type: DATA.UINT48 },
+    { name: "merkleRootHash", type: DATA.HASH },
+    { name: "radixRootHash",  type: DATA.HASH },
+    { name: "chainId",        type: DATA.STRING },
+    DB[DB_BLOCK_CONTENT][0]
   ],
   [ MSG_ANS_VB_INFO ] : [
     { name: "type",           type: DATA.UINT8 },
@@ -546,9 +571,10 @@ export const MICROBLOCK = [
 //  Components for application and oracle definitions                                                                           //
 // ============================================================================================================================ //
 export const FIELD = [
-  { name: "name",   type: DATA.STRING },
-  { name: "type",   type: DATA.UINT16 },
-  { name: "maskId", type: DATA.UINT16, condition: parent => parent.type & DATA.MASKABLE }
+  { name: "name",       type: DATA.STRING },
+  { name: "type",       type: DATA.UINT16 },
+  { name: "structType", type: DATA.UINT8, condition: parent => parent.type & DATA.STRUCT },
+  { name: "maskId",     type: DATA.UINT16, condition: parent => parent.type & DATA.MASKABLE }
 ];
 
 export const STRUCTURE = [

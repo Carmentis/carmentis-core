@@ -98,7 +98,7 @@ export const MICROBLOCK_BODY = {
 export const APPLICATION_DEFINITION = {
   fields: [
     { name: "someString", type: DATA.STRING | DATA.OPTIONAL },
-    { name: "someStruct", type: DATA.STRUCT | DATA.OPTIONAL | 1 },
+    { name: "someStruct", type: DATA.STRUCT | DATA.OPTIONAL | 1, structType: DATA.STRUCT_INTERNAL },
     { name: "someEnum", type: DATA.ENUM | DATA.OPTIONAL | 0 }
   ],
   structures: [
@@ -154,11 +154,11 @@ export const ORACLE_DEFINITION = {
       name: "service",
       request: [
         { name: "q1", type: DATA.STRING },
-        { name: "q2", type: DATA.STRUCT | 0 }
+        { name: "q2", type: DATA.STRUCT | 0, structType: DATA.STRUCT_INTERNAL }
       ],
       answer: [
         { name: "res1", type: DATA.INT },
-        { name: "res2", type: DATA.STRUCT | 0 }
+        { name: "res2", type: DATA.STRUCT | 0, structType: DATA.STRUCT_INTERNAL }
       ]
     }
   ],

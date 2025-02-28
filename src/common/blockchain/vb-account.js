@@ -80,6 +80,15 @@ export class accountVb extends virtualBlockchain {
     return null;
   }
 
+  /**
+   * Retrieves the public key.
+   *
+   * @return {string} The public key as a string.
+   */
+  getPublicKey()  {
+    return this.state.publicKey;
+  }
+
   async updateState(mb, ndx, sectionId, object) {
     switch(sectionId) {
       case SECTIONS.ACCOUNT_TOKEN_ISSUANCE: {

@@ -10,6 +10,15 @@ export class organizationVb extends virtualBlockchain {
     super(ID.OBJ_ORGANIZATION, id);
   }
 
+  /**
+   * Return the public key of the organisation.
+   *
+   * @return {string} The public key.
+   */
+  getPublicKey() {
+    return this.state.publicKey;
+  }
+
   async addPublicKey(object) {
     await this.addSection(SECTIONS.ORG_PUBLIC_KEY, object);
   }

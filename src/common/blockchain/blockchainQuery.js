@@ -116,31 +116,17 @@ export class blockchainQuery extends blockchainCore {
   }
 
   /**
-   * Retrieves the binary content of a microblock identified by its hash.
-   *
-   * @param {string} hash - The hash of the microblock to be retrieved.
-   * @return {Promise<Uint8Array>} A promise that resolves with the binary content of the microblock.
-   */
-  static async getRawMicroblock(hash) {
-    return await this.loadMicroblock(hash);
-  }
-
-  /**
-   * Retrieves the decoded content of a microblock identified by its hash.
+   * Retrieves the raw content (not decoded) of a microblock identified by its hash.
    *
    * @param {string} hash - The hash of the microblock to be retrieved.
    * @return {Promise<{
-   *   header: object,
-   *   body: object
-   * }>} A promise that resolves with the decoded content of the microblock.
+   *   vbHash: string,
+   *   vbType: number,
+   *   content: Uint8Array
+   * }>} A promise that resolves with the content of the microblock.
    */
-  static async getMicroblockContent(hash) {
-    let data = await this.loadMicroblock(hash);
-
-    let mb = new microblock();
-    await mb.load(data, hash);
-
-    return mb.object;
+  static async getRawMicroblock(hash) {
+    return await this.loadMicroblock(hash);
   }
 
   /**
@@ -154,6 +140,37 @@ export class blockchainQuery extends blockchainCore {
    */
   static async getRawMicroblocks(list) {
     return await this.loadMicroblocks(list);
+  }
+
+  /**
+   * Retrieves a content summary of a microblock identified by its hash.
+   * Note that the content of the sections is not decoded.
+   *
+   * @param {string} hash - The hash of the microblock to be retrieved.
+   * @return {Promise<{
+   *   header: {
+   *     magicString: string,
+   *     protocolVersion: number,
+   *     height: number,
+   *     previousHash: string,
+   *     timestamp: number,
+   *     gas: number,
+   *     gasPrice: number
+   *   },
+   *   sections: {
+   *     id: number,
+   *     label: string,
+   *     size: number
+   *   }[]
+   * }>} A promise that resolves with the content summary of the microblock.
+   */
+  static async getMicroblockContent(hash) {
+    let mbData = await this.loadMicroblock(hash),
+        mb = new microblock(mbData.vbType);
+
+    await mb.load(mbData.content, hash);
+
+    return mb.getContentSummary();
   }
 
   /**

@@ -59,6 +59,25 @@ export class microblock extends blockchainCore {
     this.sections = [];
   }
 
+  getContentSummary() {
+    let sections = [];
+
+    for(let section of this.object.body.sections) {
+      let sectionObject = schemaSerializer.decode(SCHEMAS.SECTION, section);
+
+      sections.push({
+        id   : sectionObject.id,
+        label: SECTIONS.DEF[this.vbType][sectionObject.id].label,
+        size : section.length
+      });
+    }
+
+    return {
+      header: this.object.header,
+      sections: sections
+    };
+  }
+
   async addSection(sectionId, object, keyManager, externalDef, schemaInfo) {
     let sectionObject = {
       id: sectionId,

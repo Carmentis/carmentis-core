@@ -135,30 +135,31 @@ export class blockchainCore {
   }
 
   static async loadMicroblockFromChain(hash) {
-    return await this.chainGet(hash);
+    let info = await this.dbGet(SCHEMAS.DB_MICROBLOCK_INFO, hash),
+        content = await this.chainGet(hash);
+
+    return {
+      vbHash : info.vbHash,
+      vbType : info.vbType,
+      content: content
+    };
   }
 
   static async loadMicroblockFromDb(hash) {
-    let record = await this.dbGet(SCHEMAS.DB_MICROBLOCK_DATA, hash),
-        content;
+    let mbData = await this.dbGet(SCHEMAS.DB_MICROBLOCK_DATA, hash);
 
-    if(record) {
-      content = record.content;
-    }
-    else {
-      let mb = await this.nodeQuery(
-        SCHEMAS.MSG_GET_MICROBLOCK,
+    if(!mbData) {
+      mbData = await this.nodeQuery(
+        SCHEMAS.MSG_GET_RAW_MICROBLOCK,
         {
           mbHash: hash
         }
       );
 
-      content = mb.content;
-
-      await this.dbPut(SCHEMAS.DB_MICROBLOCK_DATA, hash, { content: content });
+      await this.dbPut(SCHEMAS.DB_MICROBLOCK_DATA, hash, mbData);
     }
 
-    return content;
+    return mbData;
   }
 
   static async getMicroblockList(currentHash, targetHash) {
@@ -210,10 +211,10 @@ export class blockchainCore {
 
     for(let n in hashList) {
       let mbHash = hashList[n],
-          mb = await this.dbGet(SCHEMAS.DB_MICROBLOCK_DATA, mbHash);
+          mbData = await this.dbGet(SCHEMAS.DB_MICROBLOCK_DATA, mbHash);
 
-      if(mb) {
-        list[n] = { hash: mbHash, content: mb.content };
+      if(mbData) {
+        list[n] = { hash: mbHash, ...mbData };
       }
       else {
         missingHashList.push(mbHash);
@@ -224,18 +225,19 @@ export class blockchainCore {
     // request missing micro-blocks from the network and save them in the DB
     if(missingHashList.length) {
       let microblockData = await this.nodeQuery(
-        SCHEMAS.MSG_GET_MICROBLOCKS,
+        SCHEMAS.MSG_GET_RAW_MICROBLOCKS,
         {
           list: missingHashList
         }
       );
 
       for(let i in missingHashList) {
-        let content = microblockData.list[i],
-            hash = missingHashList[i];
+        let mbData = microblockData.list[i],
+            mbHash = missingHashList[i];
 
-        list[missingIndex[i]] = { hash: hash, content: content };
-        await this.dbPut(SCHEMAS.DB_MICROBLOCK_DATA, hash, { content: content });
+        list[missingIndex[i]] = { hash: mbHash, ...mbData };
+
+        await this.dbPut(SCHEMAS.DB_MICROBLOCK_DATA, mbHash, mbData);
       }
     }
 

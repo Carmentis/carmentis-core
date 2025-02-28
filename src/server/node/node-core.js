@@ -331,26 +331,27 @@ async function processMicroblock(context, mbData, apply) {
 }
 
 // ============================================================================================================================ //
-//  getMicroblock()                                                                                                             //
+//  getRawMicroblock()                                                                                                          //
 // ============================================================================================================================ //
-export async function getMicroblock(hash) {
+export async function getRawMicroblock(hash) {
   let mb = await loadMicroblockData(hash);
 
-  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_MICROBLOCK, mb, SCHEMAS.NODE_MESSAGES);
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_RAW_MICROBLOCK, mb, SCHEMAS.NODE_MESSAGES);
 }
 
 // ============================================================================================================================ //
-//  getMicroblocks()                                                                                                            //
+//  getRawMicroblocks()                                                                                                         //
 // ============================================================================================================================ //
-export async function getMicroblocks(list) {
+export async function getRawMicroblocks(list) {
   let mbList = [];
 
   for(let hash of list) {
     let obj = await loadMicroblockData(hash);
-    mbList.push(obj.content);
+
+    mbList.push(obj);
   }
 
-  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_MICROBLOCKS, { list: mbList }, SCHEMAS.NODE_MESSAGES);
+  return schemaSerializer.encodeMessage(SCHEMAS.MSG_ANS_RAW_MICROBLOCKS, { list: mbList }, SCHEMAS.NODE_MESSAGES);
 }
 
 // ============================================================================================================================ //
@@ -440,9 +441,7 @@ async function loadMicroblockData(hash) {
 
   let answer = {
     vbHash : info.vbHash,
-    type   : info.vbType,
-    block  : info.block,
-    index  : info.index,
+    vbType : info.vbType,
     content: content
   };
 

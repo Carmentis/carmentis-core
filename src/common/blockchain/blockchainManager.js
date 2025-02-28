@@ -47,9 +47,7 @@ export class blockchainManager extends blockchainCore {
     }
 
     let mbRecord = {
-      previousHash: mbObject.header.previousHash,
-      block: 1,
-      index: 0
+      previousHash: mbObject.header.previousHash
     };
 
     if(mbObject.header.height == 1) {
@@ -71,13 +69,13 @@ export class blockchainManager extends blockchainCore {
       }
       else {
         let previousMb = await this.nodeQuery(
-          SCHEMAS.MSG_GET_MICROBLOCK,
+          SCHEMAS.MSG_GET_RAW_MICROBLOCK,
           {
             mbHash: mbObject.header.previousHash
           }
         );
         mbRecord.vbHash = previousMb.vbHash;
-        mbRecord.vbType = previousMb.type;
+        mbRecord.vbType = previousMb.vbType;
       }
     }
 

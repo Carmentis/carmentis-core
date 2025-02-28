@@ -114,19 +114,20 @@ export const DB = {
     }
   ],
 
-  // microblock meta information
+  // microblock meta information, only used by a node
   // key: microblock hash
   [ DB_MICROBLOCK_INFO ] : [
     { name: "vbHash",       type: DATA.HASH },
     { name: "vbType",       type: DATA.UINT8 },
-    { name: "previousHash", type: DATA.HASH },
-    { name: "block",        type: DATA.UINT48 },
-    { name: "index",        type: DATA.UINT32 }
+    { name: "previousHash", type: DATA.HASH }
   ],
 
-  // microblock content
+  // microblock data, only used by a client for its local cache
+  // vbHash and vbType are the only information that cannot be extracted from the content
   // key: microblock hash
   [ DB_MICROBLOCK_DATA ] : [
+    { name: "vbHash",  type: DATA.HASH },
+    { name: "vbType",  type: DATA.UINT8 },
     { name: "content", type: DATA.BINARY }
   ],
 
@@ -207,8 +208,8 @@ export const MSG_GET_BLOCK_INFO            = 0x02;
 export const MSG_GET_BLOCK_CONTENT         = 0x03;
 export const MSG_GET_VB_INFO               = 0x04;
 export const MSG_GET_VB_CONTENT            = 0x05;
-export const MSG_GET_MICROBLOCK            = 0x06;
-export const MSG_GET_MICROBLOCKS           = 0x07;
+export const MSG_GET_RAW_MICROBLOCK        = 0x06;
+export const MSG_GET_RAW_MICROBLOCKS       = 0x07;
 export const MSG_GET_NEW_MICROBLOCKS       = 0x08;
 export const MSG_GET_ACCOUNT_STATE         = 0x09;
 export const MSG_GET_ACCOUNT_HISTORY       = 0x0A;
@@ -230,8 +231,8 @@ export const MSG_ANS_BLOCK_INFO            = 0x86;
 export const MSG_ANS_BLOCK_CONTENT         = 0x87;
 export const MSG_ANS_VB_INFO               = 0x88;
 export const MSG_ANS_VB_CONTENT            = 0x89;
-export const MSG_ANS_MICROBLOCK            = 0x8A;
-export const MSG_ANS_MICROBLOCKS           = 0x8B;
+export const MSG_ANS_RAW_MICROBLOCK        = 0x8A;
+export const MSG_ANS_RAW_MICROBLOCKS       = 0x8B;
 export const MSG_ANS_ACCOUNT_STATE         = 0x8C;
 export const MSG_ANS_ACCOUNT_HISTORY       = 0x8D;
 export const MSG_ANS_ACCOUNT_BY_PUBLIC_KEY = 0x8E;
@@ -246,8 +247,8 @@ export const MSG_NAMES = {
   [ MSG_GET_BLOCK_CONTENT         ]: "GET_BLOCK_CONTENT",
   [ MSG_GET_VB_INFO               ]: "GET_VB_INFO",
   [ MSG_GET_VB_CONTENT            ]: "GET_VB_CONTENT",
-  [ MSG_GET_MICROBLOCK            ]: "GET_MICROBLOCK",
-  [ MSG_GET_MICROBLOCKS           ]: "GET_MICROBLOCKS",
+  [ MSG_GET_RAW_MICROBLOCK        ]: "GET_RAW_MICROBLOCK",
+  [ MSG_GET_RAW_MICROBLOCKS       ]: "GET_RAW_MICROBLOCKS",
   [ MSG_GET_NEW_MICROBLOCKS       ]: "GET_NEW_MICROBLOCKS",
   [ MSG_GET_ACCOUNT_STATE         ]: "GET_ACCOUNT_STATE",
   [ MSG_GET_ACCOUNT_HISTORY       ]: "GET_ACCOUNT_HISTORY",
@@ -283,15 +284,15 @@ export const NODE_MESSAGES = {
   [ MSG_GET_VB_CONTENT ] : [
     { name: "vbHash", type: DATA.HASH }
   ],
-  [ MSG_GET_MICROBLOCK ] : [
+  [ MSG_GET_RAW_MICROBLOCK ] : [
     { name: "mbHash", type: DATA.HASH }
+  ],
+  [ MSG_GET_RAW_MICROBLOCKS ] : [
+    { name: "list", type: DATA.HASH | DATA.ARRAY }
   ],
   [ MSG_GET_NEW_MICROBLOCKS ] : [
     { name: "vbHash",        type: DATA.HASH },
     { name: "lastKnownHash", type: DATA.HASH }
-  ],
-  [ MSG_GET_MICROBLOCKS ] : [
-    { name: "list", type: DATA.HASH | DATA.ARRAY }
   ],
   [ MSG_GET_ACCOUNT_STATE ] : [
     { name: "accountHash", type: DATA.HASH }
@@ -384,15 +385,21 @@ export const NODE_MESSAGES = {
     { name: "type", type: DATA.UINT8 },
     { name: "list", type: DATA.HASH | DATA.ARRAY }
   ],
-  [ MSG_ANS_MICROBLOCK ] : [
+  [ MSG_ANS_RAW_MICROBLOCK ] : [
     { name: "vbHash",  type: DATA.HASH },
-    { name: "type",    type: DATA.UINT8 },
-    { name: "block",   type: DATA.UINT48 },
-    { name: "index",   type: DATA.UINT32 },
+    { name: "vbType",  type: DATA.UINT8 },
     { name: "content", type: DATA.BINARY }
   ],
-  [ MSG_ANS_MICROBLOCKS ] : [
-    { name: "list", type: DATA.BINARY | DATA.ARRAY }
+  [ MSG_ANS_RAW_MICROBLOCKS ] : [
+    {
+      name: "list",
+      type: DATA.OBJECT | DATA.ARRAY,
+      schema: [
+        { name: "vbHash",  type: DATA.HASH },
+        { name: "vbType",  type: DATA.UINT8 },
+        { name: "content", type: DATA.BINARY }
+      ]
+    }
   ],
   [ MSG_ANS_ACCEPT_MICROBLOCK ] : [
     { name: "vbHash", type: DATA.HASH },

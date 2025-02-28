@@ -164,7 +164,7 @@ export class appLedgerVb extends virtualBlockchain {
       section => section.version == version
     );
 
-    // TODO: should be removed; the path should be enough
+    // TODO: update required so that we can remove this; the path should be enough
     this.appDef.definition.messages.forEach(message => {
       message.fields.forEach(field => {
         field.name = path.decode(this.appDef.definition, field.path);

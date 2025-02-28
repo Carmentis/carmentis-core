@@ -111,6 +111,7 @@ export class virtualBlockchain extends blockchainCore {
     }
   }
 
+  // this is called only if the method is not defined in the child class
   async getExternalDefinition(sectionObject) {
     return null;
   }

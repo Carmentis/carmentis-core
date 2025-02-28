@@ -74,12 +74,10 @@ async function runTests() {
 
     accountVbHash = await accountTest();
     await blockchainQueryTest(accountVbHash);
-/*
     organization = await organizationTest();
     appId = await applicationTest(organization);
     oracleId = await oracleTest(organization, appId);
     await appLedgerTest(organization, appId);
-*/
   }
   catch(e) {
     console.error(e);

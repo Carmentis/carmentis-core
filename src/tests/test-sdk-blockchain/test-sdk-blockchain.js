@@ -281,6 +281,11 @@ async function blockchainQueryTest(vbHash) {
   content = await blockchainQuery.getBlockContent(1);
   console.log(content);
 
+  log("Retrieving a list of microblocks");
+
+  content = await blockchainQuery.getMicroblocks([ vbHash ]);
+  console.log(content);
+
   log("Retrieving info of existing VB", vbHash);
 
   content = await blockchainQuery.getVirtualBlockchainInfo(vbHash);
@@ -294,6 +299,11 @@ async function blockchainQueryTest(vbHash) {
   }
   catch(e) {
   }
+
+  log("Retrieving VB content", vbHash);
+
+  content = await blockchainQuery.getVirtualBlockchainContent(vbHash);
+  console.log(content);
 
   log("Retrieving raw microblock", vbHash);
 

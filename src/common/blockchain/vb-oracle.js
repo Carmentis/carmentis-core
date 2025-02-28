@@ -56,13 +56,18 @@ export class oracleVb extends virtualBlockchain {
     return undefined;
   }
 
-  async encodeServiceRequest(version, serviceName, dataObject, organizationId, privateKey) {
-    let definition = await this.getDefinition(version),
-        service = definition && definition.services.find(obj => obj.name == serviceName);
+  getService(definition, serviceName) {
+    let service = definition && definition.services.find(obj => obj.name == serviceName);
 
     if(!service) {
       throw new oracleError(ERRORS.ORACLE_UNKNOWN_SERVICE, serviceName);
     }
+    return service;
+  }
+
+  async encodeServiceRequest(version, serviceName, dataObject, organizationId, privateKey) {
+    let definition = await this.getDefinition(version),
+        service = this.getService(definition, serviceName);
 
     let data = schemaSerializer.encode(
       service.request,

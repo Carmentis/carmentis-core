@@ -2,11 +2,11 @@ import { ERRORS, DATA, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { organizationVb } from "./vb-organization.js";
 import { applicationVb } from "./vb-application.js";
-import * as recordManager from "./recordManager.js";
 import * as crypto from "../crypto/crypto.js";
 import * as util from "../util/util.js";
 import * as uint8 from "../util/uint8.js";
-import * as path from "../paths/path.js";
+import * as path from "../apps/path.js";
+import * as recordManager from "../apps/record.js";
 import { sectionError, appLedgerError } from "../errors/error.js";
 
 // ============================================================================================================================ //

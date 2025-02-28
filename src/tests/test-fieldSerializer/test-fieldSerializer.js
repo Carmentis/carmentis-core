@@ -24,12 +24,14 @@ export async function run() {
         error = JSON.stringify(decoded) != JSON.stringify(value);
 
         if(error) {
-          console.log("inconsistent result for", JSON.stringify(value).slice(0, 32));
+          console.log("inconsistent result for", JSON.stringify(value).slice(0, 40));
+          console.log("Expected:", JSON.stringify(value));
+          console.log("Got:", JSON.stringify(decoded));
         }
       }
       catch(e) {
         if(!isError) {
-          console.log("unexpected error for", JSON.stringify(value).slice(0, 32), e);
+          console.log("unexpected error for", JSON.stringify(value).slice(0, 40), e);
         }
       }
       success &= error == isError;

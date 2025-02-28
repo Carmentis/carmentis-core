@@ -17,7 +17,11 @@ export const ERRORS_EN = {
     "%0 is not a valid hexadecimal string (it may only contain 0..9, A..F)",
     "%0 is not an integer",
     "%0 cannot be negative",
-    "%0 is not a valid public key"
+    "%0 has an invalid decimal format",
+    "%0 should have %1 decimal place(s)",
+    "%0 is not a valid public key",
+    "%0 is not a valid amount (expecting { currency: <string>, value: <string> })",
+    "%0 has an invalid currency (expecting ISO-4217 currency code)"
   ],
 
   [ ERROR_TYPES.SCHEMA ]: [

@@ -71,10 +71,10 @@ async function runTests() {
     let accountVbHash, organization, appId, oracleId;
 
     accountVbHash = await accountTest();
-//  await blockchainQueryTest(accountVbHash);
+    await blockchainQueryTest(accountVbHash);
     organization = await organizationTest();
     appId = await applicationTest(organization);
-//  oracleId = await oracleTest(organization, appId);
+    oracleId = await oracleTest(organization, appId);
     await appLedgerTest(organization, appId);
   }
   catch(e) {
@@ -220,20 +220,15 @@ async function accountTest() {
   answer = await blockchainQuery.getAccountHistory(buyerAccountVbHash, answer.lastHistoryHash);
   showAccountHistory(buyerAccountVbHash, answer);
 
-  answer = await blockchainQuery.getAccountByPublicKey(issuerPublicKey);
-  console.log(`Account by public key: ${issuerPublicKey} -> ${answer}`);
-
-  answer = await blockchainQuery.getAccountByPublicKey(buyerPublicKey);
-  console.log(`Account by public key: ${buyerPublicKey} -> ${answer}`);
-
-  try {
-    answer = await blockchainQuery.getAccountByPublicKey(sdk.constants.DATA.NULL_HASH);
-    console.log(`Account by public key: ${buyerPublicKey} -> ${answer}`);
+  for(let key of [ issuerPublicKey, buyerPublicKey, "0".repeat(66) ]) {
+    try {
+      answer = await blockchainQuery.getAccountByPublicKey(key);
+    }
+    catch(e) {
+      answer = "(none)";
+    }
+    console.log(`Account by public key: ${key} -> ${answer}`);
   }
-  catch(e) {
-    console.log("catch()");
-  }
-  console.log("done");
 
   return rootAccountVbHash;
 }
@@ -266,36 +261,59 @@ async function blockchainQueryTest(vbHash) {
 
   let content;
 
-  console.log("Retrieving chain status");
+  log("Retrieving chain status");
 
   content = await blockchainQuery.getChainStatus();
   console.log(content);
 
-  console.log("Retrieving info of existing VB", vbHash);
+  log("Retrieving block list");
+
+  content = await blockchainQuery.getBlockList(1, 2);
+  console.log(content);
+
+  log("Retrieving block info");
+
+  content = await blockchainQuery.getBlockInfo(1);
+  console.log(content);
+
+  log("Retrieving block content");
+
+  content = await blockchainQuery.getBlockContent(1);
+  console.log(content);
+
+  log("Retrieving a list of microblocks");
+
+  content = await blockchainQuery.getMicroblocks([ vbHash ]);
+  console.log(content);
+
+  log("Retrieving info of existing VB", vbHash);
 
   content = await blockchainQuery.getVirtualBlockchainInfo(vbHash);
   console.log(content);
 
-  console.log("Retrieving info of non-existing VB");
+  log("Retrieving info of non-existing VB");
 
   try {
     content = await blockchainQuery.getVirtualBlockchainInfo("55AA".repeat(16));
     console.log(content);
   }
   catch(e) {
-    console.log(e);
   }
 
-  console.log("Retrieving raw microblock", vbHash);
+  log("Retrieving VB content", vbHash);
+
+  content = await blockchainQuery.getVirtualBlockchainContent(vbHash);
+  console.log(content);
+
+  log("Retrieving raw microblock", vbHash);
 
   content = await blockchainQuery.getMicroblock(vbHash);
   console.log(content);
 
   let mb = new microblock(sdk.constants.ID.OBJ_ACCOUNT);
   await mb.load(content, vbHash);
-  console.log(mb);
 
-  console.log("Retrieving accounts");
+  log("Retrieving accounts");
 
   content = await blockchainQuery.getAccounts();
   console.log(content);
@@ -340,7 +358,7 @@ async function organizationTest() {
 
   let price = await vb.computePrice();
 
-  console.log("Price:", price);
+  log("Price:", price);
 
   mb = await vb.publish();
 
@@ -437,18 +455,18 @@ async function applicationTest(organization) {
   vb = new applicationVb(vbHash);
   await vb.load();
 
-  console.log("Updating description");
+  log("Updating description");
 
   await vb.addDescription(APP_V2.description);
 
-  console.log("Updating definition");
+  log("Updating definition");
 
   await vb.addDefinition({
     version: 2,
     definition: APP_V2.definition
   });
 
-  console.log("Signing");
+  log("Signing");
 
   vb.setGasPrice(ECO.TOKEN);
   await vb.sign();
@@ -458,8 +476,10 @@ async function applicationTest(organization) {
   vb = new applicationVb(vbHash);
   await vb.load();
 
-  console.log("description", JSON.stringify(await vb.getDescription()));
-  console.log("definition", JSON.stringify(await vb.getDefinition()));
+  log("description", JSON.stringify(await vb.getDescription()));
+  log("definition", JSON.stringify(await vb.getDefinition()));
+
+//structure.loadOracleDefinitions
 
   return vbHash;
 }
@@ -670,25 +690,18 @@ async function processApproval(organization, endorserPrivateKey, approvalObject)
   vb = new appLedgerVb(approvalObject.appLedgerId);
 
   if(approvalObject.appLedgerId) {
-    console.log("Loading VB", approvalObject.appLedgerId);
     await vb.load();
   }
 
   if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
-    console.log("Generating endorser actor key pair");
-
     let keyPair = appLedgerVb.deriveActorKeyPair(endorserPrivateKey, vb.state.genesisSeed);
 
     vb.setEndorserActorPublicKey(keyPair.publicKey);
   }
 
-  console.log("Invoking generateDataSections()");
-
   await vb.generateDataSections(approvalObject);
 
   mb = vb.getMicroblockData();
-
-  console.log(mb);
 
   let binaryData = vb.currentMicroblock.binary;
 
@@ -713,7 +726,7 @@ async function processApproval(organization, endorserPrivateKey, approvalObject)
 
   height = vb.getHeight();
 
-  console.log("height", height);
+  log("height", height);
 
   record = vb.getRecord(height);
   console.log(record);

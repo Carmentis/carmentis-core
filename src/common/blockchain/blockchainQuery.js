@@ -6,7 +6,19 @@ export class blockchainQuery extends blockchainCore {
   /**
    * Retrieves the status of the blockchain.
    *
-   * @return {Promise} A promise that resolves to an object matching the schema MSG_ANS_CHAIN_STATUS.
+   * @return {Promise<{
+   *   lastBlockHeight: number,
+   *   timeToNextBlock: number,
+   *   nSection: number,
+   *   nMicroblock: number,
+   *   nAccountVb: number,
+   *   nValidatorNodeVb: number,
+   *   nOrganizationVb: number,
+   *   nAppUserVb: number,
+   *   nApplicationVb: number,
+   *   nAppLedgerVb: number,
+   *   nOracleVb: number
+   * }>} A promise that resolves to an object matching the schema MSG_ANS_CHAIN_STATUS.
    */
   static async getChainStatus() {
     let answer = await this.nodeQuery(
@@ -18,10 +30,95 @@ export class blockchainQuery extends blockchainCore {
   }
 
   /**
+   * Retrieves information about several blocks.
+   *
+   * @param {number} height - The height of the highest block to be retrieved.
+   * @param {number} maxBlocks - The maximum number of blocks to retrieve.
+   * @return {Promise<{
+   *   height: number,
+   *   status: number,
+   *   hash: string,
+   *   timestamp: number,
+   *   proposerNode: string,
+   *   size: number,
+   *   nMicroblock: number
+   * }[]>} A promise that resolves with an object matching the schema MSG_ANS_BLOCK_LIST.
+   */
+  static async getBlockList(height, maxBlocks) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_BLOCK_LIST,
+      {
+        height: height,
+        maxBlocks: maxBlocks
+      }
+    );
+
+    return answer;
+  }
+
+  /**
+   * Retrieves information about a single block.
+   *
+   * @param {number} height - The height of the block to be retrieved.
+   * @return {Promise<{
+   *   height: number,
+   *   status: number,
+   *   hash: string,
+   *   timestamp: number,
+   *   proposerNode: string,
+   *   size: number,
+   *   nMicroblock: number
+   * }>} A promise that resolves to an object matching the schema MSG_ANS_BLOCK_INFO.
+   */
+  static async getBlockInfo(height) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_BLOCK_INFO,
+      {
+        height: height
+      }
+    );
+
+    return answer;
+  }
+
+  /**
+   * Retrieves the content of a block.
+   *
+   * @param {number} height - The height of the block to be retrieved.
+   * @return {Promise<{
+   *   timestamp: number,
+   *   proposerNode: string,
+   *   previousHash: string,
+   *   height: number,
+   *   merkleRootHash: string,
+   *   radixRootHash: string,
+   *   chainId: string,
+   *   microblocks: {
+   *     hash: string,
+   *     vbHash: string,
+   *     vbType: number,
+   *     height: number,
+   *     size: number,
+   *     nSection: number
+   *   }[]
+   * }>} A promise that resolves to an object matching the schema MSG_ANS_BLOCK_CONTENT.
+   */
+  static async getBlockContent(height) {
+    let answer = await this.nodeQuery(
+      SCHEMAS.MSG_GET_BLOCK_CONTENT,
+      {
+        height: height
+      }
+    );
+
+    return answer;
+  }
+
+  /**
    * Retrieves the content of a microblock identified by its hash.
    *
    * @param {string} hash - The hash of the microblock to be retrieved.
-   * @return {Promise} A promise that resolves with the binary content of the microblock.
+   * @return {Promise<Uint8Array>} A promise that resolves with the binary content of the microblock.
    */
   static async getMicroblock(hash) {
     return await this.loadMicroblock(hash);
@@ -31,7 +128,10 @@ export class blockchainQuery extends blockchainCore {
    * Retrieves a list of microblock contents identified by their hashes.
    *
    * @param {string[]} list - An array of hashes of the microblocks to be retrieved.
-   * @return {Promise} A promise that resolves with an array of objects { hash: string, content: Uint8Array() }.
+   * @return {Promise<{
+   *   hash: string,
+   *   content: Uint8Array
+   * }[]>} A promise that resolves with an array of objects { hash: string, content: Uint8Array() }.
    */
   static async getMicroblocks(list) {
     return await this.loadMicroblocks(list);
@@ -41,7 +141,11 @@ export class blockchainQuery extends blockchainCore {
    * Retrieves information about a virtual blockchain identified by its hash.
    *
    * @param {string} hash - The hash of the virtual blockchain to be processed.
-   * @return {Promise} A promise that resolves with an object matching the schema MSG_ANS_VB_INFO.
+   * @return {Promise<{
+   *   type: number,
+   *   height: number,
+   *   lastMicroblock: string
+   * }>} A promise that resolves with an object matching the schema MSG_ANS_VB_INFO.
    */
   static async getVirtualBlockchainInfo(hash) {
     let answer = await this.nodeQuery(
@@ -58,7 +162,10 @@ export class blockchainQuery extends blockchainCore {
    * Retrieves the list of microblocks of a virtual blockchain identified by its hash.
    *
    * @param {string} hash - The hash of the virtual blockchain to be processed.
-   * @return {Promise} A promise that resolves with an object matching the schema MSG_ANS_VB_CONTENT.
+   * @return {Promise<{
+   *   type: number,
+   *   list: string[]
+   * }>} A promise that resolves with an object matching the schema MSG_ANS_VB_CONTENT.
    */
   static async getVirtualBlockchainContent(hash) {
     let answer = await this.nodeQuery(
@@ -75,7 +182,11 @@ export class blockchainQuery extends blockchainCore {
    * Retrieves the state of a specific account identified by its account hash.
    *
    * @param {string} accountHash - The hash of the account whose state is to be retrieved.
-   * @return {Promise<{ height: number, balance: number, lastHistoryHash: string }>} A promise that resolves with the account state data.
+   * @return {Promise<{
+   *   height: number,
+   *   balance: number,
+   *   lastHistoryHash: string
+   * }>} A promise that resolves with the account state data.
    */
   static async getAccountState(accountHash) {
     let answer = await this.nodeQuery(
@@ -148,30 +259,55 @@ export class blockchainQuery extends blockchainCore {
     return answer.accountHash;
   }
 
+  /**
+   * Retrieves the list of hashes of virtual blockchains with type 'account'.
+   *
+   * @return {Promise<string[]>} - A promise that resolves with the list of hashes.
+   */
   static async getAccounts() {
     let answer = await this.nodeQuery(SCHEMAS.MSG_GET_ACCOUNTS, {});
 
     return answer.list;
   }
 
+  /**
+   * Retrieves the list of hashes of virtual blockchains with type 'validator node'.
+   *
+   * @return {Promise<string[]>} - A promise that resolves with the list of hashes.
+   */
   static async getValidatorNodes() {
     let answer = await this.nodeQuery(SCHEMAS.MSG_GET_VALIDATOR_NODES, {});
 
     return answer.list;
   }
 
+  /**
+   * Retrieves the list of hashes of virtual blockchains with type 'organization'.
+   *
+   * @return {Promise<string[]>} - A promise that resolves with the list of hashes.
+   */
   static async getOrganizations() {
     let answer = await this.nodeQuery(SCHEMAS.MSG_GET_ORGANIZATIONS, {});
 
     return answer.list;
   }
 
+  /**
+   * Retrieves the list of hashes of virtual blockchains with type 'application'.
+   *
+   * @return {Promise<string[]>} - A promise that resolves with the list of hashes.
+   */
   static async getApplications() {
     let answer = await this.nodeQuery(SCHEMAS.MSG_GET_APPLICATIONS, {});
 
     return answer.list;
   }
 
+  /**
+   * Retrieves the list of hashes of virtual blockchains with type 'oracle'.
+   *
+   * @return {Promise<string[]>} - A promise that resolves with the list of hashes.
+   */
   static async getOracles() {
     let answer = await this.nodeQuery(SCHEMAS.MSG_GET_ORACLES, {});
 

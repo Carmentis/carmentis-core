@@ -82,11 +82,33 @@ export const LIST = [
   {
     name: "DECIMAL",
     tests: [
+      [ { type: DATA.DECIMAL, scale: 2 }, "0.01", false ],
+      [ { type: DATA.DECIMAL, scale: 2 }, "-0.12", false ],
+      [ { type: DATA.DECIMAL, scale: 3 }, "12.345", false ],
+      [ { type: DATA.DECIMAL, scale: 2 }, "-12.00", false ],
+      [ { type: DATA.DECIMAL, scale: 2 }, "12.0", true ],
+      [ { type: DATA.DECIMAL, scale: 0 }, "12.1", true ]
+    ]
+  },
+  {
+    name: "FLOAT",
+    tests: [
+      [ { type: DATA.FLOAT }, 0.00000001, false ],
+      [ { type: DATA.FLOAT }, -1.00000001, false ],
+      [ { type: DATA.FLOAT }, 1.23456789, false ],
+      [ { type: DATA.FLOAT }, -123456.789, false ]
     ]
   },
   {
     name: "AMOUNT",
     tests: [
+      [ { type: DATA.AMOUNT }, { currency: "EUR", value: "100.00" }, false ],
+      [ { type: DATA.AMOUNT }, { currency: "EUR", value: "12.34" }, false ],
+      [ { type: DATA.AMOUNT }, { currency: "JPY", value: "10000" }, false ],
+      [ { type: DATA.AMOUNT }, { currency: "EUR", value: "100" }, true ],
+      [ { type: DATA.AMOUNT }, { currency: "JPY", value: "100.12" }, true ],
+      [ { type: DATA.AMOUNT }, { currency: "XXX", value: "100.00" }, true ],
+      [ { type: DATA.AMOUNT }, { currency: "USD", value: 100 }, true ]
     ]
   },
   {

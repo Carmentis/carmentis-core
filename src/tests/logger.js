@@ -1,5 +1,5 @@
 export function log(msg) {
-  console.log(msg);
+  console.log(msg && "ℹ️ " + msg);
 }
 
 export function outcome(title, padding, success, info) {

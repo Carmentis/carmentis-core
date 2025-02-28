@@ -16,11 +16,13 @@ export const APP_V2 = {
       },
       {
         "name": "senderDocument",
-        "type": DATA.STRUCT | DATA.OPTIONAL | 0
+        "type": DATA.STRUCT | DATA.OPTIONAL | 0,
+        "structType": DATA.STRUCT_INTERNAL
       },
       {
         "name": "recipientAnswer",
-        "type": DATA.STRUCT | DATA.OPTIONAL | 1
+        "type": DATA.STRUCT | DATA.OPTIONAL | 1,
+        "structType": DATA.STRUCT_INTERNAL
       }
     ],
     "structures": [

@@ -72,6 +72,8 @@ export class operatorCore {
   }
 
   async prepareUserApproval(approvalObject) {
+    console.log("Entering prepareUserApproval()");
+
     // Attempt to create all sections. The resulting microblock is ignored but this is a way to make sure that 'approvalObject'
     // is valid and consistent. We abort the request right away if it's not.
     try {
@@ -93,6 +95,8 @@ export class operatorCore {
 
       approvalData.set(dataId, { approvalObject });
 
+      console.log(`approvalObject successfully verified and stored with dataId = ${dataId}`);
+
       return this.successAnswer({
         dataId: dataId
       });
@@ -112,6 +116,8 @@ export class operatorCore {
   }
 
   async approvalHandshake(req) {
+    console.log(`Entering approvalHandshake() with dataId = ${req.dataId}`);
+
     try {
       let storedObject = approvalData.get(req.dataId);
 
@@ -123,9 +129,13 @@ export class operatorCore {
 
       let vb = await this.loadApplicationLedger(approvalObject.appLedgerId);
 
+      console.log(`VB created`);
+
       storedObject.vb = vb;
 
       if(!vb.isEndorserSubscribed(approvalObject.approval.endorser)) {
+        console.log(`Endorser not subscribed: asking actor key to the wallet`);
+
         return schemaSerializer.encodeMessage(
           SCHEMAS.MSG_ANS_ACTOR_KEY_REQUIRED,
           {
@@ -166,6 +176,8 @@ export class operatorCore {
   }
 
   async approvalSignature(req, gasPrice) {
+    console.log(`Entering approvalSignature() with dataId = ${req.dataId}`);
+
     try {
       let storedObject = approvalData.get(req.dataId);
 
@@ -174,6 +186,15 @@ export class operatorCore {
       }
 
       let { approvalObject, vb } = storedObject;
+
+      console.log(`approvalObject:`);
+      console.log(approvalObject);
+      console.log(`VB instance:`);
+      console.log(vb);
+
+      if(!vb) {
+        throw "no VB is associated to this data ID";
+      }
 
       await vb.addEndorserSignature(req.signature);
 
@@ -200,10 +221,16 @@ export class operatorCore {
   }
 
   async sendApprovalData(vb, approvalObject) {
+    console.log(`Sending approval data`);
+
     try {
       await vb.generateDataSections(approvalObject);
 
+      console.log(`generateDataSections() succeeded`);
+
       let mb = vb.getMicroblockData();
+
+      console.log(`sending block data (size: ${mb.binary.length} bytes)`);
 
       return schemaSerializer.encodeMessage(
         SCHEMAS.MSG_ANS_APPROVAL_DATA,

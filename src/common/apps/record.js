@@ -1,5 +1,5 @@
 import { DATA, SECTIONS } from "../constants/constants.js";
-import * as structure from "./structure.js";
+import * as appDefinition from "./definition.js";
 
 // ============================================================================================================================ //
 //  getRecord()                                                                                                                 //
@@ -29,7 +29,7 @@ export function flattenRecord(vb, record) {
         arr.push({ name: newName.join("."), path: newPath, def: def, value: value });
       }
       else if(def.type & DATA.STRUCT) {
-        parse(structure.getCollection(definition, def), value, newName, newPath);
+        parse(appDefinition.getCollection(definition, def), value, newName, newPath);
       }
       else {
         arr.push({ name: newName.join("."), path: newPath, def: def, value: value });

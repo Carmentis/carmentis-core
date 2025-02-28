@@ -86,7 +86,11 @@ export const ACCOUNT_INVALID_PAYEE       = 0x08;
 export const ACCOUNT_ALREADY_EXISTS      = 0x09;
 
 // APPLICATION
-export const APPLICATION_MISSING_ORG = 0x00;
+export const APPLICATION_MISSING_ORG     = 0x00;
+export const APPLICATION_CIRCULAR_REF    = 0x01;
+export const APPLICATION_DUP_FIELD_NAME  = 0x02;
+export const APPLICATION_DUP_STRUCT_NAME = 0x03;
+export const APPLICATION_DUP_PROP_NAME   = 0x04;
 
 // APP LEDGER
 export const APP_LEDGER_BAD_ACTOR_ID       = 0x00;

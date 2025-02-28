@@ -2,6 +2,7 @@ import { ERRORS, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { organizationVb } from "./vb-organization.js";
 import * as message from "../apps/message.js";
+import * as appDefinition from "../apps/definition.js";
 import { sectionError, applicationError } from "../errors/error.js";
 
 // ============================================================================================================================ //
@@ -75,11 +76,19 @@ export class applicationVb extends virtualBlockchain {
         break;
       }
 
-      case SECTIONS.APP_DESCRIPTION:
+      case SECTIONS.APP_DESCRIPTION: {
+        if(!this.state.organizationId) {
+          throw new applicationError(ERRORS.APPLICATION_MISSING_ORG);
+        }
+        break;
+      }
+
       case SECTIONS.APP_DEFINITION: {
         if(!this.state.organizationId) {
           throw new applicationError(ERRORS.APPLICATION_MISSING_ORG);
         }
+
+        appDefinition.check(object.definition);
         break;
       }
 

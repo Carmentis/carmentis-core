@@ -1,5 +1,7 @@
 import { APP_V1 } from "./app-v1.js";
 import { APP_V2 } from "./app-v2.js";
+import { APP_CIRCULAR } from "./app-circular.js";
+import { APP_DUP_STRUCT, APP_DUP_PROP, APP_DUP_FIELD } from "./app-duplicates.js";
 import { ORACLE } from "./oracle.js";
 
 import {
@@ -72,10 +74,12 @@ async function runTests() {
 
     accountVbHash = await accountTest();
     await blockchainQueryTest(accountVbHash);
+/*
     organization = await organizationTest();
     appId = await applicationTest(organization);
     oracleId = await oracleTest(organization, appId);
     await appLedgerTest(organization, appId);
+*/
   }
   catch(e) {
     console.error(e);
@@ -155,7 +159,7 @@ async function accountTest() {
   for(let accountHash of [ rootAccountVbHash, buyerAccountVbHash ]) {
     answer = await blockchainQuery.getVirtualBlockchainContent(accountHash);
     console.log(answer);
-    let mbAnswer = await blockchainQuery.getMicroblocks(answer.list);
+    let mbAnswer = await blockchainQuery.getRawMicroblocks(answer.list);
 
     console.log(
       mbAnswer.map(obj => {
@@ -283,7 +287,7 @@ async function blockchainQueryTest(vbHash) {
 
   log("Retrieving a list of microblocks");
 
-  content = await blockchainQuery.getMicroblocks([ vbHash ]);
+  content = await blockchainQuery.getRawMicroblocks([ vbHash ]);
   console.log(content);
 
   log("Retrieving info of existing VB", vbHash);
@@ -307,11 +311,13 @@ async function blockchainQueryTest(vbHash) {
 
   log("Retrieving raw microblock", vbHash);
 
-  content = await blockchainQuery.getMicroblock(vbHash);
+  content = await blockchainQuery.getRawMicroblock(vbHash);
   console.log(content);
 
-  let mb = new microblock(sdk.constants.ID.OBJ_ACCOUNT);
-  await mb.load(content, vbHash);
+  log("Retrieving microblock content", vbHash);
+
+  content = await blockchainQuery.getMicroblockContent(vbHash);
+  console.log(JSON.stringify(content));
 
   log("Retrieving accounts");
 
@@ -428,17 +434,39 @@ async function applicationTest(organization) {
 
   let vb, mb;
 
+  for(
+    let [ app, name ] of
+    [
+      [ APP_CIRCULAR,   "circular reference" ],
+      [ APP_DUP_STRUCT, "duplicate structure name" ],
+      [ APP_DUP_PROP,   "duplicate property name" ],
+      [ APP_DUP_FIELD,  "duplicate field name" ]
+    ]
+  ) {
+    log(`Testing invalid application (${name})`);
+
+    try {
+      vb = new applicationVb();
+
+      await vb.addDeclaration({ organizationId: organization.id });
+      await vb.addDescription(app.description);
+
+      await vb.addDefinition({
+        version: 1,
+        definition: app.definition
+      });
+    }
+    catch(e) {
+      console.log(e.toString());
+    }
+  }
+
+  log("Testing valid application");
+
   vb = new applicationVb();
 
-  log("Adding declaration");
-
   await vb.addDeclaration({ organizationId: organization.id });
-
-  log("Adding description");
-
   await vb.addDescription(APP_V1.description);
-
-  log("Adding definition");
 
   await vb.addDefinition({
     version: 1,

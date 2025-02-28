@@ -4,7 +4,7 @@ import * as util from "../util/util.js";
 import * as uint8 from "../util/uint8.js";
 import * as access from "../apps/access.js";
 import * as schemaSerializer from "./schema-serializer.js";
-import * as structure from "../apps/structure.js";
+import * as appDefinition from "../apps/definition.js";
 import { sectionError } from "../errors/error.js";
 
 // ============================================================================================================================ //
@@ -258,7 +258,7 @@ function getFlattenedFields(def, ruleSets) {
           newName = [...name, item.name];
 
       if(item.type & DATA.STRUCT) {
-        scanFields(structure.getCollection(def, item), newPath, newName);
+        scanFields(appDefinition.getCollection(def, item), newPath, newName);
       }
       else if(!(item.type & DATA.ENUM) && (item.type & DATA.MSK_PRIMITIVE_TYPE) == DATA.OBJECT) {
         scanFields(item.schema, newPath, newName);

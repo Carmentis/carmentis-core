@@ -1,6 +1,7 @@
 import { ECO, SCHEMAS } from "../constants/constants.js";
 import { schemaSerializer } from "../serializers/serializers.js";
 import { blockchainCore } from "./blockchainCore.js";
+import { microblock } from "./microblock.js";
 
 export class blockchainQuery extends blockchainCore {
   /**
@@ -115,17 +116,35 @@ export class blockchainQuery extends blockchainCore {
   }
 
   /**
-   * Retrieves the content of a microblock identified by its hash.
+   * Retrieves the binary content of a microblock identified by its hash.
    *
    * @param {string} hash - The hash of the microblock to be retrieved.
    * @return {Promise<Uint8Array>} A promise that resolves with the binary content of the microblock.
    */
-  static async getMicroblock(hash) {
+  static async getRawMicroblock(hash) {
     return await this.loadMicroblock(hash);
   }
 
   /**
-   * Retrieves a list of microblock contents identified by their hashes.
+   * Retrieves the decoded content of a microblock identified by its hash.
+   *
+   * @param {string} hash - The hash of the microblock to be retrieved.
+   * @return {Promise<{
+   *   header: object,
+   *   body: object
+   * }>} A promise that resolves with the decoded content of the microblock.
+   */
+  static async getMicroblockContent(hash) {
+    let data = await this.loadMicroblock(hash);
+
+    let mb = new microblock();
+    await mb.load(data, hash);
+
+    return mb.object;
+  }
+
+  /**
+   * Retrieves a list of binary microblock contents identified by their hashes.
    *
    * @param {string[]} list - An array of hashes of the microblocks to be retrieved.
    * @return {Promise<{
@@ -133,7 +152,7 @@ export class blockchainQuery extends blockchainCore {
    *   content: Uint8Array
    * }[]>} A promise that resolves with an array of objects { hash: string, content: Uint8Array() }.
    */
-  static async getMicroblocks(list) {
+  static async getRawMicroblocks(list) {
     return await this.loadMicroblocks(list);
   }
 

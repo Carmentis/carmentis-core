@@ -2,7 +2,7 @@ import { DATA, SCHEMAS, ERRORS } from "../constants/constants.js";
 import * as fieldSerializer from "./field-serializer.js";
 import * as fieldMerklizer from "./field-merklizer.js";
 import * as uint8 from "../util/uint8.js";
-import * as structure from "../apps/structure.js";
+import * as appDefinition from "../apps/definition.js";
 import { schemaError } from "../errors/error.js";
 
 // ============================================================================================================================ //
@@ -108,7 +108,7 @@ export function encode(schema, object, context = {}) {
       }
     }
     else if(def.type & DATA.STRUCT) {
-      encodeSchema(structure.getCollection(context, def), node, path);
+      encodeSchema(appDefinition.getCollection(context, def), node, path);
     }
     else if((def.type & -1) == DATA.OBJECT) {
       encodeSchema(def.schema, node, path);
@@ -224,7 +224,7 @@ export function decode(schema, array, context = {}, object = {}) {
     }
     else if(def.type & DATA.STRUCT) {
       node = parentNode[propertyName] || {};
-      decodeSchema(structure.getCollection(context, def), node, path);
+      decodeSchema(appDefinition.getCollection(context, def), node, path);
     }
     else if((def.type & -1) == DATA.OBJECT) {
       node = parentNode[propertyName] || {};

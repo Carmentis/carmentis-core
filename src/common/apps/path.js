@@ -1,5 +1,5 @@
 import { DATA, ERRORS } from "../constants/constants.js";
-import * as structure from "./structure.js";
+import * as appDefinition from "./definition.js";
 import { pathError } from "../errors/error.js";
 
 // ============================================================================================================================ //
@@ -36,7 +36,7 @@ export function encode(def, pathStr, allowWildcard) {
       if(endOfList) {
         throw new pathError(ERRORS.PATH_INCOMPLETE_STRUCT, part);
       }
-      collection = structure.getCollection(def, item);
+      collection = appDefinition.getCollection(def, item);
     }
     else {
       if(!endOfList) {
@@ -64,7 +64,7 @@ export function decode(def, array) {
     path.push(item.name);
 
     if(item.type & DATA.STRUCT) {
-      collection = structure.getCollection(def, item);
+      collection = appDefinition.getCollection(def, item);
     }
   }
 

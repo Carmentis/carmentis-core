@@ -101,7 +101,7 @@ export const APPLICATION_DEFINITION = {
     { name: "someStruct", type: DATA.STRUCT | DATA.OPTIONAL | 1, structType: DATA.STRUCT_INTERNAL },
     { name: "someEnum", type: DATA.ENUM | DATA.OPTIONAL | 0 }
   ],
-  structures: [
+  internalStructures: [
     {
       name: "struct0",
       properties: [
@@ -116,6 +116,8 @@ export const APPLICATION_DEFINITION = {
         { name: "b1", type: DATA.STRING | DATA.MASKABLE, maskId: 0 }
       ]
     }
+  ],
+  oracleStructures: [
   ],
   enumerations: [
     {
@@ -162,7 +164,7 @@ export const ORACLE_DEFINITION = {
       ]
     }
   ],
-  structures: [
+  internalStructures: [
     {
       name: "struct",
       properties: [

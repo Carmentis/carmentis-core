@@ -34,7 +34,7 @@ export const ORACLE = {
         ]
       }
     ],
-    "structures": [
+    "internalStructures": [
     ],
     "masks": [
     ],

@@ -30,8 +30,8 @@ function checkFields(definition) {
 function checkStructures(definition) {
   let structNames = new Set;
 
-  for(let ndx in definition.structures) {
-    let struct = definition.structures[ndx],
+  for(let ndx in definition.internalStructures) {
+    let struct = definition.internalStructures[ndx],
         branchStruct = new Set;
 
     if(structNames.has(struct.name)) {
@@ -55,7 +55,7 @@ function checkStructures(definition) {
           let structNdx = item.type & DATA.MSK_OBJECT_INDEX;
 
           if(branchStruct.has(structNdx)) {
-            throw new applicationError(ERRORS.APPLICATION_CIRCULAR_REF, definition.structures[structNdx].name);
+            throw new applicationError(ERRORS.APPLICATION_CIRCULAR_REF, definition.internalStructures[structNdx].name);
           }
 
           branchStruct.add(structNdx);
@@ -74,9 +74,9 @@ function checkStructures(definition) {
 export function getCollection(definition, item) {
   switch(item.structType) {
     case DATA.STRUCT_INTERNAL: {
-      return definition.structures[item.type & DATA.MSK_OBJECT_INDEX].properties;
+      return definition.internalStructures[item.type & DATA.MSK_OBJECT_INDEX].properties;
     }
-    case DATA.STRUCT_ORACLE_ANSWER: {
+    case DATA.STRUCT_ORACLE: {
     }
   }
 }

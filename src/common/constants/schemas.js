@@ -584,9 +584,15 @@ export const FIELD = [
   { name: "maskId",     type: DATA.UINT16, condition: parent => parent.type & DATA.MASKABLE }
 ];
 
-export const STRUCTURE = [
+export const INTERNAL_STRUCTURE = [
   { name: "name",       type: DATA.STRING },
   { name: "properties", type: DATA.OBJECT | DATA.ARRAY, schema: FIELD }
+];
+
+export const ORACLE_STRUCTURE = [
+  { name: "oracle",      type: DATA.HASH },
+  { name: "version",     type: DATA.UINT16 },
+  { name: "serviceName", type: DATA.STRING }
 ];
 
 export const ENUMERATION = [
@@ -615,11 +621,12 @@ export const APPLICATION_MESSAGE = [
 ];
 
 export const APPLICATION_DEFINITION = [
-  { name: "fields",       type: DATA.OBJECT | DATA.ARRAY, schema: FIELD },
-  { name: "structures",   type: DATA.OBJECT | DATA.ARRAY, schema: STRUCTURE },
-  { name: "enumerations", type: DATA.OBJECT | DATA.ARRAY, schema: ENUMERATION },
-  { name: "masks",        type: DATA.OBJECT | DATA.ARRAY, schema: MASK },
-  { name: "messages",     type: DATA.OBJECT | DATA.ARRAY, schema: APPLICATION_MESSAGE }
+  { name: "fields",             type: DATA.OBJECT | DATA.ARRAY, schema: FIELD },
+  { name: "internalStructures", type: DATA.OBJECT | DATA.ARRAY, schema: INTERNAL_STRUCTURE },
+  { name: "oracleStructures",   type: DATA.OBJECT | DATA.ARRAY, schema: ORACLE_STRUCTURE },
+  { name: "enumerations",       type: DATA.OBJECT | DATA.ARRAY, schema: ENUMERATION },
+  { name: "masks",              type: DATA.OBJECT | DATA.ARRAY, schema: MASK },
+  { name: "messages",           type: DATA.OBJECT | DATA.ARRAY, schema: APPLICATION_MESSAGE }
 ];
 
 // ============================================================================================================================ //
@@ -632,10 +639,10 @@ export const ORACLE_SERVICE = [
 ];
 
 export const ORACLE_DEFINITION = [
-  { name: "services",     type: DATA.OBJECT | DATA.ARRAY, schema: ORACLE_SERVICE },
-  { name: "structures",   type: DATA.OBJECT | DATA.ARRAY, schema: STRUCTURE },
-  { name: "enumerations", type: DATA.OBJECT | DATA.ARRAY, schema: ENUMERATION },
-  { name: "masks",        type: DATA.OBJECT | DATA.ARRAY, schema: MASK }
+  { name: "services",           type: DATA.OBJECT | DATA.ARRAY, schema: ORACLE_SERVICE },
+  { name: "internalStructures", type: DATA.OBJECT | DATA.ARRAY, schema: INTERNAL_STRUCTURE },
+  { name: "enumerations",       type: DATA.OBJECT | DATA.ARRAY, schema: ENUMERATION },
+  { name: "masks",              type: DATA.OBJECT | DATA.ARRAY, schema: MASK }
 ];
 
 // ============================================================================================================================ //

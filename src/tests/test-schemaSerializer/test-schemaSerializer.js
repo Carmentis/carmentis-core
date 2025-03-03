@@ -106,7 +106,7 @@ export async function run() {
       schema: DATA.APPLICATION_DEFINITION.fields,
       object: DATA.APPLICATION_RECORD,
       context: {
-        structures: DATA.APPLICATION_DEFINITION.structures,
+        internalStructures: DATA.APPLICATION_DEFINITION.internalStructures,
         enumerations: DATA.APPLICATION_DEFINITION.enumerations
       },
       isError: false

@@ -1,6 +1,6 @@
 import { DATA } from "../../common/constants/constants.js";
 
-export const APP_V1 = {
+export const APP_VALID = {
   "description": {
     "name": "FileSign",
     "logoUrl": "https://sign.testapps.carmentis.io/assets/img/logo.png",
@@ -25,7 +25,7 @@ export const APP_V1 = {
         "structType": DATA.STRUCT_INTERNAL
       }
     ],
-    "structures": [
+    "internalStructures": [
       {
         "name": "document",
         "properties": [
@@ -55,6 +55,13 @@ export const APP_V1 = {
             "type": DATA.STRING | DATA.PRIVATE
           }
         ]
+      }
+    ],
+    "oracleStructures": [
+      {
+        "oracle": null,
+        "version": 1,
+        "serviceName": "verifyEmail"
       }
     ],
     "masks": [

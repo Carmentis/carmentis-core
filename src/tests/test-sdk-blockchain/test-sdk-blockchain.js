@@ -1,5 +1,4 @@
-import { APP_V1 } from "./app-v1.js";
-import { APP_V2 } from "./app-v2.js";
+import { APP_VALID } from "./app-valid.js";
 import { APP_CIRCULAR } from "./app-circular.js";
 import { APP_DUP_STRUCT, APP_DUP_PROP, APP_DUP_FIELD } from "./app-duplicates.js";
 import { ORACLE } from "./oracle.js";
@@ -75,8 +74,8 @@ async function runTests() {
     accountVbHash = await accountTest();
     await blockchainQueryTest(accountVbHash);
     organization = await organizationTest();
-    appId = await applicationTest(organization);
-    oracleId = await oracleTest(organization, appId);
+    oracleId = await oracleTest(organization);
+    appId = await applicationTest(organization, oracleId);
     await appLedgerTest(organization, appId);
   }
   catch(e) {
@@ -423,7 +422,7 @@ async function organizationTest() {
 // ============================================================================================================================ //
 //  Application                                                                                                                 //
 // ============================================================================================================================ //
-async function applicationTest(organization) {
+async function applicationTest(organization, oracleId) {
   log("--- Testing application VB ----");
 
   blockchainCore.setDbInterface(memoryDb);
@@ -463,12 +462,14 @@ async function applicationTest(organization) {
 
   vb = new applicationVb();
 
+  APP_VALID.definition.oracleStructures[0].oracle = oracleId;
+
   await vb.addDeclaration({ organizationId: organization.id });
-  await vb.addDescription(APP_V1.description);
+  await vb.addDescription(APP_VALID.description);
 
   await vb.addDefinition({
     version: 1,
-    definition: APP_V1.definition
+    definition: APP_VALID.definition
   });
 
   vb.setGasPrice(ECO.TOKEN);
@@ -483,13 +484,17 @@ async function applicationTest(organization) {
 
   log("Updating description");
 
-  await vb.addDescription(APP_V2.description);
+  APP_VALID.description.name += "!";
+
+  await vb.addDescription(APP_VALID.description);
 
   log("Updating definition");
 
+  APP_VALID.definition.messages[0].content += "!";
+
   await vb.addDefinition({
     version: 2,
-    definition: APP_V2.definition
+    definition: APP_VALID.definition
   });
 
   log("Signing");
@@ -513,7 +518,7 @@ async function applicationTest(organization) {
 // ============================================================================================================================ //
 //  Oracle                                                                                                                      //
 // ============================================================================================================================ //
-async function oracleTest(organization, appId) {
+async function oracleTest(organization) {
   log("--- Testing oracle VB ----");
 
   blockchainCore.setDbInterface(memoryDb);
@@ -568,6 +573,8 @@ async function oracleTest(organization, appId) {
   dataObject = await vb.decodeServiceRequest(1, "verifyEmail", data.request);
 
   console.log(dataObject);
+
+  return vbHash;
 }
 
 // ============================================================================================================================ //

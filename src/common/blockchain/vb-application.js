@@ -11,6 +11,8 @@ import { sectionError, applicationError } from "../errors/error.js";
 export class applicationVb extends virtualBlockchain {
   constructor(id) {
     super(ID.OBJ_APPLICATION, id);
+
+    this.state.version = 0;
   }
 
   async addDeclaration(object) {
@@ -89,6 +91,12 @@ export class applicationVb extends virtualBlockchain {
         }
 
         appDefinition.check(object.definition);
+
+        if(object.version != this.state.version + 1) {
+          throw new applicationError(ERRORS.APPLICATION_BAD_VERSION, this.state.version + 1, object.version);
+        }
+
+        this.state.version++;
         break;
       }
 

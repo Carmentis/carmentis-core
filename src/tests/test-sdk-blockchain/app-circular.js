@@ -16,7 +16,7 @@ export const APP_CIRCULAR = {
         "structType": DATA.STRUCT_INTERNAL
       }
     ],
-    "structures": [
+    "internalStructures": [
       {
         "name": "structA",
         "properties": [
@@ -37,6 +37,8 @@ export const APP_CIRCULAR = {
           }
         ]
       }
+    ],
+    "oracleStructures": [
     ],
     "masks": [
     ],

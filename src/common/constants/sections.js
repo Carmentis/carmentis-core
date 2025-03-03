@@ -267,6 +267,11 @@ const APP_LEDGER = {
   [ APP_LEDGER_ORACLE_DATA ]: {
     label: "APP_LEDGER_ORACLE_DATA",
     fields: [
+      { name: "oracleStructureId", type: DATA.UINT16 },
+      { name: "actorId",           type: DATA.UINT8 },
+      { name: "data",              type: DATA.BINARY },
+      { name: "merkleRootHash",    type: DATA.HASH },
+      { name: "oracleSignature",   type: DATA.SIGNATURE }
     ]
   },
   [ APP_LEDGER_AUTHOR ]: {

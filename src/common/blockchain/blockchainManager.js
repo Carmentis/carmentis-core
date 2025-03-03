@@ -68,12 +68,8 @@ export class blockchainManager extends blockchainCore {
         mbRecord.vbType = previousMb.vbType;
       }
       else {
-        let previousMb = await this.nodeQuery(
-          SCHEMAS.MSG_GET_RAW_MICROBLOCK,
-          {
-            mbHash: mbObject.header.previousHash
-          }
-        );
+        let previousMb = await this.loadMicroblockFromDb(mbObject.header.previousHash);
+
         mbRecord.vbHash = previousMb.vbHash;
         mbRecord.vbType = previousMb.vbType;
       }

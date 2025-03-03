@@ -28,7 +28,7 @@ export async function encode(height, sectionNdx, vbType, sectionObject, keyManag
   };
 
   if(externalDef) {
-    context.structures = externalDef.structures;
+    context.internalStructures = externalDef.internalStructures;
     context.enumerations = externalDef.enumerations;
   }
 
@@ -122,7 +122,7 @@ export async function decode(height, sectionNdx, vbType, section, keyManager, ex
   };
 
   if(externalDef) {
-    context.structures = externalDef.structures;
+    context.internalStructures = externalDef.internalStructures;
     context.enumerations = externalDef.enumerations;
   }
 

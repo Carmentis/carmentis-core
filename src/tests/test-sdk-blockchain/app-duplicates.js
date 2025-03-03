@@ -16,7 +16,7 @@ export const APP_DUP_STRUCT = {
         "structType": DATA.STRUCT_INTERNAL
       }
     ],
-    "structures": [
+    "internalStructures": [
       {
         "name": "structA",
         "properties": [
@@ -35,6 +35,8 @@ export const APP_DUP_STRUCT = {
           }
         ]
       }
+    ],
+    "oracleStructures": [
     ],
     "masks": [
     ],
@@ -61,7 +63,7 @@ export const APP_DUP_PROP = {
         "structType": DATA.STRUCT_INTERNAL
       }
     ],
-    "structures": [
+    "internalStructures": [
       {
         "name": "structA",
         "properties": [
@@ -75,6 +77,8 @@ export const APP_DUP_PROP = {
           }
         ]
       }
+    ],
+    "oracleStructures": [
     ],
     "masks": [
     ],
@@ -104,7 +108,9 @@ export const APP_DUP_FIELD = {
         "type": DATA.STRING | DATA.OPTIONAL | 0
       }
     ],
-    "structures": [
+    "internalStructures": [
+    ],
+    "oracleStructures": [
     ],
     "masks": [
     ],

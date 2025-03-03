@@ -92,8 +92,8 @@ export const MSK_OBJECT_INDEX   = 0x03FF;
 export const MSK_PRIMITIVE_TYPE = 0x001F;
 
 // structure types
-export const STRUCT_INTERNAL      = 0x0;
-export const STRUCT_ORACLE_ANSWER = 0x1;
+export const STRUCT_INTERNAL = 0x0;
+export const STRUCT_ORACLE   = 0x1;
 
 // access rules flags
 export const PLAIN    = 0x0;

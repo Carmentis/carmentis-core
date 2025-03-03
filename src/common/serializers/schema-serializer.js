@@ -44,7 +44,7 @@ export function encode(schema, object, context = {}) {
   }
 
   context.enumerations = context.enumerations || [];
-  context.structures = context.structures || [];
+  context.internalStructures = context.internalStructures || [];
 
   let stream = fieldSerializer.getWriteStream(),
       missingCounter = 8,
@@ -177,7 +177,7 @@ export function encode(schema, object, context = {}) {
 export function decode(schema, array, context = {}, object = {}) {
   context.ptr = context.ptr || 0;
   context.enumerations = context.enumerations || [];
-  context.structures = context.structures || [];
+  context.internalStructures = context.internalStructures || [];
 
   let stream = fieldSerializer.getReadStream(array, { ptr: context.ptr }),
       missingCounter = 8,

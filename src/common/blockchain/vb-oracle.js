@@ -73,7 +73,7 @@ export class oracleVb extends virtualBlockchain {
       service.request,
       dataObject,
       {
-        structures: definition.structures,
+        internalStructures: definition.internalStructures,
         enumerations: definition.enumerations
       }
     );
@@ -136,7 +136,7 @@ export class oracleVb extends virtualBlockchain {
       service.request,
       body.data,
       {
-        structures: definition.structures,
+        internalStructures: definition.internalStructures,
         enumerations: definition.enumerations
       }
     );

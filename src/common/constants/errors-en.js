@@ -89,6 +89,7 @@ export const ERRORS_EN = {
 
   [ ERROR_TYPES.APPLICATION ]: [
     "Organization is not declared",
+    "Inconsistent version number: expecting %0, got %1",
     "Circular reference on structure '%0'",
     "Duplicate field name '%0'",
     "Duplicate structure name '%0'",

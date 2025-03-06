@@ -43,7 +43,7 @@ export class applicationVb extends virtualBlockchain {
     return vb;
   }
 
-  async getDescription(version) {
+  async getDescription() {
     return await this.findSection(SECTIONS.APP_DESCRIPTION);
   }
 

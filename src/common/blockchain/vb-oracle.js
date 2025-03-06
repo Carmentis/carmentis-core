@@ -41,6 +41,10 @@ export class oracleVb extends virtualBlockchain {
     return vb;
   }
 
+  async getDescription() {
+    return await this.findSection(SECTIONS.ORACLE_DESCRIPTION);
+  }
+
   async getDefinition(version) {
     let object;
 

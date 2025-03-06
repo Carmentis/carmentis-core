@@ -7,9 +7,10 @@ export const MSG = {
 };
 
 // GLOBAL
-export const GLOBAL_UNKNOWN_ERROR  = 0x00;
-export const GLOBAL_INTERNAL_ERROR = 0x01;
-export const GLOBAL_CRYPTO_ERROR   = 0x02;
+export const GLOBAL_UNKNOWN_ERROR   = 0x00;
+export const GLOBAL_INTERNAL_ERROR  = 0x01;
+export const GLOBAL_CRYPTO_ERROR    = 0x02;
+export const GLOBAL_INVALID_MESSAGE = 0x03;
 
 // FIELD
 export const FIELD_BAD_TYPE           = 0x00;

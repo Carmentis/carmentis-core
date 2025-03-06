@@ -4,7 +4,8 @@ export const ERRORS_EN = {
   [ ERROR_TYPES.GLOBAL ]: [
     "Unknown error",
     "Internal error: %0",
-    "Crypto error: %0"
+    "Crypto error: %0",
+    "Invalid message ID 0x%0"
   ],
 
   [ ERROR_TYPES.FIELD ]: [

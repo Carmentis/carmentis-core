@@ -15,6 +15,11 @@ pipeline {
                 sh 'npm install'
             }
         }
+        stage('Build SDK') {
+            steps {
+                sh 'npm run build'
+            }
+        }
         stage('Release') {
             steps {
                 sh 'npx semantic-release'

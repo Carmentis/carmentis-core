@@ -2,6 +2,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import dts from "rollup-plugin-dts";
+import typescript from "@rollup/plugin-typescript";
 
 export default [
     {
@@ -26,6 +27,11 @@ export default [
         ],
         plugins: [
             resolve(), // resolve 3rd-party module imports
+            typescript({
+                allowJs: true, // Autoriser les fichiers .js
+                include: ["src/**/*.ts", "src/**/*.js"], // Inclure JS et TS,
+                declaration: false,
+            }),
             commonjs(), // converts CommonJS to ESM
             json() // supports JSON imports
         ],
@@ -40,7 +46,7 @@ export default [
     },
     // Build for TypeScript definitions
     {
-        input: "types/client/sdk.d.ts", // This path depends on your TypeScript configuration
+        input: "dist/client/sdk.d.ts", // This path depends on your TypeScript configuration
         output: [{ file: "dist/client/index.d.ts", format: "es" }],
         plugins: [dts()]
     }

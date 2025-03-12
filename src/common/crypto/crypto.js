@@ -1,6 +1,6 @@
-import { randomBytes } from "./noble/ciphers.js";
-import { sha256 as _sha256 } from "./noble/hashes.js";
 import * as uint8 from "../util/uint8.js";
+import {randomBytes} from "@noble/hashes/utils";
+import {sha256 as H} from '@noble/hashes/sha256';
 
 export * as aes       from "./aes.js";
 export * as derive    from "./derive.js";
@@ -21,14 +21,14 @@ export function sha256AsBinary(arr) {
   if(!(arr instanceof Uint8Array)) {
     throw "Argument passed to compute sha256 is not an instance of Uint8Array";
   }
-  return _sha256(arr);
+  return H(arr);
 }
 
 // ============================================================================================================================ //
 //  getRandomBytes()                                                                                                            //
 // ============================================================================================================================ //
 export function getRandomBytes(size) {
-  return randomBytes(size);
+  return randomBytes(size)
 }
 
 // ============================================================================================================================ //

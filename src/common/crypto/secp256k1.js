@@ -1,5 +1,6 @@
-import { sha256, hmac } from "./noble/hashes.js";
-import * as secp256k1 from "./noble/secp256k1.js";
+import { sha256 } from "@noble/hashes/sha256";
+import { hmac } from "@noble/hashes/hmac";
+import * as secp256k1 from "@noble/secp256k1";
 import * as uint8 from "../util/uint8.js";
 import { cryptoErrorHandler } from "../errors/error.js";
 

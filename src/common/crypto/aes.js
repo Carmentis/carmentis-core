@@ -1,4 +1,4 @@
-import { randomBytes, gcm, ctr } from "./noble/ciphers.js";
+import { gcm, ctr } from '@noble/ciphers/aes';
 import * as uint8 from "../util/uint8.js";
 
 // ============================================================================================================================ //

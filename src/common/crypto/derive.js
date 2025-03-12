@@ -1,4 +1,6 @@
-import { sha256, pbkdf2Async, hkdf } from "./noble/hashes.js";
+import { sha256 } from "@noble/hashes/sha256";
+import { pbkdf2Async } from '@noble/hashes/pbkdf2';
+import { hkdf } from "@noble/hashes/hkdf";
 import * as uint8 from "../util/uint8.js";
 
 export const PREFIX_SUBSECTION_KEY = 0x01;

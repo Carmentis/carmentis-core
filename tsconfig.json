@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "declaration": true,             // Enable type declaration generation
-    "emitDeclarationOnly": true,     // Emit only *.d.ts files
-    "outDir": "types",               // Directory for declaration files
+    "emitDeclarationOnly": false,     // Emit only *.d.ts files
+    "outDir": "dist",               // Directory the built content
     "allowJs": true,                 // Allow JavaScript files
     "checkJs": false,                 // Enable type checking in JavaScript
     "strict": true,                   // Ensure strict type checking,

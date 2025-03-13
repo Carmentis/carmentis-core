@@ -2,6 +2,7 @@ import { ECO, SCHEMAS } from "../constants/constants.js";
 import { schemaSerializer } from "../serializers/serializers.js";
 import { blockchainCore } from "./blockchainCore.js";
 import { microblock } from "./microblock.js";
+import {MicroBlock} from "../classes/application.js";
 
 export class blockchainQuery extends blockchainCore {
   /**
@@ -146,6 +147,7 @@ export class blockchainQuery extends blockchainCore {
    * Retrieves a content summary of a microblock identified by its hash.
    * Note that the content of the sections is not decoded.
    *
+   * @deprecated Use getMicroblockContentObject.
    * @param {string} hash - The hash of the microblock to be retrieved.
    * @return {Promise<{
    *   header: {
@@ -171,6 +173,11 @@ export class blockchainQuery extends blockchainCore {
     await mb.load(mbData.content, hash);
 
     return mb.getContentSummary();
+  }
+
+
+  static async getMicroblockContentObject(hash) {
+    return MicroBlock.build(await this.getMicroblockContent(hash))
   }
 
   /**

@@ -8,13 +8,8 @@ export * as merkle from './trees/merkle.js'
 
 import * as dataUtils from "./util/data.js";
 import * as uint8 from './util/uint8.js'
-import * as fields from './classes/field.js';
-import * as classes from './classes/application.js';
+export * from './classes/api.ts';
 export const utils = {
     data: dataUtils,
     encoding: uint8,
-    types: {
-        classes,
-        fields
-    }
 }

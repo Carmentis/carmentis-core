@@ -4,6 +4,7 @@ import { organizationVb } from "./vb-organization.js";
 import * as crypto from "../crypto/crypto.js";
 import * as schemaSerializer from "../serializers/schema-serializer.js";
 import { sectionError, oracleError } from "../errors/error.js";
+import {OracleDefinition, OracleDescription} from "../classes/api.js";
 
 // ============================================================================================================================ //
 //  oracleVb                                                                                                                    //
@@ -41,10 +42,27 @@ export class oracleVb extends virtualBlockchain {
     return vb;
   }
 
+  getLatestVersionNumber() {
+    return this.getHeight() - 1;
+  }
+
+  /**
+   * @deprecated Use getDescriptionObject
+   * @returns {Promise<*|null>}
+   */
   async getDescription() {
     return await this.findSection(SECTIONS.ORACLE_DESCRIPTION);
   }
 
+  async getDescriptionObject() {
+    return OracleDescription.build(await this.getDescription());
+  }
+
+  /**
+   * @deprecated User getDefinitionObject.
+   * @param version
+   * @returns {Promise<undefined|*>}
+   */
   async getDefinition(version) {
     let object;
 
@@ -58,6 +76,11 @@ export class oracleVb extends virtualBlockchain {
     }
 
     return undefined;
+  }
+
+
+  async getDefinitionObject(version) {
+      return OracleDefinition.build(await this.getDefinition(version));
   }
 
   getService(definition, serviceName) {

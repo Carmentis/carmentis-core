@@ -148,6 +148,7 @@ export class virtualBlockchain extends blockchainCore {
     return this.microblocks.length + 1;
   }
 
+
   async addSection(sectionId, object, externalDef, schemaInfo) {
     if(!this.currentMicroblock) {
       this.createNewMicroblock();

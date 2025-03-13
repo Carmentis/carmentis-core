@@ -2,7 +2,7 @@ import { ECO, SCHEMAS } from "../constants/constants.js";
 import { schemaSerializer } from "../serializers/serializers.js";
 import { blockchainCore } from "./blockchainCore.js";
 import { microblock } from "./microblock.js";
-import {MicroBlock} from "../classes/application.js";
+import {AccountState, MasterBlockContent, MasterBlockInfo, MicroBlock} from "../classes/api.ts";
 
 export class blockchainQuery extends blockchainCore {
   /**
@@ -61,6 +61,8 @@ export class blockchainQuery extends blockchainCore {
   /**
    * Retrieves information about a single block.
    *
+   * @deprecated Use getBlockInfoObject.
+   *
    * @param {number} height - The height of the block to be retrieved.
    * @return {Promise<{
    *   height: number,
@@ -83,9 +85,14 @@ export class blockchainQuery extends blockchainCore {
     return answer;
   }
 
+
+  static async getBlockInfoObject(height) {
+    return MasterBlockInfo.build(await blockchainQuery.getBlockInfo(height))
+  }
+
   /**
    * Retrieves the content of a block.
-   *
+   * @deprecated Use getBlockContentObject.
    * @param {number} height - The height of the block to be retrieved.
    * @return {Promise<{
    *   timestamp: number,
@@ -115,6 +122,12 @@ export class blockchainQuery extends blockchainCore {
 
     return answer;
   }
+
+  static async getBlockContentObject(height) {
+    return MasterBlockContent.build(await blockchainQuery.getBlockContent(height))
+  }
+
+
 
   /**
    * Retrieves the raw content (not decoded) of a microblock identified by its hash.
@@ -224,6 +237,8 @@ export class blockchainQuery extends blockchainCore {
   /**
    * Retrieves the state of a specific account identified by its account hash.
    *
+   * @deprecated Use getAccountStateObject.
+   *
    * @param {string} accountHash - The hash of the account whose state is to be retrieved.
    * @return {Promise<{
    *   height: number,
@@ -242,6 +257,10 @@ export class blockchainQuery extends blockchainCore {
     return answer;
   }
 
+  static async getAccountStateObject(accountHash) {
+    return AccountState.build(await this.getAccountState(accountHash));
+  }
+
   /**
    * Retrieves the account history for a specific account, allowing the retrieval of specific records
    * based on a starting point such as the `lastHistoryHash`, and limiting the number of records returned.
@@ -254,10 +273,10 @@ export class blockchainQuery extends blockchainCore {
    *   previousHistoryHash: string;
    *   type: number;
    *   name: string;
-   *   timestamp: object;
+   *   timestamp: Date;
    *   linkedAccount: string;
    *   amount: number;
-   *   chainReference: string;
+   *   chainReference: { mbHash: string, sectionIndex: number };
    * }[]>} A promise that resolves to an array of account history entries. Each entry includes
    *         updated details such as a converted timestamp, a name derived from the type, and a decoded chain reference.
    */

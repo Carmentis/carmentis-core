@@ -1,6 +1,7 @@
 import { ERRORS, ID, SECTIONS } from "../constants/constants.js";
 import { virtualBlockchain } from "./virtualBlockchain.js";
 import { sectionError, organizationError } from "../errors/error.js";
+import {OrganisationDescription} from "../classes/api.ts";
 
 // ============================================================================================================================ //
 //  organizationVb                                                                                                              //
@@ -31,8 +32,18 @@ export class organizationVb extends virtualBlockchain {
     await this.addSection(SECTIONS.ORG_SERVER, object);
   }
 
+  /**
+   * @deprecated Use getDescriptionObject.
+   */
   async getDescription() {
     return await this.findSection(SECTIONS.ORG_DESCRIPTION);
+  }
+
+  async getDescriptionObject() {
+    return OrganisationDescription.build({
+      ...await this.getDescription(),
+      publicKey: this.getPublicKey()
+    })
   }
 
   async getServer() {

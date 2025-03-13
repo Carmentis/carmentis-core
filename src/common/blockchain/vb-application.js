@@ -4,6 +4,7 @@ import { organizationVb } from "./vb-organization.js";
 import * as message from "../apps/message.js";
 import * as appDefinition from "../apps/definition.js";
 import { sectionError, applicationError } from "../errors/error.js";
+import {ApplicationDefinition, ApplicationDescription} from "../classes/api.js";
 
 // ============================================================================================================================ //
 //  applicationVb                                                                                                               //
@@ -43,10 +44,28 @@ export class applicationVb extends virtualBlockchain {
     return vb;
   }
 
+  /**
+   * @deprecated Use getDescriptionObject.
+   * @returns {Promise<*|null>}
+   */
   async getDescription() {
     return await this.findSection(SECTIONS.APP_DESCRIPTION);
   }
 
+  async getDescriptionObject() {
+    return ApplicationDescription.build(await this.getDescription())
+  }
+
+  getLatestVersionNumber() {
+    return this.getHeight() - 1;
+  }
+
+
+  /**
+   * @deprecated getDefinitionObject.
+   * @param version
+   * @returns {Promise<undefined|*>}
+   */
   async getDefinition(version) {
     let object;
 
@@ -61,6 +80,32 @@ export class applicationVb extends virtualBlockchain {
     }
 
     return undefined;
+  }
+
+  /**
+   * Retrieves the latest definition object.
+   *
+   * This method fetches the latest available definition by determining the
+   * current height and then fetching the definition.
+   *
+   * @return {Promise<ApplicationDefinition>} A promise that resolves to the latest definition object.
+   */
+  async getLatestDefinition() {
+    const latestVersion = await this.getHeight();
+    return await this.getDefinitionObject(latestVersion - 1);
+  }
+
+  /**
+   * Retrieves a definition object for a given version.
+   *
+   * @param {number} version - The version identifier for which to retrieve the definition object.
+   * @return {Promise<ApplicationDefinition>} A Promise that resolves to the constructed definition object.
+   * @throws {applicationError} Throws an error if the definition is not found for the provided version.
+   */
+  async getDefinitionObject(version) {
+    const definition = await this.getDefinition(version);
+    if (!definition) throw new applicationError(ERRORS.APPLICATION_BAD_VERSION);
+    return ApplicationDefinition.build(definition);
   }
 
   async sign() {

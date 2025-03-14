@@ -155,8 +155,19 @@ export class MasterBlock {
         return this.info.getProposerNode();
     }
 
+    isAnchored(): boolean {
+        return this.info.isAnchored();
+    }
+
+    getSize(): number {
+        return this.info.getSize();
+    }
+
+    /**
+     * @deprecated
+     */
     getSignature(): string {
-        return this.getSignature();
+        throw 'Not implemented';
     }
 
     getMicroBlocksHash(): string[] {

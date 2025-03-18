@@ -1,6 +1,7 @@
 === Internal proofs
 - Include the hash of the VB state in the VB radix tree
 --> So that the node can prove the current state without having to serve the entire VB.
+- add a new API to, generate the proof
 
 === Accounts
 - Add a section for a public key renewal

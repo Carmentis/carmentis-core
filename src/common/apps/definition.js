@@ -59,7 +59,7 @@ function checkStructures(definition) {
           }
 
           branchStruct.add(structNdx);
-          scan(getCollection(definition, item));
+          scan(getSchema(definition, item));
         }
       }
     }
@@ -69,14 +69,18 @@ function checkStructures(definition) {
 }
 
 // ============================================================================================================================ //
-//  getCollection()                                                                                                             //
+//  getSchema()                                                                                                                 //
 // ============================================================================================================================ //
-export function getCollection(definition, item) {
+export function getSchema(definition, item) {
   switch(item.structType) {
     case DATA.STRUCT_INTERNAL: {
       return definition.internalStructures[item.type & DATA.MSK_OBJECT_INDEX].properties;
     }
     case DATA.STRUCT_ORACLE: {
+      return null;
+    }
+    default: {
+      throw `Internal error: invalid structure type ${item.structType}`;
     }
   }
 }

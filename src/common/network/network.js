@@ -44,8 +44,8 @@ export async function sendWalletToOperatorMessage(url, schemaId, object) {
 // ============================================================================================================================ //
 //  sendMessage()                                                                                                               //
 // ============================================================================================================================ //
-async function sendMessage(url, schemaId, object, collection) {
-  let data = schemaSerializer.encodeMessage(schemaId, object, collection),
+async function sendMessage(url, schemaId, object, schema) {
+  let data = schemaSerializer.encodeMessage(schemaId, object, schema),
       b64 = base64.encodeBinary(data, base64.BASE64);
 
   return new Promise(function(resolve, reject) {
@@ -65,7 +65,7 @@ async function sendMessage(url, schemaId, object, collection) {
         try {
           let responseObject = JSON.parse(answer);
           let binary = base64.decodeBinary(responseObject.response, base64.BASE64);
-          let [ id, object ] = schemaSerializer.decodeMessage(binary, collection);
+          let [ id, object ] = schemaSerializer.decodeMessage(binary, schema);
 
           lastAnswerId = id;
 

@@ -170,6 +170,8 @@ export class appLedgerVb extends virtualBlockchain {
         field.name = path.decode(this.appDef.definition, field.path);
       });
     });
+
+    return this.appDef;
   }
 
   convertPermissionsToSubsections(permissions) {

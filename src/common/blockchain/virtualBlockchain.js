@@ -1,5 +1,6 @@
 import { ID, ERRORS, SCHEMAS, SECTIONS, ECO } from "../constants/constants.js";
 import { microblock } from "./microblock.js";
+import { proofBuilder } from "../proofs/proofBuilder.js";
 import { blockchainCore, ROLES } from "./blockchainCore.js";
 import * as schemaSerializer from "../serializers/schema-serializer.js";
 import * as sectionSerializer from "../serializers/section-serializer.js";
@@ -140,6 +141,10 @@ export class virtualBlockchain extends blockchainCore {
     return crypto.ecdh.getSharedKey(myPrivateKey, theirPublicKey);
   }
 
+  getProofBuilder() {
+    return new proofBuilder(this);
+  }
+
   async keyManager() {
     return null;
   }
@@ -147,7 +152,6 @@ export class virtualBlockchain extends blockchainCore {
   getHeight() {
     return this.microblocks.length + 1;
   }
-
 
   async addSection(sectionId, object, externalDef, schemaInfo) {
     if(!this.currentMicroblock) {

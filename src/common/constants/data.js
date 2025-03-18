@@ -78,16 +78,17 @@ export const NAME = [
 
 // common flags
 export const STRUCT   = 0x8000;
-export const ARRAY    = 0x4000;
-export const ENUM     = 0x2000;
+export const ENUM     = 0x4000;
+export const ARRAY    = 0x2000;
 export const OPTIONAL = 0x1000;
 
-// flags for primitive types
+// flags for types other than a structure
 export const PRIVATE  = 0x0800;
 export const MASKABLE = 0x0200; // \__ anonymization
 export const HASHABLE = 0x0400; // /
 
 // bitmasks
+export const MSK_HAS_INDEX      = STRUCT | ENUM;
 export const MSK_OBJECT_INDEX   = 0x03FF;
 export const MSK_PRIMITIVE_TYPE = 0x001F;
 
@@ -95,11 +96,14 @@ export const MSK_PRIMITIVE_TYPE = 0x001F;
 export const STRUCT_INTERNAL = 0x0;
 export const STRUCT_ORACLE   = 0x1;
 
-// access rules flags
-export const PLAIN    = 0x0;
-export const MASKED   = 0x1;
-export const HASHED   = 0x2;
-export const REDACTED = 0x4;
+// proof flags
+export const PLAIN      = 0x00;
+export const MASKED     = 0x01;
+export const HASHED     = 0x02;
+export const REDACTED   = 0x04;
+export const MSK_ACCESS = 0x07;
+export const TREE       = 0x08;
+export const MISSING    = 0x10;
 
 // wildcard
 export const WILDCARD = 0xFF;

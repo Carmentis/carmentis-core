@@ -45,7 +45,13 @@ export async function run() {
     keyManager
   );
 
-  outcome("Internal schema (public data)", 50, JSON.stringify(unserialized.object) == JSON.stringify(object));
+  let success = JSON.stringify(unserialized.object) == JSON.stringify(object);
+
+  if(!success) {
+    console.log(unserialized);
+  }
+
+  outcome("Internal schema (public data)", 50, success);
 
   let keyA = crypto.generateKey256(),
       keyB = crypto.generateKey256();
@@ -60,7 +66,15 @@ export async function run() {
     city: "Paris",
     address: "2 rue de la Roquette, Cour de Mai",
     countryCode: "FR",
-    website: "www.carmentis.io"
+    website: "www.carmentis.io",
+    status: "active",
+    emails: [ "foo@gmail.com", "bar@gmail.com" ],
+    mainContact: { phoneNumber1: "00010101", phoneNumber2: "00020202" },
+    contacts: [
+      { phoneNumber1: "01010101", phoneNumber2: "01020202" },
+      { phoneNumber1: "02010101", phoneNumber2: "02020202" }
+    ],
+    moreContacts: []
   };
 
   serialized = await encode(
@@ -79,9 +93,48 @@ export async function run() {
   delete externalDef.subsections;
 
   const EXPECTED = [
-    { name: object.name, city: null, address: null, countryCode: null, website: null },
-    { name: object.name, city: null, address: null, countryCode: null, website: object.website },
-    { name: object.name, city: object.city, address: object.address, countryCode: object.countryCode, website: null },
+    {
+      name: object.name,
+      city: null,
+      address: null,
+      countryCode: null,
+      website: null,
+      status: null,
+      emails: null,
+      mainContact: null,
+      contacts: null,
+      moreContacts: null
+    },
+    {
+      name: object.name,
+      city: null,
+      address: null,
+      countryCode: null,
+      website: object.website,
+      status: object.status,
+      emails: object.emails,
+      mainContact: { phoneNumber1: object.mainContact.phoneNumber1, phoneNumber2: null },
+      contacts: [
+        { phoneNumber1: object.contacts[0].phoneNumber1, phoneNumber2: null },
+        { phoneNumber1: object.contacts[1].phoneNumber1, phoneNumber2: null }
+      ],
+      moreContacts: []
+    },
+    {
+      name: object.name,
+      city: object.city,
+      address: object.address,
+      countryCode: object.countryCode,
+      website: null,
+      status: null,
+      emails: null,
+      mainContact: { phoneNumber1: null, phoneNumber2: object.mainContact.phoneNumber2 },
+      contacts: [
+        { phoneNumber1: null, phoneNumber2: object.contacts[0].phoneNumber2 },
+        { phoneNumber1: null, phoneNumber2: object.contacts[1].phoneNumber2 }
+      ],
+      moreContacts: []
+    },
     object
   ];
 
@@ -108,7 +161,7 @@ export async function run() {
     let success = JSON.stringify(unserialized.object) == JSON.stringify(EXPECTED[n]);
 
     if(!success) {
-      console.log(unserialized);
+      console.log(JSON.stringify(unserialized));
     }
 
     outcome(`External schema / key combination #${n}`, 50, success);

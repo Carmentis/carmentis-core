@@ -646,6 +646,20 @@ export const ORACLE_DEFINITION = [
 ];
 
 // ============================================================================================================================ //
+//  Proofs                                                                                                                      //
+// ============================================================================================================================ //
+export const PROOF_DATA = [
+  { name: "provable",  type: DATA.UINT8 },
+  { name: "modeList",  type: DATA.UINT8 | DATA.ARRAY, condition: parent => parent.provable },
+  { name: "dataList",  type: DATA.BINARY | DATA.ARRAY, condition: parent => parent.provable },
+  { name: "proofList", type: DATA.BINARY | DATA.ARRAY, condition: parent => parent.provable }
+];
+
+export const PROOF_LIST = [
+  { name: "list", type: DATA.OBJECT | DATA. ARRAY, schema: PROOF_DATA }
+];
+
+// ============================================================================================================================ //
 //  Wallet interface                                                                                                            //
 // ============================================================================================================================ //
 export const WI_MAX_SERVER_URL_LENGTH = 100;

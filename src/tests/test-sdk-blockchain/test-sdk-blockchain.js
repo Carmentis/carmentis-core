@@ -11,7 +11,7 @@ import {
 } from "./approval.js";
 
 import { spawn } from "child_process";
-import * as sdk from "../../server/sdk.js";
+import * as sdk from "@cmts-dev/carmentis-sdk/server";
 import * as memoryDb from "../memoryDb.js";
 import { log, outcome } from "../logger.js";
 
@@ -19,7 +19,7 @@ const AUTO_NODE_START = false;
 const PATH_TO_NODE = "../../../carmentis-dev-node/dev-node.js";
 const NODE_URL = "http://localhost:3000";
 
-const { ECO } = sdk.constants;
+const { ECO, SCHEMAS } = sdk.constants;
 
 const {
   blockchainCore,
@@ -35,6 +35,7 @@ const {
 } = sdk.blockchain;
 
 const crypto = sdk.crypto;
+const proofLoader = sdk.proofLoader;
 
 export async function run() {
   if(AUTO_NODE_START) {
@@ -261,6 +262,21 @@ async function blockchainQueryTest(vbHash) {
   blockchainCore.setNode(NODE_URL);
 
   let content;
+
+  log("Sending invalid message");
+
+  try {
+    content = await blockchainCore.nodeQuery(
+      SCHEMAS.MSG_ANS_VB_CONTENT,
+      {
+        type: 0,
+        list: []
+      }
+    );
+  }
+  catch(e) {
+    console.log(e);
+  }
 
   log("Retrieving chain status");
 
@@ -701,6 +717,16 @@ async function appLedgerTest(organization, appId) {
   console.log(vb.getRecord(1));
   console.log(vb.getRecord(2));
 
+  log("Exporting proof as sender");
+
+  let builder = vb.getProofBuilder();
+
+  builder.addAllMicroblocks();
+
+  let proofJson = builder.generate();
+
+  console.log(proofJson);
+
   log("Retrieving both records as John Doe");
 
   blockchainCore.setUser(ROLES.USER, "55AA".repeat(16));
@@ -710,6 +736,13 @@ async function appLedgerTest(organization, appId) {
 
   console.log(vb.getRecord(1));
   console.log(vb.getRecord(2));
+
+  log("Importing proof as John Doe");
+
+  let loader = new proofLoader(proofJson),
+      records = await loader.load();
+
+  console.log(records);
 }
 
 // ============================================================================================================================ //
@@ -760,7 +793,7 @@ async function processApproval(organization, endorserPrivateKey, approvalObject)
   height = vb.getHeight();
 
   log("height", height);
-
+console.log("getRecord");
   record = vb.getRecord(height);
   console.log(record);
   console.log(vb.flattenRecord(record));

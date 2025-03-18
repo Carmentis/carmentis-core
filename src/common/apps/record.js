@@ -1,5 +1,7 @@
 import { DATA, SECTIONS } from "../constants/constants.js";
 import * as appDefinition from "./definition.js";
+import { schemaIterator } from "../serializers/schema.js";
+import * as util from "../util/util.js";
 
 // ============================================================================================================================ //
 //  getRecord()                                                                                                                 //
@@ -18,18 +20,22 @@ export function flattenRecord(vb, record) {
   let definition = vb.appDef.definition,
       arr = [];
 
-  function parse(fieldDef, node, name = [], path = []) {
+  function parse(schema, node, name = [], path = []) {
+    if(node === null || typeof node != "object") {
+      return;
+    }
+
     Object.keys(node).forEach((key, ndx) => {
       let value = node[key],
           newName = [...name, key],
           newPath = [...path, ndx],
-          def = fieldDef.find(o => o.name == key);
+          def = schema.find(o => o.name == key);
 
       if(def.type & DATA.ARRAY) {
         arr.push({ name: newName.join("."), path: newPath, def: def, value: value });
       }
       else if(def.type & DATA.STRUCT) {
-        parse(appDefinition.getCollection(definition, def), value, newName, newPath);
+        parse(appDefinition.getSchema(definition, def), value, newName, newPath);
       }
       else {
         arr.push({ name: newName.join("."), path: newPath, def: def, value: value });
@@ -39,6 +45,30 @@ export function flattenRecord(vb, record) {
 
   parse(definition.fields, record);
 
+/*
+  let arr0 = [];
+  let iterator = new schemaIterator(definition.fields);
+
+  iterator.iterate({
+    internalStructures: definition.internalStructures,
+
+    onLeaf: (def, nodeContext) => {
+      let value = schemaIterator.readObject(record, nodeContext);
+
+      arr0.push({
+        name: schemaIterator.getNodeName(nodeContext.namePath),
+        path: nodeContext.indexPath,
+        def: def,
+        value: value
+      });
+    }
+  });
+
+  if(JSON.stringify(arr) != JSON.stringify(arr0)) {
+    console.log(JSON.stringify(arr));
+    console.log(JSON.stringify(arr0));
+  }
+*/
   return arr;
 }
 
@@ -64,8 +94,7 @@ export function getApprovalMessage(vb, height) {
       let match = flatRecord.find(obj =>
         obj.name == field.name
 /*
-        obj.path.length == field.path.length &&
-        obj.path.every((v, i) => field.path[i] == v)
+        util.arraysAreEqual(obj.path, field.path)
 */
       );
 

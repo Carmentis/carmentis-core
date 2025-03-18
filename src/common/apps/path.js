@@ -7,7 +7,7 @@ import { pathError } from "../errors/error.js";
 // ============================================================================================================================ //
 export function encode(def, pathStr, allowWildcard) {
   let array = pathStr.split("."),
-      collection = def.fields,
+      schema = def.fields,
       path = [];
 
   for(let i in array) {
@@ -22,7 +22,7 @@ export function encode(def, pathStr, allowWildcard) {
     }
 
     let endOfList = i == array.length - 1,
-        ndx = collection.findIndex(field => field.name == part);
+        ndx = schema.findIndex(field => field.name == part);
 
     if(!~ndx) {
       throw new pathError(ERRORS.PATH_UNKNOWN_FIELD, part);
@@ -30,13 +30,13 @@ export function encode(def, pathStr, allowWildcard) {
 
     path.push(ndx);
 
-    let item = collection[ndx];
+    let item = schema[ndx];
 
     if(item.type & DATA.STRUCT) {
       if(endOfList) {
         throw new pathError(ERRORS.PATH_INCOMPLETE_STRUCT, part);
       }
-      collection = appDefinition.getCollection(def, item);
+      schema = appDefinition.getSchema(def, item);
     }
     else {
       if(!endOfList) {
@@ -51,11 +51,11 @@ export function encode(def, pathStr, allowWildcard) {
 //  decode()                                                                                                                    //
 // ============================================================================================================================ //
 export function decode(def, array) {
-  let collection = def.fields,
+  let schema = def.fields,
       path = [];
 
   for(let ndx of array) {
-    let item = collection[ndx];
+    let item = schema[ndx];
 
     if(!item) {
       throw new pathError(ERRORS.PATH_INVALID_ENCODING);
@@ -64,7 +64,7 @@ export function decode(def, array) {
     path.push(item.name);
 
     if(item.type & DATA.STRUCT) {
-      collection = appDefinition.getCollection(def, item);
+      schema = appDefinition.getSchema(def, item);
     }
   }
 

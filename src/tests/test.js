@@ -2,6 +2,7 @@ import * as logger from "./logger.js";
 import * as testFieldSerializer from "./test-fieldSerializer/test-fieldSerializer.js";
 import * as testSchemaSerializer from "./test-schemaSerializer/test-schemaSerializer.js";
 import * as testSectionSerializer from "./test-sectionSerializer/test-sectionSerializer.js";
+import * as testProofs from "./test-proofs/test-proofs.js";
 import * as testSdkBlockchain from "./test-sdk-blockchain/test-sdk-blockchain.js";
 
 (async function() {
@@ -9,11 +10,14 @@ import * as testSdkBlockchain from "./test-sdk-blockchain/test-sdk-blockchain.js
 
   await testFieldSerializer.run();
   logger.log("");
-
+  
   await testSchemaSerializer.run();
   logger.log("");
-
+  
   await testSectionSerializer.run();
+  logger.log("");
+
+  await testProofs.run();
   logger.log("");
 
   await testSdkBlockchain.run();

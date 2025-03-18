@@ -146,7 +146,7 @@ function getWitnessHashPositions(tree, indexList) {
 // ============================================================================================================================ //
 //  buildProof()                                                                                                                //
 // ============================================================================================================================ //
-export function buildProof(treeData, indexList) {
+export function buildProof(indexList, treeData) {
   let nLeaf       = getNumberOfLeaves(treeData),
       tree        = initializeTree(nLeaf),
       witnessHash = getWitnessHashPositions(tree, indexList);

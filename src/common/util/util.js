@@ -24,6 +24,13 @@ export function hexa(n, size) {
 }
 
 // ============================================================================================================================ //
+//  arraysAreEqual()                                                                                                            //
+// ============================================================================================================================ //
+export function arraysAreEqual(a, b) {
+  return a.length == b.length && a.every((v, i) => v === b[i]);
+}
+
+// ============================================================================================================================ //
 //  intToByteArray()                                                                                                            //
 // ---------------------------------------------------------------------------------------------------------------------------- //
 //  Converts a positive integer to a list of bytes in big-endian order, forcing at least 'size' bytes if specified.             //
@@ -185,84 +192,6 @@ export function passwordStrength(str) {
 // ============================================================================================================================ //
 export function isValidEmail(str) {
   return /^[^@]+@[^@]+\.[^@]+$/.test(str);
-}
-
-// ============================================================================================================================ //
-//  jsonEncodeUint8Safe()                                                                                                       //
-// ---------------------------------------------------------------------------------------------------------------------------- //
-//  Performs JSON encoding with each Uint8Array converted to an array of numbers prefixed with 1 and other arrays prefixed      //
-//  with 0.                                                                                                                     //
-// ============================================================================================================================ //
-export function jsonEncodeUint8Safe(obj, space) {
-  return JSON.stringify(
-    obj,
-    function (key, value) {
-      if(value instanceof Uint8Array) {
-        return [1, ...value];
-      }
-      else if(Array.isArray(value)) {
-        return [0, ...value];
-      }
-      return value;
-    },
-    space
-  );
-}
-
-// ============================================================================================================================ //
-//  jsonDecodeUint8Safe()                                                                                                       //
-// ---------------------------------------------------------------------------------------------------------------------------- //
-//  Decodes a string encoded with jsonEncodeUint8Safe().                                                                        //
-// ============================================================================================================================ //
-export function jsonDecodeUint8Safe(str) {
-  return JSON.parse(
-    str,
-    function (key, value) {
-      if(Array.isArray(value)) {
-        return value[0] ? new Uint8Array(value.slice(1)) : value.slice(1);
-      }
-      return value;
-    }
-  );
-}
-
-// ============================================================================================================================ //
-//  jsonEncodeBase64()                                                                                                          //
-// ---------------------------------------------------------------------------------------------------------------------------- //
-//  Performs JSON encoding with each Uint8Array converted to a base64-encoded string prefixed with "b_" and other strings       //
-//  prefixed with "s_".                                                                                                         //
-// ============================================================================================================================ //
-export function jsonEncodeBase64(obj, space) {
-  return JSON.stringify(
-    obj,
-    function (key, value) {
-      if(typeof value == "string") {
-        return "s_" + value;
-      }
-      else if(value instanceof Uint8Array) {
-        return "b_" + base64.encodeBinary(value, base64.BASE64);
-      }
-      return value;
-    },
-    space
-  );
-}
-
-// ============================================================================================================================ //
-//  jsonDecodeBase64()                                                                                                          //
-// ---------------------------------------------------------------------------------------------------------------------------- //
-//  Decodes a string encoded with jsonEncodeBase64().                                                                           //
-// ============================================================================================================================ //
-export function jsonDecodeBase64(str) {
-  return JSON.parse(
-    str,
-    function (key, value) {
-      if(typeof value == "string") {
-        return value[0] == "b" ? base64.decodeBinary(value.slice(2), base64.BASE64) : value.slice(2);
-      }
-      return value;
-    }
-  );
 }
 
 // ============================================================================================================================ //

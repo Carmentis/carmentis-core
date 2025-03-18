@@ -33,7 +33,7 @@ export function getRuleSets(sectionDef) {
 // ============================================================================================================================ //
 //  parseRuleSet()                                                                                                              //
 // ============================================================================================================================ //
-function parseRuleSet(sectionDef, ruleSet, allowModifiers = true) {
+export function parseRuleSet(sectionDef, ruleSet, allowModifiers = true) {
   let accessRules = [];
 
   ruleSet.forEach(rule => {

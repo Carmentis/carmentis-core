@@ -1,4 +1,5 @@
 import { ERRORS, ID, DATA, SECTIONS, SCHEMAS } from "../constants/constants.js";
+import { schemaIterator } from "./schema.js";
 import * as crypto from "../crypto/crypto.js";
 import * as util from "../util/util.js";
 import * as uint8 from "../util/uint8.js";
@@ -126,7 +127,8 @@ export async function decode(height, sectionNdx, vbType, section, keyManager, ex
     context.enumerations = externalDef.enumerations;
   }
 
-  let object = {};
+  let object = {},
+      treeData = [];
 
   for(let subsectionNdx in section.subsections) {
     subsectionNdx = +subsectionNdx;
@@ -168,9 +170,81 @@ export async function decode(height, sectionNdx, vbType, section, keyManager, ex
     schemaSerializer.decode(sectionDef.fields, serializedData, context, object);
 
     if(isProvable) {
+      treeData.push(context.treeData);
+
       if(context.merkleRootHash != subsection.merkleRootHash) {
         throw new sectionError(ERRORS.SECTION_BAD_MERKLE_HASH, util.hexa(subId), subsection.merkleRootHash, context.merkleRootHash);
       }
+    }
+    else {
+      treeData.push(null);
+    }
+  }
+
+  return {
+    id: section.id,
+    object: object,
+    treeData: treeData
+  };
+}
+
+// ============================================================================================================================ //
+//  decodeFromProof()                                                                                                           //
+// ============================================================================================================================ //
+export function decodeFromProof(vbType, section, proofList, externalDef) {
+  let sectionDef = getSectionDefinition(vbType, section.id, externalDef);
+
+  let ruleSets;
+
+  if(section.id & DATA.EXTERNAL_SCHEMA) {
+    ruleSets = getRuleSetsFromSection(section);
+  }
+  else {
+    ruleSets = access.getRuleSets(sectionDef);
+  }
+
+  let flattenedFields = getFlattenedFields(sectionDef, ruleSets);
+
+  let context = {
+    flattenedFields: flattenedFields.list
+  };
+
+  if(externalDef) {
+    context.internalStructures = externalDef.internalStructures;
+    context.enumerations = externalDef.enumerations;
+  }
+
+  let object = {};
+
+  for(let subsectionNdx in section.subsections) {
+    subsectionNdx = +subsectionNdx;
+
+    let subsection = section.subsections[subsectionNdx];
+
+    let isPrivate = !!(subsection.type & DATA.SUB_PRIVATE),
+        isProvable = !!(subsection.type & DATA.SUB_PROVABLE),
+        hasAccessRules = !!(subsection.type & DATA.SUB_ACCESS_RULES),
+        keyId = subsection.keyId,
+        subId = subsection.type << 16 | keyId;
+
+    let serializedData;
+
+    context.subId = subId;
+
+    if(isPrivate) {
+      if(!isProvable) {
+        continue;
+      }
+
+      if(proofList[subsectionNdx].merkleRootHash != subsection.merkleRootHash) {
+        throw new sectionError(ERRORS.SECTION_BAD_MERKLE_HASH, util.hexa(subId), subsection.merkleRootHash, proofList[subsectionNdx].merkleRootHash);
+      }
+
+      schemaSerializer.decodeFromProof(sectionDef.fields, proofList[subsectionNdx].data, context, object);
+    }
+    else {
+      serializedData = subsection.data;
+      schemaSerializer.decode(sectionDef.fields, serializedData, context, object);
     }
   }
 
@@ -250,36 +324,41 @@ function getRuleSetsFromSection(section) {
 // ============================================================================================================================ //
 function getFlattenedFields(def, ruleSets) {
   let list = [],
-      hasPublicData = 0;
+      hasPublicData = 0,
+      iterator = new schemaIterator(def.fields);
 
-  function scanFields(collection, path = [], name = []) {
-    collection.forEach((item, id) => {
-      let newPath = [...path, id],
-          newName = [...name, item.name];
+  iterator.iterate({
+    internalStructures: def.internalStructures,
 
-      if(item.type & DATA.STRUCT) {
-        scanFields(appDefinition.getCollection(def, item), newPath, newName);
+    onEnterStructure: (def, nodeContext) => {
+      nodeContext.subId = new Set;
+      return true;
+    },
+
+    onLeaveStructure: (def, nodeContext) => {
+      list.push({
+        path: nodeContext.indexPath,
+        subId: nodeContext.subId
+      });
+    },
+
+    onLeaf: (def, nodeContext) => {
+      let isPublic = !(def.type & DATA.PRIVATE),
+          [ subId, modifiers ] = getSubsection(nodeContext.indexPath, isPublic, ruleSets);
+
+      hasPublicData |= isPublic;
+
+      list.push({
+        path: nodeContext.indexPath,
+        subId: (new Set).add(subId),
+        modifiers: modifiers
+      });
+
+      for(let ctx = nodeContext.parentNodeContext; ctx && ctx.subId; ctx = ctx.parentNodeContext) {
+        ctx.subId.add(subId);
       }
-      else if(!(item.type & DATA.ENUM) && (item.type & DATA.MSK_PRIMITIVE_TYPE) == DATA.OBJECT) {
-        scanFields(item.schema, newPath, newName);
-      }
-      else {
-        let isPublic = !(item.type & DATA.PRIVATE),
-            [ subId, modifiers ] = getSubsection(newPath, isPublic, ruleSets);
-
-        hasPublicData |= isPublic;
-
-        list.push({
-          name: newName.join("."),
-          path: newPath,
-          subId: subId,
-          modifiers: modifiers
-        });
-      }
-    });
-  }
-
-  scanFields(def.fields);
+    }
+  });
 
   return {
     list: list,

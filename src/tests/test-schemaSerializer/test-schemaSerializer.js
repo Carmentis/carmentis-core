@@ -124,6 +124,9 @@ export async function run() {
         size = "n/a";
 
     try {
+      test.context = test.context || {};
+      test.context.merklize = true;
+
       let encoded = schemaSerializer.encode(test.schema, test.object, test.context),
           decoded = schemaSerializer.decode(test.schema, encoded, test.context);
 

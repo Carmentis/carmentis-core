@@ -21,6 +21,9 @@ export default [
         ],
         plugins: [
             typescript({
+                compilerOptions: {
+                    target: 'es6',
+                },
                 allowJs: true, // Autoriser les fichiers .js
                 include: ["src/**/*.ts", "src/**/*.js"], // Inclure JS et TS,
                 declaration: false,

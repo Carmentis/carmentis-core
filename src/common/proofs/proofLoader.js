@@ -1,9 +1,9 @@
 import { ID, DATA, SCHEMAS, SECTIONS } from "../constants/constants.js";
 import { proofDecoder } from "./field-merklizer.js";
 import * as base64 from "../util/base64.js";
+import { appLedgerVb } from "../blockchain/blockchain.js";
 import * as schemaSerializer from "../serializers/schema-serializer.js";
 import * as sectionSerializer from "../serializers/section-serializer.js";
-import { appLedgerVb } from "../blockchain/blockchain.js";
 
 export class proofLoader {
   constructor(proof) {

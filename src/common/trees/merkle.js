@@ -113,7 +113,7 @@ function initializeTree(nLeaf) {
     }
   })(nLeaf, tree.depth - 1);
 
-  tree.size = ptr;
+  tree.size = Math.max(ptr, HEADER_SIZE + 32);
 
   return tree;
 }
@@ -178,6 +178,10 @@ export function applyProof(indexList, knownHash, proof) {
       witnessHash = getWitnessHashPositions(tree, indexList),
       hash        = [...Array(tree.depth)].map(_ => []),
       ptr         = 0;
+
+  if(tree.depth == 0) {
+    return new Uint8Array(32);
+  }
 
   tree.emptyNode.forEach((index, depth) => {
     if(~index) {

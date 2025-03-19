@@ -56,7 +56,6 @@ export class proofBuilder {
 
       return {
         height: n + 1,
-        appVersion: 1, // TODO: temporary hard-coded value, must be fixed
         data: b64
       };
     });

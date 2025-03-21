@@ -41,13 +41,28 @@ export class wiClient {
     if(!buttonElement) {
       throw `Button '${id}' not found`;
     }
-
-    buttonElement.el.addEventListener(
+    this.button = buttonElement.el;
+    this.eventOfButtonAttached = this.button.addEventListener(
       "click",
       _ => this.buttonCallback && this.buttonCallback()
     );
 
     this.buttonAttached = true;
+  }
+
+  /**
+   * Detaches the previously attached click event listener from the extension button.
+   * Ensures that the event listener is removed and the associated reference is cleared.
+   *
+   * @return {void} Does not return any value.
+   */
+  detach() {
+    if (this.eventOfButtonAttached) {
+      this.buttonAttached = false;
+      this.button.removeEventListener("click", this.eventOfButtonAttached);
+      this.eventOfButtonAttached = undefined;
+      this.button = undefined;
+    }
   }
 
   getQrData(id) {

@@ -1,10 +1,10 @@
 import * as http from "http";
 import * as fs from "fs";
 
-import { APP_V1 } from "../test-sdk-blockchain/app-v1.js";
+import { APP_VALID } from "../test-sdk-blockchain/app-valid.js";
 import { ORACLE } from "../test-sdk-blockchain/oracle.js";
 
-import * as sdk from "../../server/sdk.js";
+import * as sdk from "@cmts-dev/carmentis-sdk/server";
 import * as memoryDb from "../memoryDb.js";
 
 const PORT = 8080;
@@ -156,8 +156,8 @@ async function publishObjects(res) {
     }
   );
 
-  applicationId = await publishApplication(appOrganization);
   oracleId = await publishOracle(oracleOrganization);
+  applicationId = await publishApplication(appOrganization, oracleId);
 
   await operatorQuery(
     APP_OPERATOR_URL + "/setOrganization",
@@ -345,7 +345,7 @@ async function publishOracleOrganization(orgPrivateKey) {
   };
 }
 
-async function publishApplication(organization) {
+async function publishApplication(organization, oracleId) {
   blockchainCore.setDbInterface(memoryDb);
   blockchainCore.setNode(NODE_URL);
   blockchainCore.setUser(ROLES.OPERATOR, organization.privateKey);
@@ -354,12 +354,14 @@ async function publishApplication(organization) {
 
   vb = new applicationVb();
 
+  APP_VALID.definition.oracleStructures[0].oracle = oracleId;
+
   await vb.addDeclaration({ organizationId: organization.id });
-  await vb.addDescription(APP_V1.description);
+  await vb.addDescription(APP_VALID.description);
 
   await vb.addDefinition({
     version: 1,
-    definition: APP_V1.definition
+    definition: APP_VALID.definition
   });
 
   vb.setGasPrice(ECO.TOKEN);

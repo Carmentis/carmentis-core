@@ -54,6 +54,12 @@ export class proofLoader {
       });
     }
 
-    return records;
+    return {
+      exportTime: new Date(this.proof.information.exportTime),
+      application: this.proof.information.application,
+      applicationOperator: this.proof.information.applicationOperator,
+      issuer: this.proof.information.issuer,
+      records: records
+    };
   }
 }

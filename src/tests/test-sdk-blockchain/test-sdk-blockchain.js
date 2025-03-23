@@ -723,7 +723,7 @@ async function appLedgerTest(organization, appId) {
 
   builder.addAllMicroblocks();
 
-  let proofJson = builder.generate();
+  let proofJson = await builder.generate();
 
   console.log(proofJson);
 

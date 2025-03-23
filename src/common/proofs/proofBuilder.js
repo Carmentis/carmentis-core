@@ -1,5 +1,6 @@
 import { ID, DATA, SCHEMAS, SECTIONS } from "../constants/constants.js";
 import { proofGenerator } from "./field-merklizer.js";
+import { applicationVb, organizationVb } from "../blockchain/blockchain.js";
 import * as base64 from "../util/base64.js";
 import * as schemaSerializer from "../serializers/schema-serializer.js";
 
@@ -12,7 +13,7 @@ export class proofBuilder {
     console.log(vb);
 
     this.vb = vb;
-    this.issuer = "(not specified)";
+    this.issuer = "";
     this.microblocks = [];
   }
 
@@ -32,10 +33,16 @@ export class proofBuilder {
     }
   }
 
-  generate() {
+  async generate() {
     const date = new Date();
-    const applicationName = "";
-    const operatorName = "";
+
+    const appVb = new applicationVb(this.vb.state.applicationId);
+    await appVb.load();
+    const orgVb = new organizationVb(appVb.state.organizationId);
+    await orgVb.load();
+
+    const applicationName = (await appVb.getDescription()).name;
+    const operatorName = (await orgVb.getDescription()).name;
 
     const microblocks = this.microblocks.map(n => {
       const mb = this.vb.microblocks[n];

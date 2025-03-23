@@ -81,6 +81,6 @@ export class proofBuilder {
       }
     };
 
-    return JSON.stringify(obj, null, 2);
+    return obj;
   }
 }

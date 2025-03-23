@@ -7,7 +7,7 @@ import * as sectionSerializer from "../serializers/section-serializer.js";
 
 export class proofLoader {
   constructor(proof) {
-    this.proof = JSON.parse(proof);
+    this.proof = proof;
   }
 
   async load() {

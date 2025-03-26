@@ -18,10 +18,11 @@ export class proofLoader {
 
     for(let mbObject of this.proof.proofData.microblocks) {
       let height = mbObject.height - 1,
-          versionHeight = height,
           version;
 
-      for(let h = height; !version; h--) {
+      console.log(`Decoding proof at height ${mbObject.height}`);
+
+      for(let h = height; h >= 0 && !version; h--) {
         const section = vb.microblocks[h].sections.find(section =>
           section.id == SECTIONS.APP_LEDGER_DECLARATION ||
           section.id == SECTIONS.APP_LEDGER_VERSION_UPDATE
@@ -32,8 +33,20 @@ export class proofLoader {
         }
       }
 
+      if(!version) {
+        throw "Unable to find the application version";
+      }
+
+      console.log(`Application version: ${version}`);
+
       const mb = vb.microblocks[height];
+
       const appDef = await vb.loadApplicationDefinition(version);
+
+      if(!appDef) {
+        throw `Unable to load the application definition for version ${version}`;
+      }
+
       const serialized = base64.decodeBinary(mbObject.data, base64.BASE64);
       const proofList = schemaSerializer.decode(SCHEMAS.PROOF_LIST, serialized).list;
       const sectionIndex = mb.sections.findIndex(section => section.id == SECTIONS.APP_LEDGER_CHANNEL_DATA);

@@ -6,6 +6,10 @@ import { cryptoErrorHandler } from "../errors/error.js";
 
 secp256k1.etc.hmacSha256Sync = (k, ...m) => hmac(sha256, k, secp256k1.etc.concatBytes(...m));
 
+/**
+ * Generates a random private signature key.
+ * @returns string The random private key (in hex format).
+ */
 export function randomPrivateKey() {
   try {
     return uint8.toHexa(secp256k1.utils.randomPrivateKey());

@@ -6,6 +6,15 @@ import { cryptoErrorHandler } from "../errors/error.js";
 
 secp256k1.etc.hmacSha256Sync = (k, ...m) => hmac(sha256, k, secp256k1.etc.concatBytes(...m));
 
+export function randomPrivateKey() {
+  try {
+    return uint8.toHexa(secp256k1.utils.randomPrivateKey());
+  }
+  catch(e) {
+    cryptoErrorHandler(e);
+  }
+}
+
 // ============================================================================================================================ //
 //  publicKeyFromPrivateKey()                                                                                                   //
 // ============================================================================================================================ //

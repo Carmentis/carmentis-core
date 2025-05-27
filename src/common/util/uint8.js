@@ -122,10 +122,29 @@ export function isEqual(a, b) {
     return false;
   }
 
-  for(let i = 0; i < a.length; i++) {
+  for(const i in a) {
     if(a[i] != b[i]) {
       return false;
     }
   }
   return true;
+}
+
+// ============================================================================================================================ //
+//  compare()                                                                                                                   //
+// ============================================================================================================================ //
+export function compare(a, b) {
+  if(!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
+    throw "cannot compare";
+  }
+
+  for(const i in a) {
+    if(a[i] < b[i]) {
+      return -1;
+    }
+    else if(a[i] > b[i]) {
+      return 1;
+    }
+  }
+  return 0;
 }

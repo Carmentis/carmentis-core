@@ -19,6 +19,8 @@ async function processMessage(data) {
     case SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY: {
       let answer = wiWallet.signAuthenticationByPublicKey(privateKey, req.object);
 
+      console.log("extension/answer", answer);
+
       postAnswer(answer);
       break;
     }

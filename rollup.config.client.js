@@ -31,8 +31,8 @@ export default [
                 compilerOptions: {
                     target: 'es6',
                 },
-                allowJs: true, // Autoriser les fichiers .js
-                include: ["src/**/*.ts", "src/**/*.js"], // Inclure JS et TS,
+                allowJs: true, // authorize .js files
+                include: ["src/**/*.ts", "src/**/*.js"], // includes .js and .ts
                 declaration: false,
             }),
             commonjs(), // converts CommonJS to ESM

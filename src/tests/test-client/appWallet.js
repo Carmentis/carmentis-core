@@ -23,5 +23,7 @@ async function processQrCode(qrData) {
 
   console.log("obtainDataFromServer", req);
 
-  wiWallet.signAuthenticationByPublicKey(privateKey, req.object);
+  let answer = wiWallet.signAuthenticationByPublicKey(privateKey, req.object);
+
+  console.log("app/answer", answer);
 }

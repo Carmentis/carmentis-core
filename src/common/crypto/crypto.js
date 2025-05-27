@@ -1,11 +1,14 @@
 import * as uint8 from "../util/uint8.js";
-import {randomBytes} from "@noble/hashes/utils";
-import {sha256 as H} from '@noble/hashes/sha256';
+import { randomBytes } from "@noble/hashes/utils";
+import { sha256 as H256 } from "@noble/hashes/sha256";
+import { sha512 as H512 } from "@noble/hashes/sha512";
 
 export * as aes       from "./aes.js";
 export * as derive    from "./derive.js";
 export * as secp256k1 from "./secp256k1.js";
 export * as ecdh      from "./ecdh.js";
+export * as mlDsa     from "./ml-dsa.js";
+export * as mlKem     from "./ml-kem.js";
 
 // ============================================================================================================================ //
 //  sha256()                                                                                                                    //
@@ -21,7 +24,24 @@ export function sha256AsBinary(arr) {
   if(!(arr instanceof Uint8Array)) {
     throw "Argument passed to compute sha256 is not an instance of Uint8Array";
   }
-  return H(arr);
+  return H256(arr);
+}
+
+// ============================================================================================================================ //
+//  sha512()                                                                                                                    //
+// ============================================================================================================================ //
+export function sha512(arr) {
+  return uint8.toHexa(sha512AsBinary(arr));
+}
+
+// ============================================================================================================================ //
+//  sha512AsBinary()                                                                                                            //
+// ============================================================================================================================ //
+export function sha512AsBinary(arr) {
+  if(!(arr instanceof Uint8Array)) {
+    throw "Argument passed to compute sha512 is not an instance of Uint8Array";
+  }
+  return H512(arr);
 }
 
 // ============================================================================================================================ //

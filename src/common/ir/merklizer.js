@@ -87,8 +87,8 @@ export class pepperMerklizer extends merklizer {
 
     return {
       nLeaves: this.leaves.length,
-      rootHash: rootHash,
-      pepper: this.pepper
+      rootHash: uint8.toHexa(rootHash),
+      pepper: uint8.toHexa(this.pepper)
     };
   }
 

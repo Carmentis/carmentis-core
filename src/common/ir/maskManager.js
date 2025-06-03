@@ -1,4 +1,4 @@
-export class maskManager {
+export class MaskManager {
   static getListFromRegex(str, regex, substitution) {
     const stringParts = (regex.exec(str) || []).slice(1);
 

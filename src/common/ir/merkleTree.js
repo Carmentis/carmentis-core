@@ -2,7 +2,7 @@ import * as crypto from "../crypto/crypto.js";
 
 const PADDING_HASH = new Uint8Array(32);
 
-export class merkleTree {
+export class MerkleTree {
   constructor() {
     this.leaves = [];
   }

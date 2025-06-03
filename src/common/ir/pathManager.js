@@ -1,6 +1,6 @@
-import * as CST from "./constants.js";
+import { DATA } from "./constants/constants.js";
 
-export class pathManager {
+export class PathManager {
   static parsePrefix(pathString) {
     const match = /^(this|previous|block(\d+))(?=\.|\[)/.exec(pathString);
 
@@ -25,11 +25,11 @@ export class pathManager {
         pathString = "";
 
     for(const index of numericPath) {
-      if(item.type == CST.T_OBJECT) {
+      if(item.type == DATA.TYPE_OBJECT) {
         item = item.properties[index];
         pathString += "." + item.name;
       }
-      else if(item.type == CST.T_ARRAY) {
+      else if(item.type == DATA.TYPE_ARRAY) {
         item = item.entries[index];
         pathString += `[${item.index}]`;
       }
@@ -44,7 +44,7 @@ export class pathManager {
     for(let n = 1; n < parents.length; n++) {
       const item = parents[n];
 
-      pathString += parents[n - 1].type == CST.T_ARRAY ? `[${item.index}]` : "." + item.name;
+      pathString += parents[n - 1].type == DATA.TYPE_ARRAY ? `[${item.index}]` : "." + item.name;
     }
     return pathString;
   }
@@ -55,10 +55,10 @@ export class pathManager {
     if(res.hasWildcard) {
       (function browse(list) {
         for(const item of list) {
-          if(item.type == CST.T_OBJECT) {
+          if(item.type == DATA.TYPE_OBJECT) {
             browse(item.properties);
           }
-          else if(item.type == CST.T_ARRAY) {
+          else if(item.type == DATA.TYPE_ARRAY) {
             browse(item.entries);
           }
           else {
@@ -94,7 +94,7 @@ export class pathManager {
         case ".": {
           const propertyName = part.slice(1);
 
-          if(item.type != CST.T_OBJECT) {
+          if(item.type != DATA.TYPE_OBJECT) {
             throw `cannot read property '${propertyName}': the parent node is not an object`;
           }
 
@@ -117,7 +117,7 @@ export class pathManager {
         }
 
         case "[": {
-          if(item.type != CST.T_ARRAY) {
+          if(item.type != DATA.TYPE_ARRAY) {
             throw `cannot read entry '${part}': the parent node is not an array`;
           }
 
@@ -146,10 +146,10 @@ export class pathManager {
 
     if(!hasWildcard) {
       switch(item.type) {
-        case CST.T_OBJECT: {
+        case DATA.TYPE_OBJECT: {
           throw `the last part of the path must be a primitive type${wildcardAllowed ? " (use .* to access all object properties)" : ""}`;
         }
-        case CST.T_ARRAY: {
+        case DATA.TYPE_ARRAY: {
           throw `the last part of the path must be a primitive type${wildcardAllowed ? " (use [*] to access all array entries)" : ""}`;
         }
       }

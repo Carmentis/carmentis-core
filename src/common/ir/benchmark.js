@@ -1,6 +1,6 @@
 import * as sdk from "@cmts-dev/carmentis-sdk/server";
 
-testSecp256k1();
+//testSecp256k1();
 testMlDsa();
 testMlKem();
 testSalts();
@@ -28,7 +28,7 @@ function testSecp256k1() {
   }
 
   time = performance.now() - ts;
-  console.log("sign", time.toFixed(2), 300 / time * 1000);
+  console.log("sign secp256k1", time.toFixed(2), 300 / time * 1000);
 
   ts = performance.now();
 
@@ -37,7 +37,7 @@ function testSecp256k1() {
   }
 
   time = performance.now() - ts;
-  console.log("verify", time.toFixed(2), 300 / time * 1000);
+  console.log("verify secp256k1", time.toFixed(2), 300 / time * 1000);
 }
 
 function testMlDsa() {
@@ -54,7 +54,7 @@ function testMlDsa() {
   }
 
   time = performance.now() - ts;
-  console.log("genKeys", time.toFixed(2), 1000 / time * 1000);
+  console.log("genKeys mlDsa", time.toFixed(2), 1000 / time * 1000);
 
   const msg = new Uint8Array("As we travel the universe");
 
@@ -67,7 +67,7 @@ function testMlDsa() {
   }
 
   time = performance.now() - ts;
-  console.log("sign", time.toFixed(2), 300 / time * 1000);
+  console.log("sign mlDsa", time.toFixed(2), 300 / time * 1000);
 
   ts = performance.now();
 
@@ -76,7 +76,7 @@ function testMlDsa() {
   }
 
   time = performance.now() - ts;
-  console.log("verify", time.toFixed(2), 300 / time * 1000);
+  console.log("verify mlDsa", time.toFixed(2), 300 / time * 1000);
 }
 
 function testMlKem() {
@@ -93,7 +93,7 @@ function testMlKem() {
   }
 
   time = performance.now() - ts;
-  console.log("genKeys", time.toFixed(2), 1000 / time * 1000);
+  console.log("genKeys mlKem", time.toFixed(2), 1000 / time * 1000);
 
   let encaps;
 

@@ -47,7 +47,10 @@ export function getType(v) {
       if(v instanceof Uint8Array) {
         return UINT8;
       }
-      return OBJECT;
+      if(Object.getPrototypeOf(v).isPrototypeOf(Object)) {
+        return OBJECT;
+      }
+      return OTHER;
     }
     default: {
       return OTHER;

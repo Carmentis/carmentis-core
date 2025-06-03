@@ -1,11 +1,11 @@
-import { merkleTree } from "./merkleTree.js";
+import { MerkleTree } from "./merkleTree.js";
 import * as crypto from "../crypto/crypto.js";
 import * as uint8 from "../util/uint8.js";
 
 for(let size = 1; size <= 16; size++) {
   console.log(`Testing tree of size ${size}`);
 
-  const tree = new merkleTree;
+  const tree = new MerkleTree;
 
   for(let n = 0; n < size; n++) {
     tree.addLeaf(crypto.sha256AsBinary(new Uint8Array([ Math.random() * 0x100, Math.random() * 0x100 ])));
@@ -19,7 +19,7 @@ for(let size = 1; size <= 16; size++) {
     const knownHashes = tree.tree[0].map((h, i) => [ i, h ]).filter(([i]) => !(n >> i & 1));
     const witnesses = tree.getWitnesses(missing);
 
-    const newTree = new merkleTree;
+    const newTree = new MerkleTree;
 
     for(const [ index, hash ] of knownHashes) {
       newTree.setLeaf(index, hash);

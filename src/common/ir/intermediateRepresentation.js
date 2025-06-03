@@ -1,11 +1,16 @@
-import { writeStream, readStream } from "./byteStreams.js";
-import { pathManager } from "./pathManager.js";
-import { maskManager } from "./maskManager.js";
-import { jsonManager } from "./jsonManager.js";
-import { pepperMerklizer, saltMerklizer } from "./merklizer.js";
-import * as CST from "./constants.js";
+import { WriteStream, ReadStream } from "./byteStreams.js";
+import { PathManager } from "./pathManager.js";
+import { MaskManager } from "./maskManager.js";
+import { TypeManager } from "./typeManager.js";
+import { PepperMerklizer, SaltMerklizer } from "./merklizer.js";
+import { DATA } from "./constants/constants.js";
 
-export class intermediateRepresentation {
+const MAX_UINT8_ARRAY_DUMP_SIZE = 24;
+
+export class IntermediateRepresentation {
+  /**
+    Constructor
+  */
   constructor() {
     this.irObject = [];
     this.object = {
@@ -14,6 +19,10 @@ export class intermediateRepresentation {
     };
   }
 
+  /**
+    Initializes the IR object from a JSON-compatible object.
+    @param {object} input
+  */
   buildFromJson(input) {
     const output = [];
 
@@ -29,7 +38,11 @@ export class intermediateRepresentation {
 
     function processNode(object, propertyName, container, insideArray) {
       const item = object[propertyName],
-            type = jsonManager.getType(item);
+            type = TypeManager.getType(item);
+
+      if(!TypeManager.isJsonType(type)) {
+        throw `Invalid JSON type`;
+      }
 
       const outputNode = {
         type: type
@@ -42,11 +55,11 @@ export class intermediateRepresentation {
         outputNode.name = propertyName;
       }
 
-      if(type == CST.T_OBJECT) {
+      if(type == DATA.TYPE_OBJECT) {
         outputNode.properties = [];
         processStructure(item, outputNode.properties, false);
       }
-      else if(type == CST.T_ARRAY) {
+      else if(type == DATA.TYPE_ARRAY) {
         outputNode.entries = [];
         processStructure(item, outputNode.entries, true);
       }
@@ -66,9 +79,19 @@ export class intermediateRepresentation {
     }
   }
 
-  exportToSectionFormat(channel) {
-    const stream = new writeStream(),
-          dictionary = this.buildDictionary(channel);
+  /**
+    Exports the IR object to the serialized section format used for on-chain storage.
+  */
+  exportToSectionFormat(channel, isPrivate) {
+    const stream = new WriteStream();
+
+    if(isPrivate) {
+      const pepper = PepperMerklizer.generatePepper();
+
+      stream.writeByteArray(pepper);
+    }
+
+    const dictionary = this.buildDictionary(channel);
 
     stream.writeVarUint(dictionary.length);
 
@@ -92,19 +115,21 @@ export class intermediateRepresentation {
         stream.writeByte(item.type);
         stream.writeVarUint(countChildren(item.entries));
       },
-      onLeaf: (item, context, insideArray, parents) => {
+      onPrimitive: (item, context, insideArray, parents) => {
         writeIdentifier(item, insideArray);
         stream.writeByte(item.type | item.attributes << 3);
 
-        if(item.attributes == CST.MASKABLE) {
-          stream.writeArray(item.visiblePartsBinary);
-          stream.writeArray(item.hiddenPartsBinary);
+        if(item.attributes == DATA.MASKABLE) {
+          stream.writeByteArray(item.visiblePartsBinary);
+          stream.writeByteArray(item.hiddenPartsBinary);
         }
         else {
-          stream.writeArray(item.valueBinary);
+          stream.writeByteArray(item.valueBinary);
         }
       }
     });
+
+    return stream.getContent();
 
     function writeIdentifier(item, insideArray) {
       stream.writeVarUint(
@@ -118,19 +143,20 @@ export class intermediateRepresentation {
     function countChildren(list) {
       return list.reduce((cnt, item) =>
         cnt +=
-          item.type == CST.T_ARRAY || item.type == CST.T_OBJECT ?
+          item.type == DATA.TYPE_ARRAY || item.type == DATA.TYPE_OBJECT ?
             item.channels.has(channel)
           :
             item.channel === channel,
         0
       );
     }
-
-    return stream.getContent();
   }
 
+  /**
+    Imports the IR object from the serialized section format.
+  */
   importFromSectionFormat(channel, content) {
-    const stream = new readStream(content);
+    const stream = new ReadStream(content);
 
     const dictionarySize = stream.readVarUint(),
           dictionary = [];
@@ -151,7 +177,7 @@ export class intermediateRepresentation {
       let newItem = true,
           item;
 
-      if(type == CST.T_OBJECT || type == CST.T_ARRAY) {
+      if(type == DATA.TYPE_OBJECT || type == DATA.TYPE_ARRAY) {
         // if this item is an object or an array, it may have been already created while processing another channel,
         // in which case we must re-use the existing instance
         item = container.find(item => insideArray ? item.index == id : item.name == name);
@@ -169,16 +195,16 @@ export class intermediateRepresentation {
         }
       }
 
-      if(type == CST.T_OBJECT) {
+      if(type == DATA.TYPE_OBJECT) {
         (item.channels = item.channels || new Set).add(channel);
         readObject(item);
       }
-      else if(type == CST.T_ARRAY) {
+      else if(type == DATA.TYPE_ARRAY) {
         (item.channels = item.channels || new Set).add(channel);
         readArray(item, !newItem);
       }
       else {
-        if(attributes == CST.MASKABLE) {
+        if(attributes == DATA.MASKABLE) {
           let ptr;
 
           item.visibleParts = [];
@@ -197,7 +223,7 @@ export class intermediateRepresentation {
           }
           item.hiddenPartsBinary = stream.extractFrom(ptr);
 
-          item.value = maskManager.getFullText(item.visibleParts, item.hiddenParts);
+          item.value = MaskManager.getFullText(item.visibleParts, item.hiddenParts);
         }
         else {
           item.value = stream.read(type);
@@ -237,8 +263,12 @@ export class intermediateRepresentation {
     }
   }
 
+  /**
+    Exports the IR object to a proof, as a JSON-compatible object.
+    @param {object} info - An object containing meta-data about the proof.
+  */
   exportToProof(info) {
-    const proofIr = new intermediateRepresentation,
+    const proofIr = new IntermediateRepresentation,
           merkleData = [];
 
     for(const channel of this.channels) {
@@ -246,12 +276,10 @@ export class intermediateRepresentation {
             merkleObject = merklizer.generateTree(),
             knownPositions = new Set;
 
-      console.log("export/merkleObject", merkleObject);
-
       this.traverseIrObject({
         channel: channel,
-        onLeaf: (item, context, insideArray, parents) => {
-          if(!(item.attributes & CST.REDACTED)) {
+        onPrimitive: (item, context, insideArray, parents) => {
+          if(!(item.attributes & DATA.REDACTED)) {
             knownPositions.add(item.leafIndex);
 
             const proofItem = proofIr.createBranch(parents);
@@ -260,11 +288,11 @@ export class intermediateRepresentation {
             proofItem.channel = item.channel;
             proofItem.leafIndex = item.leafIndex;
 
-            if(item.attributes & CST.MASKABLE) {
+            if(item.attributes & DATA.MASKABLE) {
               proofItem.visibleSalt = item.visibleSalt;
               proofItem.visibleParts = item.visibleParts;
 
-              if(item.attributes & CST.MASKED) {
+              if(item.attributes & DATA.MASKED) {
                 proofItem.hiddenHash = item.hiddenHash;
               }
               else {
@@ -272,10 +300,10 @@ export class intermediateRepresentation {
                 proofItem.hiddenParts = item.hiddenParts;
               }
             }
-            else if(item.attributes & CST.HASHABLE) {
+            else if(item.attributes & DATA.HASHABLE) {
               proofItem.salt = item.salt;
 
-              if(item.attributes & CST.HASHED) {
+              if(item.attributes & DATA.HASHED) {
                 proofItem.hash = item.hash;
               }
               else {
@@ -309,32 +337,47 @@ export class intermediateRepresentation {
     return proofIr.object;
   }
 
+  /**
+    Imports the IR object from a proof.
+    @param {object} proof - The proof object generated by the exportToProof() method.
+  */
   importFromProof(proof) {
     this.object = proof;
     this.irObject = proof.recordData;
     this.populateChannels();
     this.serializeFields();
 
+    const merkleData = [];
+
     for(const channel of this.channels) {
       const merklizer = this.merklize(channel),
             merkleObject = merklizer.generateTree();
 
-      console.log("import/merkleObject", merkleObject);
+      merkleData.push({
+        channel: channel,
+        rootHash: merkleObject.rootHash
+      });
     }
+    return merkleData;
   }
 
-  createBranch(parents) {
+  /**
+    Internal method to create a branch in the object tree, including a primitive type and all its parents.
+    Only a minimal set of properties is included for each node: 'type', 'name'/'index', 'properties'/'entries'.
+    @param {array} itemList - An array containing the primitive item, preceded by all its parents.
+  */
+  createBranch(itemList) {
     let container = this.irObject,
         insideArray = false;
 
-    for(const currentItem of parents) {
-      if(currentItem.type == CST.T_OBJECT || currentItem.type == CST.T_ARRAY) {
+    for(const currentItem of itemList) {
+      if(currentItem.type == DATA.TYPE_OBJECT || currentItem.type == DATA.TYPE_ARRAY) {
         let refItem = container.find(item => insideArray ? item.index == currentItem.index : item.name == currentItem.name);
 
         if(!refItem) {
           refItem = createNewItem(currentItem);
 
-          if(currentItem.type == CST.T_OBJECT) {
+          if(currentItem.type == DATA.TYPE_OBJECT) {
             refItem.properties = [];
           }
           else {
@@ -342,8 +385,8 @@ export class intermediateRepresentation {
           }
           container.push(refItem);
         }
-        container = refItem.type == CST.T_OBJECT ? refItem.properties : refItem.entries;
-        insideArray = refItem.type == CST.T_ARRAY;
+        insideArray = refItem.type == DATA.TYPE_ARRAY;
+        container = insideArray ? refItem.entries : refItem.properties;
       }
       else {
         const refItem = createNewItem(currentItem);
@@ -369,20 +412,24 @@ export class intermediateRepresentation {
     }
   }
 
+  /**
+    Internal method to create a Merkle tree for a given channel, using either the channel pepper or the salts.
+    @param {number} channel - The identifier of the channel.
+  */
   merklize(channel) {
     let merklizer;
 
     if(this.object.info.type == "proof") {
       const merkleData = this.object.merkleData.find(obj => obj.channel == channel);
-      merklizer = new saltMerklizer(merkleData.nLeaves, merkleData.witnesses);
+      merklizer = new SaltMerklizer(merkleData.nLeaves, merkleData.witnesses);
     }
     else {
-      merklizer = new pepperMerklizer(this.object.info.pepper);
+      merklizer = new PepperMerklizer(this.object.info.pepper);
     }
 
     this.traverseIrObject({
       channel: channel,
-      onLeaf: (item, context, insideArray, parents) => {
+      onPrimitive: (item, context, insideArray, parents) => {
         merklizer.addItem(item, parents);
       }
     });
@@ -390,129 +437,196 @@ export class intermediateRepresentation {
     return merklizer;
   }
 
+  /**
+    Returns the IR object.
+  */
   getIRObject() {
     return this.irObject;
   }
 
+  /**
+    Returns a formatted dump of the IR object, with uint8 arrays turned into truncated hexadecimal strings for readability.
+  */
   dumpIRObject() {
-    return jsonManager.stringifyIRObject(this.irObject);
+    return JSON.stringify(
+      this.irObject,
+      (key, value) => {
+        if(value instanceof Uint8Array) {
+          return [
+            `<${value.length} byte(s)>`,
+            ...[ ...value.slice(0, MAX_UINT8_ARRAY_DUMP_SIZE) ].map(v =>
+              v.toString(16).toUpperCase().padStart(2, "0")
+            )
+          ].join(" ") +
+          (value.length > MAX_UINT8_ARRAY_DUMP_SIZE ? " .." : "");
+        }
+        if(value instanceof Set) {
+          return [ ...value ];
+        }
+        return value;
+      },
+      2
+    );
   }
 
-  setChannel(pathStringList, channelName) {
+  /**
+    Associates a set of fields to a channel.
+    @param {string} pathStringList - A string describing the set of fields.
+    @param {number} channel - The channel identifier.
+  */
+  setChannel(pathStringList, channel) {
     this.processPath(
       pathStringList,
       item => {
-        item.channel = channelName;
+        item.channel = channel;
       }
     );
   }
 
+  /**
+    Sets the 'maskable' attribute for a set of fields and define their visible and hidden parts using a callback function.
+    The callback function will receive the field value and must return an object with 'visible' and 'hidden' properties,
+    each consisting of a list of sub-strings.
+    @param {string} pathStringList - A string describing the set of fields.
+    @param {function} callback - The callback function.
+  */
   setAsMaskableByCallback(pathStringList, callback) {
     this.processPath(
       pathStringList,
       item => {
         const list = callback(item.value),
-              obj = maskManager.applyMask(item.value, list);
+              obj = MaskManager.applyMask(item.value, list);
 
         item.visibleParts = obj.visible;
         item.hiddenParts = obj.hidden;
-        item.attributes = CST.MASKABLE;
+        item.attributes = DATA.MASKABLE;
       }
     );
   }
 
+  /**
+    Sets the 'maskable' attribute for a set of fields and define their visible and hidden parts using a regular expression and a substitution string.
+    @param {string} pathStringList - A string describing the set of fields.
+    @param {RegExp} regex - A regular expression whose capturing groups must cover the entire field value, e.g. /^(.)(.*?)(@.)(.*?)(\..*)$/.
+    @param {string} substitution - The substitution string, which should include references to capturing groups and placeholders for hidden parts, e.g. "$1***$3***$5".
+  */
   setAsMaskableByRegex(pathStringList, regex, substitution) {
     this.processPath(
       pathStringList,
       item => {
-        const list = maskManager.getListFromRegex(item.value, regex, substitution),
-              obj = maskManager.applyMask(item.value, list);
+        const list = MaskManager.getListFromRegex(item.value, regex, substitution),
+              obj = MaskManager.applyMask(item.value, list);
 
         item.visibleParts = obj.visible;
         item.hiddenParts = obj.hidden;
-        item.attributes = (item.attributes & ~CST.PROPERTIES) | CST.MASKABLE;
+        item.attributes = (item.attributes & ~DATA.PROPERTIES) | DATA.MASKABLE;
       }
     );
   }
 
+  /**
+    Sets the 'hashable' attribute for a set of fields.
+    @param {string} pathStringList - A string describing the set of fields.
+  */
   setAsHashable(pathStringList) {
     this.processPath(
       pathStringList,
       item => {
-        item.attributes = (item.attributes & ~CST.PROPERTIES) | CST.HASHABLE;
+        item.attributes = (item.attributes & ~DATA.PROPERTIES) | DATA.HASHABLE;
       }
     );
   }
 
+  /**
+    Marks a set of fields as 'redacted'.
+    @param {string} pathStringList - A string describing the set of fields.
+  */
   setAsRedacted(pathStringList) {
     this.processPath(
       pathStringList,
       item => {
-//      if(item.attributes & CST.FORMAT) {
-//        throw "the format of this item was already set";
-//      }
-        item.attributes = (item.attributes & ~CST.FORMAT) | CST.REDACTED;
+        item.attributes = (item.attributes & ~DATA.FORMAT) | DATA.REDACTED;
       }
     );
   }
 
+  /**
+    Marks a set of fields as 'masked'.
+    @param {string} pathStringList - A string describing the set of fields.
+  */
   setAsMasked(pathStringList) {
     this.processPath(
       pathStringList,
       item => {
-        if(!(item.attributes & CST.MASKABLE)) {
+        if(!(item.attributes & DATA.MASKABLE)) {
           throw "this item is not maskable";
         }
-        if(item.attributes & CST.FORMAT) {
+        if(item.attributes & DATA.FORMAT) {
           throw "the format of this item was already set";
         }
-        item.attributes = (item.attributes & ~CST.FORMAT) | CST.MASKED;
+        item.attributes = (item.attributes & ~DATA.FORMAT) | DATA.MASKED;
       }
     );
   }
 
+  /**
+    Marks a set of fields as 'hashed'.
+    @param {string} pathStringList - A string describing the set of fields.
+  */
   setAsHashed(pathStringList) {
     this.processPath(
       pathStringList,
       item => {
-        if(!(item.attributes & CST.HASHABLE)) {
+        if(!(item.attributes & DATA.HASHABLE)) {
           throw "this item is not hashable";
         }
-        if(item.attributes & CST.FORMAT) {
+        if(item.attributes & DATA.FORMAT) {
           throw "the format of this item was already set";
         }
-        item.attributes = (item.attributes & ~CST.FORMAT) | CST.HASHED;
+        item.attributes = (item.attributes & ~DATA.FORMAT) | DATA.HASHED;
       }
     );
   }
 
+  /**
+    Internal method to apply a callback function to each field included in a set of fields.
+    @param {string} pathStringList - A string describing the set of fields.
+    @param {function} callback - The callback function, which will receive the field item as argument.
+  */
   processPath(pathStringList, callback) {
     const pathStrings = pathStringList.split(/, */);
 
     for(const pathString of pathStrings) {
-      const res = pathManager.parsePrefix(pathString);
+      const res = PathManager.parsePrefix(pathString);
 
       if(res.prefix != "this") {
         throw `the path must start with 'this'`;
       }
 
-      pathManager.processCallback(this.irObject, res.pathString, callback);
+      PathManager.processCallback(this.irObject, res.pathString, callback);
     }
   }
 
+  /**
+    Internal method to populate the channel identifiers from the primitive fields to their parents.
+    Also loads the sorted list of all channels in the array this.channels.
+  */
   populateChannels() {
-    this.channels = new Set;
-
     this.traverseIrObject({
-      onLeaf: (item, context, insideArray, parents) => {
+      onPrimitive: (item, context, insideArray, parents) => {
         for(let i = 0; i < parents.length - 1; i++) {
           (parents[i].channels = parents[i].channels || new Set).add(item.channel);
-          this.channels.add(item.channel);
         }
       }
     });
+
+    this.channels = [...this.irObject[0].channels].sort((a, b) => a - b);
   }
 
+  /**
+    Internal method to build a dictionary of field names for a given channel.
+    @param {number} channel - The channel identifier.
+  */
   buildDictionary(channel) {
     const dictionary = new Map;
 
@@ -529,7 +643,7 @@ export class intermediateRepresentation {
           processItem(item);
         }
       },
-      onLeaf: (item, context, insideArray, parents) => {
+      onPrimitive: (item, context, insideArray, parents) => {
         if(!insideArray) {
           processItem(item);
         }
@@ -552,12 +666,15 @@ export class intermediateRepresentation {
     return [...lookup.keys()];
   }
 
+  /**
+    Internal method to serialize the primitive fields.
+  */
   serializeFields() {
     this.traverseIrObject({
-      onLeaf: (item, context, insideArray, parents) => {
-        const stream = new writeStream();
+      onPrimitive: (item, context, insideArray, parents) => {
+        const stream = new WriteStream();
 
-        if(item.attributes & CST.MASKABLE) {
+        if(item.attributes & DATA.MASKABLE) {
           stream.writeVarUint(item.visibleParts.length);
 
           for(const str of item.visibleParts) {
@@ -565,7 +682,7 @@ export class intermediateRepresentation {
           }
           item.visiblePartsBinary = stream.getContent();
 
-          if(!(item.attributes & CST.MASKED)) {
+          if(!(item.attributes & DATA.MASKED)) {
             stream.clear();
             stream.writeVarUint(item.hiddenParts.length);
 
@@ -575,7 +692,7 @@ export class intermediateRepresentation {
             item.hiddenPartsBinary = stream.getContent();
           }
         }
-        else if(!(item.attributes & CST.HASHED)) {
+        else if(!(item.attributes & DATA.HASHED)) {
           stream.write(item.type, item.value);
           item.valueBinary = stream.getContent();
         }
@@ -586,21 +703,25 @@ export class intermediateRepresentation {
   // !! not used
   unserializeFields() {
     this.traverseIrObject({
-      onLeaf: item => {
-        const stream = new readStream(item.valueBinary);
+      onPrimitive: item => {
+        const stream = new ReadStream(item.valueBinary);
 
         item.value = stream.read(item.type);
       }
     });
   }
 
+  /**
+    Internal method to traverse the IR object and calling optional callbacks on each node.
+    @param {object} options - An object containing the traversal options.
+  */
   traverseIrObject(options) {
     processStructure(this.irObject, options.initialContext, false, []);
 
-    function hasChannel(item, isLeaf) {
+    function hasChannel(item, isPrimitive) {
       return (
         options.channel === undefined || (
-          isLeaf?
+          isPrimitive?
             item.channel === options.channel
           :
             item.channels.has(options.channel)
@@ -611,14 +732,14 @@ export class intermediateRepresentation {
     function processNode(item, context, insideArray, parents) {
       const newParents = [ ...parents, item ];
 
-      if(item.type == CST.T_ARRAY) {
+      if(item.type == DATA.TYPE_ARRAY) {
         if(hasChannel(item, false)) {
           const newContext = options.onArray && options.onArray(item, context, insideArray, newParents);
 
           processStructure(item.entries, newContext, true, newParents);
         }
       }
-      else if(item.type == CST.T_OBJECT) {
+      else if(item.type == DATA.TYPE_OBJECT) {
         if(hasChannel(item, false)) {
           const newContext = options.onObject && options.onObject(item, context, insideArray, newParents);
 
@@ -627,7 +748,7 @@ export class intermediateRepresentation {
       }
       else {
         if(hasChannel(item, true)) {
-          options.onLeaf && options.onLeaf(item, context, insideArray, newParents);
+          options.onPrimitive && options.onPrimitive(item, context, insideArray, newParents);
         }
       }
     }
@@ -639,18 +760,21 @@ export class intermediateRepresentation {
     }
   }
 
+  /**
+    Exports the IR object back to the core JSON-compatible object it describes.
+  */
   exportToJson() {
     const object = {};
 
     this.traverseIrObject({
       initialContext: object,
-      onArray: (item, context) => {
-        return context[item.name] = [];
+      onArray: (item, context, insideArray) => {
+        return context[insideArray ? item.index : item.name] = [];
       },
-      onObject: (item, context) => {
-        return context[item.name] = {};
+      onObject: (item, context, insideArray) => {
+        return context[insideArray ? item.index : item.name] = {};
       },
-      onLeaf: (item, context, insideArray, parents) => {
+      onPrimitive: (item, context, insideArray, parents) => {
         context[insideArray ? item.index : item.name] = item.value;
       }
     });

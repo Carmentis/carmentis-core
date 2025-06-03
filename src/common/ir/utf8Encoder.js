@@ -1,4 +1,4 @@
-export class textEncoder {
+export class Utf8Encoder {
   static encoder = new TextEncoder();
   static decoder = new TextDecoder();
 

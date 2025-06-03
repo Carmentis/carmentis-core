@@ -1,6 +1,6 @@
-import { pathManager } from "./pathManager.js";
+import { PathManager } from "./pathManager.js";
 
-export class messageManager {
+export class MessageManager {
   static async encode(msg, irLoader) {
     const texts = [],
           fields = [],
@@ -11,11 +11,11 @@ export class messageManager {
 
       if(index & 1) {
         const field = part.slice(2, -2).trim(),
-              res = pathManager.parsePrefix(field);
+              res = PathManager.parsePrefix(field);
 
         const irObject = await irLoader(res.blockIndex);
 
-        const numericPath = pathManager.toNumericPath(irObject, res.pathString);
+        const numericPath = PathManager.toNumericPath(irObject, res.pathString);
 
         fields.push(numericPath);
       }
@@ -37,7 +37,7 @@ export class messageManager {
   static async decode(msg, irLoader) {
     for(const numericPath of msg.fields) {
       const irObject = await irLoader(0);
-      const path = pathManager.fromNumericPath(irObject, numericPath);
+      const path = PathManager.fromNumericPath(irObject, numericPath);
       console.log(path);
     }
   }

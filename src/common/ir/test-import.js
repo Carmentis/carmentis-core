@@ -8,3 +8,5 @@ const proof = JSON.parse(proofAsText);
 const ir = new intermediateRepresentation;
 
 ir.importFromProof(proof);
+
+console.log(ir.exportToJson());

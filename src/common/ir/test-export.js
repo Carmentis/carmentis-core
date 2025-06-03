@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { intermediateRepresentation } from "./intermediateRepresentation.js";
 import * as uint8 from "../util/uint8.js";
 
-const content = fs.readFileSync("./test-data/test1.json");
+const content = fs.readFileSync("./test-data/test1-small.json");
 const testObject = JSON.parse(content);
 
 const ir = new intermediateRepresentation;
@@ -21,9 +21,9 @@ const info = {
   author: "Arnauld Chevallier"
 };
 
-ir.setAsRedacted("this[0].*");
-ir.setAsRedacted("this[1].*");
-ir.setAsRedacted("this[2].*");
+  ir.setAsRedacted("this[0].*");
+//ir.setAsRedacted("this[1].*");
+//ir.setAsRedacted("this[2].*");
 
 const proof = ir.exportToProof(info);
 const proofAsText = JSON.stringify(proof, null, 2);

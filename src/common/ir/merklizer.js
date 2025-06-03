@@ -1,22 +1,22 @@
-import { pathManager } from "./pathManager.js";
-import { textEncoder } from "./textEncoder.js";
-import { merkleTree } from "./merkleTree.js";
+import { PathManager } from "./pathManager.js";
+import { Utf8Encoder } from "./utf8Encoder.js";
+import { MerkleTree } from "./merkleTree.js";
 import * as crypto from "../crypto/crypto.js";
 import * as uint8 from "../util/uint8.js";
-import * as CST from "./constants.js";
+import { DATA } from "./constants/constants.js";
 
-class merklizer {
+class Merklizer {
   constructor() {
-    this.tree = new merkleTree;
+    this.tree = new MerkleTree;
   }
 
   addItem(item, parents) {
     const info = this.getLeafInfo(item, parents);
 
-    if(item.attributes & CST.MASKABLE) {
+    if(item.attributes & DATA.MASKABLE) {
       this.addMaskableItem(item, info);
     }
-    else if(item.attributes & CST.HASHABLE) {
+    else if(item.attributes & DATA.HASHABLE) {
       this.addHashableItem(item, info);
     }
     else {
@@ -25,8 +25,8 @@ class merklizer {
   }
 
   getLeafInfo(item, parents) {
-    const path = pathManager.fromParents(parents),
-          utf8Path = textEncoder.encode(path);
+    const path = PathManager.fromParents(parents),
+          utf8Path = Utf8Encoder.encode(path);
 
     if(utf8Path.length > 0xFFFF) {
       throw "path too long";
@@ -57,12 +57,16 @@ class merklizer {
   }
 }
 
-export class pepperMerklizer extends merklizer {
+export class PepperMerklizer extends Merklizer {
   constructor(pepper) {
     super();
-    this.pepper = pepper || crypto.getRandomBytes(32);
+    this.pepper = pepper;
     this.saltCounter = 0;
     this.leaves = [];
+  }
+
+  static generatePepper() {
+    return crypto.getRandomBytes(32);
   }
 
   addLeaf(item, data) {
@@ -131,7 +135,7 @@ export class pepperMerklizer extends merklizer {
   }
 }
 
-export class saltMerklizer extends merklizer {
+export class SaltMerklizer extends Merklizer {
   constructor(nLeaves, witnesses) {
     super();
     this.nLeaves = nLeaves;

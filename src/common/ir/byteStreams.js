@@ -1,5 +1,5 @@
-import { textEncoder } from "./textEncoder.js";
-import * as CST from "./constants.js";
+import { Utf8Encoder } from "./utf8Encoder.js";
+import { DATA } from "./constants/constants.js";
 
 const NUM_SMALL     = 0x80;
 const NUM_TYPE      = 0x60;
@@ -9,7 +9,7 @@ const NUM_FLOAT64   = 0x40;
 const NUM_SIZE      = 0x07;
 const NUM_SIGN      = 0x08;
 
-export class writeStream {
+export class WriteStream {
   constructor() {
     this.clear();
   }
@@ -24,28 +24,63 @@ export class writeStream {
 
   write(type, value) {
     switch(type) {
-      case CST.T_STRING : { this.writeString(value); break; }
-      case CST.T_NUMBER : { this.writeNumber(value); break; }
-      case CST.T_BOOLEAN: { this.writeBoolean(value); break; }
-      case CST.T_NULL   : { break; }
+      case DATA.TYPE_STRING : { this.writeString(value); break; }
+      case DATA.TYPE_NUMBER : { this.writeNumber(value); break; }
+      case DATA.TYPE_BOOLEAN: { this.writeBoolean(value); break; }
+      case DATA.TYPE_NULL   : { break; }
+      case DATA.TYPE_UINT8  : { this.writeUint8(value); break; }
+      case DATA.TYPE_UINT16 : { this.writeUint16(value); break; }
+      case DATA.TYPE_UINT24 : { this.writeUint24(value); break; }
+      case DATA.TYPE_UINT32 : { this.writeUint32(value); break; }
+      case DATA.TYPE_UINT48 : { this.writeUint48(value); break; }
+
+      default: {
+        throw `Unexpected type ${type}`;
+      }
     }
   }
 
   writeByte(n) {
-    this.byteStream.push(n);
+    this.byteStream.push(n & 0xFF);
   }
 
-  writeArray(arr) {
+  writeUnsigned(n, nByte) {
+    while(nByte--) {
+      this.writeByte(n / 2 ** (nByte * 8));
+    }
+  }
+
+  writeUint8(n) {
+    this.writeUnsigned(n, 1);
+  }
+
+  writeUint16(n) {
+    this.writeUnsigned(n, 2);
+  }
+
+  writeUint24(n) {
+    this.writeUnsigned(n, 3);
+  }
+
+  writeUint32(n) {
+    this.writeUnsigned(n, 4);
+  }
+
+  writeUint48(n) {
+    this.writeUnsigned(n, 6);
+  }
+
+  writeByteArray(arr) {
     for(const n of arr) {
       this.writeByte(n);
     }
   }
 
   writeString(str) {
-    const bin = textEncoder.encode(str);
+    const bin = Utf8Encoder.encode(str);
 
     this.writeVarUint(bin.length);
-    this.writeArray(bin);
+    this.writeByteArray(bin);
   }
 
   writeVarUint(n) {
@@ -83,36 +118,30 @@ export class writeStream {
         const sign = n < 0;
 
         this.writeByte(sign << 3 | sz);
-
-        if(sign) {
-          n = -n - 1;
-        }
-        while(sz--) {
-          this.writeByte(n / 2 ** (sz * 8) & 0xFF);
-        }
+        this.writeUnsigned(sign ? -n - 1 : n, sz);
         return;
       }
 
-      // test whether this number can be safely encoded as a Float32
+      // for size 4, test whether this number can be safely encoded as a Float32
       if(sz == 4) {
         const f32 = new Float32Array([n]);
         const v32 = +f32[0].toPrecision(7);
 
         if(v32 === n) {
           this.writeByte(NUM_FLOAT32);
-          this.writeArray(new Uint8Array(new Float32Array([n]).buffer));
+          this.writeByteArray(new Uint8Array(f32.buffer));
           return;
         }
       }
     }
 
-    // encode as 1 prefix byte + 8 bytes (Float64)
+    // fallback for everything else: encode as Float64 (1 prefix byte + 8 bytes)
     this.writeByte(NUM_FLOAT64);
-    this.writeArray(new Uint8Array(new Float64Array([n]).buffer));
+    this.writeByteArray(new Uint8Array(new Float64Array([n]).buffer));
   }
 }
 
-export class readStream {
+export class ReadStream {
   constructor(stream) {
     this.byteStream = stream;
     this.pointer = 0;
@@ -122,10 +151,15 @@ export class readStream {
     this.lastPointer = this.pointer;
 
     switch(type) {
-      case CST.T_STRING : { return this.readString(); }
-      case CST.T_NUMBER : { return this.readNumber(); }
-      case CST.T_BOOLEAN: { return this.readBoolean(); }
-      case CST.T_NULL   : { return null; }
+      case DATA.TYPE_STRING : { return this.readString(); }
+      case DATA.TYPE_NUMBER : { return this.readNumber(); }
+      case DATA.TYPE_BOOLEAN: { return this.readBoolean(); }
+      case DATA.TYPE_NULL   : { return null; }
+      case DATA.TYPE_UINT8  : { return this.readUint8(); }
+      case DATA.TYPE_UINT16 : { return this.readUint16(); }
+      case DATA.TYPE_UINT24 : { return this.readUint24(); }
+      case DATA.TYPE_UINT32 : { return this.readUint32(); }
+      case DATA.TYPE_UINT48 : { return this.readUint48(); }
     }
   }
 
@@ -145,15 +179,44 @@ export class readStream {
     return this.byteStream[this.pointer++];
   }
 
-  readArray(sz) {
+  readUnsigned(nByte) {
+    let n = 0;
+
+    while(nByte--) {
+      n = n * 0x100 + this.readByte();
+    }
+    return n;
+  }
+
+  readUint8() {
+    return this.readUnsigned(1);
+  }
+
+  readUint16() {
+    return this.readUnsigned(2);
+  }
+
+  readUint24() {
+    return this.readUnsigned(3);
+  }
+
+  readUint32() {
+    return this.readUnsigned(4);
+  }
+
+  readUint48() {
+    return this.readUnsigned(6);
+  }
+
+  readByteArray(sz) {
     return this.byteStream.slice(this.pointer, this.pointer += sz);
   }
 
   readString() {
     const size = this.readVarUint(),
-          array = this.readArray(size);
+          array = this.readByteArray(size);
 
-    return textEncoder.decode(array);
+    return Utf8Encoder.decode(array);
   }
 
   readVarUint() {
@@ -181,17 +244,14 @@ export class readStream {
 
     switch(leadingByte & NUM_TYPE) {
       case NUM_FLOAT32: {
-        return +new Float32Array(this.readArray(4).buffer)[0].toPrecision(7);
+        return +new Float32Array(this.readByteArray(4).buffer)[0].toPrecision(7);
       }
       case NUM_FLOAT64: {
-        return new Float64Array(this.readArray(8).buffer)[0];
+        return new Float64Array(this.readByteArray(8).buffer)[0];
       }
       default: {
-        let n = 0;
+        const n = this.readUnsigned(leadingByte & NUM_SIZE);
 
-        for(let i = leadingByte & NUM_SIZE; i--;) {
-          n = n * 0x100 + this.readByte();
-        }
         return leadingByte & NUM_SIGN ? -n - 1 : n;
       }
     }

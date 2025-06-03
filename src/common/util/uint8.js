@@ -17,7 +17,12 @@ export function toHexa(array) {
 //  fromHexa()                                                                                                                  //
 // ============================================================================================================================ //
 export function fromHexa(str) {
-  return new Uint8Array(typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ? str.match(/../g).map(s => parseInt(s, 16)) : []);
+  return new Uint8Array(
+    typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ?
+      str.match(/../g).map(s => parseInt(s, 16))
+    :
+      []
+  );
 }
 
 // ============================================================================================================================ //
@@ -84,7 +89,9 @@ export function from(...arg) {
       ndx = 0;
 
   arg.forEach((data, i) => {
-    switch(type.getType(data)) {
+    const t = type.getType(data);
+
+    switch(t) {
       case type.NUMBER: {
         arg[i] = util.intToByteArray(data);
         break;
@@ -92,6 +99,12 @@ export function from(...arg) {
       case type.STRING: {
         arg[i] = encoder.encode(data);
         break;
+      }
+      case type.UINT8: {
+        break;
+      }
+      default: {
+        throw `unsupported type '${type.NAME[t]}' for uint8.from()`;
       }
     }
     list[i] = ndx;

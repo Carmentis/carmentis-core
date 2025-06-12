@@ -1,17 +1,18 @@
-import { WriteStream, ReadStream } from "./byteStreams.js";
-import { IntermediateRepresentation } from "./intermediateRepresentation.js";
-import { SchemaSerializer, SchemaUnserializer } from "./schemaSerializer.js";
-import { AppLedger } from "./appLedger.js";
-import { Organization } from "./organization.js";
-import * as uint8 from "../util/uint8.js";
+import { WriteStream, ReadStream } from "./serializers/byteStreams.js";
+import { IntermediateRepresentation } from "./records/intermediateRepresentation.js";
+import { SchemaSerializer, SchemaUnserializer } from "./serializers/schemaSerializer.js";
+import { Blockchain } from "./blockchain/blockchain.js";
+import { MemoryProvider } from "./providers/memoryProvider.js";
+import { Crypto } from "./crypto/crypto.js";
+import { Utils } from "./utils/utils.js";
 import { DATA } from "./constants/constants.js";
 
 (async function() {
   testNumbers();
   testUnsignedIntegers();
   testStrings();
-  await testChain();
-//testIR();
+//await testChain();
+  testIR();
 //testSchemaSerializer();
 //await testLedger();
 })();
@@ -31,7 +32,7 @@ function testNumbers() {
 
     stream.writeNumber(+n);
 
-    const data = stream.getContent();
+    const data = stream.getByteStream();
 
     stream = new ReadStream(data);
 
@@ -55,7 +56,7 @@ function testUnsignedIntegers() {
 
     stream.writeVarUint(n);
 
-    const data = stream.getContent();
+    const data = stream.getByteStream();
 
     stream = new ReadStream(data);
 
@@ -83,7 +84,7 @@ function testStrings() {
 
     stream.writeString(str);
 
-    const data = stream.getContent();
+    const data = stream.getByteStream();
 
     stream = new ReadStream(data);
 
@@ -98,14 +99,37 @@ function testStrings() {
 }
 
 async function testChain() {
-  const organization = new Organization;
+  //const keyPair = Crypto.MLDsa.generateKeyPair();
 
-  organization.setDescription({
+  const privateKey = Crypto.Random.getKey256(),
+        publicKey = Crypto.Secp256k1.publicKeyFromPrivateKey(privateKey),
+        keyPair = { publicKey, privateKey };
+
+  const blockchain = new Blockchain({
+    internalProvider: MemoryProvider,
+    externalProvider: MemoryProvider
+  });
+
+  let hash;
+
+  let account = await blockchain.createGenesisAccount(keyPair);
+
+  hash = await account.publishUpdates();
+
+  account = await blockchain.loadAccount(hash, keyPair);
+
+  let organization = await blockchain.createOrganization(keyPair);
+
+  await organization.setDescription({
     name: "Carmentis SAS",
     city: "Paris",
     countryCode: "FR",
     website: "www.carmentis.io"
   });
+
+  hash = await organization.publishUpdates();
+
+  organization = await blockchain.loadOrganization(hash, keyPair);
 }
 
 function testIR() {
@@ -125,6 +149,8 @@ function testIR() {
     };
 
   ir = new IntermediateRepresentation;
+  ir.addPrivateChannel(0);
+  ir.addPrivateChannel(1);
 
   ir.buildFromJson(testObject);
   ir.setChannel("this.*", 0);
@@ -133,15 +159,17 @@ function testIR() {
   ir.serializeFields();
   ir.populateChannels();
 
-  data0 = ir.exportToSectionFormat(0);
+  data0 = ir.exportToSectionFormat(0, true);
   console.log("data0", data0);
-  data1 = ir.exportToSectionFormat(1);
+  console.log(ir.getMerkleRootHash(0));
+  data1 = ir.exportToSectionFormat(1, true);
   console.log("data1", data1);
+  console.log(ir.getMerkleRootHash(1));
 
   ir.setAsRedacted("this.someObject.someNumberArrayProp[*]");
 
   const info = {
-    microblock: uint8.toHexa(new Uint8Array(32)),
+    microblock: Utils.binaryToHexa(new Uint8Array(32)),
     author: "Arnauld Chevallier"
   };
 
@@ -149,12 +177,16 @@ function testIR() {
   console.log("proof 1", JSON.stringify(proof1, null, 2));
 
   ir = new IntermediateRepresentation;
+  ir.addPrivateChannel(0);
+  ir.addPrivateChannel(1);
   console.log(ir.importFromProof(proof1));
   ir.setAsMasked("this.email");
   const proof2 = ir.exportToProof(info);
   console.log("proof 2", JSON.stringify(proof2, null, 2));
 
   ir = new IntermediateRepresentation;
+  ir.addPrivateChannel(0);
+  ir.addPrivateChannel(1);
   console.log(ir.importFromProof(proof2));
   ir.setAsRedacted("this.email");
   ir.setAsRedacted("this.someObject.someStringProp");
@@ -162,9 +194,19 @@ function testIR() {
   console.log("proof 3", JSON.stringify(proof3, null, 2));
 
   ir = new IntermediateRepresentation;
+  ir.addPrivateChannel(0);
+  ir.addPrivateChannel(1);
   console.log(ir.importFromProof(proof3));
 
   console.log("exportToJson", JSON.stringify(ir.exportToJson(), null, 2));
+
+  ir = new IntermediateRepresentation;
+  ir.addPrivateChannel(0);
+  ir.addPrivateChannel(1);
+
+  ir.importFromSectionFormat(0, data0);
+  ir.importFromSectionFormat(1, data1);
+  console.log("recovered from sections", JSON.stringify(ir.exportToJson(), null, 2));
 /*
 //ir.merklize(0);
 //ir.merklize(1);

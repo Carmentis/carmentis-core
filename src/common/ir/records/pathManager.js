@@ -1,4 +1,4 @@
-import { DATA } from "./constants/constants.js";
+import { DATA } from "../constants/constants.js";
 
 export class PathManager {
   static parsePrefix(pathString) {

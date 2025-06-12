@@ -1,6 +1,8 @@
+import { Crypto } from "./crypto/crypto.js";
+import { Utils } from "./utils/utils.js";
 import * as sdk from "@cmts-dev/carmentis-sdk/server";
 
-//testSecp256k1();
+testSecp256k1();
 testMlDsa();
 testMlKem();
 testSalts();
@@ -10,7 +12,7 @@ function testSecp256k1() {
 
   let ts, time;
 
-  const secretKey = sdk.utils.encoding.toHexa(sdk.crypto.getRandomBytes(32));
+  const secretKey = Utils.binaryToHexa(Crypto.Random.getBytes(32));
 
   const keys = {
     secretKey: secretKey,
@@ -41,7 +43,6 @@ function testSecp256k1() {
 }
 
 function testMlDsa() {
-  const mlDsa = sdk.crypto.mlDsa;
   const seed = new Uint8Array([...Array(32)].map((_, i) => i));
 
   let ts, time;
@@ -50,7 +51,7 @@ function testMlDsa() {
   ts = performance.now();
 
   for(let n = 0; n < 1000; n++) {
-    keys = mlDsa.generateKeyPair(seed);
+    keys = Crypto.MLDsa.generateKeyPair(seed);
   }
 
   time = performance.now() - ts;
@@ -63,7 +64,7 @@ function testMlDsa() {
   ts = performance.now();
 
   for(let n = 0; n < 300; n++) {
-    sig = mlDsa.sign(keys.secretKey, msg);
+    sig = Crypto.MLDsa.sign(keys.secretKey, msg);
   }
 
   time = performance.now() - ts;
@@ -72,7 +73,7 @@ function testMlDsa() {
   ts = performance.now();
 
   for(let n = 0; n < 300; n++) {
-    mlDsa.verify(keys.publicKey, msg, sig);
+    Crypto.MLDsa.verify(keys.publicKey, msg, sig);
   }
 
   time = performance.now() - ts;
@@ -80,7 +81,6 @@ function testMlDsa() {
 }
 
 function testMlKem() {
-  const mlKem = sdk.crypto.mlKem;
   const seed = new Uint8Array([...Array(64)].map((_, i) => i));
 
   let ts, time;
@@ -89,8 +89,10 @@ function testMlKem() {
   ts = performance.now();
 
   for(let n = 0; n < 1000; n++) {
-    keys = mlKem.generateKeyPair(seed);
+    keys = Crypto.MLKem.generateKeyPair(seed);
   }
+
+  console.log(keys);
 
   time = performance.now() - ts;
   console.log("genKeys mlKem", time.toFixed(2), 1000 / time * 1000);
@@ -100,17 +102,23 @@ function testMlKem() {
   ts = performance.now();
 
   for(let n = 0; n < 1000; n++) {
-    encaps = mlKem.encapsulate(keys.publicKey);
+    encaps = Crypto.MLKem.encapsulate(keys.publicKey);
   }
+
+  console.log("encaps", encaps);
 
   time = performance.now() - ts;
   console.log("encapsulate", time.toFixed(2), 1000 / time * 1000);
 
+  let decaps;
+
   ts = performance.now();
 
   for(let n = 0; n < 300; n++) {
-    mlKem.decapsulate(encaps.cipherText, keys.secretKey);
+    decaps = Crypto.MLKem.decapsulate(encaps.cipherText, keys.secretKey);
   }
+
+  console.log("decaps", decaps);
 
   time = performance.now() - ts;
   console.log("decapsulate", time.toFixed(2), 300 / time * 1000);
@@ -124,7 +132,7 @@ function testSalts() {
 
   for(let n = 0; n < 100000; n++) {
     const data = new Uint8Array([...Array(256)].map(_ => Math.random() * 256 | 0)),
-          hash = sdk.crypto.sha256AsBinary(data),
+          hash = Crypto.Hashes.sha256AsBinary(data),
           s0 = hash.slice(0, 128),
           s1 = hash.slice(128);
 
@@ -138,7 +146,7 @@ function testSalts() {
 
   for(let n = 0; n < 50000; n++) {
     const data = new Uint8Array([...Array(256)].map(_ => Math.random() * 256 | 0)),
-          hash = sdk.crypto.sha512AsBinary(data),
+          hash = Crypto.Hashes.sha512AsBinary(data),
           s0 = hash.slice(0, 128),
           s1 = hash.slice(128, 256),
           s2 = hash.slice(256, 384),

@@ -1,5 +1,5 @@
-import { Utf8Encoder } from "./utf8Encoder.js";
-import { DATA } from "./constants/constants.js";
+import { DATA } from "../constants/constants.js";
+import { Utf8Encoder } from "../utils/utf8Encoder.js";
 
 const NUM_SMALL     = 0x80;
 const NUM_TYPE      = 0x60;
@@ -18,13 +18,26 @@ export class WriteStream {
     this.byteStream = [];
   }
 
-  getContent() {
+  getByteStream() {
     return new Uint8Array(this.byteStream);
   }
 
-  write(type, value) {
+  writeJsonValue(type, value) {
     switch(type) {
       case DATA.TYPE_STRING : { this.writeString(value); break; }
+      case DATA.TYPE_NUMBER : { this.writeNumber(value); break; }
+      case DATA.TYPE_BOOLEAN: { this.writeBoolean(value); break; }
+      case DATA.TYPE_NULL   : { break; }
+
+      default: {
+        throw `Type ${type} is not a JSON type`;
+      }
+    }
+  }
+
+  writeSchemaValue(type, value, size) {
+    switch(type) {
+      case DATA.TYPE_STRING : { this.writeString(value, size); break; }
       case DATA.TYPE_NUMBER : { this.writeNumber(value); break; }
       case DATA.TYPE_BOOLEAN: { this.writeBoolean(value); break; }
       case DATA.TYPE_NULL   : { break; }
@@ -33,6 +46,8 @@ export class WriteStream {
       case DATA.TYPE_UINT24 : { this.writeUint24(value); break; }
       case DATA.TYPE_UINT32 : { this.writeUint32(value); break; }
       case DATA.TYPE_UINT48 : { this.writeUint48(value); break; }
+      case DATA.TYPE_BINARY : { this.writeBinary(value, size); break; }
+      case DATA.TYPE_BIN256 : { this.writeByteArray(value); break; }
 
       default: {
         throw `Unexpected type ${type}`;
@@ -70,16 +85,25 @@ export class WriteStream {
     this.writeUnsigned(n, 6);
   }
 
+  writeBinary(arr, size) {
+    if(size === undefined) {
+      this.writeVarUint(arr.length);
+    }
+    this.writeByteArray(arr);
+  }
+
   writeByteArray(arr) {
     for(const n of arr) {
       this.writeByte(n);
     }
   }
 
-  writeString(str) {
+  writeString(str, size) {
     const bin = Utf8Encoder.encode(str);
 
-    this.writeVarUint(bin.length);
+    if(size === undefined) {
+      this.writeVarUint(bin.length);
+    }
     this.writeByteArray(bin);
   }
 
@@ -112,18 +136,18 @@ export class WriteStream {
     }
 
     // attempt to encode as 1 prefix byte + 1 to 6 data bytes
-    for(let sz = 1, max = 0x100; sz <= 6; sz++, max *= 0x100) {
+    for(let size = 1, max = 0x100; size <= 6; size++, max *= 0x100) {
       // attempt to encode as a signed integer in big-endian format
       if(isInteger && n >= -max && n < max) {
         const sign = n < 0;
 
-        this.writeByte(sign << 3 | sz);
-        this.writeUnsigned(sign ? -n - 1 : n, sz);
+        this.writeByte(sign << 3 | size);
+        this.writeUnsigned(sign ? -n - 1 : n, size);
         return;
       }
 
       // for size 4, test whether this number can be safely encoded as a Float32
-      if(sz == 4) {
+      if(size == 4) {
         const f32 = new Float32Array([n]);
         const v32 = +f32[0].toPrecision(7);
 
@@ -147,11 +171,24 @@ export class ReadStream {
     this.pointer = 0;
   }
 
-  read(type) {
+  readJsonValue(type) {
+    switch(type) {
+      case DATA.TYPE_STRING : { return this.readString(); }
+      case DATA.TYPE_NUMBER : { return this.readNumber(); }
+      case DATA.TYPE_BOOLEAN: { return this.readBoolean(); }
+      case DATA.TYPE_NULL   : { return null; }
+
+      default: {
+        throw `Type ${type} is not a JSON type`;
+      }
+    }
+  }
+
+  readSchemaValue(type, size) {
     this.lastPointer = this.pointer;
 
     switch(type) {
-      case DATA.TYPE_STRING : { return this.readString(); }
+      case DATA.TYPE_STRING : { return this.readString(size); }
       case DATA.TYPE_NUMBER : { return this.readNumber(); }
       case DATA.TYPE_BOOLEAN: { return this.readBoolean(); }
       case DATA.TYPE_NULL   : { return null; }
@@ -160,6 +197,8 @@ export class ReadStream {
       case DATA.TYPE_UINT24 : { return this.readUint24(); }
       case DATA.TYPE_UINT32 : { return this.readUint32(); }
       case DATA.TYPE_UINT48 : { return this.readUint48(); }
+      case DATA.TYPE_BINARY : { return this.readBinary(size); }
+      case DATA.TYPE_BIN256 : { return this.readByteArray(32); }
     }
   }
 
@@ -208,27 +247,37 @@ export class ReadStream {
     return this.readUnsigned(6);
   }
 
-  readByteArray(sz) {
-    return this.byteStream.slice(this.pointer, this.pointer += sz);
+  readBinary(size) {
+    if(size === undefined) {
+      size = this.readVarUint();
+    }
+    return this.readByteArray(size);
   }
 
-  readString() {
-    const size = this.readVarUint(),
-          array = this.readByteArray(size);
+  readByteArray(size) {
+    return this.byteStream.slice(this.pointer, this.pointer += size);
+  }
+
+  readString(size) {
+    if(size === undefined) {
+      size = this.readVarUint();
+    }
+
+    const array = this.readByteArray(size);
 
     return Utf8Encoder.decode(array);
   }
 
   readVarUint() {
     const parts = [];
-    let v;
+    let b;
 
     do {
-      v = this.readByte();
-      parts.push(v & 0x7F);
-    } while(v & 0x80);
+      b = this.readByte();
+      parts.push(b & 0x7F);
+    } while(b & 0x80);
 
-    return parts.reduceRight((p, c) => p * 0x80 + c, 0);
+    return parts.reduceRight((value, b) => value * 0x80 + b, 0);
   }
 
   readBoolean() {

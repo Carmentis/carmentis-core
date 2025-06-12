@@ -1,4 +1,4 @@
-import * as crypto from "../crypto/crypto.js";
+import { Crypto } from "../crypto/crypto.js";
 
 const PADDING_HASH = new Uint8Array(32);
 
@@ -146,6 +146,6 @@ export class MerkleTree {
     data.set(left, 1);
     data.set(right, 33);
 
-    return crypto.sha256AsBinary(data);
+    return Crypto.Hashes.sha256AsBinary(data);
   }
 }

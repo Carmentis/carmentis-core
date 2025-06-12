@@ -1,9 +1,9 @@
-import { WriteStream, ReadStream } from "./byteStreams.js";
+import { WriteStream, ReadStream } from "../serializers/byteStreams.js";
 import { PathManager } from "./pathManager.js";
 import { MaskManager } from "./maskManager.js";
-import { TypeManager } from "./typeManager.js";
+import { TypeManager } from "../utils/types.js";
 import { PepperMerklizer, SaltMerklizer } from "./merklizer.js";
-import { DATA } from "./constants/constants.js";
+import { DATA } from "../constants/constants.js";
 
 const MAX_UINT8_ARRAY_DUMP_SIZE = 24;
 
@@ -13,10 +13,25 @@ export class IntermediateRepresentation {
   */
   constructor() {
     this.irObject = [];
+    this.channels = new Map;
     this.object = {
       info: {},
       recordData: this.irObject
     };
+  }
+
+  addPublicChannel(channel) {
+    if(this.channels.has(channel)) {
+      throw `channel ${channel} was already added`;
+    }
+    this.channels.set(channel, { isPrivate: false });
+  }
+
+  addPrivateChannel(channel) {
+    if(this.channels.has(channel)) {
+      throw `channel ${channel} was already added`;
+    }
+    this.channels.set(channel, { isPrivate: true, pepper: PepperMerklizer.generatePepper() });
   }
 
   /**
@@ -82,13 +97,12 @@ export class IntermediateRepresentation {
   /**
     Exports the IR object to the serialized section format used for on-chain storage.
   */
-  exportToSectionFormat(channel, isPrivate) {
+  exportToSectionFormat(channel) {
     const stream = new WriteStream();
+    const channelInfo = this.channels.get(channel);
 
-    if(isPrivate) {
-      const pepper = PepperMerklizer.generatePepper();
-
-      stream.writeByteArray(pepper);
+    if(channelInfo.isPrivate) {
+      stream.writeByteArray(channelInfo.pepper);
     }
 
     const dictionary = this.buildDictionary(channel);
@@ -129,7 +143,7 @@ export class IntermediateRepresentation {
       }
     });
 
-    return stream.getContent();
+    return stream.getByteStream();
 
     function writeIdentifier(item, insideArray) {
       stream.writeVarUint(
@@ -157,6 +171,11 @@ export class IntermediateRepresentation {
   */
   importFromSectionFormat(channel, content) {
     const stream = new ReadStream(content);
+    const channelInfo = this.channels.get(channel);
+
+    if(channelInfo.isPrivate) {
+      channelInfo.pepper = stream.readByteArray(32);
+    }
 
     const dictionarySize = stream.readVarUint(),
           dictionary = [];
@@ -226,7 +245,7 @@ export class IntermediateRepresentation {
           item.value = MaskManager.getFullText(item.visibleParts, item.hiddenParts);
         }
         else {
-          item.value = stream.read(type);
+          item.value = stream.readJsonValue(type);
           item.valueBinary = stream.getLastField();
         }
         item.attributes = attributes;
@@ -271,7 +290,7 @@ export class IntermediateRepresentation {
     const proofIr = new IntermediateRepresentation,
           merkleData = [];
 
-    for(const channel of this.channels) {
+    for(const channel of this.usedChannels) {
       const merklizer = this.merklize(channel),
             merkleObject = merklizer.generateTree(),
             knownPositions = new Set;
@@ -349,7 +368,7 @@ export class IntermediateRepresentation {
 
     const merkleData = [];
 
-    for(const channel of this.channels) {
+    for(const channel of this.usedChannels) {
       const merklizer = this.merklize(channel),
             merkleObject = merklizer.generateTree();
 
@@ -412,6 +431,13 @@ export class IntermediateRepresentation {
     }
   }
 
+  getMerkleRootHash(channel) {
+    const merklizer = this.merklize(channel),
+          merkleObject = merklizer.generateTree();
+
+    return merkleObject.rootHash;
+  }
+
   /**
     Internal method to create a Merkle tree for a given channel, using either the channel pepper or the salts.
     @param {number} channel - The identifier of the channel.
@@ -424,7 +450,8 @@ export class IntermediateRepresentation {
       merklizer = new SaltMerklizer(merkleData.nLeaves, merkleData.witnesses);
     }
     else {
-      merklizer = new PepperMerklizer(this.object.info.pepper);
+      const channelInfo = this.channels.get(channel);
+      merklizer = new PepperMerklizer(channelInfo.pepper);
     }
 
     this.traverseIrObject({
@@ -475,6 +502,10 @@ export class IntermediateRepresentation {
     @param {number} channel - The channel identifier.
   */
   setChannel(pathStringList, channel) {
+    if(!this.channels.has(channel)) {
+      throw `channel ${channel} is undefined`;
+    }
+
     this.processPath(
       pathStringList,
       item => {
@@ -609,7 +640,7 @@ export class IntermediateRepresentation {
 
   /**
     Internal method to populate the channel identifiers from the primitive fields to their parents.
-    Also loads the sorted list of all channels in the array this.channels.
+    Also loads the sorted list of all channels in the array this.usedChannels.
   */
   populateChannels() {
     this.traverseIrObject({
@@ -620,7 +651,13 @@ export class IntermediateRepresentation {
       }
     });
 
-    this.channels = [...this.irObject[0].channels].sort((a, b) => a - b);
+    this.usedChannels = [...this.irObject[0].channels].sort((a, b) => a - b);
+
+    for(const channel of this.usedChannels) {
+      if(!this.channels.has(channel)) {
+        throw `channel ${channel} is undefined`;
+      }
+    }
   }
 
   /**
@@ -680,7 +717,7 @@ export class IntermediateRepresentation {
           for(const str of item.visibleParts) {
             stream.writeString(str);
           }
-          item.visiblePartsBinary = stream.getContent();
+          item.visiblePartsBinary = stream.getByteStream();
 
           if(!(item.attributes & DATA.MASKED)) {
             stream.clear();
@@ -689,12 +726,12 @@ export class IntermediateRepresentation {
             for(const str of item.hiddenParts) {
               stream.writeString(str);
             }
-            item.hiddenPartsBinary = stream.getContent();
+            item.hiddenPartsBinary = stream.getByteStream();
           }
         }
         else if(!(item.attributes & DATA.HASHED)) {
-          stream.write(item.type, item.value);
-          item.valueBinary = stream.getContent();
+          stream.writeJsonValue(item.type, item.value);
+          item.valueBinary = stream.getByteStream();
         }
       }
     });

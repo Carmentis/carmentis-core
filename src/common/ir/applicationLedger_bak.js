@@ -1,8 +1,8 @@
 import { VirtualBlockchain } from "./virtualBlockchain.js";
-import { IntermediateRepresentation } from "./intermediateRepresentation.js";
-import { MessageManager } from "./messageManager.js";
+import { IntermediateRepresentation } from "../intermediateRepresentation.js";
+import { MessageManager } from "../messageManager.js";
 
-export class AppLedger extends VirtualBlockchain {
+export class ApplicationLedger extends VirtualBlockchain {
   async encodeMessage(msg) {
     const res = await MessageManager.encode(msg, this.irLoader);
 

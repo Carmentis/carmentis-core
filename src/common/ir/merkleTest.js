@@ -1,6 +1,6 @@
 import { MerkleTree } from "./merkleTree.js";
-import * as crypto from "../crypto/crypto.js";
-import * as uint8 from "../util/uint8.js";
+import { Utils } from "./utils/utils.js";
+import { Crypto } from "./crypto/crypto.js";
 
 for(let size = 1; size <= 16; size++) {
   console.log(`Testing tree of size ${size}`);
@@ -8,11 +8,11 @@ for(let size = 1; size <= 16; size++) {
   const tree = new MerkleTree;
 
   for(let n = 0; n < size; n++) {
-    tree.addLeaf(crypto.sha256AsBinary(new Uint8Array([ Math.random() * 0x100, Math.random() * 0x100 ])));
+    tree.addLeaf(Crypto.Hashes.sha256AsBinary(new Uint8Array([ Math.random() * 0x100, Math.random() * 0x100 ])));
   }
   tree.finalize();
 
-  const rootHash = uint8.toHexa(tree.getRootHash());
+  const rootHash = Utils.binaryToHexa(tree.getRootHash());
 
   for(let n = 0; n < (1 << size); n++) {
     const missing = [...Array(size)].map((_, i) => i).filter(i => n >> i & 1);
@@ -27,7 +27,7 @@ for(let size = 1; size <= 16; size++) {
     newTree.finalize(size);
     newTree.setWitnesses(witnesses);
 
-    const newRootHash = uint8.toHexa(newTree.getRootHash());
+    const newRootHash = Utils.binaryToHexa(newTree.getRootHash());
 
     if(newRootHash != rootHash) {
       throw "FAILED: invalid root hash";

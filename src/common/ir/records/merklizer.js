@@ -1,9 +1,9 @@
 import { PathManager } from "./pathManager.js";
-import { Utf8Encoder } from "./utf8Encoder.js";
-import { MerkleTree } from "./merkleTree.js";
-import * as crypto from "../crypto/crypto.js";
-import * as uint8 from "../util/uint8.js";
-import { DATA } from "./constants/constants.js";
+import { MerkleTree } from "../trees/merkleTree.js";
+import { Crypto } from "../crypto/crypto.js";
+import { Utils } from "../utils/utils.js";
+import { Utf8Encoder } from "../utils/utf8Encoder.js";
+import { DATA } from "../constants/constants.js";
 
 class Merklizer {
   constructor() {
@@ -53,32 +53,32 @@ class Merklizer {
 
     const witnesses = this.tree.getWitnesses(unknownPositions);
 
-    return witnesses.map(arr => uint8.toHexa(arr)).join("");
+    return witnesses.map(arr => Utils.binaryToHexa(arr)).join("");
   }
 }
 
 export class PepperMerklizer extends Merklizer {
   constructor(pepper) {
     super();
-    this.pepper = pepper;
+    this.pepper = pepper || this.constructor.generatePepper();
     this.saltCounter = 0;
     this.leaves = [];
   }
 
   static generatePepper() {
-    return crypto.getRandomBytes(32);
+    return Crypto.Random.getBytes(32);
   }
 
   addLeaf(item, data) {
     this.leaves.push({
       item: item,
-      hash: crypto.sha256AsBinary(data)
+      hash: Crypto.Hashes.sha256AsBinary(data)
     });
   }
 
   generateTree() {
     this.nLeaves = this.leaves.length;
-    this.leaves.sort((a, b) => uint8.compare(a.hash, b.hash));
+    this.leaves.sort((a, b) => Utils.binaryCompare(a.hash, b.hash));
 
     for(const n in this.leaves) {
       this.tree.addLeaf(this.leaves[+n].hash);
@@ -91,37 +91,37 @@ export class PepperMerklizer extends Merklizer {
 
     return {
       nLeaves: this.leaves.length,
-      rootHash: uint8.toHexa(rootHash),
-      pepper: uint8.toHexa(this.pepper)
+      rootHash: Utils.binaryToHexa(rootHash),
+      pepper: Utils.binaryToHexa(this.pepper)
     };
   }
 
   addRawItem(item, info) {
     const salt = this.getSalt();
 
-    item.salt = uint8.toHexa(salt);
-    this.addLeaf(item, uint8.from(salt, info, item.valueBinary));
+    item.salt = Utils.binaryToHexa(salt);
+    this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
   addHashableItem(item, info) {
     const salt = this.getSalt(),
-          hash = crypto.sha256AsBinary(item.valueBinary);
+          hash = Crypto.Hashes.sha256AsBinary(item.valueBinary);
 
-    item.hash = uint8.toHexa(hash);
-    item.salt = uint8.toHexa(salt);
-    this.addLeaf(item, uint8.from(salt, info, hash));
+    item.hash = Utils.binaryToHexa(hash);
+    item.salt = Utils.binaryToHexa(salt);
+    this.addLeaf(item, Utils.binaryFrom(salt, info, hash));
   }
 
   addMaskableItem(item, info) {
     const visibleSalt = this.getSalt(),
-          visibleHash = crypto.sha256AsBinary(uint8.from(visibleSalt, info, item.visiblePartsBinary)),
+          visibleHash = Crypto.Hashes.sha256AsBinary(Utils.binaryFrom(visibleSalt, info, item.visiblePartsBinary)),
           hiddenSalt = this.getSalt(),
-          hiddenHash = crypto.sha256AsBinary(uint8.from(hiddenSalt, item.hiddenPartsBinary));
+          hiddenHash = Crypto.Hashes.sha256AsBinary(Utils.binaryFrom(hiddenSalt, item.hiddenPartsBinary));
 
-    item.visibleSalt = uint8.toHexa(visibleSalt);
-    item.hiddenSalt = uint8.toHexa(hiddenSalt);
-    item.hiddenHash = uint8.toHexa(hiddenHash);
-    this.addLeaf(item, uint8.from(visibleHash, hiddenHash));
+    item.visibleSalt = Utils.binaryToHexa(visibleSalt);
+    item.hiddenSalt = Utils.binaryToHexa(hiddenSalt);
+    item.hiddenHash = Utils.binaryToHexa(hiddenHash);
+    this.addLeaf(item, Utils.binaryFrom(visibleHash, hiddenHash));
   }
 
   getSalt() {
@@ -129,7 +129,7 @@ export class PepperMerklizer extends Merklizer {
           k = this.saltCounter++ >> 2;
 
     if(!n) {
-      this.sha512 = crypto.sha512AsBinary(uint8.from(this.pepper, k));
+      this.sha512 = Crypto.Hashes.sha512AsBinary(Utils.binaryFrom(this.pepper, k));
     }
     return this.sha512.slice(n << 4, (n + 1) << 4);
   }
@@ -139,11 +139,11 @@ export class SaltMerklizer extends Merklizer {
   constructor(nLeaves, witnesses) {
     super();
     this.nLeaves = nLeaves;
-    this.witnesses = (witnesses.match(/.{64}/g) || []).map(s => uint8.fromHexa(s));
+    this.witnesses = (witnesses.match(/.{64}/g) || []).map(s => Utils.binaryFromHexa(s));
   }
 
   addLeaf(item, data) {
-    this.tree.setLeaf(item.leafIndex, crypto.sha256AsBinary(data));
+    this.tree.setLeaf(item.leafIndex, Crypto.Hashes.sha256AsBinary(data));
   }
 
   generateTree() {
@@ -154,48 +154,48 @@ export class SaltMerklizer extends Merklizer {
 
     return {
       nLeaves: this.tree.getNumberOfLeaves(),
-      rootHash: uint8.toHexa(rootHash)
+      rootHash: Utils.binaryToHexa(rootHash)
     };
   }
 
   addRawItem(item, info) {
-    const salt = uint8.fromHexa(item.salt);
+    const salt = Utils.binaryFromHexa(item.salt);
 
-    this.addLeaf(item, uint8.from(salt, info, item.valueBinary));
+    this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
   addHashableItem(item, info) {
-    const salt = uint8.fromHexa(item.salt);
+    const salt = Utils.binaryFromHexa(item.salt);
 
     let hash;
 
     if(item.hash) {
-      hash = uint8.fromHexa(item.hash);
+      hash = Utils.binaryFromHexa(item.hash);
     }
     else {
-      hash = crypto.sha256AsBinary(item.valueBinary);
+      hash = Crypto.Hashes.sha256AsBinary(item.valueBinary);
       item.hash = hash;
     }
 
-    this.addLeaf(item, uint8.from(salt, info, item.valueBinary));
+    this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
   addMaskableItem(item, info) {
-    const visibleSalt = uint8.fromHexa(item.visibleSalt),
-          visibleHash = crypto.sha256AsBinary(uint8.from(visibleSalt, info, item.visiblePartsBinary));
+    const visibleSalt = Utils.binaryFromHexa(item.visibleSalt),
+          visibleHash = Crypto.Hashes.sha256AsBinary(Utils.binaryFrom(visibleSalt, info, item.visiblePartsBinary));
 
     let hiddenHash;
 
     if(item.hiddenHash) {
-      hiddenHash = uint8.fromHexa(item.hiddenHash);
+      hiddenHash = Utils.binaryFromHexa(item.hiddenHash);
     }
     else {
-      const hiddenSalt = uint8.fromHexa(item.hiddenSalt);
+      const hiddenSalt = Utils.binaryFromHexa(item.hiddenSalt);
 
-      hiddenHash = crypto.sha256AsBinary(uint8.from(hiddenSalt, item.hiddenPartsBinary));
-      item.hiddenHash = uint8.toHexa(hiddenHash);
+      hiddenHash = Crypto.Hashes.sha256AsBinary(Utils.binaryFrom(hiddenSalt, item.hiddenPartsBinary));
+      item.hiddenHash = Utils.binaryToHexa(hiddenHash);
     }
 
-    this.addLeaf(item, uint8.from(visibleHash, hiddenHash));
+    this.addLeaf(item, Utils.binaryFrom(visibleHash, hiddenHash));
   }
 }

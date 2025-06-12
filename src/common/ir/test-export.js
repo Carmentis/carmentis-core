@@ -1,11 +1,11 @@
 import * as fs from "fs";
-import { intermediateRepresentation } from "./intermediateRepresentation.js";
-import * as uint8 from "../util/uint8.js";
+import { IntermediateRepresentation } from "./intermediateRepresentation.js";
+import { Utils } from "./utils/utils.js";
 
 const content = fs.readFileSync("./test-data/test1-small.json");
 const testObject = JSON.parse(content);
 
-const ir = new intermediateRepresentation;
+const ir = new IntermediateRepresentation;
 
 ir.buildFromJson(testObject);
 ir.setChannel("this[*]", 0);
@@ -17,7 +17,7 @@ const sectionData = ir.exportToSectionFormat(0);
 console.log(`Section binary data: ${sectionData.length} bytes`);
 
 const info = {
-  microblock: uint8.toHexa(new Uint8Array(32)),
+  microblock: Utils.binaryToHexa(new Uint8Array(32)),
   author: "Arnauld Chevallier"
 };
 

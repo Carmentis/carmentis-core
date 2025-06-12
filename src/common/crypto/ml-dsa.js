@@ -1,6 +1,5 @@
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa";
 import { randomBytes } from "@noble/post-quantum/utils";
-import * as uint8 from "../util/uint8.js";
 import { cryptoErrorHandler } from "../errors/error.js";
 
 // ============================================================================================================================ //

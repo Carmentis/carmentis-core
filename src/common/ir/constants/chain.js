@@ -1,3 +1,6 @@
+export const MAGIC_STRING = "CMTS";
+export const PROTOCOL_VERSION = 1;
+
 export const VB_ACCOUNT        = 0;
 export const VB_VALIDATOR_NODE = 1;
 export const VB_ORGANIZATION   = 2;

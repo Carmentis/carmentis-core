@@ -11,14 +11,14 @@ import { Utils } from "./utils/utils.js";
 import { DATA } from "./constants/constants.js";
 
 (async function() {
-//testNumbers();
-//testUnsignedIntegers();
-//testStrings();
-//testRadixTree();
-//testIR();
-//testRecord();
+  testNumbers();
+  testUnsignedIntegers();
+  testStrings();
+  testRadixTree();
+  testIR();
+  testRecord();
   await testChain();
-//testSchemaSerializer();
+  testSchemaSerializer();
 //await testLedger();
 })();
 
@@ -32,7 +32,7 @@ function testNumbers() {
     2**48-1, 2**48, -(2**48),
     Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER
   ]
-  .forEach(n => {
+  .forEach((n) => {
     let stream = new WriteStream();
 
     stream.writeNumber(+n);
@@ -45,7 +45,7 @@ function testNumbers() {
 
     console.log(
       n.toString().padEnd(22),
-      [...data].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
+      [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
       res === n ? "OK" : `FAILED (${res})`
     );
   });
@@ -56,7 +56,7 @@ function testUnsignedIntegers() {
   console.log("Testing unsigned integers");
 
   [ 0, 1, 127, 128, 255, 256, 16383, 16384, 123456, Number.MAX_SAFE_INTEGER ]
-  .forEach(n => {
+  .forEach((n) => {
     let stream = new WriteStream();
 
     stream.writeVarUint(n);
@@ -67,7 +67,7 @@ function testUnsignedIntegers() {
 
     console.log(
       n.toString().padEnd(22),
-      [...data].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
+      [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
       stream.readVarUint() === n ? "OK" : "FAILED"
     );
   });
@@ -96,7 +96,7 @@ function testStrings() {
     console.log(
       JSON.stringify(str),
       `(${str.length})`,
-      [...data].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join(""),
+      [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join(""),
       stream.readString() === str ? "OK" : "FAILED"
     );
   });
@@ -157,9 +157,12 @@ async function testChain() {
         publicKey = Crypto.Secp256k1.publicKeyFromPrivateKey(privateKey),
         keyPair = { publicKey, privateKey };
 
+  const memoryProvider = new MemoryProvider();
+  const networkProvider = new ServerNetworkProvider("http://localhost:3000");
+
   const blockchain = new Blockchain({
-    internalProvider: new MemoryProvider(),
-    externalProvider: new ServerNetworkProvider("http://localhost:3000")
+    internalProvider: memoryProvider,
+    externalProvider: networkProvider
   });
 
   let hash;
@@ -210,6 +213,10 @@ async function testChain() {
   hash = await organization.publishUpdates();
 
   organization = await blockchain.loadOrganization(hash, keyPair);
+
+  memoryProvider.clear();
+  console.log(await organization.getDescription());
+  console.log(await organization.getDescription());
 }
 
 function testIR() {

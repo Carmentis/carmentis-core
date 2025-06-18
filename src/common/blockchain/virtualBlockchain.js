@@ -75,10 +75,10 @@ export class VirtualBlockchain {
     }
 
     const info = await this.provider.getMicroblockInformation(hash);
-    const body = await this.provider.getMicroblockBodys([ hash ]);
+    const bodyList = await this.provider.getMicroblockBodys([ hash ]);
 
     const microblock = new Microblock(this.type);
-    microblock.load(info.header, body);
+    microblock.load(info.header, bodyList[0].body);
 
     return microblock;
   }

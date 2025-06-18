@@ -55,7 +55,6 @@ export class MicroblockImporter {
     }
 
     if(this.height > 1) {
-console.log("loading from identifier", vbIdentifier);
       await this.vb.load(vbIdentifier);
     }
 

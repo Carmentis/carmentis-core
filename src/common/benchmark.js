@@ -131,7 +131,7 @@ function testSalts() {
   salts = [];
 
   for(let n = 0; n < 100000; n++) {
-    const data = new Uint8Array([...Array(256)].map(_ => Math.random() * 256 | 0)),
+    const data = new Uint8Array([...Array(256)].map(() => Math.random() * 256 | 0)),
           hash = Crypto.Hashes.sha256AsBinary(data),
           s0 = hash.slice(0, 128),
           s1 = hash.slice(128);
@@ -145,7 +145,7 @@ function testSalts() {
   salts = [];
 
   for(let n = 0; n < 50000; n++) {
-    const data = new Uint8Array([...Array(256)].map(_ => Math.random() * 256 | 0)),
+    const data = new Uint8Array([...Array(256)].map(() => Math.random() * 256 | 0)),
           hash = Crypto.Hashes.sha512AsBinary(data),
           s0 = hash.slice(0, 128),
           s1 = hash.slice(128, 256),

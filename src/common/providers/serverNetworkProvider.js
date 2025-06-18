@@ -24,7 +24,7 @@ export class ServerNetworkProvider extends NetworkProvider {
         body: {}
       };
 
-      const req = httpModule.request(options, res => {
+      const req = httpModule.request(options, (res) => {
         const chunks = [];
 
         res.on("data", (chunk) => {
@@ -36,7 +36,7 @@ export class ServerNetworkProvider extends NetworkProvider {
         });
       });
 
-      req.on("error", error => {
+      req.on("error", (error) => {
         reject(error);
       });
 

@@ -106,6 +106,26 @@ async function query(data) {
         }
       );
     }
+
+    case SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION: {
+      const microblockInfo = await blockchain.provider.getMicroblockInformation(object.hash);
+
+      return serializer.serialize(
+        SCHEMAS.MSG_MICROBLOCK_INFORMATION,
+        microblockInfo
+      );
+    }
+
+    case SCHEMAS.MSG_GET_MICROBLOCK_BODYS: {
+      const bodys = await blockchain.provider.getMicroblockBodys(object.hashes);
+
+      return serializer.serialize(
+        SCHEMAS.MSG_MICROBLOCK_BODYS,
+        {
+          list: bodys
+        }
+      );
+    }
   }
 }
 

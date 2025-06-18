@@ -15,7 +15,7 @@ function getListFromRegex(str, regex, substitution) {
   const substitutionParts =
     substitution.split(/(\$\d+)/)
     .map((s, i) => [ i & 1, s ])
-    .filter(a => a[1]);
+    .filter((a) => a[1]);
 
   if(
     substitutionParts.length != stringParts.length ||

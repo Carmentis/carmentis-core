@@ -7,6 +7,12 @@ export class MemoryProvider {
     this.virtualBlockchainStateStore = new Map;
   }
 
+  clear() {
+    this.microblockInformationStore = new Map;
+    this.microblockBodyStore = new Map;
+    this.virtualBlockchainStateStore = new Map;
+  }
+
   async getMicroblockInformation(identifier) {
     return await this.constructor.get(this.microblockInformationStore, identifier);
   }

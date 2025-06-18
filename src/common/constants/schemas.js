@@ -66,7 +66,7 @@ export const VIRTUAL_BLOCKCHAIN_STATE = [
 // ============================================================================================================================ //
 export const ACCOUNT_STATE = [
   { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
-  { name: "publicKeyHeight", type: DATA.TYPE_UINT48 }
+  { name: "publicKeyHeight",      type: DATA.TYPE_UINT48 }
 ];
 
 // ============================================================================================================================ //
@@ -80,7 +80,8 @@ export const VALIDATOR_NODE_STATE = [
 // ============================================================================================================================ //
 export const ORGANIZATION_STATE = [
   { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
-  { name: "publicKeyHeight",      type: DATA.TYPE_UINT48 }
+  { name: "publicKeyHeight",      type: DATA.TYPE_UINT48 },
+  { name: "descriptionHeight",    type: DATA.TYPE_UINT48 }
 ];
 
 // ============================================================================================================================ //
@@ -142,8 +143,12 @@ export const MICROBLOCK_INFORMATION = [
 // ============================================================================================================================ //
 //  Node messages                                                                                                               //
 // ============================================================================================================================ //
-export const MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE = 0;
-export const MSG_VIRTUAL_BLOCKCHAIN_UPDATE = 1;
+export const MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE  = 0x00;
+export const MSG_VIRTUAL_BLOCKCHAIN_UPDATE      = 0x01;
+export const MSG_GET_MICROBLOCK_INFORMATION     = 0x02;
+export const MSG_MICROBLOCK_INFORMATION         = 0x03;
+export const MSG_GET_MICROBLOCK_BODYS           = 0x04;
+export const MSG_MICROBLOCK_BODYS               = 0x05;
 
 export const NODE_MESSAGES = {
   [ MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE ] : [
@@ -154,5 +159,22 @@ export const NODE_MESSAGES = {
     { name: "changed",   type: DATA.TYPE_BOOLEAN },
     { name: "stateData", type: DATA.TYPE_BINARY },
     { name: "headers",   type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BINARY }
+  ],
+  [ MSG_GET_MICROBLOCK_INFORMATION ] : [
+    { name: "hash", type: DATA.TYPE_BIN256 }
+  ],
+  [ MSG_MICROBLOCK_INFORMATION ] : MICROBLOCK_INFORMATION,
+  [ MSG_GET_MICROBLOCK_BODYS ] : [
+    { name: "hashes", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
+  ],
+  [ MSG_MICROBLOCK_BODYS ] : [
+    {
+      name: "list",
+      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+      schema: [
+        { name: "hash", type: DATA.TYPE_BIN256 },
+        { name: "body", type: DATA.TYPE_BINARY }
+      ]
+    }
   ]
 };

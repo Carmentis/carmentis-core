@@ -1,3 +1,4 @@
+import { SECTIONS } from "../constants/constants.js";
 import { OrganizationVb } from "./organizationVb.js";
 import { Crypto } from "../crypto/crypto.js";
 
@@ -25,6 +26,13 @@ export class Organization {
 
   async setDescription(object) {
     await this.vb.setDescription(object);
+  }
+
+  async getDescription() {
+    // TODO (for all similar methods): the state may have changed and there may be a more recent description
+    const microblock = await this.vb.getMicroblock(this.vb.state.descriptionHeight);
+    const section = microblock.getSection((section) => section.type == SECTIONS.ORG_DESCRIPTION);
+    return section.object;
   }
 
   async publishUpdates() {

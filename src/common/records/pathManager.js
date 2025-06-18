@@ -113,7 +113,7 @@ function processPathString(irObject, pathString, wildcardAllowed) {
           hasWildcard = true;
         }
         else {
-          index = item.properties.findIndex(obj => obj.name == propertyName);
+          index = item.properties.findIndex((obj) => obj.name == propertyName);
 
           if(index == -1) {
             throw `cannot find property '${propertyName}'`;
@@ -138,7 +138,7 @@ function processPathString(irObject, pathString, wildcardAllowed) {
           hasWildcard = true;
         }
         else {
-          index = item.entries.findIndex(obj => obj.index == arrayIndex);
+          index = item.entries.findIndex((obj) => obj.index == arrayIndex);
 
           if(index == -1) {
             throw `cannot find index '${arrayIndex}'`;

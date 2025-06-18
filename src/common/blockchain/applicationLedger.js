@@ -102,7 +102,7 @@ export class ApplicationLedger {
 
     // process maskable fields
     for(const def of object.maskableFields || []) {
-      const list = def.maskedParts.map(obj => [ obj.position, obj.position + obj.length, obj.replacementString ]);
+      const list = def.maskedParts.map((obj) => [ obj.position, obj.position + obj.length, obj.replacementString ]);
       ir.setAsMaskable(def.fieldPath, list);
     }
 

@@ -234,7 +234,7 @@ export class IntermediateRepresentation {
       if(type == DATA.TYPE_OBJECT || type == DATA.TYPE_ARRAY) {
         // if this item is an object or an array, it may have been already created while processing another channel,
         // in which case we must re-use the existing instance
-        item = container.find(item => insideArray ? item.index == id : item.name == name);
+        item = container.find((item) => insideArray ? item.index == id : item.name == name);
         newItem = item === undefined;
       }
 
@@ -438,7 +438,7 @@ export class IntermediateRepresentation {
 
     for(const currentItem of itemList) {
       if(currentItem.type == DATA.TYPE_OBJECT || currentItem.type == DATA.TYPE_ARRAY) {
-        let refItem = container.find(item => insideArray ? item.index == currentItem.index : item.name == currentItem.name);
+        let refItem = container.find((item) => insideArray ? item.index == currentItem.index : item.name == currentItem.name);
 
         if(!refItem) {
           refItem = createNewItem(currentItem);
@@ -493,7 +493,7 @@ export class IntermediateRepresentation {
     let merklizer;
 
     if(this.object.info.type == "proof") {
-      const merkleData = this.object.merkleData.find(obj => obj.channelId == channelId);
+      const merkleData = this.object.merkleData.find((obj) => obj.channelId == channelId);
       merklizer = new SaltMerklizer(merkleData.nLeaves, merkleData.witnesses);
     }
     else {
@@ -528,7 +528,7 @@ export class IntermediateRepresentation {
         if(value instanceof Uint8Array) {
           return [
             `<${value.length} byte(s)>`,
-            ...[ ...value.slice(0, MAX_UINT8_ARRAY_DUMP_SIZE) ].map(v =>
+            ...[ ...value.slice(0, MAX_UINT8_ARRAY_DUMP_SIZE) ].map((v) =>
               v.toString(16).toUpperCase().padStart(2, "0")
             )
           ].join(" ") +
@@ -555,7 +555,7 @@ export class IntermediateRepresentation {
 
     this.processPath(
       pathStringList,
-      item => {
+      (item) => {
         item.channelId = channelId;
       }
     );
@@ -569,7 +569,7 @@ export class IntermediateRepresentation {
   setAsMaskable(pathStringList, maskedParts) {
     this.processPath(
       pathStringList,
-      item => {
+      (item) => {
         const obj = MaskManager.applyMask(item.value, maskedParts);
 
         item.visibleParts = obj.visible;
@@ -588,7 +588,7 @@ export class IntermediateRepresentation {
   setAsMaskableByRegex(pathStringList, regex, substitution) {
     this.processPath(
       pathStringList,
-      item => {
+      (item) => {
         const list = MaskManager.getListFromRegex(item.value, regex, substitution),
               obj = MaskManager.applyMask(item.value, list);
 
@@ -606,7 +606,7 @@ export class IntermediateRepresentation {
   setAsHashable(pathStringList) {
     this.processPath(
       pathStringList,
-      item => {
+      (item) => {
         item.attributes = (item.attributes & ~DATA.PROPERTIES) | DATA.HASHABLE;
       }
     );
@@ -619,7 +619,7 @@ export class IntermediateRepresentation {
   setAsRedacted(pathStringList) {
     this.processPath(
       pathStringList,
-      item => {
+      (item) => {
         item.attributes = (item.attributes & ~DATA.FORMAT) | DATA.REDACTED;
       }
     );
@@ -632,7 +632,7 @@ export class IntermediateRepresentation {
   setAsMasked(pathStringList) {
     this.processPath(
       pathStringList,
-      item => {
+      (item) => {
         if(!(item.attributes & DATA.MASKABLE)) {
           throw "this item is not maskable";
         }
@@ -651,7 +651,7 @@ export class IntermediateRepresentation {
   setAsHashed(pathStringList) {
     this.processPath(
       pathStringList,
-      item => {
+      (item) => {
         if(!(item.attributes & DATA.HASHABLE)) {
           throw "this item is not hashable";
         }
@@ -787,7 +787,7 @@ export class IntermediateRepresentation {
   // !! not used
   unserializeFields() {
     this.traverseIrObject({
-      onPrimitive: item => {
+      onPrimitive: (item) => {
         const stream = new ReadStream(item.valueBinary);
 
         item.value = stream.read(item.type);

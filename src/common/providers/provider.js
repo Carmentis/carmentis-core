@@ -27,12 +27,14 @@ export class Provider {
   }
 
   async getMicroblockInformation(hash) {
+    // FIXME: we should avoid the encoding/decoding passes when getting data from the external provider
     let data = await this.internalProvider.getMicroblockInformation(hash);
 
     if(!data) {
-      data = await this.externalProvider.getMicroblockInformation(hash);
+      const info = await this.externalProvider.getMicroblockInformation(hash);
 
-      if(data) {
+      if(info) {
+        data = BlockchainUtils.encodeMicroblockInformation(info.virtualBlockchainType, info.virtualBlockchainId, info.header);
         await this.internalProvider.setMicroblockInformation(hash, data);
       }
     }
@@ -60,7 +62,7 @@ export class Provider {
       const externalData = await this.externalProvider.getMicroblockBodys(missingHashes);
 
       // save missing data in the internal provider and update res[]
-      for(const { hash, body } of externalData) {
+      for(const { hash, body } of externalData.list) {
         await this.internalProvider.setMicroblockBody(hash, body);
         res.push({ hash, body });
       }
@@ -145,12 +147,15 @@ export class Provider {
     }
 
     // query our external provider for state update and new headers, starting at the known height
+console.log("known hashes", microblockHashes);
     const knownHeight = microblockHashes.length;
     const vbUpdate = await this.externalProvider.getVirtualBlockchainUpdate(virtualBlockchainId, knownHeight);
+console.log("received headers", vbUpdate.headers);
 
     if(vbUpdate.changed) {
       // check the consistency of the new headers
       const check = BlockchainUtils.checkHeaderList(vbUpdate.headers);
+console.log("received hashes", check.hashes);
 
       if(!check.valid) {
         throw `received headers are inconsistent`;
@@ -158,9 +163,10 @@ export class Provider {
 
       // make sure that the 'previous hash' field of the first new microblock matches the last known hash
       if(knownHeight) {
-        const linkedHash = BlockchainUtils.previousHashFromHeader(check.hashes[0]);
+        const firstNewHeader = vbUpdate.headers[vbUpdate.headers.length - 1];
+        const linkedHash = BlockchainUtils.previousHashFromHeader(firstNewHeader);
 
-        if(!Util.binaryIsEqual(linkedHash, microblockHashes[knownHeight - 1])) {
+        if(!Utils.binaryIsEqual(linkedHash, microblockHashes[knownHeight - 1])) {
           throw `received headers do not link properly to the last known header`;
         }
       }

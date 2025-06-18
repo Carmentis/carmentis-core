@@ -15,27 +15,39 @@ export class NetworkProvider {
   }
 
   async sendMicroblock(headerData, bodyData) {
-    return await this.broadcastTx(Utils.binaryFrom(headerData, bodyData));
+    const answer = await this.broadcastTx(Utils.binaryFrom(headerData, bodyData));
+    return answer;
   }
 
   async getMicroblockInformation(hash) {
-    return await this.abciQuery(
+    const answer = await this.abciQuery(
+      SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
+      {
+        hash
+      }
     );
+    return answer;
   }
 
   async getMicroblockBodys(hashes) {
-    return await this.abciQuery(
+    const answer = await this.abciQuery(
+      SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
+      {
+        hashes
+      }
     );
+    return answer;
   }
 
   async getVirtualBlockchainUpdate(virtualBlockchainId, knownHeight) {
-    return await this.abciQuery(
+    const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE,
       {
         virtualBlockchainId,
         knownHeight
       }
     );
+    return answer;
   }
 
   async query() {

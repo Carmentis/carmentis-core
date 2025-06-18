@@ -53,7 +53,7 @@ class Merklizer {
 
     const witnesses = this.tree.getWitnesses(unknownPositions);
 
-    return witnesses.map(arr => Utils.binaryToHexa(arr)).join("");
+    return witnesses.map((arr) => Utils.binaryToHexa(arr)).join("");
   }
 }
 
@@ -139,7 +139,7 @@ export class SaltMerklizer extends Merklizer {
   constructor(nLeaves, witnesses) {
     super();
     this.nLeaves = nLeaves;
-    this.witnesses = (witnesses.match(/.{64}/g) || []).map(s => Utils.binaryFromHexa(s));
+    this.witnesses = (witnesses.match(/.{64}/g) || []).map((s) => Utils.binaryFromHexa(s));
   }
 
   addLeaf(item, data) {

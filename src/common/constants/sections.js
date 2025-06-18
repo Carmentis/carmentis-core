@@ -57,7 +57,7 @@ const ACCOUNT = {
   [ ACCOUNT_TRANSFER ]: {
     label: "ACCOUNT_TRANSFER",
     schema: [
-      { name: "account",          type: DATA },
+      { name: "account",          type: DATA.TYPE_BIN256 },
       { name: "amount",           type: DATA.TYPE_UINT48 },
       { name: "publicReference",  type: DATA.TYPE_STRING },
       { name: "privateReference", type: DATA.TYPE_STRING }
@@ -227,10 +227,11 @@ const APP_LEDGER = {
   [ APP_LEDGER_ACTOR_SUBSCRIPTION ]: {
     label: "APP_LEDGER_ACTOR_SUBSCRIPTION",
     schema: [
-      { name: "actorId",        type: DATA.TYPE_UINT8 },
-      { name: "actorType",      type: DATA.TYPE_UINT8 },
-      { name: "organizationId", type: DATA.TYPE_BIN256 },
-      { name: "publicKey",      type: DATA.TYPE_BINARY }
+      { name: "actorId",            type: DATA.TYPE_UINT8 },
+      { name: "actorType",          type: DATA.TYPE_UINT8 },
+      { name: "organizationId",     type: DATA.TYPE_BIN256 },
+      { name: "kemPublicKey",       type: DATA.TYPE_BINARY },
+      { name: "signaturePublicKey", type: DATA.TYPE_BINARY }
     ]
   },
   [ APP_LEDGER_PUBLIC_CHANNEL_DATA ]: {

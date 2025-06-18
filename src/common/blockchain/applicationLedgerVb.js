@@ -55,7 +55,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     Helper methods
   */
   getChannelId(name) {
-    const id = this.state.channels.findIndex(obj => obj.name == name);
+    const id = this.state.channels.findIndex((obj) => obj.name == name);
     if(id == -1) {
       throw `unknown channel '${name}'`;
     }
@@ -63,7 +63,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   }
 
   getActorId(name) {
-    const id = this.state.actors.findIndex(obj => obj.name == name);
+    const id = this.state.actors.findIndex((obj) => obj.name == name);
     if(id == -1) {
       throw `unknown actor '${name}'`;
     }
@@ -81,7 +81,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     if(section.object.id != this.state.actors.length) {
       throw `invalid actor ID ${section.object.id}`;
     }
-    if(this.state.actors.some(obj => obj.name == section.object.name)) {
+    if(this.state.actors.some((obj) => obj.name == section.object.name)) {
       throw `actor '${section.object.name}' already exists`;
     }
     this.state.actors.push({
@@ -93,7 +93,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     if(section.object.id != this.state.channels.length) {
       throw `invalid channel ID ${section.object.id}`;
     }
-    if(this.state.channels.some(obj => obj.name == section.object.name)) {
+    if(this.state.channels.some((obj) => obj.name == section.object.name)) {
       throw `channel '${section.object.name}' already exists`;
     }
     this.state.channels.push({

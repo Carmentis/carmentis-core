@@ -6,7 +6,7 @@ const HASH_SIZE           = 32;
 const ROOT_ANCHORING_HASH = new Uint8Array(HASH_SIZE);
 
 function debug(array) {
-  return [...array].map(n => n.toString(16).toUpperCase().padStart(2, 0)).join('');
+  return [...array].map((n) => n.toString(16).toUpperCase().padStart(2, 0)).join('');
 }
 
 /**
@@ -37,7 +37,7 @@ class RadixStorage {
     }
 
     if(value === undefined || value === null) {
-      if(hash.some(v => v)) {
+      if(hash.some((v) => v)) {
         console.log(value);
         throw `failed to get hash ${hashString} from storage`;
       }
@@ -195,7 +195,7 @@ export class RadixTree {
   */
   async getEntries() {
     function hexa(a) {
-      return a.map(v => v.toString(16).toUpperCase().padStart(2, 0)).join('');
+      return a.map((v) => v.toString(16).toUpperCase().padStart(2, 0)).join('');
     }
 
     const iterator = database.query(subId),
@@ -206,7 +206,7 @@ export class RadixTree {
 
       list.push(
         hexa([...e[0]]) + ": " + (
-          e[0].some(v => v) ?
+          e[0].some((v) => v) ?
             msk.toString(2).padStart(16, 0) + " " + (
               msk ?
                 hexa([...e[1]].slice(2)).match(RegExp(`.{${HASH_SIZE * 2}}`, 'g')).join(' ')

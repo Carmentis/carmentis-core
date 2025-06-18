@@ -56,6 +56,10 @@ export class Account {
     await this.vb.load(identifier);
   }
 
+  async transfer(object) {
+    await this.vb.setTransfer(object);
+  }
+
   async publishUpdates() {
     if (!this.provider.isKeyed()) throw "Cannot publish updates without a keyed provider.";
     await this.vb.setSignature(this.privateKey);

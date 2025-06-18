@@ -11,13 +11,13 @@ export class Utils {
       return "";
     }
 
-    return [...array].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join("");
+    return [...array].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("");
   }
 
   static binaryFromHexa(str) {
     return new Uint8Array(
       typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ?
-        str.match(/../g).map(s => parseInt(s, 16))
+        str.match(/../g).map((s) => parseInt(s, 16))
       :
         []
     );

@@ -14,14 +14,14 @@ import {MLDSA44PrivateSignatureKey} from "./crypto/signature-interface.js";
 import {KeyedProvider} from "./providers/keyed-provider.js";
 
 (async function() {
-//testNumbers();
-//testUnsignedIntegers();
-//testStrings();
-//testRadixTree();
-//testIR();
-//testRecord();
+  testNumbers();
+  testUnsignedIntegers();
+  testStrings();
+  testRadixTree();
+  testIR();
+  testRecord();
   await testChain();
-//testSchemaSerializer();
+  testSchemaSerializer();
 //await testLedger();
 })();
 
@@ -35,7 +35,7 @@ function testNumbers() {
     2**48-1, 2**48, -(2**48),
     Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER
   ]
-  .forEach(n => {
+  .forEach((n) => {
     let stream = new WriteStream();
 
     stream.writeNumber(+n);
@@ -48,7 +48,7 @@ function testNumbers() {
 
     console.log(
       n.toString().padEnd(22),
-      [...data].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
+      [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
       res === n ? "OK" : `FAILED (${res})`
     );
   });
@@ -59,7 +59,7 @@ function testUnsignedIntegers() {
   console.log("Testing unsigned integers");
 
   [ 0, 1, 127, 128, 255, 256, 16383, 16384, 123456, Number.MAX_SAFE_INTEGER ]
-  .forEach(n => {
+  .forEach((n) => {
     let stream = new WriteStream();
 
     stream.writeVarUint(n);
@@ -70,7 +70,7 @@ function testUnsignedIntegers() {
 
     console.log(
       n.toString().padEnd(22),
-      [...data].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
+      [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
       stream.readVarUint() === n ? "OK" : "FAILED"
     );
   });
@@ -99,7 +99,7 @@ function testStrings() {
     console.log(
       JSON.stringify(str),
       `(${str.length})`,
-      [...data].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join(""),
+      [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join(""),
       stream.readString() === str ? "OK" : "FAILED"
     );
   });
@@ -167,15 +167,42 @@ async function testChain() {
 
   const provider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
   const blockchain = new Blockchain(provider);
-
   let hash;
 
-  let account = await blockchain.createGenesisAccount();
+  // account
+  console.log("creating genesis account");
 
-  hash = await account.publishUpdates();
+  let genesisAccount = await blockchain.createGenesisAccount(keyPair);
 
-  account = await blockchain.loadAccount(hash);
+  hash = await genesisAccount.publishUpdates();
 
+  console.log("processing transfer");
+
+  genesisAccount = await blockchain.loadAccount(hash, keyPair);
+
+  await genesisAccount.transfer({
+    account: new Uint8Array(32),
+    amount: 1,
+    publicReference: "transfer #1",
+    privateReference: "private ref."
+  });
+
+  await genesisAccount.publishUpdates();
+
+  genesisAccount = await blockchain.loadAccount(hash, keyPair);
+
+  await genesisAccount.transfer({
+    account: new Uint8Array(32),
+    amount: 2,
+    publicReference: "transfer #2",
+    privateReference: "private ref."
+  });
+
+  await genesisAccount.publishUpdates();
+
+  genesisAccount = await blockchain.loadAccount(hash, keyPair);
+
+  // organization
   let organization = await blockchain.createOrganization();
 
   await organization.setDescription({
@@ -188,6 +215,10 @@ async function testChain() {
   hash = await organization.publishUpdates();
 
   organization = await blockchain.loadOrganization(hash);
+
+  memoryProvider.clear();
+  console.log(await organization.getDescription());
+  console.log(await organization.getDescription());
 }
 
 function testIR() {

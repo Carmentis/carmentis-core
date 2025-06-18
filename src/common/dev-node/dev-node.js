@@ -88,7 +88,7 @@ async function query(data) {
   const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
   const { type, object } = unserializer.unserialize(data);
 
-  console.log(`Received query of type ${type}`);
+  console.log(`Received query of type ${type}`, object);
 
   switch(type) {
     case SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE: {
@@ -102,6 +102,26 @@ async function query(data) {
           changed,
           stateData,
           headers
+        }
+      );
+    }
+
+    case SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION: {
+      const microblockInfo = await blockchain.provider.getMicroblockInformation(object.hash);
+
+      return serializer.serialize(
+        SCHEMAS.MSG_MICROBLOCK_INFORMATION,
+        microblockInfo
+      );
+    }
+
+    case SCHEMAS.MSG_GET_MICROBLOCK_BODYS: {
+      const bodys = await blockchain.provider.getMicroblockBodys(object.hashes);
+
+      return serializer.serialize(
+        SCHEMAS.MSG_MICROBLOCK_BODYS,
+        {
+          list: bodys
         }
       );
     }

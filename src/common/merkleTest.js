@@ -15,7 +15,7 @@ for(let size = 1; size <= 16; size++) {
   const rootHash = Utils.binaryToHexa(tree.getRootHash());
 
   for(let n = 0; n < (1 << size); n++) {
-    const missing = [...Array(size)].map((_, i) => i).filter(i => n >> i & 1);
+    const missing = [...Array(size)].map((_, i) => i).filter((i) => n >> i & 1);
     const knownHashes = tree.tree[0].map((h, i) => [ i, h ]).filter(([i]) => !(n >> i & 1));
     const witnesses = tree.getWitnesses(missing);
 

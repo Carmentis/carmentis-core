@@ -9,6 +9,7 @@ export class OrganizationVb extends VirtualBlockchain {
 
     this.registerSectionCallback(SECTIONS.ORG_SIG_ALGORITHM, this.signatureAlgorithmCallback);
     this.registerSectionCallback(SECTIONS.ORG_PUBLIC_KEY, this.publicKeyCallback);
+    this.registerSectionCallback(SECTIONS.ORG_DESCRIPTION, this.descriptionCallback);
     this.registerSectionCallback(SECTIONS.ORG_SIGNATURE, this.signatureCallback);
   }
 
@@ -46,6 +47,10 @@ export class OrganizationVb extends VirtualBlockchain {
 
   async publicKeyCallback(microblock, section) {
     this.state.publicKeyHeight = microblock.header.height;
+  }
+
+  async descriptionCallback(microblock, section) {
+    this.state.descriptionHeight = microblock.header.height;
   }
 
   async signatureCallback(microblock, section) {

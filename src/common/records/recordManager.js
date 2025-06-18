@@ -13,7 +13,7 @@ export class RecordManager {
     const validator = new SchemaValidator(SCHEMAS.RECORD_DESCRIPTION);
     validator.validate(this.object);
 
-    this.forEach(this.object.actors, def => {
+    this.forEach(this.object.actors, (def) => {
       this.addActor(def.name);
     });
 
@@ -25,7 +25,7 @@ export class RecordManager {
     if(this.object.virtualBlockchainId) {
     }
 
-    this.forEach(this.object.channels, def => {
+    this.forEach(this.object.channels, (def) => {
       const channelId = this.addChannel(def.name);
 
       if(def.public) {
@@ -36,22 +36,22 @@ export class RecordManager {
       }
     });
 
-    this.forEach(this.object.fieldAssignations, def => {
+    this.forEach(this.object.fieldAssignations, (def) => {
       const channelId = this.getChannelId(def.channelName);
       ir.setChannel(def.fieldPath, channelId);
     });
 
-    this.forEach(this.object.actorAssignations, def => {
+    this.forEach(this.object.actorAssignations, (def) => {
       const channelId = this.getChannelId(def.channelName),
             actorId = this.getActorId(def.actorName);
     });
 
-    this.forEach(this.object.hashableFields, def => {
+    this.forEach(this.object.hashableFields, (def) => {
       ir.setAsHashable(def.fieldPath);
     });
 
-    this.forEach(this.object.maskableFields, def => {
-      const list = def.maskedParts.map(obj => [ obj.position, obj.position + obj.length, obj.replacementString ]);
+    this.forEach(this.object.maskableFields, (def) => {
+      const list = def.maskedParts.map((obj) => [ obj.position, obj.position + obj.length, obj.replacementString ]);
       ir.setAsMaskable(def.fieldPath, list);
     });
 

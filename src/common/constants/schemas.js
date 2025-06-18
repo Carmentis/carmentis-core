@@ -178,3 +178,153 @@ export const NODE_MESSAGES = {
     }
   ]
 };
+
+
+// ============================================================================================================================ //
+//  Wallet interface                                                                                                            //
+// ============================================================================================================================ //
+export const WI_MAX_SERVER_URL_LENGTH = 100;
+
+export const WI_QR_CODE = [
+  { name: "qrId",      type: DATA.TYPE_BIN256 },
+  { name: "timestamp", type: DATA.TYPE_UINT48 },
+  { name: "serverUrl", type: DATA.TYPE_STRING, size: WI_MAX_SERVER_URL_LENGTH }
+];
+
+// client -> server
+export const WIMSG_REQUEST             = 0x0;
+
+// server -> client
+export const WIMSG_UPDATE_QR           = 0x1;
+export const WIMSG_CONNECTION_TOKEN    = 0x2;
+export const WIMSG_FORWARDED_ANSWER    = 0x3;
+
+// wallet -> server
+export const WIMSG_GET_CONNECTION_INFO = 0x4;
+export const WIMSG_ANSWER              = 0x5;
+
+// server -> wallet
+export const WIMSG_CONNECTION_INFO     = 0x6;
+export const WIMSG_CONNECTION_ACCEPTED = 0x7;
+export const WIMSG_FORWARDED_REQUEST   = 0x8;
+
+export const WI_MESSAGES = {
+  [ WIMSG_REQUEST ]: [
+    { name: "requestType", type: DATA.TYPE_UINT8 },
+    { name: "request",     type: DATA.TYPE_BINARY },
+    { name: "deviceId",    type: DATA.TYPE_BIN256 },
+    { name: "withToken",   type: DATA.TYPE_UINT8 },
+    { name: "token",       type: DATA.TYPE_BIN256, condition: parent => parent.withToken }
+  ],
+  [ WIMSG_UPDATE_QR ]: [
+    { name: "qrId",      type: DATA.TYPE_BIN256 },
+    { name: "timestamp", type: DATA.TYPE_UINT48 }
+  ],
+  [ WIMSG_CONNECTION_TOKEN ]: [
+    { name: "token", type: DATA.TYPE_BIN256 }
+  ],
+  [ WIMSG_FORWARDED_ANSWER ]: [
+    { name: "answerType", type: DATA.TYPE_UINT8 },
+    { name: "answer",     type: DATA.TYPE_BINARY }
+  ],
+  [ WIMSG_GET_CONNECTION_INFO ]: [
+    { name: "qrId", type: DATA.TYPE_BIN256 }
+  ],
+  [ WIMSG_ANSWER ]: [
+    { name: "answerType", type: DATA.TYPE_UINT8 },
+    { name: "answer",     type: DATA.TYPE_BINARY }
+  ],
+  [ WIMSG_CONNECTION_INFO ]: [
+  ],
+  [ WIMSG_CONNECTION_ACCEPTED ]: [
+    { name: "qrId", type: DATA.TYPE_BIN256 }
+  ],
+  [ WIMSG_FORWARDED_REQUEST ]: [
+    { name: "requestType", type: DATA.TYPE_UINT8 },
+    { name: "request",     type: DATA.TYPE_BINARY }
+  ]
+};
+
+export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x0;
+export const WIRQ_DATA_APPROVAL      = 0x1;
+export const WIRQ_GET_EMAIL          = 0x2;
+export const WIRQ_GET_USER_DATA      = 0x3;
+
+export const WI_REQUESTS = {
+  [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
+    { name: "challenge", type: DATA.TYPE_BIN256 }
+  ],
+  [ WIRQ_GET_EMAIL ]: [],
+  [ WIRQ_GET_USER_DATA ]: [
+    { name: "requiredData", type: DATA.TYPE_ARRAY | DATA.TYPE_STRING }
+  ],
+  [ WIRQ_DATA_APPROVAL ]: [
+    { name: "dataId", type: DATA.TYPE_BINARY },
+    { name: "serverUrl", type: DATA.TYPE_STRING }
+  ]
+};
+
+export const WI_ANSWERS = {
+  [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
+    { name: "publicKey", type: DATA.TYPE_BINARY },
+    { name: "signature", type: DATA.TYPE_BINARY }
+  ],
+  [ WIRQ_GET_EMAIL ]: [
+    { name: "email", type: DATA.TYPE_STRING }
+  ],
+  [ WIRQ_DATA_APPROVAL ]: [
+    { name: "vbHash", type: DATA.TYPE_BINARY },
+    { name: "mbHash", type: DATA.TYPE_BINARY },
+    { name: "height", type: DATA.TYPE_UINT48 }
+  ],
+  [ WIRQ_GET_USER_DATA ]: [
+    { name: "userData", type: DATA.TYPE_STRING | DATA.TYPE_ARRAY }
+  ],
+};
+
+
+// ============================================================================================================================ //
+//  Wallet <-> operator network messages                                                                                        //
+// ============================================================================================================================ //
+export const MSG_APPROVAL_HANDSHAKE     = 0x00;
+export const MSG_ACTOR_KEY              = 0x01;
+export const MSG_APPROVAL_SIGNATURE     = 0x02;
+
+export const MSG_ANS_ACTOR_KEY_REQUIRED = 0x80;
+export const MSG_ANS_APPROVAL_DATA      = 0x81;
+export const MSG_ANS_APPROVAL_SIGNATURE = 0x82;
+
+export const WALLET_OP_MESSAGES = {
+  [ MSG_APPROVAL_HANDSHAKE ] : [
+    { name: "dataId", type: DATA.TYPE_BINARY }
+  ],
+  [ MSG_ACTOR_KEY ] : [
+    { name: "dataId",   type: DATA.TYPE_BINARY },
+    { name: "actorKey", type: DATA.TYPE_BINARY }
+  ],
+  [ MSG_APPROVAL_SIGNATURE ] : [
+    { name: "dataId",    type: DATA.TYPE_BINARY },
+    { name: "signature", type: DATA.TYPE_BINARY }
+  ],
+  [ MSG_ANS_ACTOR_KEY_REQUIRED ] : [
+    { name: "genesisSeed", type: DATA.TYPE_BINARY }
+  ],
+  [ MSG_ANS_APPROVAL_DATA ] : [
+    { name: "data", type: DATA.TYPE_BINARY }
+  ],
+  [ MSG_ANS_APPROVAL_SIGNATURE ] : [
+    { name: "vbHash", type: DATA.TYPE_BINARY },
+    { name: "mbHash", type: DATA.TYPE_BINARY },
+    { name: "height", type: DATA.TYPE_NUMBER }
+  ],
+  [ MSG_ANS_ERROR ] : [
+    { name: "error", type: DATA.TYPE_OBJECT, schema: ERROR }
+  ]
+};
+
+export const MSG_ANS_ERROR = 0xFF;
+export const ERROR = [
+  { name: "type",type: DATA.TYPE_UINT8 },
+  { name: "id",  type: DATA.TYPE_UINT8 },
+  { name: "arg", type: DATA.TYPE_STRING | DATA.TYPE_ARRAY }
+];

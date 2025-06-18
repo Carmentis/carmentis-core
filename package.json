@@ -7,8 +7,7 @@
     "clean": "rimraf dist && rimraf types",
     "build:client": "rollup --config rollup.config.client.js",
     "build:server": "rollup --config rollup.config.server.js",
-    "build:application": "rollup --config rollup.config.application.js",
-    "build": "tsc && npm run build:client && npm run build:server && npm run build:application"
+    "build": "tsc && npm run build:client && npm run build:server"
   },
   "exports": {
     "./client": {

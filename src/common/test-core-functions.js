@@ -164,12 +164,29 @@ async function testChain() {
 
   let hash;
 
-  let account = await blockchain.createGenesisAccount(keyPair);
+  // account
+  console.log("creating genesis account");
 
-  hash = await account.publishUpdates();
+  let genesisAccount = await blockchain.createGenesisAccount(keyPair);
 
-  account = await blockchain.loadAccount(hash, keyPair);
+  hash = await genesisAccount.publishUpdates();
 
+  console.log("processing transfer");
+
+  genesisAccount = await blockchain.loadAccount(hash, keyPair);
+
+  await genesisAccount.transfer({
+    account: new Uint8Array(32),
+    amount: 1,
+    publicReference: "public ref.",
+    privateReference: "private ref."
+  });
+
+  hash = await genesisAccount.publishUpdates();
+
+  genesisAccount = await blockchain.loadAccount(hash, keyPair);
+
+  // organization
   let organization = await blockchain.createOrganization(keyPair);
 
   await organization.setDescription({

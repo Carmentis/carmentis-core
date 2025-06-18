@@ -72,6 +72,7 @@ export class StructureChecker {
   checkConstraint(constraint, count) {
     switch(constraint) {
       case SECTIONS.ANY         : { return true; }
+      case SECTIONS.ZERO        : { return count == 0; }
       case SECTIONS.ONE         : { return count == 1; }
       case SECTIONS.AT_LEAST_ONE: { return count >= 1; }
       case SECTIONS.AT_MOST_ONE : { return count <= 1; }

@@ -42,6 +42,10 @@ export class Account {
     await this.vb.load(identifier);
   }
 
+  async transfer(object) {
+    await this.vb.setTransfer(object);
+  }
+
   async publishUpdates() {
     await this.vb.setSignature(this.privateKey);
     return await this.vb.publish();

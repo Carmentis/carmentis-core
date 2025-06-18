@@ -89,8 +89,9 @@ export class VirtualBlockchain {
   async addSection(type, object) {
     if(!this.currentMicroblock) {
       this.currentMicroblock = new Microblock(this.type);
+      const previousHash = this.height ? this.microblockHashes[this.height - 1] : null;
       this.height++;
-      this.currentMicroblock.create(this.height);
+      this.currentMicroblock.create(this.height, previousHash);
     }
 
     const section = this.currentMicroblock.addSection(type, object);
@@ -119,6 +120,8 @@ export class VirtualBlockchain {
     Publishes the current microblock.
   */
   async publish() {
+    console.log("publishing", this);
+
 //  console.log(this.currentMicroblock.header);
 //  console.log(this.currentMicroblock.sections);
 

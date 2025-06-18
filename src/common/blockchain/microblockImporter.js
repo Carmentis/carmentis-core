@@ -26,14 +26,21 @@ export class MicroblockImporter {
       throw `inconsistent body hash`;
     }
 
-    console.log(header);
-
     this.height = header.height;
 
-    if(this.height == 1) {
-      this.type = header.previousHash[0];
+    let vbIdentifier;
+
+    if(this.height > 1) {
+      const previousMicroblockInfo = await this.provider.getMicroblockInformation(header.previousHash);
+
+      if(!previousMicroblockInfo) {
+        throw `previous microblock not found`;
+      }
+      this.type = previousMicroblockInfo.virtualBlockchainType;
+      vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
     }
     else {
+      this.type = header.previousHash[0];
     }
 
     switch(this.type) {
@@ -45,6 +52,11 @@ export class MicroblockImporter {
       default: {
         throw `inconsistent type`;
       }
+    }
+
+    if(this.height > 1) {
+console.log("loading from identifier", vbIdentifier);
+      await this.vb.load(vbIdentifier);
     }
 
     this.hash = await this.vb.importMicroblock(this.headerData, this.bodyData);

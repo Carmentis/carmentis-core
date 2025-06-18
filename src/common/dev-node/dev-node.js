@@ -89,7 +89,7 @@ async function query(data) {
   const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
   const { type, object } = unserializer.unserialize(data);
 
-  console.log(`Received query of type ${type}`);
+  console.log(`Received query of type ${type}`, object);
 
   switch(type) {
     case SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE: {

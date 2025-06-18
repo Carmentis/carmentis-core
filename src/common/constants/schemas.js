@@ -65,6 +65,7 @@ export const VIRTUAL_BLOCKCHAIN_STATE = [
 //  Account state                                                                                                               //
 // ============================================================================================================================ //
 export const ACCOUNT_STATE = [
+  { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
   { name: "publicKeyHeight", type: DATA.TYPE_UINT48 }
 ];
 

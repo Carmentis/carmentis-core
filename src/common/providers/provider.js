@@ -20,7 +20,6 @@ export class Provider {
   }
 
   async updateVirtualBlockchainState(virtualBlockchainId, type, height, lastMicroblockHash, customStateObject) {
-    console.log("updateVirtualBlockchainState", virtualBlockchainId, type, height, lastMicroblockHash, customStateObject);
     const stateData = BlockchainUtils.encodeVirtualBlockchainState(type, height, lastMicroblockHash, customStateObject);
     await this.internalProvider.setVirtualBlockchainState(virtualBlockchainId, stateData);
   }
@@ -79,7 +78,6 @@ export class Provider {
   }
 
   async getVirtualBlockchainHeaders(virtualBlockchainId, knownHeight) {
-    console.log("retrieving state", virtualBlockchainId);
     const stateData = await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
     const state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
 
@@ -158,9 +156,10 @@ export class Provider {
 
       // make sure that the 'previous hash' field of the first new microblock matches the last known hash
       if(knownHeight) {
-        const linkedHash = BlockchainUtils.previousHashFromHeader(check.hashes[0]);
+        const firstNewHeader = vbUpdate.headers[vbUpdate.headers.length - 1];
+        const linkedHash = BlockchainUtils.previousHashFromHeader(firstNewHeader);
 
-        if(!Util.binaryIsEqual(linkedHash, microblockHashes[knownHeight - 1])) {
+        if(!Utils.binaryIsEqual(linkedHash, microblockHashes[knownHeight - 1])) {
           throw `received headers do not link properly to the last known header`;
         }
       }

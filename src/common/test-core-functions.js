@@ -178,11 +178,22 @@ async function testChain() {
   await genesisAccount.transfer({
     account: new Uint8Array(32),
     amount: 1,
-    publicReference: "public ref.",
+    publicReference: "transfer #1",
     privateReference: "private ref."
   });
 
-  hash = await genesisAccount.publishUpdates();
+  await genesisAccount.publishUpdates();
+
+  genesisAccount = await blockchain.loadAccount(hash, keyPair);
+
+  await genesisAccount.transfer({
+    account: new Uint8Array(32),
+    amount: 2,
+    publicReference: "transfer #2",
+    privateReference: "private ref."
+  });
+
+  await genesisAccount.publishUpdates();
 
   genesisAccount = await blockchain.loadAccount(hash, keyPair);
 

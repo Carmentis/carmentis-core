@@ -1,6 +1,7 @@
 import { CHAIN, SECTIONS } from "../constants/constants.js";
 import { VirtualBlockchain } from "./virtualBlockchain.js";
 import { StructureChecker } from "./structureChecker.js";
+import {CryptoSchemeFactory} from "../crypto/factory.js";
 
 export class OrganizationVb extends VirtualBlockchain {
   constructor({ provider }) {
@@ -26,8 +27,13 @@ export class OrganizationVb extends VirtualBlockchain {
     await this.addSection(SECTIONS.ORG_DESCRIPTION, object);
   }
 
+  /**
+   *
+   * @param {PrivateSignatureKey} privateKey
+   * @returns {Promise<void>}
+   */
   async setSignature(privateKey) {
-    const object = this.createSignature(this.state.signatureAlgorithmId, privateKey);
+    const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.ORG_SIGNATURE, object);
   }
 
@@ -44,10 +50,12 @@ export class OrganizationVb extends VirtualBlockchain {
 
   async signatureCallback(microblock, section) {
     const keyMicroblock = await this.getMicroblock(this.state.publicKeyHeight);
-    const publicKey = keyMicroblock.getSection(section => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
+    const rawPublicKey = keyMicroblock.getSection(section => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
+    const cryptoFactory = new CryptoSchemeFactory();
+    const signatureAlgorithmId = this.state.signatureAlgorithmId;
+    const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
 
     const valid = microblock.verifySignature(
-      this.state.signatureAlgorithmId,
       publicKey,
       section.object.signature,
       true,

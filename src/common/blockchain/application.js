@@ -2,11 +2,13 @@ import { ApplicationVb } from "./applicationVb.js";
 import { Crypto } from "../crypto/crypto.js";
 
 export class Application {
-  constructor({ provider, publicKey, privateKey }) {
+  constructor({ provider }) {
     this.vb = new ApplicationVb({ provider });
-    this.publicKey = publicKey;
-    this.privateKey = privateKey;
-    this.signatureAlgorithmId = Crypto.SECP256K1;
+    this.provider = provider;
+    if (this.provider.isKeyed()) {
+      const privateKey = this.provider.getPrivateSignatureKey();
+      this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
+    }
   }
 
   async _create(organizationId) {
@@ -28,7 +30,9 @@ export class Application {
   }
 
   async publishUpdates() {
-    await this.vb.sign(this.privateKey);
+    if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.'
+    const privateKey = this.provider.getPrivateSignatureKey();
+    await this.vb.sign(privateKey);
     return await this.vb.publish();
   }
 }

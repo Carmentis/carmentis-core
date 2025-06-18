@@ -26,8 +26,13 @@ export class ApplicationVb extends VirtualBlockchain {
     await this.addSection(SECTIONS.APP_DESCRIPTION, object);
   }
 
+  /**
+   *
+   * @param {PrivateSignatureKey} privateKey
+   * @returns {Promise<void>}
+   */
   async setSignature(privateKey) {
-    const object = this.createSignature(this.state.signatureAlgorithmId, privateKey);
+    const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.APP_SIGNATURE, object);
   }
 

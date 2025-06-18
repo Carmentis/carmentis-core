@@ -41,8 +41,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     await this.addSection(SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA, object);
   }
 
+  /**
+   *
+   * @param {PrivateSignatureKey} privateKey
+   * @returns {Promise<void>}
+   */
   async signAsAuthor(privateKey) {
-    const object = this.createSignature(this.state.signatureAlgorithmId, privateKey);
+    const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE, object);
   }
 

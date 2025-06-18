@@ -11,6 +11,8 @@ export class Provider {
     return await this.externalProvider.sendMicroblock(headerData, bodyData);
   }
 
+  isKeyed() { return false; }
+
   async storeMicroblock(hash, virtualBlockchainId, virtualBlockchainType, height, headerData, bodyData) {
     await this.internalProvider.setMicroblockInformation(
       hash,

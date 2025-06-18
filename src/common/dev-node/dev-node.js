@@ -7,6 +7,7 @@ import { Blockchain } from "../blockchain/blockchain.js";
 import { MemoryProvider } from "../providers/memoryProvider.js";
 import { NullNetworkProvider } from "../providers/nullNetworkProvider.js";
 import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer.js";
+import {Provider} from "../providers/provider.js";
 
 const PORT = process.env.PORT || 3000;
 const BLOCK_DELAY = 500;
@@ -16,10 +17,8 @@ const MESSAGES = {
   READY: `Carmentis node is ready and listening on port ${PORT}`
 };
 
-const blockchain = new Blockchain({
-  internalProvider: new MemoryProvider(),
-  externalProvider: new NullNetworkProvider()
-});
+const provider = new Provider(new MemoryProvider(), new NullNetworkProvider());
+const blockchain = new Blockchain(provider);
 
 function start() {
   console.log(MESSAGES.START);

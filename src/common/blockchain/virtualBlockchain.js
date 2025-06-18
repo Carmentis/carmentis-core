@@ -108,10 +108,14 @@ export class VirtualBlockchain {
   }
 
   /**
-    Creates a signature for the current microblock.
-  */
-  createSignature(algorithmId, privateKey, withGas = true) {
-    const signature = this.currentMicroblock.createSignature(algorithmId, privateKey, withGas);
+   * Creates a signature for the current microblock.
+   *
+   * @param {PrivateSignatureKey} privateKey
+   * @param {boolean} withGas
+   * @returns {{signature: (*|{signature})}}
+   */
+  createSignature(privateKey, withGas = true) {
+    const signature = this.currentMicroblock.createSignature(privateKey, withGas);
     return { signature };
   }
 

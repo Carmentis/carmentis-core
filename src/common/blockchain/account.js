@@ -2,20 +2,25 @@ import { AccountVb } from "./accountVb.js";
 import { Crypto } from "../crypto/crypto.js";
 
 export class Account {
-  constructor({ provider, publicKey, privateKey }) {
+
+  constructor({ provider }) {
     this.vb = new AccountVb({ provider });
-    this.publicKey = publicKey;
-    this.privateKey = privateKey;
-    this.signatureAlgorithmId = Crypto.SECP256K1;
+    this.provider = provider;
+    if (provider.isKeyed()) {
+      this.privateKey = this.provider.getPrivateSignatureKey();
+      this.signatureAlgorithmId = this.privateKey.getSignatureAlgorithmId();
+    }
   }
 
   async _createGenesis() {
+    if (!this.provider.isKeyed()) throw "Cannot create a genesis account without a keyed provider."
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
     });
 
+    const publicKey = this.privateKey.getPublicKey();
     await this.vb.setPublicKey({
-      publicKey: this.publicKey
+      publicKey: publicKey.getRawPublicKey()
     });
 
     await this.vb.setTokenIssuance({
@@ -23,13 +28,22 @@ export class Account {
     });
   }
 
+  /**
+   *
+   * @param {Uint8Array} sellerAccount
+   * @param {PublicSignatureKey} buyerPublicKey
+   * @param {number} amount
+   * @returns {Promise<void>}
+   * @private
+   */
   async _create(sellerAccount, buyerPublicKey, amount) {
+    if (!this.provider.isKeyed()) throw "Cannot create an account without a keyed provider."
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
     });
 
     await this.vb.setPublicKey({
-      publicKey: buyerPublicKey
+      publicKey: buyerPublicKey.getRawPublicKey()
     });
 
     await this.vb.setCreation({
@@ -43,6 +57,7 @@ export class Account {
   }
 
   async publishUpdates() {
+    if (!this.provider.isKeyed()) throw "Cannot publish updates without a keyed provider.";
     await this.vb.setSignature(this.privateKey);
     return await this.vb.publish();
   }

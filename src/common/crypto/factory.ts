@@ -1,0 +1,62 @@
+import {
+    KeyExchangeAlgorithmId,
+    DecapsulationKey, InsecureKeyExchangeScheme, EncapsulationKey,
+} from "./encryption-interface";
+import {
+    MLDSA44PrivateSignatureKey, MLDSA44PublicKeyEncoder,
+    PrivateSignatureKey, PublicSignatureKey,
+    SignatureAlgorithmId,
+    SignatureScheme
+} from "./signature-interface";
+import {hexToBytes} from "@noble/ciphers/utils";
+
+export class CryptoSchemeFactory {
+
+
+    createPrivateSignatureKey( schemeId: number, walletSeed: string ): PrivateSignatureKey {
+        const rawWalletSeed = hexToBytes(walletSeed);
+        switch (schemeId) {
+            case SignatureAlgorithmId.ML_DSA_44: return new MLDSA44PrivateSignatureKey(rawWalletSeed);
+            default: throw `Not supported signature scheme ID: ${schemeId}`
+        }
+    }
+
+    createVirtualBlockchainPrivateSignatureScheme( schemeId: number, walletSeed: string , vbSeed: string ): PrivateSignatureKey {
+        const rawWalletSeed = hexToBytes(walletSeed); // TODO: add the vbSeed
+        switch (schemeId) {
+            case SignatureAlgorithmId.ML_DSA_44: return new MLDSA44PrivateSignatureKey(rawWalletSeed);
+            default: throw `Not supported signature scheme ID: ${schemeId}`
+        }
+    }
+
+
+    createDecapsulationKey( schemeId: number, walletSeed: string  ): DecapsulationKey {
+        switch (schemeId) {
+            case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
+            default: throw `Not supported encryption scheme ID: ${schemeId}`
+        }
+    }
+
+    createVirtualBlockchainDecapsulationKey( schemeId: number, walletSeed: string, vbSeed: string ): DecapsulationKey {
+        switch (schemeId) {
+            case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
+            default: throw `Not supported encryption scheme ID: ${schemeId}`
+        }
+    }
+
+
+
+    createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): PublicSignatureKey {
+        switch (schemeId) {
+            case SignatureAlgorithmId.ML_DSA_44: return new MLDSA44PublicKeyEncoder().decodeFromUint8Array(publicKey);
+            default: throw `Not supported signature scheme ID: ${schemeId}`
+        }
+    }
+
+    createEncapsulationKey( schemeId: number, encapsulationKey: Uint8Array  ): EncapsulationKey {
+        switch (schemeId) {
+            case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
+            default: throw `Not supported encryption scheme ID: ${schemeId}`
+        }
+    }
+}

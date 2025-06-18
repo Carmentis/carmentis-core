@@ -1,219 +1,207 @@
-import { PROTOCOL, ERRORS, SCHEMAS, SECTIONS, ECO } from "../constants/constants.js";
-import { blockchainCore } from "./blockchainCore.js";
-import * as schemaSerializer from "../serializers/schema-serializer.js";
-import * as sectionSerializer from "../serializers/section-serializer.js";
-import * as crypto from "../crypto/crypto.js";
-import * as network from "../network/network.js";
-import * as keyValue from "../keyValue/keyValue.js";
-import * as uint8 from "../util/uint8.js";
-import * as util from "../util/util.js";
-import { blockchainError } from "../errors/error.js";
+import { CHAIN, SCHEMAS, SECTIONS } from "../constants/constants.js";
+import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer.js";
+import { Utils } from "../utils/utils.js";
+import { Crypto } from "../crypto/crypto.js";
 
-const MAGIC = "CMTS";
-
-// ============================================================================================================================ //
-//  microblock                                                                                                                  //
-// ============================================================================================================================ //
-export class microblock extends blockchainCore {
-  constructor(vbType) {
-    super();
-    this.vbType = vbType;
-  }
-
-  load(binary, hash) {
-    this.hash = hash;
-    this.object = schemaSerializer.decode(SCHEMAS.MICROBLOCK, binary);
+export class Microblock {
+  constructor(type) {
+    this.type = type;
     this.sections = [];
+    this.gasPrice = 0;
   }
 
+  /**
+    Creates a microblock at a given height.
+    If the height is greater than 1, a 'previousHash' is expected.
+  */
   create(height, previousHash) {
-    let timestamp = util.getCarmentisTimestamp();
-
     if(height == 1) {
-      let seed = crypto.getRandomBytes(16);
+      const genesisSeed = Crypto.Random.getBytes(24);
 
-      previousHash = uint8.toHexa(
-        uint8.from(
-          this.vbType,
-          new Uint8Array(15),
-          seed
-        )
-      );
+      previousHash = new Uint8Array(32);
+      previousHash[0] = this.type;
+      previousHash.set(genesisSeed, 8);
+    }
+    else if(previousHash === undefined) {
+      throw `previous hash not provided`;
     }
 
-    this.object = {
-      header: {
-        magicString    : MAGIC,
-        protocolVersion: PROTOCOL.VERSION,
-        height         : height,
-        previousHash   : previousHash,
-        timestamp      : timestamp,
-        gas            : 0,
-        gasPrice       : 0
-      },
-      body: {
-        sections: []
+    this.header = {
+      magicString: CHAIN.MAGIC_STRING,
+      protocolVersion: CHAIN.PROTOCOL_VERSION,
+      height: height,
+      previousHash: previousHash,
+      timestamp: 0,
+      gas: 0,
+      gasPrice: 0,
+      bodyHash: new Uint8Array(32)
+    };
+  }
+
+  /**
+    Loads a microblock from its header data and body data.
+  */
+  load(headerData, bodyData) {
+    const headerUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
+
+    this.header = headerUnserializer.unserialize(headerData);
+
+    const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
+
+    if(!Utils.binaryIsEqual(this.header.bodyHash, bodyHash)) {
+      throw `inconsistent body hash`;
+    }
+
+    this.hash = Crypto.Hashes.sha256AsBinary(headerData);
+
+    const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY),
+          body = bodyUnserializer.unserialize(bodyData).body;
+
+    for(const { type, data } of body) {
+      const sectionDef = SECTIONS.DEF[this.type][type];
+      const unserializer = new SchemaUnserializer(sectionDef.schema);
+      const object = unserializer.unserialize(data);
+
+      this.storeSection(type, object, data);
+    }
+  }
+
+  /**
+    Adds a section of a given type and defined by a given object.
+  */
+  addSection(type, object) {
+    const sectionDef = SECTIONS.DEF[this.type][type];
+    const serializer = new SchemaSerializer(sectionDef.schema);
+    const data = serializer.serialize(object);
+
+    return this.storeSection(type, object, data);
+  }
+
+  /**
+    Stores a section, including its serialized data, hash and index.
+  */
+  storeSection(type, object, data) {
+    const hash = Crypto.Hashes.sha256AsBinary(data);
+    const index = this.sections.length;
+
+    const section = { type, object, data, hash, index };
+    this.sections.push(section);
+
+    return section;
+  }
+
+  /**
+    Returns the first section for which the given callback function returns true.
+  */
+  getSection(callback) {
+    return this.sections.find((section) => callback(section));
+  }
+
+  /**
+    Creates a signature.
+  */
+  createSignature(algorithmId, privateKey, includeGas) {
+    const signedData = this.getSignedData(
+      includeGas,
+      this.sections.length,
+      Crypto.SIG_ALGORITHMS[algorithmId].signatureSectionSize
+    );
+
+    let signature;
+
+    switch(algorithmId) {
+      case Crypto.SECP256K1: {
+        signature = Crypto.Secp256k1.sign(privateKey, signedData);
+        break;
       }
-    };
-
-    this.sections = [];
-  }
-
-  getContentSummary() {
-    let sections = [];
-
-    for(let section of this.object.body.sections) {
-      let sectionObject = schemaSerializer.decode(SCHEMAS.SECTION, section);
-
-      sections.push({
-        id   : sectionObject.id,
-        label: SECTIONS.DEF[this.vbType][sectionObject.id].label,
-        size : section.length
-      });
+      case Crypto.ML_DSA: {
+        signature = Crypto.MLDsa.sign(privateKey, signedData);
+        break;
+      }
     }
 
-    return {
-      header: this.object.header,
-      sections: sections
-    };
+    return signature;
   }
 
-  async addSection(sectionId, object, keyManager, externalDef, schemaInfo) {
-    let sectionObject = {
-      id: sectionId,
-      object: object
-    };
-
-    let section = await sectionSerializer.encode(
-      this.object.header.height,
-      this.getSectionIndex(), 
-      this.vbType,
-      sectionObject,
-      keyManager,
-      externalDef,
-      schemaInfo
+  /**
+    Verifies a signature.
+  */
+  verifySignature(algorithmId, publicKey, signature, includeGas, sectionCount) {
+    const signedData = this.getSignedData(
+      includeGas,
+      sectionCount,
+      0
     );
 
-    let serializedSection = schemaSerializer.encode(SCHEMAS.SECTION, section);
-
-    this.object.body.sections.push(serializedSection);
-    this.sections.push(sectionObject);
+    switch(algorithmId) {
+      case Crypto.SECP256K1: {
+        return Crypto.Secp256k1.verify(publicKey, signedData, signature);
+      }
+      case Crypto.ML_DSA: {
+        return Crypto.MLDsa.verify(publicKey, signedData, signature);
+      }
+    }
+    return false;
   }
 
-  findSection(id, callback = _ => true) {
-    let section = this.sections.find(section =>
-      section.id == id && callback(section.object)
+  /**
+    Generates the data to be signed:
+      - the header with or without the gas data, and without the body hash
+      - the list of section hashes
+  */
+  getSignedData(includeGas, sectionCount, extraBytes) {
+    this.setGasData(includeGas, extraBytes);
+
+    const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER),
+          headerData = serializer.serialize(this.header);
+
+    const sections = this.sections.slice(0, sectionCount);
+
+    return Utils.binaryFrom(
+      headerData.slice(0, SCHEMAS.MICROBLOCK_HEADER_BODY_HASH_OFFSET),
+      ...sections.map((section) => section.hash)
     );
-
-    return section ? section.object : null;
   }
 
-  getSectionIndex() {
-    return this.object.body.sections.length;
-  }
-
-  sign(privateKey, includeGas) {
+  /**
+    Sets the gas data to either 0 or to their actual values.
+  */
+  setGasData(includeGas, extraBytes = 0) {
     if(includeGas) {
-      this.updateGas(SECTIONS.SIGNATURE_SECTION_SIZE);
+      const totalSize = this.sections.reduce((total, { data }) => total + data.length, extraBytes);
+
+      this.header.gas = totalSize;
+      this.header.gasPrice = this.gasPrice;
     }
     else {
-      this.object.header.gas = 0;
-      this.object.header.gasPrice = 0;
+      this.header.gas = 0;
+      this.header.gasPrice = 0;
     }
-
-    let binary = schemaSerializer.encode(
-      SCHEMAS.MICROBLOCK,
-      this.object
-    );
-
-    return crypto.secp256k1.sign(privateKey, binary);
   }
 
-  verifySignature(publicKey, signature, includeGas, ignoredSections) {
-    let header = { ...this.object.header };
-
-    if(!includeGas) {
-      header.gas = 0;
-      header.gasPrice = 0;
-    }
-
-    // we sign all sections except the ones whose ID is included in 'ignoredSections'
-    // and except the last one, which is the signature section itself
-    let signedSections =
-      this.object.body.sections
-      .filter(section => !ignoredSections.includes(section[0]))
-      .slice(0, -1);
-
-    let object = {
-      header: header,
-      body: {
-        sections: signedSections
-      }
+  /**
+    Serializes the microblock and returns an object with the microblock hash, the header data,
+    the body hash and the body data.
+  */
+  serialize() {
+    const body = {
+      body: this.sections.map(({ type, data }) => ({ type, data }))
     };
 
-    let binary = schemaSerializer.encode(
-      SCHEMAS.MICROBLOCK,
-      object
-    );
+    this.setGasData(true);
 
-    return crypto.secp256k1.verify(publicKey, binary, signature);
-  }
+    const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY),
+          bodyData = bodySerializer.serialize(body),
+          bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
 
-  updateGas(extraBytes = 0) {
-    let binary;
+    this.header.bodyHash = bodyHash;
 
-    binary = schemaSerializer.encode(
-      SCHEMAS.MICROBLOCK,
-      this.object
-    );
+    const headerSerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER),
+          headerData = headerSerializer.serialize(this.header),
+          microblockHash = Crypto.Hashes.sha256AsBinary(headerData);
 
-    this.object.header.gas = this.constructor.computeGas(binary.length + extraBytes);
-  }
+    this.hash = microblockHash;
 
-  getStructure() {
-    return this.sections.map(section => `<${section.id}>`).join("");
-  }
-
-  finalize(includeGas) {
-    if(includeGas) {
-      if(this.object.header.gasPrice < ECO.MINIMUM_GAS_PRICE || this.object.header.gasPrice > ECO.MAXIMUM_GAS_PRICE) {
-        throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS_PRICE);
-      }
-    }
-    else {
-      this.object.header.gas = 0;
-      this.object.header.gasPrice = 0;
-    }
-
-    this.binary = schemaSerializer.encode(
-      SCHEMAS.MICROBLOCK,
-      this.object
-    );
-
-    if(this.binary.length > PROTOCOL.MAX_MICROBLOCK_SIZE) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_TOO_LARGE);
-    }
-
-    if(includeGas && this.object.header.gas != this.constructor.computeGas(this.binary.length)) {
-      throw new blockchainError(ERRORS.BLOCKCHAIN_MB_INVALID_GAS);
-    }
-
-    this.hash = crypto.sha256(this.binary);
-
-    return {
-      hash: this.hash,
-      header: this.object.header,
-      sections: this.sections,
-      binary: this.binary
-    };
-  }
-
-  async broadcast() {
-    let answer = await this.constructor.nodeQuery(
-      SCHEMAS.MSG_SEND_MICROBLOCK,
-      {
-        data: this.binary
-      }
-    );
+    return { microblockHash, headerData, bodyHash, bodyData };
   }
 }

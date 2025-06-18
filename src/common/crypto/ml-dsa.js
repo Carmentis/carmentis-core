@@ -1,30 +1,26 @@
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa";
 import { randomBytes } from "@noble/post-quantum/utils";
-import { cryptoErrorHandler } from "../errors/error.js";
 
-// ============================================================================================================================ //
-//  generateKeyPair()                                                                                                           //
-// ============================================================================================================================ //
-export function generateKeyPair(seed) {
+export const MLDsa = {
+  generateKeyPair,
+  sign,
+  verify
+};
+
+function generateKeyPair(seed) {
   if(seed == undefined) {
     seed = randomBytes(32);
   }
 
   const keys = ml_dsa65.keygen(seed);
 
-  return keys;
+  return { publicKey: keys.publicKey, privateKey: keys.secretKey };
 }
 
-// ============================================================================================================================ //
-//  sign()                                                                                                                      //
-// ============================================================================================================================ //
-export function sign(privateKey, msg) {
-  return ml_dsa65.sign(privateKey, msg);
+function sign(privateKey, data) {
+  return ml_dsa65.sign(privateKey, data);
 }
 
-// ============================================================================================================================ //
-//  verify()                                                                                                                    //
-// ============================================================================================================================ //
-export function verify(publicKey, msg, signature) {
-  return ml_dsa65.verify(publicKey, msg, signature);
+function verify(publicKey, data, signature) {
+  return ml_dsa65.verify(publicKey, data, signature);
 }

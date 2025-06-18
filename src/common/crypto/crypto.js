@@ -1,77 +1,37 @@
-import * as uint8 from "../util/uint8.js";
-import { randomBytes } from "@noble/hashes/utils";
-import { sha256 as H256 } from "@noble/hashes/sha256";
-import { sha512 as H512 } from "@noble/hashes/sha512";
+import { Random } from "./random.js";
+import { Hashes } from "./hashes.js";
+import { Aes } from "./aes.js";
+import { MLDsa } from "./ml-dsa.js";
+import { MLKem } from "./ml-kem.js";
+import { Secp256k1 } from "./secp256k1.js";
 
-export * as aes       from "./aes.js";
-export * as derive    from "./derive.js";
-export * as secp256k1 from "./secp256k1.js";
-export * as ecdh      from "./ecdh.js";
-export * as mlDsa     from "./ml-dsa.js";
-export * as mlKem     from "./ml-kem.js";
+const SIG_ALGORITHM_IDS = {
+  SECP256K1: 0,
+  ML_DSA: 1
+};
 
-// ============================================================================================================================ //
-//  sha256()                                                                                                                    //
-// ============================================================================================================================ //
-export function sha256(arr) {
-  return uint8.toHexa(sha256AsBinary(arr));
-}
+const SIG_ALGORITHMS = [
+  { name: "SECP256K1", signatureSectionSize: 65 },
+  { name: "ML_DSA", signatureSectionSize: 3311 }
+];
 
-// ============================================================================================================================ //
-//  sha256AsBinary()                                                                                                            //
-// ============================================================================================================================ //
-export function sha256AsBinary(arr) {
-  if(!(arr instanceof Uint8Array)) {
-    throw "Argument passed to compute sha256 is not an instance of Uint8Array";
-  }
-  return H256(arr);
-}
+const KEM_ALGORITHM_IDS = {
+  ML_KEM: 0
+};
 
-// ============================================================================================================================ //
-//  sha512()                                                                                                                    //
-// ============================================================================================================================ //
-export function sha512(arr) {
-  return uint8.toHexa(sha512AsBinary(arr));
-}
+const KEM_ALGORITHMS = [
+  { name: "ML-KEM" }
+];
 
-// ============================================================================================================================ //
-//  sha512AsBinary()                                                                                                            //
-// ============================================================================================================================ //
-export function sha512AsBinary(arr) {
-  if(!(arr instanceof Uint8Array)) {
-    throw "Argument passed to compute sha512 is not an instance of Uint8Array";
-  }
-  return H512(arr);
-}
-
-// ============================================================================================================================ //
-//  getRandomBytes()                                                                                                            //
-// ============================================================================================================================ //
-export function getRandomBytes(size) {
-  return randomBytes(size)
-}
-
-// ============================================================================================================================ //
-//  getRandomInteger()                                                                                                          //
-// ---------------------------------------------------------------------------------------------------------------------------- //
-//  Returns a random integer in [0 .. max[.                                                                                     //
-// ============================================================================================================================ //
-export function getRandomInteger(max) {
-  let rand = getRandomBytes(6),
-      v = 0;
-
-  for(let i = 0; i < 6; i++) {
-    v = v * 256 + rand[i];
-  }
-
-  return Math.floor(v / 2 ** 48 * max);
-}
-
-// ============================================================================================================================ //
-//  generateKey256()                                                                                                            //
-// ============================================================================================================================ //
-export function generateKey256() {
-  let key = randomBytes(32);
-
-  return uint8.toHexa(key);
-}
+export const Crypto = {
+  ...SIG_ALGORITHM_IDS,
+  SIG_ALGORITHMS,
+  ...KEM_ALGORITHM_IDS,
+  KEM_ALGORITHMS,
+  Random,
+  Hashes,
+  Aes,
+  MLDsa,
+  MLKem,
+  Secp256k1
+};

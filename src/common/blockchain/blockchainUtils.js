@@ -1,0 +1,102 @@
+import { SCHEMAS } from "../constants/constants.js";
+import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer.js";
+import { Crypto } from "../crypto/crypto.js";
+import { Utils } from "../utils/utils.js";
+
+export const BlockchainUtils = {
+  checkHeaderList,
+  previousHashFromHeader,
+  decodeMicroblockHeader,
+  encodeMicroblockInformation,
+  decodeMicroblockInformation,
+  encodeVirtualBlockchainState,
+  decodeVirtualBlockchainState
+};
+
+/**
+  Takes a list of consecutive microblock headers in binary format and in anti-chronological order.
+  Returns an object with a flag telling if the hash chain is valid and the list of microblock hashes (also in anti-chronological order).
+*/
+function checkHeaderList(headers) {
+  const hashes = [];
+  let expectedHash = null;
+
+  for(const header of headers) {
+    const hash = Crypto.Hashes.sha256AsBinary(header);
+
+    if(expectedHash && !Utils.binaryIsEqual(hash, expectedHash)) {
+      return {
+        valid: false,
+        hashes: []
+      };
+    }
+
+    hashes.push(hash);
+    expectedHash = previousHashFromHeader(header);
+  }
+
+  return {
+    valid: true,
+    hashes: hashes
+  };
+}
+
+/**
+  Extracts the 'previousHash' field from a microblock header in binary format.
+*/
+function previousHashFromHeader(header) {
+  return header.slice(
+    SCHEMAS.MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET,
+    SCHEMAS.MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET + 32
+  );
+}
+
+function decodeMicroblockHeader(data) {
+  const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER),
+        object = unserializer.unserialize(data);
+
+  return object;
+}
+
+function encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, header) {
+  const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_INFORMATION),
+        data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId, header });
+
+  return data;
+}
+
+function decodeMicroblockInformation(data) {
+  const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_INFORMATION),
+        object = unserializer.unserialize(data);
+
+  return object;
+}
+
+function encodeVirtualBlockchainState(type, height, lastMicroblockHash, customStateObject) {
+  const customStateSerializer = new SchemaSerializer(SCHEMAS.STATES[type]),
+        customState = customStateSerializer.serialize(customStateObject);
+
+  const stateObject = {
+    type,
+    height,
+    lastMicroblockHash,
+    customState
+  };
+
+  const stateSerializer = new SchemaSerializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
+        data = stateSerializer.serialize(stateObject);
+
+  return data;
+}
+
+function decodeVirtualBlockchainState(data) {
+  const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
+        stateObject = stateUnserializer.unserialize(data);
+
+  const customStateUnserializer = new SchemaUnserializer(SCHEMAS.STATES[stateObject.type]),
+        customStateObject = customStateUnserializer.unserialize(stateObject.customState);
+
+  stateObject.customState = customStateObject;
+
+  return stateObject;
+}

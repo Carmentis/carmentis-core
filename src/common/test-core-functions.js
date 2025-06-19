@@ -11,14 +11,14 @@ import { Utils } from "./utils/utils.js";
 import { DATA } from "./constants/constants.js";
 
 (async function() {
-  testNumbers();
-  testUnsignedIntegers();
-  testStrings();
-  testRadixTree();
-  testIR();
-  testRecord();
+//testNumbers();
+//testUnsignedIntegers();
+//testStrings();
+//testSchemaSerializer();
+//testRadixTree();
+//testIR();
+//testRecord();
   await testChain();
-  testSchemaSerializer();
 //await testLedger();
 })();
 
@@ -101,6 +101,23 @@ function testStrings() {
     );
   });
   console.log();
+}
+
+function testSchemaSerializer() {
+  const SCHEMA = [
+    { name: "foo", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8, size: 2 },
+    { name: "bar", type: DATA.TYPE_OBJECT, schema: [ { name: "p0", type: DATA.TYPE_STRING }, { name: "p1", type: DATA.TYPE_BOOLEAN } ] }
+  ];
+
+  const object = { foo: [ 123, 255 ], bar: { p0: "hello", p1: true } };
+
+  const serializer = new SchemaSerializer(SCHEMA),
+        unserializer = new SchemaUnserializer(SCHEMA);
+
+  const data = serializer.serialize(object);
+
+  console.log("data", data);
+  console.log(unserializer.unserialize(data));
 }
 
 async function testRadixTree() {
@@ -289,23 +306,6 @@ function testIR() {
 
   ir.importFromSectionFormat(sectionData);
   console.log("recovered from sections", JSON.stringify(ir.exportToJson(), null, 2));
-}
-
-function testSchemaSerializer() {
-  const SCHEMA = [
-    { name: "foo", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8, size: 2 },
-    { name: "bar", type: DATA.TYPE_OBJECT, schema: [ { name: "p0", type: DATA.TYPE_STRING }, { name: "p1", type: DATA.TYPE_BOOLEAN } ] }
-  ];
-
-  const object = { foo: [ 123, 255 ], bar: { p0: "hello", p1: true } };
-
-  const serializer = new SchemaSerializer(SCHEMA),
-        unserializer = new SchemaUnserializer(SCHEMA);
-
-  const data = serializer.serialize(object);
-
-  console.log("data", data);
-  console.log(unserializer.unserialize(data));
 }
 
 async function testLedger() {

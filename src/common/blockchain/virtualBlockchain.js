@@ -53,6 +53,8 @@ export class VirtualBlockchain {
       await this.processSectionCallback(this.currentMicroblock, section);
     }
 
+    this.height++;
+
     if(this.currentMicroblock.header.height == 1) {
       this.identifier = this.currentMicroblock.hash;
     }

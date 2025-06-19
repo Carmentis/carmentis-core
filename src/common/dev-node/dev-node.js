@@ -50,7 +50,7 @@ function handleRequest(req, res) {
     switch(urlObject.pathname) {
       case "/broadcast_tx_sync": {
         const tx = NodeCore.decodeQueryField(urlObject, "tx");
-        response = await NodeCore.checkTx(tx);
+        response = await NodeCore.checkTx({ tx });
         break;
       }
       case "/abci_query": {

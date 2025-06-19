@@ -26,24 +26,23 @@ export class MicroblockImporter {
       throw `inconsistent body hash`;
     }
 
-    this.height = header.height;
-
+    let type;
     let vbIdentifier;
 
-    if(this.height > 1) {
+    if(header.height > 1) {
       const previousMicroblockInfo = await this.provider.getMicroblockInformation(header.previousHash);
 
       if(!previousMicroblockInfo) {
         throw `previous microblock not found`;
       }
-      this.type = previousMicroblockInfo.virtualBlockchainType;
+      type = previousMicroblockInfo.virtualBlockchainType;
       vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
     }
     else {
-      this.type = header.previousHash[0];
+      type = header.previousHash[0];
     }
 
-    switch(this.type) {
+    switch(type) {
       case CHAIN.VB_ACCOUNT     : { this.vb = new AccountVb({ provider: this.provider }); break; }
       case CHAIN.VB_ORGANIZATION: { this.vb = new OrganizationVb({ provider: this.provider }); break; }
       case CHAIN.VB_APPLICATION : { this.vb = new ApplicationVb({ provider: this.provider }); break; }
@@ -54,7 +53,7 @@ export class MicroblockImporter {
       }
     }
 
-    if(this.height > 1) {
+    if(header.height > 1) {
       await this.vb.load(vbIdentifier);
     }
 
@@ -62,7 +61,7 @@ export class MicroblockImporter {
   }
 
   async store() {
-    await this.provider.storeMicroblock(this.hash, this.vb.identifier, this.type, this.height, this.headerData, this.bodyData);
-    await this.provider.updateVirtualBlockchainState(this.vb.identifier, this.type, this.height, this.hash, this.vb.state);
+    await this.provider.storeMicroblock(this.hash, this.vb.identifier, this.vb.type, this.vb.height, this.headerData, this.bodyData);
+    await this.provider.updateVirtualBlockchainState(this.vb.identifier, this.vb.type, this.vb.height, this.hash, this.vb.state);
   }
 }

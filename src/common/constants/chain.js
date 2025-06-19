@@ -7,7 +7,7 @@ export const VB_ORGANIZATION   = 2;
 export const VB_APPLICATION    = 3;
 export const VB_APP_LEDGER     = 4;
 
-export const N_VB = 5;
+export const N_VIRTUAL_BLOCKCHAINS = 5;
 
 export const VB_NAME = [
   "account",

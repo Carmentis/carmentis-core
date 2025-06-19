@@ -1,12 +1,5 @@
 import * as http from "http";
-
-import { SCHEMAS } from "../constants/constants.js";
-import { Base64 } from "../data/base64.js";
-import { Utils } from "../utils/utils.js";
-import { Blockchain } from "../blockchain/blockchain.js";
-import { MemoryProvider } from "../providers/memoryProvider.js";
-import { NullNetworkProvider } from "../providers/nullNetworkProvider.js";
-import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer.js";
+import { NodeCore } from "./node-core.js";
 import {Provider} from "../providers/provider.js";
 
 const PORT = process.env.PORT || 3000;
@@ -54,78 +47,19 @@ function handleRequest(req, res) {
 
     switch(urlObject.pathname) {
       case "/broadcast_tx_sync": {
-        const tx = Utils.binaryFromHexa(urlObject.searchParams.get("tx").slice(2));
-        response = await checkTx(tx);
+        const tx = NodeCore.decodeQueryField(urlObject, "tx");
+        response = await NodeCore.checkTx(tx);
         break;
       }
       case "/abci_query": {
-        const data = Utils.binaryFromHexa(urlObject.searchParams.get("data").slice(2));
-        response = await query(data);
+        const data = NodeCore.decodeQueryField(urlObject, "data");
+        response = await NodeCore.query(data);
         break;
       }
     }
 
-    res.end(
-      JSON.stringify({
-        data: Base64.encodeBinary(response)
-      })
-    );
+    res.end(NodeCore.encodeResponse(response));
   });
-}
-
-async function checkTx(tx) {
-  console.log(`Received microblock`);
-
-  const importer = blockchain.getMicroblockImporter(tx);
-  await importer.check();
-  await importer.store();
-
-  return new Uint8Array();
-}
-
-async function query(data) {
-  const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
-  const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
-  const { type, object } = unserializer.unserialize(data);
-
-  console.log(`Received query of type ${type}`, object);
-
-  switch(type) {
-    case SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE: {
-      const stateData = await blockchain.provider.getVirtualBlockchainStateInternal(object.virtualBlockchainId);
-      const headers = await blockchain.provider.getVirtualBlockchainHeaders(object.virtualBlockchainId, object.knownHeight);
-      const changed = headers.length > 0;
-
-      return serializer.serialize(
-        SCHEMAS.MSG_VIRTUAL_BLOCKCHAIN_UPDATE,
-        {
-          changed,
-          stateData,
-          headers
-        }
-      );
-    }
-
-    case SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION: {
-      const microblockInfo = await blockchain.provider.getMicroblockInformation(object.hash);
-
-      return serializer.serialize(
-        SCHEMAS.MSG_MICROBLOCK_INFORMATION,
-        microblockInfo
-      );
-    }
-
-    case SCHEMAS.MSG_GET_MICROBLOCK_BODYS: {
-      const bodys = await blockchain.provider.getMicroblockBodys(object.hashes);
-
-      return serializer.serialize(
-        SCHEMAS.MSG_MICROBLOCK_BODYS,
-        {
-          list: bodys
-        }
-      );
-    }
-  }
 }
 
 async function processMempool() {

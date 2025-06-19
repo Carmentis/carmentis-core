@@ -1,3 +1,4 @@
+
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
@@ -20,25 +21,33 @@ export default [
             }
         ],
         plugins: [
+            resolve({
+                preferBuiltins: true,
+                exportConditions: ['import', 'module', 'default']
+            }), // resolve 3rd-party module imports
             typescript({
                 compilerOptions: {
                     target: 'es6',
                 },
                 allowJs: true, // Autoriser les fichiers .js
                 include: ["src/**/*.ts", "src/**/*.js"], // Inclure JS et TS,
+                exclude: ['node_modules/**'],
                 declaration: false,
             }),
-            resolve(), // resolve 3rd-party module imports
             commonjs(), // converts CommonJS to ESM
             json() // supports JSON imports
         ],
+        external: (id) => {
+            // Marquer les dépendances comme externes si elles posent problème
+            return /node_modules/.test(id) && id.includes('.ts') && !id.includes('src/');
+        },
         onLog(level, log, handler) {
-          if(log.code == "MISSING_EXPORT") {
-            handler("error", log); // turn missing exports into errors
-          }
-          else {
-            handler(level, log); // use the default handler for anything else
-          }
+            if(log.code == "MISSING_EXPORT") {
+                handler("error", log); // turn missing exports into errors
+            }
+            else {
+                handler(level, log); // use the default handler for anything else
+            }
         }
     },
     // Build for TypeScript definitions

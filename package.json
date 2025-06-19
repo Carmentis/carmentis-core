@@ -54,7 +54,6 @@
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.2",
-    "@swc/jest": "^0.2.38",
     "@types/jest": "^30.0.0",
     "jest": "^30.0.1",
     "rimraf": "^6.0.1",

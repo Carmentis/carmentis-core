@@ -323,3 +323,4 @@ async function testLedger() {
   console.log("message", msg);
   console.log(await ledger.decodeMessage(msg));
 }
+*/

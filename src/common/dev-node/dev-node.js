@@ -15,16 +15,22 @@ const MESSAGES = {
     READY: `Carmentis node is ready and listening on port ${PORT}`
 };
 
+let server;
+
 export function start() {
   console.log(MESSAGES.START);
 
   // Start the HTTP server
-  http
+  server = http
     .createServer(handleRequest)
     .listen(PORT, () => console.log(MESSAGES.READY));
 
   // Start the scheduler
   setInterval(processMempool, BLOCK_DELAY);
+}
+
+export function stop() {
+  server.close();
 }
 
 function handleRequest(req, res) {

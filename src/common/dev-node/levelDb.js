@@ -2,13 +2,15 @@ import { Level } from "level";
 import { NODE_SCHEMAS } from "./node-constants.js";
 import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer.js";
 
+const SUB_PREFIX = "SUB";
+
 export class LevelDb {
   constructor(path, tableSchemas) {
     this.path = path;
     this.tableSchemas = tableSchemas;
   }
 
-  async open() {
+  async initialize() {
     const encoding = {
       keyEncoding: "view",
       valueEncoding: "view"
@@ -20,32 +22,37 @@ export class LevelDb {
     const nTables = Object.keys(this.tableSchemas).length;
 
     for(let n = 0; n < nTables; n++) {
-      this.sub[n] = this.db.sublevel("SUB" + n, encoding);
+      this.sub[n] = this.db.sublevel(SUB_PREFIX + n.toString().padStart(2, "0"), encoding);
     }
   }
 
-  close() {
-    this.db.close();
+  async close() {
+    await this.db.close();
+  }
+
+  async clear() {
+    await this.db.clear();
   }
 
   async getRaw(tableId, key) {
     try {
       const b = await this.sub[tableId].get(key);
+      if(b === undefined) {
+        return b;
+      }
       return new Uint8Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
     }
     catch(e) {
-      if(!e.notFound) {
-        console.error(e);
-      }
-      return null;
+      console.error(e);
+      return undefined;
     }
   }
 
   async getObject(tableId, key) {
     const data = await this.getRaw(tableId, key);
 
-    if(!data) {
-      return null;
+    if(data === undefined) {
+      return data;
     }
 
     const unserializer = new SchemaUnserializer(NODE_SCHEMAS.DB[tableId]);
@@ -70,6 +77,16 @@ export class LevelDb {
     return await this.putRaw(tableId, key, data);
   }
 
+  async query(tableId, query) {
+    try {
+      return this.sub[tableId].iterator(query);
+    }
+    catch(e) {
+      console.error(e);
+      return null;
+    }
+  }
+
   async del(tableId, key) {
     try {
       await this.db.sub[tableId].del(key);
@@ -79,5 +96,41 @@ export class LevelDb {
       console.error(e);
       return false;
     }
+  }
+
+  getBatch() {
+    const batchObject = this.db.batch();
+    const sub = this.sub;
+
+    const obj = {
+      del: function(tableId, list) {
+        const options = { sublevel: sub[tableId] };
+
+        for(const key of list) {
+          batchObject.del(key, options);
+        }
+        return obj;
+      },
+      put: function(tableId, list) {
+        const options = { sublevel: sub[tableId] };
+
+        for(const [ key, value ] of list) {
+          batchObject.put(key, value, options);
+        }
+        return obj;
+      },
+      write: async function() {
+        try {
+          await batchObject.write();
+          return true;
+        }
+        catch(e) {
+          console.error(e);
+          return e;
+        }
+      }
+    };
+
+    return obj;
   }
 }

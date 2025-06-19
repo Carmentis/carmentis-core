@@ -1,6 +1,5 @@
 import {ml_dsa44, ml_dsa65} from "@noble/post-quantum/ml-dsa";
 import {randomBytes} from "@noble/post-quantum/utils";
-import * as assert from "node:assert";
 
 
 export interface SignatureScheme  {
@@ -95,7 +94,9 @@ export class MLDSA65PublicSignatureKey extends MLDSA65SignatureScheme implements
     }
 }
 
-
+/**
+ *
+ */
 export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implements PrivateSignatureKey {
 
     /**
@@ -155,7 +156,7 @@ export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implem
 /**
  * Class responsible for encoding and decoding MLDSA44 public signature keys.
  * This implementation provides methods to handle conversions between
- * `MLDSA44PublicSignatureKey` objects and their `Uint8Array` byte representations.
+ * `MLDSA65PublicSignatureKey` objects and their `Uint8Array` byte representations.
  */
 export class MLDSA65PublicKeyEncoder implements PublicSignatureKeyEncoder<MLDSA65PublicSignatureKey> {
     /**

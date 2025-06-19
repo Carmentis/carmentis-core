@@ -24,7 +24,7 @@ import {KeyedProvider} from "./providers/keyed-provider.js";
   await testChain();
 //await testLedger();
 })();
-
+/*
 function testNumbers() {
   console.log("Testing numbers");
 
@@ -127,15 +127,11 @@ async function testRadixTree() {
   const tree = new RadixTree();
 }
 
+ */
+/*
 async function testRecord() {
   const privateKey = MLDSA65PrivateSignatureKey.gen();
-  /*
-  const privateKey = Crypto.Random.getKey256(),
-        publicKey = Crypto.Secp256k1.publicKeyFromPrivateKey(privateKey),
-        keyPair = { publicKey, privateKey };
 
-
-   */
   const provider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
   const blockchain = new Blockchain(provider);
 
@@ -172,6 +168,9 @@ async function testRecord() {
   const hash = await appLedger.publishUpdates();
 }
 
+ */
+
+/*
 async function testChain() {
   //const keyPair = Crypto.MLDsa.generateKeyPair();
   const privateKey = MLDSA65PrivateSignatureKey.gen();
@@ -180,7 +179,7 @@ async function testChain() {
         publicKey = Crypto.Secp256k1.publicKeyFromPrivateKey(privateKey),
         keyPair = { publicKey, privateKey };
 
-   */
+   *
 
   const provider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
   const blockchain = new Blockchain(provider);
@@ -237,7 +236,11 @@ async function testChain() {
   console.log(await organization.getDescription());
   console.log(await organization.getDescription());
 }
+*/
 
+
+
+/*
 function testIR() {
   let ir, testObject, sectionData;
 
@@ -309,6 +312,8 @@ function testIR() {
   ir.importFromSectionFormat(sectionData);
   console.log("recovered from sections", JSON.stringify(ir.exportToJson(), null, 2));
 }
+
+ */
 
 async function testLedger() {
   const ledger = new AppLedger;

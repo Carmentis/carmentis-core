@@ -1,8 +1,8 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { hmac } from "@noble/hashes/hmac";
-import * as secp256k1 from "@noble/secp256k1";
+import {etc, getPublicKey, sign as sigsign, verify as sigver} from "@noble/secp256k1";
 
-secp256k1.etc.hmacSha256Sync = (k, ...m) => hmac(sha256, k, secp256k1.etc.concatBytes(...m));
+etc.hmacSha256Sync = (k, ...m) => hmac(sha256, k, etc.concatBytes(...m));
 
 export const Secp256k1 = {
   publicKeyFromPrivateKey,
@@ -11,12 +11,12 @@ export const Secp256k1 = {
 };
 
 function publicKeyFromPrivateKey(privateKey) {
-  return secp256k1.getPublicKey(privateKey);
+  return getPublicKey(privateKey);
 }
 
 function sign(privateKey, data) {
   let hash = sha256(data),
-      signature = secp256k1.sign(hash, privateKey);
+      signature = sigsign(hash, privateKey);
 
   return signature.toCompactRawBytes();
 }
@@ -24,5 +24,5 @@ function sign(privateKey, data) {
 function verify(publicKey, data, signature) {
   let hash = sha256(data);
 
-  return secp256k1.verify(signature, hash, publicKey);
+  return sigver(signature, hash, publicKey);
 }

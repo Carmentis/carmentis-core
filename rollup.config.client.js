@@ -33,6 +33,7 @@ export default [
                 },
                 allowJs: true, // authorize .js files
                 include: ["src/**/*.ts", "src/**/*.js"], // includes .js and .ts
+                exclude: ['/node_modules'],
                 declaration: false,
             }),
             commonjs(), // converts CommonJS to ESM

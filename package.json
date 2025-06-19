@@ -19,11 +19,6 @@
       "require": "./dist/server/index.cjs",
       "import": "./dist/server/index.mjs",
       "types": "./dist/server/index.d.ts"
-    },
-    "./application": {
-      "require": "./dist/application/index.cjs",
-      "import": "./dist/application/index.mjs",
-      "types": "./dist/application/index.d.ts"
     }
   },
   "main": "dist/server/index.cjs",
@@ -36,9 +31,6 @@
       ],
       "server": [
         "dist/server/index.d.ts"
-      ],
-      "application": [
-        "dist/application/index.d.ts"
       ]
     }
   },
@@ -56,16 +48,22 @@
   },
   "homepage": "https://github.com/Carmentis/carmentis-core#readme",
   "devDependencies": {
+    "@babel/preset-env": "^7.27.2",
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@swc/jest": "^0.2.38",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.1",
     "rimraf": "^6.0.1",
     "rollup": "^4.30.1",
     "rollup-plugin-dts": "^6.1.1",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@noble/ciphers": "^1.2.1",

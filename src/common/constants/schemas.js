@@ -1,5 +1,13 @@
 import * as CHAIN from "./chain.js";
 import * as DATA from "./data.js";
+export const MSG_ANS_ERROR = 0xFF;
+export const ERROR = [
+  { name: "type",type: DATA.TYPE_UINT8 },
+  { name: "id",  type: DATA.TYPE_UINT8 },
+  { name: "arg", type: DATA.TYPE_STRING | DATA.TYPE_ARRAY }
+];
+
+
 
 // ============================================================================================================================ //
 //  Record description                                                                                                          //
@@ -322,9 +330,3 @@ export const WALLET_OP_MESSAGES = {
   ]
 };
 
-export const MSG_ANS_ERROR = 0xFF;
-export const ERROR = [
-  { name: "type",type: DATA.TYPE_UINT8 },
-  { name: "id",  type: DATA.TYPE_UINT8 },
-  { name: "arg", type: DATA.TYPE_STRING | DATA.TYPE_ARRAY }
-];

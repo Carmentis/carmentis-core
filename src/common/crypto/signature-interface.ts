@@ -1,5 +1,6 @@
 import {ml_dsa44} from "@noble/post-quantum/ml-dsa";
 import {randomBytes} from "@noble/post-quantum/utils";
+import * as assert from "node:assert";
 
 
 export interface SignatureScheme  {
@@ -74,8 +75,7 @@ export class MLDSA44PrivateSignatureKey extends MLDSA44PublicSignatureKey implem
 
     public static gen(): PrivateSignatureKey {
         const seed = randomBytes(32);
-        const keys = ml_dsa44.keygen(seed);
-        return new MLDSA44PrivateSignatureKey(keys.secretKey);
+        return new MLDSA44PrivateSignatureKey(seed);
     }
 
     private signatureKey: Uint8Array;

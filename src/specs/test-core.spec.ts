@@ -1,5 +1,4 @@
 import {describe, expect, test} from '@jest/globals';
-import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature-interface";
 import {KeyedProvider} from "../common/providers/keyed-provider";
 import {MemoryProvider} from "../common/providers/memoryProvider";
 import {ServerNetworkProvider} from "../common/providers/serverNetworkProvider";
@@ -11,6 +10,7 @@ import {SchemaSerializer, SchemaUnserializer} from "../common/data/schemaSeriali
 import {ReadStream, WriteStream} from "../common/data/byteStreams";
 import {RadixTree} from "../common/trees/radixTree";
 import {DATA} from '../common/constants/constants.js';
+import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 
 describe('testNumbers', () => {
     test('should serialize and deserialize numbers correctly', () => {

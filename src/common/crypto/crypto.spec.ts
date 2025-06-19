@@ -1,11 +1,9 @@
 import {
-    MLDSA65PrivateSignatureKey,
-    MLDSA65PublicKeyEncoder,
-    MLDSA65PublicSignatureKey,
     SignatureAlgorithmId
 } from "./signature-interface";
 import {toBytes} from "@noble/ciphers/utils";
 import {CryptoSchemeFactory} from "./factory";
+import {MLDSA65PrivateSignatureKey, MLDSA65PublicKeyEncoder, MLDSA65PublicSignatureKey} from "./signature/ml-dsa-65";
 
 describe('crypto', () => {
     test("Signature verification", () => {

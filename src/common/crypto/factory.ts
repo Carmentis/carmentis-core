@@ -3,12 +3,12 @@ import {
     DecapsulationKey, InsecureKeyExchangeScheme, EncapsulationKey,
 } from "./encryption-interface";
 import {
-    MLDSA65PrivateSignatureKey, MLDSA65PublicKeyEncoder,
     PrivateSignatureKey, PublicSignatureKey,
     SignatureAlgorithmId,
     SignatureScheme
 } from "./signature-interface";
 import {hexToBytes} from "@noble/ciphers/utils";
+import {MLDSA65PrivateSignatureKey, MLDSA65PublicKeyEncoder} from "./signature/ml-dsa-65";
 
 export class CryptoSchemeFactory {
 

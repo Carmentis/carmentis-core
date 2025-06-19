@@ -10,8 +10,8 @@ import { Crypto } from "./crypto/crypto.js";
 import { Utils } from "./utils/utils.js";
 import { DATA } from "./constants/constants.js";
 import {Provider} from "./providers/provider.js";
-import {MLDSA65PrivateSignatureKey} from "./crypto/signature-interface.js";
 import {KeyedProvider} from "./providers/keyed-provider.js";
+import {MLDSA65PrivateSignatureKey} from "./crypto/signature/ml-dsa-65.js";
 
 (async function() {
 //testNumbers();

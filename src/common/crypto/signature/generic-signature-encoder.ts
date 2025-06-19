@@ -26,7 +26,6 @@ export class GenericSignatureEncoder implements PublicSignatureKeyEncoder<Public
      */
     decodeFromUint8Array(publicKey: Uint8Array): PublicSignatureKey {
         const items = JSON.parse(bytesToUtf8(publicKey));
-        console.log(items);
         if (items && typeof items.signatureSchemeId === "number" && typeof items.publicKey === "string") {
             const rawPublicKey = hexToBytes(items.publicKey);
             const factory = new CryptoSchemeFactory();

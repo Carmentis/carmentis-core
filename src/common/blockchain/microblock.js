@@ -98,17 +98,22 @@ export class Microblock {
   }
 
   /**
-    Creates a signature.
-  */
-  createSignature(algorithmId, privateKey, includeGas) {
+   *
+   * @param {PrivateSignatureKey} privateKey
+   * @param {boolean} includeGas
+   * @returns {*}
+   */
+  createSignature(privateKey, includeGas) {
+    const signatureSize = privateKey.getSignatureSize()
     const signedData = this.getSignedData(
       includeGas,
       this.sections.length,
-      Crypto.SIG_ALGORITHMS[algorithmId].signatureSectionSize
+      signatureSize
     );
 
-    let signature;
+    const signature = privateKey.sign( signedData )
 
+    /*
     switch(algorithmId) {
       case Crypto.SECP256K1: {
         signature = Crypto.Secp256k1.sign(privateKey, signedData);
@@ -120,19 +125,31 @@ export class Microblock {
       }
     }
 
+     */
+
     return signature;
   }
 
   /**
-    Verifies a signature.
-  */
-  verifySignature(algorithmId, publicKey, signature, includeGas, sectionCount) {
+   * Verifies the provided cryptographic signature using the specified algorithm.
+   *
+   *
+   *
+   * @param {PublicSignatureKey} publicKey - The public key used to verify the signature.
+   * @param {string} signature - The signature to be verified.
+   * @param {boolean} includeGas - Indicates whether to include gas-related data in the signed payload.
+   * @param {number} sectionCount - The number of sections to include in the signed data.
+   * @return {boolean} Returns true if the signature is successfully verified; otherwise, returns false.
+   */
+  verifySignature(publicKey, signature, includeGas, sectionCount) {
     const signedData = this.getSignedData(
       includeGas,
       sectionCount,
       0
     );
 
+    return publicKey.verify(signedData, signature);
+    /*
     switch(algorithmId) {
       case Crypto.SECP256K1: {
         return Crypto.Secp256k1.verify(publicKey, signedData, signature);
@@ -141,7 +158,8 @@ export class Microblock {
         return Crypto.MLDsa.verify(publicKey, signedData, signature);
       }
     }
-    return false;
+
+     */
   }
 
   /**

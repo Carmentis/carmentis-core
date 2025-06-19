@@ -9,6 +9,9 @@ import { RadixTree } from "./trees/radixTree.js";
 import { Crypto } from "./crypto/crypto.js";
 import { Utils } from "./utils/utils.js";
 import { DATA } from "./constants/constants.js";
+import {Provider} from "./providers/provider.js";
+import {MLDSA44PrivateSignatureKey} from "./crypto/signature-interface.js";
+import {KeyedProvider} from "./providers/keyed-provider.js";
 
 (async function() {
 //testNumbers();
@@ -125,14 +128,16 @@ async function testRadixTree() {
 }
 
 async function testRecord() {
+  const privateKey = MLDSA44PrivateSignatureKey.gen();
+  /*
   const privateKey = Crypto.Random.getKey256(),
         publicKey = Crypto.Secp256k1.publicKeyFromPrivateKey(privateKey),
         keyPair = { publicKey, privateKey };
 
-  const blockchain = new Blockchain({
-    internalProvider: new MemoryProvider(),
-    externalProvider: new ServerNetworkProvider("http://localhost:3000")
-  });
+
+   */
+  const provider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
+  const blockchain = new Blockchain(provider);
 
   const object = {
 //  virtualBlockchainId: "0123456789ABCDEF0123456789ABCDEF",
@@ -162,26 +167,23 @@ async function testRecord() {
     author: "seller"
   };
 
-  const appLedger = await blockchain.getApplicationLedgerFromJson(keyPair, object);
+  const appLedger = await blockchain.getApplicationLedgerFromJson(object);
 
   const hash = await appLedger.publishUpdates();
 }
 
 async function testChain() {
   //const keyPair = Crypto.MLDsa.generateKeyPair();
-
+  const privateKey = MLDSA44PrivateSignatureKey.gen();
+  /*
   const privateKey = Crypto.Random.getKey256(),
         publicKey = Crypto.Secp256k1.publicKeyFromPrivateKey(privateKey),
         keyPair = { publicKey, privateKey };
 
-  const memoryProvider = new MemoryProvider();
-  const networkProvider = new ServerNetworkProvider("http://localhost:3000");
+   */
 
-  const blockchain = new Blockchain({
-    internalProvider: memoryProvider,
-    externalProvider: networkProvider
-  });
-
+  const provider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
+  const blockchain = new Blockchain(provider);
   let hash;
 
   // account
@@ -218,7 +220,7 @@ async function testChain() {
   genesisAccount = await blockchain.loadAccount(hash, keyPair);
 
   // organization
-  let organization = await blockchain.createOrganization(keyPair);
+  let organization = await blockchain.createOrganization();
 
   await organization.setDescription({
     name: "Carmentis SAS",
@@ -229,7 +231,7 @@ async function testChain() {
 
   hash = await organization.publishUpdates();
 
-  organization = await blockchain.loadOrganization(hash, keyPair);
+  organization = await blockchain.loadOrganization(hash);
 
   memoryProvider.clear();
   console.log(await organization.getDescription());

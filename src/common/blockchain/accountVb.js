@@ -37,8 +37,13 @@ export class AccountVb extends VirtualBlockchain {
     await this.addSection(SECTIONS.ACCOUNT_TRANSFER, object);
   }
 
+  /**
+   *
+   * @param {PrivateSignatureKey} privateKey
+   * @returns {Promise<void>}
+   */
   async setSignature(privateKey) {
-    const object = this.createSignature(this.state.signatureAlgorithmId, privateKey);
+    const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.ACCOUNT_SIGNATURE, object);
   }
 

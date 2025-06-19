@@ -6,14 +6,20 @@ import { Crypto } from "../crypto/crypto.js";
 import { Utils } from "../utils/utils.js";
 
 export class ApplicationLedger {
-  constructor({ provider, publicKey, privateKey }) {
+  constructor({ provider }) {
     this.vb = new ApplicationLedgerVb({ provider });
-    this.publicKey = publicKey;
-    this.privateKey = privateKey;
-    this.signatureAlgorithmId = Crypto.SECP256K1;
+    //this.publicKey = publicKey;
+    //this.privateKey = privateKey;
+    this.provider = provider
+    //this.signatureAlgorithmId = Crypto.SECP256K1;
+    if (this.provider.isKeyed()) {
+      const privateKey = this.provider.getPrivateSignatureKey();
+      this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
+    }
   }
 
   async _create(applicationId) {
+    if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without keyed provider.'
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
     });
@@ -129,7 +135,9 @@ export class ApplicationLedger {
   }
 
   async publishUpdates() {
-    await this.vb.signAsAuthor(this.privateKey);
+    if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.'
+    const privateKey = this.provider.getPrivateSignatureKey();
+    await this.vb.signAsAuthor(privateKey);
     return await this.vb.publish();
   }
 }

@@ -2,11 +2,14 @@ import { ValidatorNodeVb } from "./validatorNodeVb.js";
 import { Crypto } from "../crypto/crypto.js";
 
 export class ValidatorNode {
-  constructor({ provider, publicKey, privateKey }) {
+  constructor({ provider }) {
     this.vb = new ValidatorNodeVb({ provider });
-    this.publicKey = publicKey;
-    this.privateKey = privateKey;
-    this.signatureAlgorithmId = Crypto.SECP256K1;
+    this.provider = provider;
+    if (this.provider.isKeyed()) {
+      const privateKey = this.provider.getPrivateSignatureKey();
+      this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
+    }
+    //this.signatureAlgorithmId = Crypto.SECP256K1;
   }
 
   async _create() {
@@ -17,7 +20,9 @@ export class ValidatorNode {
   }
 
   async publishUpdates() {
-    await this.vb.setSignature(this.privateKey);
+    if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.'
+    const privateKey = this.provider.getPrivateSignatureKey();
+    await this.vb.setSignature(privateKey);
     return await this.vb.publish();
   }
 }

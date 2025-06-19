@@ -1,13 +1,7 @@
 import * as http from "http";
 import { NodeCore } from "./node-core.js";
-
-const PORT = process.env.PORT || 3000;
-const BLOCK_DELAY = 500;
-
-const MESSAGES = {
-  START: "Starting Carmentis node...",
-  READY: `Carmentis node is ready and listening on port ${PORT}`
-};
+const provider = new Provider(new MemoryProvider(), new NullNetworkProvider());
+const blockchain = new Blockchain(provider);
 
 function start() {
   console.log(MESSAGES.START);

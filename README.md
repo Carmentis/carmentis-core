@@ -43,6 +43,20 @@ npx jest path/to/test-file.spec.ts
 
 Tests are located in `.spec.ts` files throughout the source code.
 
+## Documentation
+
+To generate documentation using JSDoc:
+
+```bash
+npx jsdoc -r -c jsdoc.json -t ./node_modules/better-docs -d docs src
+```
+
+This command will:
+- Recursively scan the `src` directory for JSDoc comments
+- Use the configuration in `jsdoc.json`
+- Apply the better-docs template
+- Output the documentation to the `docs` directory
+
 ## Project Structure
 
 - `src/`: Source code

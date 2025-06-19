@@ -10,7 +10,7 @@ import { Crypto } from "./crypto/crypto.js";
 import { Utils } from "./utils/utils.js";
 import { DATA } from "./constants/constants.js";
 import {Provider} from "./providers/provider.js";
-import {MLDSA44PrivateSignatureKey} from "./crypto/signature-interface.js";
+import {MLDSA65PrivateSignatureKey} from "./crypto/signature-interface.js";
 import {KeyedProvider} from "./providers/keyed-provider.js";
 
 (async function() {
@@ -128,7 +128,7 @@ async function testRadixTree() {
 }
 
 async function testRecord() {
-  const privateKey = MLDSA44PrivateSignatureKey.gen();
+  const privateKey = MLDSA65PrivateSignatureKey.gen();
   /*
   const privateKey = Crypto.Random.getKey256(),
         publicKey = Crypto.Secp256k1.publicKeyFromPrivateKey(privateKey),
@@ -174,7 +174,7 @@ async function testRecord() {
 
 async function testChain() {
   //const keyPair = Crypto.MLDsa.generateKeyPair();
-  const privateKey = MLDSA44PrivateSignatureKey.gen();
+  const privateKey = MLDSA65PrivateSignatureKey.gen();
   /*
   const privateKey = Crypto.Random.getKey256(),
         publicKey = Crypto.Secp256k1.publicKeyFromPrivateKey(privateKey),

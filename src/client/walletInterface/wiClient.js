@@ -117,7 +117,7 @@ export class wiClient {
     // load the public key
     const cryptoFactory = new CryptoSchemeFactory();
 
-    const publicKey = cryptoFactory.createPublicSignatureKey(SignatureAlgorithmId.ML_DSA_44, answer.publicKey) // TODO add dynamic key parsing
+    const publicKey = cryptoFactory.createPublicSignatureKey(SignatureAlgorithmId.ML_DSA_65, answer.publicKey) // TODO add dynamic key parsing
     if (!publicKey.verify(challenge, answer.signature)) {
       throw new Error(ERRORS.WI_INVALID_SIGNATURE);
     }

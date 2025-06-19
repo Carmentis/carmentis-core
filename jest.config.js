@@ -25,15 +25,11 @@ export default {
     '^.+\\.(ts|tsx)?$': 'ts-jest',
     '^.+\\.(js|jsx)$': 'babel-jest',
   },
-  transformIgnorePatterns: [
-      /*
-      `<rootDir>/node_modules/(?!@noble\/(secp256k1|post-quantum(?!\/ml-dsa)))`,
-      '/node_modules/(?!@noble/(post-quantum|secp256k1)/).*\\.(ts|js)$',
-    '/node_modules/@noble/(post-quantum|secp256k1)/',
-      '<rootDir>/node_modules/',*/
-      //'node_modules/(?!my-library-dir)/'
-
+  setupFilesAfterEnv: [
+      //'./src/common/dev-node/dev-node.js'
   ],
+  transformIgnorePatterns: []
+
 
 
 

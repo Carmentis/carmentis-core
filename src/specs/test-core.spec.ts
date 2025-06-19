@@ -1,18 +1,21 @@
 import {describe, expect, test} from '@jest/globals';
-import {MLDSA44PrivateSignatureKey} from "../common/crypto/signature-interface";
+import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature-interface";
 import {KeyedProvider} from "../common/providers/keyed-provider";
 import {MemoryProvider} from "../common/providers/memoryProvider";
 import {ServerNetworkProvider} from "../common/providers/serverNetworkProvider";
 import {Blockchain} from "../common/blockchain/blockchain";
+import {start} from "../common/dev-node/dev-node";
 
 
-describe('sum module', () => {
-    test('adds 1 + 2 to equal 3', () => {
-        expect(1 + 2).toBe(3);
-    });
+describe('Chain test', () => {
 
+    beforeAll(async () => {
+        start()
+    })
+
+    const TEST_TIMEOUT = 10000;
     test("testChain()", async () => {
-        const privateKey = MLDSA44PrivateSignatureKey.gen();
+        const privateKey = MLDSA65PrivateSignatureKey.gen();
         const memoryProvider = new MemoryProvider();
         const provider = new KeyedProvider(privateKey, memoryProvider, new ServerNetworkProvider("http://localhost:3000"));
         const blockchain = new Blockchain(provider);
@@ -68,5 +71,5 @@ describe('sum module', () => {
         memoryProvider.clear();
         console.log(await organization.getDescription());
         console.log(await organization.getDescription());
-    })
+    }, TEST_TIMEOUT);
 });

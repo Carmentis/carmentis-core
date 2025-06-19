@@ -7,6 +7,7 @@ import { Blockchain } from "../blockchain/blockchain.js";
 import { MemoryProvider } from "../providers/memoryProvider.js";
 import { NullNetworkProvider } from "../providers/nullNetworkProvider.js";
 import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer.js";
+import {Provider} from "../providers/provider.js";
 
 export const NodeCore = {
   decodeQueryField,
@@ -18,10 +19,8 @@ export const NodeCore = {
 const messageUnserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
 const messageSerializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
 
-const blockchain = new Blockchain({
-  internalProvider: new MemoryProvider(),
-  externalProvider: new NullNetworkProvider()
-});
+const provider = new Provider(new MemoryProvider(), new NullNetworkProvider());
+const blockchain = new Blockchain(provider);
 
 const callbacks = new Map;
 

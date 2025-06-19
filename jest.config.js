@@ -6,18 +6,13 @@ const tsJestTransformCfg = createDefaultPreset().transform;
 export default {
   testEnvironment: "node",
   rootDir: '.',
-  preset: 'ts-jest',
   testMatch: ['<rootDir>/src/**/*.spec.ts'],
   transform: {
     ...tsJestTransformCfg,
-    //'^\.src\/.+\\.(ts|tsx|js)$': 'babel-jest',
+    /*
     '^\.src\/.+\\.(ts|tsx|js)$': [
         'ts-jest', { isolatedModules: true, useESM: true,  tsconfig: '<rootDir>/tsconfig.json' }
     ],
-    /*
-    '^src.+\\.(ts|js)$': ['ts-jest', {
-      isolatedModules: false,
-    }]
 
      */
   },

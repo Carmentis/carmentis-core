@@ -313,8 +313,6 @@ function testIR() {
   console.log("recovered from sections", JSON.stringify(ir.exportToJson(), null, 2));
 }
 
- */
-
 async function testLedger() {
   const ledger = new AppLedger;
 

@@ -1,18 +1,21 @@
 import { CHAIN, DATA } from "../constants/constants.js";
 
-export const DB_CHAIN                 = 0x0;
-export const DB_BLOCK_INFO            = 0x1;
-export const DB_BLOCK_CONTENT         = 0x2;
-export const DB_MICROBLOCK_INFO       = 0x3;
-export const DB_MICROBLOCK_DATA       = 0x4;
-export const DB_VB_INFO               = 0x5;
-export const DB_ACCOUNT_STATE         = 0x6;
-export const DB_ACCOUNT_HISTORY       = 0x7;
-export const DB_ACCOUNT_BY_PUBLIC_KEY = 0x8;
-export const DB_ACCOUNTS              = 0x9;
-export const DB_VALIDATOR_NODES       = 0xA;
-export const DB_ORGANIZATIONS         = 0xB;
-export const DB_APPLICATIONS          = 0xC;
+export const DB_CHAIN                 = 0x00;
+export const DB_VB_RADIX              = 0x01;
+export const DB_TOKEN_RADIX           = 0x02;
+export const DB_VALIDATOR             = 0x03;
+export const DB_BLOCK_INFO            = 0x04;
+export const DB_BLOCK_CONTENT         = 0x05;
+export const DB_MICROBLOCK_INFO       = 0x06;
+export const DB_MICROBLOCK_DATA       = 0x07;
+export const DB_VB_INFO               = 0x08;
+export const DB_ACCOUNT_STATE         = 0x09;
+export const DB_ACCOUNT_HISTORY       = 0x0A;
+export const DB_ACCOUNT_BY_PUBLIC_KEY = 0x0B;
+export const DB_ACCOUNTS              = 0x0C;
+export const DB_VALIDATOR_NODES       = 0x0D;
+export const DB_ORGANIZATIONS         = 0x0E;
+export const DB_APPLICATIONS          = 0x0F;
 
 export const DB = {
   // chain information
@@ -21,6 +24,11 @@ export const DB = {
     { name: "lastBlockTs",    type: DATA.TYPE_UINT48 },
     { name: "nMicroblock",    type: DATA.TYPE_UINT48 },
     { name: "objectCounters", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT48, size: CHAIN.N_VIRTUAL_BLOCKCHAINS }
+  ],
+
+  // validator: Comet address -> Carmentis ID
+  [ DB_VALIDATOR ] : [
+    { name: "validatorNodeId", type: DATA.TYPE_BIN256 }
   ],
 
   // block meta information

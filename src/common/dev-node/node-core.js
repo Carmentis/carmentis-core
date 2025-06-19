@@ -2,7 +2,9 @@ import { CHAIN, SCHEMAS, SECTIONS } from "../constants/constants.js";
 import { NODE_SCHEMAS } from "./node-constants.js";
 import { LevelDb } from "./levelDb.js";
 import { Base64 } from "../data/base64.js";
+import { RadixTree } from "../trees/radixTree.js";
 import { Utils } from "../utils/utils.js";
+//import { AccountManager } from "./accountManager.js";
 import { Blockchain } from "../blockchain/blockchain.js";
 import { MemoryProvider } from "../providers/memoryProvider.js";
 import { NullNetworkProvider } from "../providers/nullNetworkProvider.js";
@@ -25,7 +27,47 @@ const blockchain = new Blockchain(provider);
 const callbacks = new Map;
 
 const db = new LevelDb("database", NODE_SCHEMAS.DB);
-db.open();
+db.initialize();
+const vbRadix = new RadixTree(db, NODE_SCHEMAS.DB_VB_RADIX);
+const tokenRadix = new RadixTree(db, NODE_SCHEMAS.DB_TOKEN_RADIX);
+
+test();
+
+async function test() {
+  await db.clear();
+  await db.putObject(NODE_SCHEMAS.DB_CHAIN, "SOMEKEY", { height: 1, lastBlockTs: 1, nMicroblock: 123, objectCounters: [ 1, 2, 3, 4, 5 ] });
+  console.log(await db.getObject(NODE_SCHEMAS.DB_CHAIN, "SOMEKEY"));
+
+  const keys = [], values = [];
+  const N = 10000;
+
+  function randomHash() { return new Uint8Array([...Array(32)].map(() => Math.random() * 256 | 0)); }
+
+  for(let n = 0; n < N; n++) {
+    keys[n] = randomHash();
+    values[n] = randomHash();
+    await vbRadix.set(keys[n], values[n]);
+  }
+  await vbRadix.flush();
+
+  const rootHash = await vbRadix.getRootHash();
+  console.log("root hash", rootHash);
+
+  for(let n = 0; n < N; n++) {
+    const res = await vbRadix.get(keys[n]);
+
+    if(!Utils.binaryIsEqual(res.value, values[n])) {
+      throw `read value is invalid`;
+    }
+
+    const proofRootHash = await RadixTree.verifyProof(keys[n], res.value, res.proof);
+
+    if(!Utils.binaryIsEqual(proofRootHash, rootHash)) {
+      throw `failed proof`;
+    }
+  }
+  console.log("done");
+}
 
 registerSectionCallbacks(
   CHAIN.ACCOUNT,
@@ -62,19 +104,47 @@ function encodeResponse(response) {
   });
 }
 
-async function checkTx(tx) {
+async function checkTx(request) {
   console.log(`Received microblock`);
 
-  const importer = blockchain.getMicroblockImporter(tx);
+  const importer = blockchain.getMicroblockImporter(request.tx);
   await importer.check();
 
   for(const section of importer.vb.currentMicroblock.sections) {
     await invokeSectionCallback(importer.vb.type, section.type, section.object);
   }
-  
+
   await importer.store();
 
   return new Uint8Array();
+}
+
+/**
+  Executed by the proposer
+  request.txs
+*/
+async function prepareProposal(request) {
+}
+
+/**
+  Executed by all validators
+  request.txs
+  request.proposed_last_commit
+*/
+async function processProposal(request) {
+}
+
+async function extendVote(request) {
+}
+
+async function verifyVoteExtension(request) {
+}
+
+async function finalizeBlock(request) {
+}
+
+async function commit() {
+  // commit changes to DB
 }
 
 async function accountTokenIssuanceCallback(object) {

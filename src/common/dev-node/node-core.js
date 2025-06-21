@@ -1,15 +1,15 @@
 import { CHAIN, SCHEMAS, SECTIONS } from "../constants/constants.js";
-import { NODE_SCHEMAS } from "./node-constants.js";
+import { NODE_SCHEMAS } from "./constants/constants.js";
 import { LevelDb } from "./levelDb.js";
 import { Base64 } from "../data/base64.js";
 import { RadixTree } from "../trees/radixTree.js";
 import { Utils } from "../utils/utils.js";
-//import { AccountManager } from "./accountManager.js";
+import { AccountManager } from "./accountManager.js";
 import { Blockchain } from "../blockchain/blockchain.js";
 import { MemoryProvider } from "../providers/memoryProvider.js";
 import { NullNetworkProvider } from "../providers/nullNetworkProvider.js";
 import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer.js";
-import {Provider} from "../providers/provider.js";
+import { Provider } from "../providers/provider.js";
 
 export const NodeCore = {
   decodeQueryField,
@@ -30,6 +30,7 @@ const db = new LevelDb("database", NODE_SCHEMAS.DB);
 db.initialize();
 const vbRadix = new RadixTree(db, NODE_SCHEMAS.DB_VB_RADIX);
 const tokenRadix = new RadixTree(db, NODE_SCHEMAS.DB_TOKEN_RADIX);
+const accountManager = new AccountManager(db);
 
 test();
 
@@ -41,7 +42,9 @@ async function test() {
   const keys = [], values = [];
   const N = 10000;
 
-  function randomHash() { return new Uint8Array([...Array(32)].map(() => Math.random() * 256 | 0)); }
+  function randomHash() {
+    return new Uint8Array([...Array(32)].map(() => Math.random() * 256 | 0));
+  }
 
   for(let n = 0; n < N; n++) {
     keys[n] = randomHash();
@@ -72,7 +75,8 @@ async function test() {
 registerSectionCallbacks(
   CHAIN.ACCOUNT,
   [
-    [ SECTIONS.ACCOUNT_TOKEN_ISSUANCE, accountTokenIssuanceCallback ]
+    [ SECTIONS.ACCOUNT_TOKEN_ISSUANCE, accountTokenIssuanceCallback ],
+    [ SECTIONS.ACCOUNT_TOKEN_TRANSFER, accountTokenTransferCallback ]
   ]
 );
 
@@ -83,12 +87,12 @@ function registerSectionCallbacks(objectType, callbackList) {
   }
 }
 
-async function invokeSectionCallback(objectType, sectionType, object) {
+async function invokeSectionCallback(objectType, sectionType, object, apply) {
   const key = sectionType << 4 | objectType;
 
   if(callbacks.has(key)) {
     const callback = callbacks.get(key);
-    await callback(object);
+    await callback(object, apply);
   }
 }
 
@@ -104,6 +108,9 @@ function encodeResponse(response) {
   });
 }
 
+/**
+  Incoming transaction
+*/
 async function checkTx(request) {
   console.log(`Received microblock`);
 
@@ -111,7 +118,7 @@ async function checkTx(request) {
   await importer.check();
 
   for(const section of importer.vb.currentMicroblock.sections) {
-    await invokeSectionCallback(importer.vb.type, section.type, section.object);
+    await invokeSectionCallback(importer.vb.type, section.type, section.object, false);
   }
 
   await importer.store();
@@ -147,10 +154,20 @@ async function commit() {
   // commit changes to DB
 }
 
-async function accountTokenIssuanceCallback(object) {
+/**
+  Account callbacks
+*/
+async function accountTokenIssuanceCallback(object, apply) {
   console.log("** TOKEN ISSUANCE **");
 }
 
+async function accountTokenTransferCallback(object, apply) {
+  console.log("** TOKEN TRANSFER **");
+}
+
+/**
+  Custom Carmentis query via abci_query
+*/
 async function query(data) {
   const { type, object } = messageUnserializer.unserialize(data);
 

@@ -1,4 +1,4 @@
-import {PrivateSignatureKey} from "./signature-interface";
+import {PrivateSignatureKey} from "./signature-interface.js";
 
 export interface SymmetricEncryptionKey  {
     getEncryptionAlgorithmId(): number;

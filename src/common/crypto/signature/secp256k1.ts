@@ -1,4 +1,4 @@
-import {PublicSignatureKeyEncoder, SignatureScheme} from "../signature-interface";
+import {PublicSignatureKeyEncoder, SignatureScheme} from "../signature-interface.js";
 
 export class Secp256k1SignatureScheme implements SignatureScheme {
     private static SIGNATURE_SIZE = 65;

@@ -1,6 +1,5 @@
 import { Crypto } from "../crypto/crypto.js";
-
-const PADDING_HASH = new Uint8Array(32);
+import { Utils } from "../utils/utils.js";
 
 export class MerkleTree {
   constructor() {
@@ -101,7 +100,7 @@ export class MerkleTree {
       const row = Array(nLeaves).fill(null);
 
       if(nLeaves > 1 && nLeaves & 1) {
-        row.push(PADDING_HASH);
+        row.push(Utils.getNullHash());
         nLeaves++;
       }
       this.tree.push(row);

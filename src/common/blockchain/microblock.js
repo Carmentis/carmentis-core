@@ -18,7 +18,7 @@ export class Microblock {
     if(height == 1) {
       const genesisSeed = Crypto.Random.getBytes(24);
 
-      previousHash = new Uint8Array(32);
+      previousHash = Utils.getNullHash();
       previousHash[0] = this.type;
       previousHash.set(genesisSeed, 8);
     }
@@ -34,7 +34,7 @@ export class Microblock {
       timestamp: 0,
       gas: 0,
       gasPrice: 0,
-      bodyHash: new Uint8Array(32)
+      bodyHash: Utils.getNullHash()
     };
   }
 

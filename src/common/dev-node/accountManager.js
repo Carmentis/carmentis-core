@@ -1,10 +1,9 @@
-import { DATA, ECO, SCHEMAS, ERRORS } from "../constants/constants.js";
-import { schemaSerializer } from "../serializers/serializers.js";
+import { DATA, ECO } from "../constants/constants.js";
+import { NODE_SCHEMAS } from "./constants/constants.js";
+import { SchemaSerializer } from "../data/schemaSerializer.js";
 import { Crypto } from "../crypto/crypto.js";
 import { Utils } from "../utils/utils.js";
 //import { accountError } from "../errors/error.js";
-
-export const FEES_ACCOUNT = "0".repeat(31) + "1";
 
 export class AccountManager {
   constructor(dbInterface) {
@@ -12,16 +11,15 @@ export class AccountManager {
   }
 
   async tokenTransfer(transfer, chainReference, timestamp, apply) {
-    let accountCreation = transfer.type == ECO.BK_SENT_ISSUANCE || transfer.type == ECO.BK_SALE,
-        payeeBalance,
-        payerBalance,
-        obj;
+    const accountCreation = transfer.type == ECO.BK_SENT_ISSUANCE || transfer.type == ECO.BK_SALE;
+    let payeeBalance;
+    let payerBalance;
 
     if(transfer.payerAccount === null) {
       payerBalance = null;
     }
     else {
-      let payerState = await loadState(transfer.payerAccount);
+      const payerState = await loadState(transfer.payerAccount);
 
       payerBalance = payerState.balance;
 
@@ -35,7 +33,7 @@ export class AccountManager {
       payeeBalance = null;
     }
     else {
-      let payeeState = await loadState(transfer.payeeAccount);
+      const payeeState = await loadState(transfer.payeeAccount);
 
       if(accountCreation){
         if(payeeState.height != 0) {
@@ -65,28 +63,24 @@ export class AccountManager {
   }
 
   async loadState(accountHash) {
-    const state = await this.dbInterface.getObject(SCHEMAS.DB_ACCOUNT_STATE, accountHash);
+    const state = await this.dbInterface.getObject(NODE_SCHEMAS.DB_ACCOUNT_STATE, accountHash);
 
-    if(state) {
-      return state;
-    }
-
-    return {
+    return state || {
       height: 0,
       balance: 0,
-      lastHistoryHash: DATA.NULL_HASH
+      lastHistoryHash: Utils.getNullHash()
     };
   }
 
   async update(type, accountHash, linkedAccountHash, amount, chainReference, timestamp) {
-    let state = await loadState(accountHash);
+    const state = await loadState(accountHash);
 
     state.height++;
     state.balance += type & ECO.BK_PLUS ? amount : -amount;
     state.lastHistoryHash = await addHistoryEntry(state, type, accountHash, linkedAccountHash, amount, chainReference, timestamp);
 
     await dbInterface.putObject(
-      SCHEMAS.DB_ACCOUNT_STATE,
+      NODE_SCHEMAS.DB_ACCOUNT_STATE,
       accountHash,
       state
     );
@@ -107,7 +101,7 @@ export class AccountManager {
   }
 
   async loadHistoryEntry(accountHash, historyHash) {
-    const entry = await this.dbInterface.getObject(SCHEMAS.DB_ACCOUNT_HISTORY, historyHash);
+    const entry = await this.dbInterface.getObject(NODE_SCHEMAS.DB_ACCOUNT_HISTORY, historyHash);
 
     if(!entry) {
       throw `Internal error: account history entry not found`;
@@ -117,10 +111,8 @@ export class AccountManager {
   }
 
   async addHistoryEntry(state, type, accountHash, linkedAccountHash, amount, chainReference, timestamp) {
-    const chainReferenceBinary = schemaSerializer.encode(
-      ECO.BK_REF_SCHEMAS[ECO.BK_REFERENCES[type]],
-      chainReference
-    );
+    const serializer = new SchemaSerializer(NODE_SCHEMAS.ACCOUNT_REF_SCHEMAS[ECO.BK_REFERENCES[type]]);
+    const chainReferenceBinary = serializer.serialize(chainReference);
 
     const entry = {
       height             : state.height,
@@ -132,11 +124,11 @@ export class AccountManager {
       chainReference     : chainReferenceBinary
     };
 
-    const record = schemaSerializer.encode(SCHEMAS.DB[SCHEMAS.DB_ACCOUNT_HISTORY], entry);
-    const hash = getHistoryEntryHash(uint8.fromHexa(accountHash), Crypto.Hashes.sha256AsBinary(record));
+    const record = db.serialize(NODE_SCHEMAS.DB_ACCOUNT_HISTORY, entry);
+    const hash = getHistoryEntryHash(Utils.binaryFromHexa(accountHash), Crypto.Hashes.sha256AsBinary(record));
 
-    await this.dbInterface.put(
-      SCHEMAS.DB_ACCOUNT_HISTORY,
+    await this.dbInterface.putRaw(
+      NODE_SCHEMAS.DB_ACCOUNT_HISTORY,
       hash,
       record
     );
@@ -145,14 +137,14 @@ export class AccountManager {
   }
 
   getHistoryEntryHash(accountHash, recordHash) {
-    return Crypto.Hashes.sha256(uint8.from(accountHash, recordHash));
+    return Crypto.Hashes.sha256(Utils.binaryFrom(accountHash, recordHash));
   }
 
   async testPublicKeyAvailability(publicKey) {
-    let keyHash = Crypto.Hashes.sha256(uint8.fromHexa(publicKey));
+    const keyHash = Crypto.Hashes.sha256(Utils.binaryFromHexa(publicKey));
 
-    let accountHash = await this.dbInterface.get(
-      SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
+    const accountHash = await this.dbInterface.get(
+      NODE_SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
       keyHash
     );
 
@@ -163,25 +155,26 @@ export class AccountManager {
   }
 
   async saveAccountByPublicKey(accountHash, publicKey) {
-    let keyHash = Crypto.Hashes.sha256(uint8.fromHexa(publicKey));
+    const keyHash = Crypto.Hashes.sha256(Utils.binaryFromHexa(publicKey));
 
     await this.dbInterface.put(
-      SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
+      NODE_SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
       keyHash,
       accountHash
     );
   }
 
   async loadAccountByPublicKey(publicKey) {
-    let keyHash = Crypto.Hashes.sha256(uint8.fromHexa(publicKey));
+    const keyHash = Crypto.Hashes.sha256(Utils.binaryFromHexa(publicKey));
 
-    let accountHash = await this.dbInterface.get(
-      SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
+    const accountHash = await this.dbInterface.get(
+      NODE_SCHEMAS.DB_ACCOUNT_BY_PUBLIC_KEY,
       keyHash
     );
 
     if(!accountHash) {
-      throw new accountError(ERRORS.ACCOUNT_KEY_UNKNOWN, publicKey);
+//    throw new accountError(ERRORS.ACCOUNT_KEY_UNKNOWN, publicKey);
+      throw `unknown account key`;
     }
 
     return accountHash;

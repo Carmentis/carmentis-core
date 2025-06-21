@@ -3,7 +3,6 @@ import {KeyedProvider} from "../common/providers/keyed-provider";
 import {MemoryProvider} from "../common/providers/memoryProvider";
 import {ServerNetworkProvider} from "../common/providers/serverNetworkProvider";
 import {Blockchain} from "../common/blockchain/blockchain";
-import {start, stop} from "../common/dev-node/dev-node";
 import {IntermediateRepresentation} from "../common/records/intermediateRepresentation";
 import {Utils} from "../common/utils/utils";
 import {SchemaSerializer, SchemaUnserializer} from "../common/data/schemaSerializer";
@@ -13,19 +12,8 @@ import {DATA} from '../common/constants/constants.js';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 
 describe('Chain test', () => {
-
-    beforeAll(async () => {
-        start()
-    })
-
-    afterAll(async () => {
-        stop()
-    })
-
     const TEST_TIMEOUT = 2000;
     test("testChain()", async () => {
-//      start();
-
         const privateKey = MLDSA65PrivateSignatureKey.gen();
         const memoryProvider = new MemoryProvider();
         const provider = new KeyedProvider(privateKey, memoryProvider, new ServerNetworkProvider("http://localhost:3000"));
@@ -38,7 +26,7 @@ describe('Chain test', () => {
         let genesisAccount = await blockchain.createGenesisAccount();
 
         hash = await genesisAccount.publishUpdates();
-/*
+
         console.log("processing transfer");
 
         genesisAccount = await blockchain.loadAccount(hash);
@@ -82,8 +70,6 @@ describe('Chain test', () => {
         memoryProvider.clear();
         console.log(await organization.getDescription());
         console.log(await organization.getDescription());
-*/
-//      stop();
     }, TEST_TIMEOUT);
 
 

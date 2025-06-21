@@ -6,7 +6,7 @@ import {
     PublicSignatureKeyEncoder,
     SignatureAlgorithmId,
     SignatureScheme
-} from "../signature-interface";
+} from "../signature-interface.js";
 
 export class MLDSA65SignatureScheme implements SignatureScheme {
     private static SIGNATURE_SIZE = 3311;

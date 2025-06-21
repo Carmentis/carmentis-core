@@ -1,4 +1,4 @@
-import { CHAIN, DATA } from "../constants/constants.js";
+import { CHAIN, DATA, ECO } from "../../constants/constants.js";
 
 export const DB_CHAIN                 = 0x00;
 export const DB_VB_RADIX              = 0x01;
@@ -116,4 +116,29 @@ export const DB = {
   [ DB_VALIDATOR_NODES ]: [],
   [ DB_ORGANIZATIONS   ]: [],
   [ DB_APPLICATIONS    ]: []
+};
+
+// ============================================================================================================================ //
+//  Account history references (chainReference field in DB_ACCOUNT_HISTORY)                                                     //
+// ============================================================================================================================ //
+// reference to a block (for earned fees)
+const ACCOUNT_BLOCK_REFERENCE = [
+  { name: "height", type: DATA.UINT48 }
+];
+
+// reference to a microblock (for paid fees)
+const ACCOUNT_MB_REFERENCE = [
+  { name: "mbHash", type: DATA.HASH }
+];
+
+// reference to a microblock section (for token transfers)
+const ACCOUNT_SECTION_REFERENCE = [
+  { name: "mbHash",       type: DATA.HASH },
+  { name: "sectionIndex", type: DATA.UINT16 }
+];
+
+export const ACCOUNT_REF_SCHEMAS = {
+  [ ECO.BK_REF_BLOCK ]: ACCOUNT_BLOCK_REFERENCE,
+  [ ECO.BK_REF_MICROBLOCK ]: ACCOUNT_MB_REFERENCE,
+  [ ECO.BK_REF_SECTION ]: ACCOUNT_SECTION_REFERENCE
 };

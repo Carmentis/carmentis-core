@@ -1,18 +1,13 @@
 import * as http from "http";
 import { NodeCore } from "./node-core.js";
-import {Provider} from "../providers/provider";
-import {MemoryProvider} from "../providers/memoryProvider.js";
-import {NullNetworkProvider} from "../providers/nullNetworkProvider.js";
-import {Blockchain} from "../blockchain/blockchain.js";
-const provider = new Provider(new MemoryProvider(), new NullNetworkProvider());
-const blockchain = new Blockchain(provider);
 
 const PORT = process.env.PORT || 3000;
 const BLOCK_DELAY = 500;
 
 const MESSAGES = {
-    START: "Starting Carmentis node...",
-    READY: `Carmentis node is ready and listening on port ${PORT}`
+  START: "Starting Carmentis node...",
+  READY: `Carmentis node is ready and listening on port ${PORT}`,
+  CLOSED: `Server closed`
 };
 
 let server;
@@ -30,7 +25,10 @@ export function start() {
 }
 
 export function stop() {
-  server.close();
+  server.close(_ => {
+    console.log(MESSAGES.CLOSED);
+    process.exit(0);
+  });
 }
 
 function handleRequest(req, res) {
@@ -73,4 +71,4 @@ function handleRequest(req, res) {
 async function processMempool() {
 }
 
-//start();
+start();

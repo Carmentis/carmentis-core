@@ -3,7 +3,6 @@ import {KeyedProvider} from "../common/providers/keyed-provider";
 import {MemoryProvider} from "../common/providers/memoryProvider";
 import {ServerNetworkProvider} from "../common/providers/serverNetworkProvider";
 import {Blockchain} from "../common/blockchain/blockchain";
-import {start} from "../common/dev-node/dev-node";
 import {IntermediateRepresentation} from "../common/records/intermediateRepresentation";
 import {Utils} from "../common/utils/utils";
 import {SchemaSerializer, SchemaUnserializer} from "../common/data/schemaSerializer";

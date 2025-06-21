@@ -1,14 +1,14 @@
 import {
     KeyExchangeAlgorithmId,
     DecapsulationKey, InsecureKeyExchangeScheme, EncapsulationKey,
-} from "./encryption-interface";
+} from "./encryption-interface.js";
 import {
     PrivateSignatureKey, PublicSignatureKey,
     SignatureAlgorithmId,
     SignatureScheme
-} from "./signature-interface";
+} from "./signature-interface.js";
 import {hexToBytes} from "@noble/ciphers/utils";
-import {MLDSA65PrivateSignatureKey, MLDSA65PublicKeyEncoder} from "./signature/ml-dsa-65";
+import {MLDSA65PrivateSignatureKey, MLDSA65PublicKeyEncoder} from "./signature/ml-dsa-65.js";
 
 export class CryptoSchemeFactory {
 

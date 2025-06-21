@@ -70,10 +70,14 @@ export class LevelDb {
     }
   }
 
-  async putObject(tableId, key, object) {
+  serialize(tableId, object) {
     const serializer = new SchemaSerializer(NODE_SCHEMAS.DB[tableId]);
     const data = serializer.serialize(object);
+    return data;
+  }
 
+  async putObject(tableId, key, object) {
+    const data = this.serialize(tableId, object);
     return await this.putRaw(tableId, key, data);
   }
 

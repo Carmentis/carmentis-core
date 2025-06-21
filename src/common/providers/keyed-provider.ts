@@ -1,6 +1,6 @@
-import {Provider} from "./provider";
-import {Wallet} from "../wallet";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature-interface";
+import {Provider} from "./provider.js";
+import {Wallet} from "../wallet.js";
+import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature-interface.js";
 
 export class KeyedProvider extends Provider {
     private signatureKey: PrivateSignatureKey;

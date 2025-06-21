@@ -1,7 +1,7 @@
 import { CHAIN, SECTIONS } from "../constants/constants.js";
 import { VirtualBlockchain } from "./virtualBlockchain.js";
 import { StructureChecker } from "./structureChecker.js";
-import {CryptoSchemeFactory} from "../crypto/factory";
+import {CryptoSchemeFactory} from "../crypto/factory.js";
 
 export class OrganizationVb extends VirtualBlockchain {
   constructor({ provider }) {

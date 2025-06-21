@@ -13,31 +13,29 @@ import {MLDSA65PrivateSignatureKey, MLDSA65PublicKeyEncoder} from "./signature/m
 export class CryptoSchemeFactory {
 
 
-    createPrivateSignatureKey( schemeId: number, walletSeed: string ): PrivateSignatureKey {
-        const rawWalletSeed = hexToBytes(walletSeed);
+    createPrivateSignatureKey( schemeId: number, walletSeed: Uint8Array ): PrivateSignatureKey {
         switch (schemeId) {
-            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(rawWalletSeed);
+            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(walletSeed);
             default: throw `Not supported signature scheme ID: ${schemeId}`
         }
     }
 
-    createVirtualBlockchainPrivateSignatureScheme( schemeId: number, walletSeed: string , vbSeed: string ): PrivateSignatureKey {
-        const rawWalletSeed = hexToBytes(walletSeed); // TODO: add the vbSeed
+    createVirtualBlockchainPrivateSignatureScheme( schemeId: number, walletSeed: Uint8Array , vbSeed: Uint8Array ): PrivateSignatureKey {
         switch (schemeId) {
-            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(rawWalletSeed);
+            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(walletSeed);
             default: throw `Not supported signature scheme ID: ${schemeId}`
         }
     }
 
 
-    createDecapsulationKey( schemeId: number, walletSeed: string  ): DecapsulationKey {
+    createDecapsulationKey( schemeId: number, walletSeed: Uint8Array  ): DecapsulationKey {
         switch (schemeId) {
             case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
             default: throw `Not supported encryption scheme ID: ${schemeId}`
         }
     }
 
-    createVirtualBlockchainDecapsulationKey( schemeId: number, walletSeed: string, vbSeed: string ): DecapsulationKey {
+    createVirtualBlockchainDecapsulationKey( schemeId: number, walletSeed: Uint8Array, vbSeed: Uint8Array ): DecapsulationKey {
         switch (schemeId) {
             case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
             default: throw `Not supported encryption scheme ID: ${schemeId}`

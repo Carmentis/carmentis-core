@@ -4,6 +4,7 @@ import { TypeManager } from "../data/types.js";
 export const Utils = {
   numberToHexa,
   getNullHash,
+  getTimestampInSeconds,
   binaryToHexa,
   binaryFromHexa,
   binaryFrom,
@@ -18,6 +19,10 @@ function numberToHexa(value, size) {
 
 function getNullHash() {
   return new Uint8Array(32);
+}
+
+function getTimestampInSeconds() {
+  return Math.floor(Date.now() / 1000);
 }
 
 function binaryToHexa(array) {

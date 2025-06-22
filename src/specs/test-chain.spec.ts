@@ -72,8 +72,6 @@ describe('Chain test', () => {
         console.log(await organization.getDescription());
     }, TEST_TIMEOUT);
 
-
-
     test('testIr()', async () => {
         let ir, testObject, sectionData;
 
@@ -146,7 +144,6 @@ describe('Chain test', () => {
         console.log("recovered from sections", JSON.stringify(ir.exportToJson(), null, 2));
     })
 
-
     test("testRecord()", async () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
         const provider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
@@ -184,6 +181,4 @@ describe('Chain test', () => {
 
         const hash = await appLedger.publishUpdates();
     }, TEST_TIMEOUT)
-
-
 });

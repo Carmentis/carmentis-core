@@ -126,10 +126,9 @@ export class VirtualBlockchain {
     Publishes the current microblock.
   */
   async publish() {
-    console.log("publishing", this);
-
-//  console.log(this.currentMicroblock.header);
-//  console.log(this.currentMicroblock.sections);
+    console.log("publishing");
+    console.log(this.currentMicroblock.header);
+    console.log(this.currentMicroblock.sections);
 
     this.checkStructure(this.currentMicroblock);
 

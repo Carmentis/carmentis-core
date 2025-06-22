@@ -31,11 +31,18 @@ export class Microblock {
       protocolVersion: CHAIN.PROTOCOL_VERSION,
       height: height,
       previousHash: previousHash,
-      timestamp: 0,
+      timestamp: Utils.getTimestampInSeconds(),
       gas: 0,
       gasPrice: 0,
       bodyHash: Utils.getNullHash()
     };
+  }
+
+  /**
+    Updates the timestamp.
+  */
+  updateTimestamp() {
+    this.header.timestamp = Utils.getTimestampInSeconds();
   }
 
   /**

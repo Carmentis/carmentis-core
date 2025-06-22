@@ -10,6 +10,12 @@ const MESSAGES = {
   CLOSED: `Server closed`
 };
 
+const core = new NodeCore({
+  dbPath: ".database"
+});
+
+core.test();
+
 let server;
 
 export function start() {
@@ -54,12 +60,12 @@ function handleRequest(req, res) {
     switch(urlObject.pathname) {
       case "/broadcast_tx_sync": {
         const tx = NodeCore.decodeQueryField(urlObject, "tx");
-        response = await NodeCore.checkTx({ tx });
+        response = await core.checkTx({ tx });
         break;
       }
       case "/abci_query": {
         const data = NodeCore.decodeQueryField(urlObject, "data");
-        response = await NodeCore.query(data);
+        response = await core.query(data);
         break;
       }
     }

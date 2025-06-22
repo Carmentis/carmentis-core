@@ -10,54 +10,97 @@ import { Utils } from "../utils/utils.js";
 export class MicroblockImporter {
   constructor({ data, provider }) {
     this.provider = provider;
-    this.data = data;
+    this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
+    this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
+    this.hash = Crypto.Hashes.sha256AsBinary(this.headerData);
+    this.error = "";
   }
 
-  async check() {
-    this.headerData = this.data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
-    this.bodyData = this.data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
+  async check(currentTimestamp) {
+    this.currentTimestamp = currentTimestamp || Utils.getTimestampInSeconds();
 
-    const headerUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
-    const header = headerUnserializer.unserialize(this.headerData);
+    return await this.checkHeader() || await this.checkTimestamp() || await this.checkContent();
+  }
 
-    const bodyHash = Crypto.Hashes.sha256AsBinary(this.bodyData);
+  async checkHeader() {
+    try {
+      const headerUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
+      this.header = headerUnserializer.unserialize(this.headerData);
 
-    if(!Utils.binaryIsEqual(bodyHash, header.bodyHash)) {
-      throw `inconsistent body hash`;
-    }
-
-    let type;
-    let vbIdentifier;
-
-    if(header.height > 1) {
-      const previousMicroblockInfo = await this.provider.getMicroblockInformation(header.previousHash);
-
-      if(!previousMicroblockInfo) {
-        throw `previous microblock not found`;
-      }
-      type = previousMicroblockInfo.virtualBlockchainType;
-      vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
-    }
-    else {
-      type = header.previousHash[0];
-    }
-
-    switch(type) {
-      case CHAIN.VB_ACCOUNT     : { this.vb = new AccountVb({ provider: this.provider }); break; }
-      case CHAIN.VB_ORGANIZATION: { this.vb = new OrganizationVb({ provider: this.provider }); break; }
-      case CHAIN.VB_APPLICATION : { this.vb = new ApplicationVb({ provider: this.provider }); break; }
-      case CHAIN.VB_APP_LEDGER  : { this.vb = new ApplicationLedgerVb({ provider: this.provider }); break; }
-
-      default: {
-        throw `inconsistent type`;
+      if(this.header.magicString != CHAIN.MAGIC_STRING) {
+        this.error = `magic string '${CHAIN.MAGIC_STRING}' is missing`;
+        return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR
       }
     }
-
-    if(header.height > 1) {
-      await this.vb.load(vbIdentifier);
+    catch(error) {
+      this.error = `invalid header format (${error})`;
+      return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
     }
+    return 0;
+  }
 
-    this.hash = await this.vb.importMicroblock(this.headerData, this.bodyData);
+  async checkTimestamp() {
+    if(this.header.timestamp < this.currentTimestamp - CHAIN.MAX_MICROBLOCK_PAST_DELAY) {
+      this.error = `timestamp is too far in the past`;
+      return CHAIN.MB_STATUS_TIMESTAMP_ERROR;
+    }
+    if(this.header.timestamp > this.currentTimestamp + CHAIN.MAX_MICROBLOCK_FUTURE_DELAY) {
+      this.error = `timestamp is too far in the future`;
+      return CHAIN.MB_STATUS_TIMESTAMP_ERROR;
+    }
+    return 0;
+  }
+
+  async checkContent() {
+    try {
+      const bodyHash = Crypto.Hashes.sha256AsBinary(this.bodyData);
+
+      if(!Utils.binaryIsEqual(bodyHash, this.header.bodyHash)) {
+        this.error = `inconsistent body hash`;
+        return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+      }
+
+      let type;
+      let vbIdentifier;
+
+      if(this.header.height > 1) {
+        const previousMicroblockInfo = await this.provider.getMicroblockInformation(this.header.previousHash);
+
+        if(!previousMicroblockInfo) {
+          this.error = `previous microblock ${Utils.binaryToHexa(this.header.previousHash)} not found`;
+          return CHAIN.MB_STATUS_PREVIOUS_HASH_ERROR;
+        }
+        // TODO: test the height of the previous microblock
+        type = previousMicroblockInfo.virtualBlockchainType;
+        vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
+      }
+      else {
+        type = this.header.previousHash[0];
+      }
+
+      switch(type) {
+        case CHAIN.VB_ACCOUNT     : { this.vb = new AccountVb({ provider: this.provider }); break; }
+        case CHAIN.VB_ORGANIZATION: { this.vb = new OrganizationVb({ provider: this.provider }); break; }
+        case CHAIN.VB_APPLICATION : { this.vb = new ApplicationVb({ provider: this.provider }); break; }
+        case CHAIN.VB_APP_LEDGER  : { this.vb = new ApplicationLedgerVb({ provider: this.provider }); break; }
+
+        default: {
+          this.error = `inconsistent virtual blockchain type ${type}`;
+          return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+        }
+      }
+
+      if(this.header.height > 1) {
+        await this.vb.load(vbIdentifier);
+      }
+
+      await this.vb.importMicroblock(this.headerData, this.bodyData);
+    }
+    catch(error) {
+      this.error = error.toString();
+      return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+    }
+    return 0;
   }
 
   async store() {

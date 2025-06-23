@@ -9,8 +9,8 @@ describe('testRadix', () => {
   test('radix set/get test', async () => {
     const db = new LevelDb(".database-test", NODE_SCHEMAS.DB);
     await db.initialize();
-//  await db.clear();
-/*
+    await db.clear();
+
     const vbRadix = new RadixTree(db, NODE_SCHEMAS.DB_VB_RADIX);
 
     const keys = [], values = [];
@@ -38,6 +38,5 @@ describe('testRadix', () => {
         throw `failed proof`;
       }
     }
-*/
   });
 });

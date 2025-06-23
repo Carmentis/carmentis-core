@@ -1,6 +1,6 @@
 import { ECO } from "../constants/constants.js";
 import { AccountVb } from "./accountVb.js";
-import { Crypto } from "../crypto/crypto.js";
+import { Utils } from "../utils/utils.js";
 
 export class Account {
 
@@ -58,7 +58,12 @@ export class Account {
   }
 
   async transfer(object) {
-    await this.vb.setTransfer(object);
+    await this.vb.setTransfer({
+      account: Utils.binaryFromHexa(object.account),
+      amount: object.amount,
+      publicReference: object.publicReference,
+      privateReference: object.privateReference
+    });
   }
 
   async publishUpdates() {

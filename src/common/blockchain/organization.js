@@ -17,7 +17,7 @@ export class Organization {
       algorithmId: this.signatureAlgorithmId
     });
 
-    if (!this.provider.isKeyed()) throw 'Cannot create an organisation without a keyed provider';
+    if (!this.provider.isKeyed()) throw 'Cannot create an organization without a keyed provider';
     const privateKey = this.provider.getPrivateSignatureKey();
     const publicKey = privateKey.getPublicKey();
     await this.vb.setPublicKey({

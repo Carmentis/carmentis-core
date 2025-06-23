@@ -19,6 +19,48 @@ export class NetworkProvider {
     return answer;
   }
 
+  async awaitMicroblockAnchoring(hash) {
+    const answer = await this.abciQuery(
+      SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
+      {
+        hash
+      }
+    );
+    return answer;
+  }
+
+  async getAccountState(accountHash) {
+    const answer = await this.abciQuery(
+      SCHEMAS.MSG_GET_ACCOUNT_STATE,
+      {
+        accountHash
+      }
+    );
+    return answer;
+  }
+
+  async getAccountHistory(accountHash, lastHistoryHash, maxRecords) {
+    const answer = await this.abciQuery(
+      SCHEMAS.MSG_GET_ACCOUNT_HISTORY,
+      {
+        accountHash,
+        lastHistoryHash,
+        maxRecords
+      }
+    );
+    return answer;
+  }
+
+  async getAccountByPublicKeyHash(publicKeyHash) {
+    const answer = await this.abciQuery(
+      SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
+      {
+        publicKeyHash
+      }
+    );
+    return answer;
+  }
+
   async getMicroblockInformation(hash) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,

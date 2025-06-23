@@ -1,4 +1,5 @@
 import {describe, expect, test} from '@jest/globals';
+import {Provider} from "../common/providers/provider";
 import {KeyedProvider} from "../common/providers/keyed-provider";
 import {MemoryProvider} from "../common/providers/memoryProvider";
 import {ServerNetworkProvider} from "../common/providers/serverNetworkProvider";
@@ -12,12 +13,14 @@ import {DATA} from '../common/constants/constants.js';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 
 describe('Chain test', () => {
-    const TEST_TIMEOUT = 2000;
+    const TEST_TIMEOUT = 5000;
     test("testChain()", async () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
         const memoryProvider = new MemoryProvider();
-        const provider = new KeyedProvider(privateKey, memoryProvider, new ServerNetworkProvider("http://localhost:3000"));
-        const blockchain = new Blockchain(provider);
+        const networkProvider = new ServerNetworkProvider("http://localhost:3000");
+        const keyedProvider = new KeyedProvider(privateKey, memoryProvider, networkProvider);
+
+        let blockchain = new Blockchain(keyedProvider);
 
         // account
         console.log("creating genesis account");
@@ -65,9 +68,13 @@ describe('Chain test', () => {
 
         await genesisAccount.publishUpdates();
 
+        console.log("loading back genesis account");
+
         genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
         // organization
+        console.log("creating organization");
+
         let organization = await blockchain.createOrganization();
 
         await organization.setDescription({
@@ -79,11 +86,22 @@ describe('Chain test', () => {
 
         let organizationId = await organization.publishUpdates();
 
+        console.log("loading back organization");
+
         organization = await blockchain.loadOrganization(organizationId);
 
         memoryProvider.clear();
         console.log(await organization.getDescription());
         console.log(await organization.getDescription());
+
+        const explorerProvider = new Provider(memoryProvider, networkProvider);
+
+        blockchain = new Blockchain(explorerProvider);
+
+        const explorer = blockchain.getExplorer();
+
+        console.log("explorer.getAccountState / genesis", await explorer.getAccountState(genesisAccountId));
+        console.log("explorer.getAccountState / test", await explorer.getAccountState(testAccountId));
     }, TEST_TIMEOUT);
 
     test('testIr()', async () => {
@@ -160,8 +178,8 @@ describe('Chain test', () => {
 
     test("testRecord()", async () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const provider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
-        const blockchain = new Blockchain(provider);
+        const keyedProvider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
+        const blockchain = new Blockchain(keyedProvider);
 
         const object = {
             //  virtualBlockchainId: "0123456789ABCDEF0123456789ABCDEF",

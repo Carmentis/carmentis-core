@@ -73,7 +73,7 @@ function decodeMicroblockInformation(data) {
 }
 
 function encodeVirtualBlockchainState(type, height, lastMicroblockHash, customStateObject) {
-  const customStateSerializer = new SchemaSerializer(SCHEMAS.STATES[type]),
+  const customStateSerializer = new SchemaSerializer(SCHEMAS.VB_STATES[type]),
         customState = customStateSerializer.serialize(customStateObject);
 
   const stateObject = {
@@ -93,7 +93,7 @@ function decodeVirtualBlockchainState(data) {
   const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
         stateObject = stateUnserializer.unserialize(data);
 
-  const customStateUnserializer = new SchemaUnserializer(SCHEMAS.STATES[stateObject.type]),
+  const customStateUnserializer = new SchemaUnserializer(SCHEMAS.VB_STATES[stateObject.type]),
         customStateObject = customStateUnserializer.unserialize(stateObject.customState);
 
   stateObject.customState = customStateObject;

@@ -14,6 +14,6 @@ export class NullNetworkProvider {
   }
 
   async getVirtualBlockchainUpdate() {
-    return { changed: false };
+    return { changed: false, exists: true };
   }
 }

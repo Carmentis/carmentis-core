@@ -5,6 +5,7 @@ import { Account } from "./account.js";
 import { Organization } from "./organization.js";
 import { Application } from "./application.js";
 import { ApplicationLedger } from "./applicationLedger.js";
+import { Utils } from "../utils/utils.js";
 
 export class Blockchain {
   constructor(provider) {
@@ -22,7 +23,6 @@ export class Blockchain {
   /**
    * Should be used with a keyed provider.
    *
-   *
    * @returns {Promise<Account>}
    */
   async createGenesisAccount() {
@@ -35,7 +35,7 @@ export class Blockchain {
   /**
    * Should be used with a keyed provider.
    *
-   * @param {Uint8Array} sellerAccount
+   * @param {string} sellerAccount
    * @param {PublicSignatureKey} buyerPublicKey
    * @param {number} amount
    * @returns {Promise<Account>}
@@ -43,19 +43,19 @@ export class Blockchain {
   async createAccount(sellerAccount, buyerPublicKey, amount) {
     if (!this.provider.isKeyed()) throw 'Cannot create an account without a keyed provider.'
     const account = new Account({ provider: this.provider });
-    await account._create(sellerAccount, buyerPublicKey, amount);
+    await account._create(Utils.binaryFromHexa(sellerAccount), buyerPublicKey, amount);
     return account;
   }
 
   /**
    * Can be used with a keyed provider.
    *
-   * @param identifier
+   * @param identifierString
    * @returns {Promise<Account>}
    */
-  async loadAccount(identifier) {
+  async loadAccount(identifierString) {
     const account = new Account({ provider: this.provider });
-    await account._load(identifier);
+    await account._load(Utils.binaryFromHexa(identifierString));
     return account;
   }
 
@@ -73,23 +73,22 @@ export class Blockchain {
   /**
    * Can be used with a keyed provider.
    *
-   * @param identifier
+   * @param identifierString
    * @returns {Promise<Organization>}
    */
-  async loadOrganization(identifier) {
+  async loadOrganization(identifierString) {
     const organization = new Organization({ provider: this.provider });
-    await organization._load(identifier);
+    await organization._load(Utils.binaryFromHexa(identifierString));
     return organization;
   }
 
   /**
    * Should be used with a keyed provider.
    *
-   * @param keyPair
    * @returns {Promise<Application>}
    */
-  async createApplication(keyPair) {
-    const application = new Application({ ...keyPair, provider: this.provider });
+  async createApplication() {
+    const application = new Application({ provider: this.provider });
     await application._create();
     return application;
   }
@@ -97,12 +96,12 @@ export class Blockchain {
   /**
    * Can be used with a keyed provider.
    *
-   * @param identifier
+   * @param identifierString
    * @returns {Promise<Application>}
    */
-  async loadApplication(identifier) {
+  async loadApplication(identifierString) {
     const application = new Application({ provider: this.provider });
-    await application._load(identifier);
+    await application._load(Utils.binaryFromHexa(identifierString));
     return application;
   }
 
@@ -133,12 +132,12 @@ export class Blockchain {
   /**
    * Can be used with a keyed provider.
    *
-   * @param identifier
+   * @param identifierString
    * @returns {Promise<ApplicationLedger>}
    */
-  async loadApplicationLedger(identifier) {
+  async loadApplicationLedger(identifierString) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
-    await applicationLedger._load(identifier);
+    await applicationLedger._load(Utils.binaryFromHexa(identifierString));
     return applicationLedger;
   }
 }

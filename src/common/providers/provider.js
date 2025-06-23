@@ -7,11 +7,27 @@ export class Provider {
     this.externalProvider = externalProvider;
   }
 
-  async sendMicroblock(headerData, bodyData) {
-    return await this.externalProvider.sendMicroblock(headerData, bodyData);
+  isKeyed() { return false; }
+
+  async sendMicroblock(...args) {
+    return await this.externalProvider.sendMicroblock(...args);
   }
 
-  isKeyed() { return false; }
+  async awaitMicroblockAnchoring(...args) {
+    return await this.externalProvider.awaitMicroblockAnchoring(...args);
+  }
+
+  async getAccountState(...args) {
+    return await this.externalProvider.getAccountState(...args);
+  }
+
+  async getAccountHistory(...args) {
+    return await this.externalProvider.getAccountHistory(...args);
+  }
+
+  async getAccountByPublicKeyHash(...args) {
+    return await this.externalProvider.getAccountByPublicKeyHash(...args);
+  }
 
   async storeMicroblock(hash, virtualBlockchainId, virtualBlockchainType, height, headerData, bodyData) {
     await this.internalProvider.setMicroblockInformation(

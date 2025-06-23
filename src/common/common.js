@@ -1,4 +1,11 @@
 export * as constants from "./constants/constants.js";
 export * as crypto from "./crypto/crypto.js";
 export * as blockchain from "./blockchain/blockchain.js";
+export * as schemaSerializer from "./data/schemaSerializer.js";
+export * as messageSerializer from "./data/messageSerializer.js";
+export * as base64 from "./data/base64.js";
+export * as radixTree from "./trees/radixTree.js";
+export * as memoryProvider from "./providers/memoryProvider.js";
+export * as nullNetworkProvider from "./providers/nullNetworkProvider.js";
+export * as provider from "./providers/provider.js";
 export * as utils from "./utils/utils.js";

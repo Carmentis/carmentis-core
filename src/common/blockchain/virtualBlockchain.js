@@ -1,5 +1,6 @@
 import { CHAIN } from "../constants/constants.js";
 import { Microblock } from "./microblock.js";
+import { Utils } from "../utils/utils.js";
 
 export class VirtualBlockchain {
   constructor({ provider, type }) {
@@ -29,11 +30,11 @@ export class VirtualBlockchain {
     const content = await this.provider.getVirtualBlockchainContent(identifier);
 
     if(!content) {
-      throw `virtual blockchain not found`;
+      throw `virtual blockchain ${Utils.binaryToHexa(identifier)} not found`;
     }
 
     if(this.type != content.state.type) {
-      throw `inconsistent virtual blockchain type`;
+      throw `inconsistent virtual blockchain type (expected ${this.type}, got ${content.state.type})`;
     }
 
     this.identifier = identifier;
@@ -143,12 +144,13 @@ export class VirtualBlockchain {
     }
 
     await this.provider.sendMicroblock(headerData, bodyData);
+    await this.provider.awaitMicroblockAnchoring(microblockHash);
 
 //  await this.provider.setMicroblockInformation(microblockHash, this.type, this.identifier, this.currentMicroblock.header.previousHash);
 //  await this.provider.setMicroblockHeader(microblockHash, headerData);
 //  await this.provider.setMicroblockBody(bodyHash, bodyData);
 //  await this.provider.setVirtualBlockchainState(this.identifier, this.type, this.height, microblockHash, this.state);
 
-    return microblockHash;
+    return Utils.binaryToHexa(microblockHash);
   }
 }

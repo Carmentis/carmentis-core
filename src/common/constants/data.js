@@ -12,6 +12,7 @@ export const TYPE_UINT32   = 0x0A;
 export const TYPE_UINT48   = 0x0B;
 export const TYPE_BINARY   = 0x0C;
 export const TYPE_BIN256   = 0x0D;
+export const TYPE_HASH_STR = 0x0E;
 
 export const TYPE_MAIN     = 0x1F;
 export const TYPE_ARRAY_OF = 0x20;
@@ -30,7 +31,8 @@ export const TYPE_NAMES = [
   "uint32",
   "uint48",
   "binary",
-  "bin256"
+  "bin256",
+  "hashString"
 ];
 
 export const HASHABLE   = 0x01;

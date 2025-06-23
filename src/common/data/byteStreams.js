@@ -1,5 +1,6 @@
 import { DATA } from "../constants/constants.js";
-import { Utf8Encoder } from "../data/utf8Encoder.js";
+import { Utf8Encoder } from "./utf8Encoder.js";
+import { Utils } from "../utils/utils.js";
 
 const NUM_SMALL     = 0x80;
 const NUM_TYPE      = 0x60;
@@ -37,17 +38,18 @@ export class WriteStream {
 
   writeSchemaValue(type, value, size) {
     switch(type) {
-      case DATA.TYPE_STRING : { this.writeString(value, size); break; }
-      case DATA.TYPE_NUMBER : { this.writeNumber(value); break; }
-      case DATA.TYPE_BOOLEAN: { this.writeBoolean(value); break; }
-      case DATA.TYPE_NULL   : { break; }
-      case DATA.TYPE_UINT8  : { this.writeUint8(value); break; }
-      case DATA.TYPE_UINT16 : { this.writeUint16(value); break; }
-      case DATA.TYPE_UINT24 : { this.writeUint24(value); break; }
-      case DATA.TYPE_UINT32 : { this.writeUint32(value); break; }
-      case DATA.TYPE_UINT48 : { this.writeUint48(value); break; }
-      case DATA.TYPE_BINARY : { this.writeBinary(value, size); break; }
-      case DATA.TYPE_BIN256 : { this.writeByteArray(value); break; }
+      case DATA.TYPE_STRING  : { this.writeString(value, size); break; }
+      case DATA.TYPE_NUMBER  : { this.writeNumber(value); break; }
+      case DATA.TYPE_BOOLEAN : { this.writeBoolean(value); break; }
+      case DATA.TYPE_NULL    : { break; }
+      case DATA.TYPE_UINT8   : { this.writeUint8(value); break; }
+      case DATA.TYPE_UINT16  : { this.writeUint16(value); break; }
+      case DATA.TYPE_UINT24  : { this.writeUint24(value); break; }
+      case DATA.TYPE_UINT32  : { this.writeUint32(value); break; }
+      case DATA.TYPE_UINT48  : { this.writeUint48(value); break; }
+      case DATA.TYPE_BINARY  : { this.writeBinary(value, size); break; }
+      case DATA.TYPE_BIN256  : { this.writeByteArray(value); break; }
+      case DATA.TYPE_HASH_STR: { this.writeHashString(); break; }
 
       default: {
         throw `Unexpected type ${type}`;
@@ -90,6 +92,10 @@ export class WriteStream {
       this.writeVarUint(arr.length);
     }
     this.writeByteArray(arr);
+  }
+
+  writeHashString(str) {
+    this.writeByteArray(Utils.binaryFromHexa(str));
   }
 
   writeByteArray(arr) {
@@ -190,17 +196,18 @@ export class ReadStream {
     this.lastPointer = this.pointer;
 
     switch(type) {
-      case DATA.TYPE_STRING : { return this.readString(size); }
-      case DATA.TYPE_NUMBER : { return this.readNumber(); }
-      case DATA.TYPE_BOOLEAN: { return this.readBoolean(); }
-      case DATA.TYPE_NULL   : { return null; }
-      case DATA.TYPE_UINT8  : { return this.readUint8(); }
-      case DATA.TYPE_UINT16 : { return this.readUint16(); }
-      case DATA.TYPE_UINT24 : { return this.readUint24(); }
-      case DATA.TYPE_UINT32 : { return this.readUint32(); }
-      case DATA.TYPE_UINT48 : { return this.readUint48(); }
-      case DATA.TYPE_BINARY : { return this.readBinary(size); }
-      case DATA.TYPE_BIN256 : { return this.readByteArray(32); }
+      case DATA.TYPE_STRING  : { return this.readString(size); }
+      case DATA.TYPE_NUMBER  : { return this.readNumber(); }
+      case DATA.TYPE_BOOLEAN : { return this.readBoolean(); }
+      case DATA.TYPE_NULL    : { return null; }
+      case DATA.TYPE_UINT8   : { return this.readUint8(); }
+      case DATA.TYPE_UINT16  : { return this.readUint16(); }
+      case DATA.TYPE_UINT24  : { return this.readUint24(); }
+      case DATA.TYPE_UINT32  : { return this.readUint32(); }
+      case DATA.TYPE_UINT48  : { return this.readUint48(); }
+      case DATA.TYPE_BINARY  : { return this.readBinary(size); }
+      case DATA.TYPE_BIN256  : { return this.readByteArray(32); }
+      case DATA.TYPE_HASH_STR: { return this.readHashString(); }
     }
   }
 
@@ -254,6 +261,10 @@ export class ReadStream {
       size = this.readVarUint();
     }
     return this.readByteArray(size);
+  }
+
+  readHashString() {
+    return Utils.binaryToHexa(this.readByteArray(32));
   }
 
   readByteArray(size) {

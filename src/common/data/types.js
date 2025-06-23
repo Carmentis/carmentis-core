@@ -58,16 +58,17 @@ export class TypeChecker {
     const mainType = this.definition.type & DATA.TYPE_MAIN;
 
     switch(mainType) {
-      case DATA.TYPE_STRING : { this.isString(); break; }
-      case DATA.TYPE_NUMBER : { this.isNumber(); break; }
-      case DATA.TYPE_BOOLEAN: { this.isBoolean(); break; }
-      case DATA.TYPE_UINT8  : { this.isUnsignedInteger(8); break; }
-      case DATA.TYPE_UINT16 : { this.isUnsignedInteger(16); break; }
-      case DATA.TYPE_UINT24 : { this.isUnsignedInteger(24); break; }
-      case DATA.TYPE_UINT32 : { this.isUnsignedInteger(32); break; }
-      case DATA.TYPE_UINT48 : { this.isUnsignedInteger(48); break; }
-      case DATA.TYPE_BINARY : { this.isBinary(); break; }
-      case DATA.TYPE_BIN256 : { this.isBinary(32); break; }
+      case DATA.TYPE_STRING  : { this.isString(); break; }
+      case DATA.TYPE_NUMBER  : { this.isNumber(); break; }
+      case DATA.TYPE_BOOLEAN : { this.isBoolean(); break; }
+      case DATA.TYPE_UINT8   : { this.isUnsignedInteger(8); break; }
+      case DATA.TYPE_UINT16  : { this.isUnsignedInteger(16); break; }
+      case DATA.TYPE_UINT24  : { this.isUnsignedInteger(24); break; }
+      case DATA.TYPE_UINT32  : { this.isUnsignedInteger(32); break; }
+      case DATA.TYPE_UINT48  : { this.isUnsignedInteger(48); break; }
+      case DATA.TYPE_BINARY  : { this.isBinary(); break; }
+      case DATA.TYPE_BIN256  : { this.isBinary(32); break; }
+      case DATA.TYPE_HASH_STR: { this.isHashString(); break; }
 
       default: {
         throw `unexpected definition type ${mainType}`;
@@ -127,6 +128,15 @@ export class TypeChecker {
     }
 
     this.checkSize(this.value.length, size || this.definition.size);
+  }
+
+  isHashString() {
+    this.isString();
+    this.checkSize(this.value.length, 64);
+
+    if(/[^\da-f]/i.test(this.value)) {
+      throw `hexadecimal string expected`;
+    }
   }
 
   checkSize(actualSize, expectedSize) {

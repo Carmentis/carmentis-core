@@ -3,6 +3,7 @@ import * as SCHEMAS from "./schemas.js";
 // tokens
 export const TOKEN_NAME    = "CMTS";
 export const TOKEN         = 100000;
+export const CENTITOKEN    = 1000;
 export const MILLITOKEN    = 100;
 export const INITIAL_OFFER = 1000000000 * TOKEN;
 

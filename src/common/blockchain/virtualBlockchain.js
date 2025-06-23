@@ -4,7 +4,7 @@ import { Microblock } from "./microblock.js";
 export class VirtualBlockchain {
   constructor({ provider, type }) {
     if(!CHAIN.VB_NAME[type]) {
-      throw `Invalid VB type '${type}'`;
+      throw `Invalid virtual blockchain type '${type}'`;
     }
     this.provider = provider;
     this.sectionCallbacks = new Map;
@@ -28,6 +28,10 @@ export class VirtualBlockchain {
   async load(identifier) {
     const content = await this.provider.getVirtualBlockchainContent(identifier);
 
+    if(!content) {
+      throw `virtual blockchain not found`;
+    }
+
     if(this.type != content.state.type) {
       throw `inconsistent virtual blockchain type`;
     }
@@ -36,8 +40,6 @@ export class VirtualBlockchain {
     this.height = content.state.height;
     this.state = content.state.customState;
     this.microblockHashes = content.microblockHashes;
-
-    console.log(this);
   }
 
   /**
@@ -126,9 +128,9 @@ export class VirtualBlockchain {
     Publishes the current microblock.
   */
   async publish() {
-    console.log("publishing");
-    console.log(this.currentMicroblock.header);
-    console.log(this.currentMicroblock.sections);
+//  console.log("publishing");
+//  console.log(this.currentMicroblock.header);
+//  console.log(this.currentMicroblock.sections);
 
     this.checkStructure(this.currentMicroblock);
 

@@ -1,6 +1,7 @@
 import http from "http";
 import https from "https";
 import { NetworkProvider } from "./networkProvider.js";
+import { Utils } from "../utils/utils.js";
 
 export class ServerNetworkProvider extends NetworkProvider {
   constructor(nodeUrl) {
@@ -8,7 +9,7 @@ export class ServerNetworkProvider extends NetworkProvider {
   }
 
   async query(urlObject) {
-    console.log("network query", urlObject.toString());
+    console.log("network query", Utils.truncateString(urlObject.toString(), 80));
 
     return new Promise(function(resolve, reject) {
       const httpModule = urlObject.protocol == "https:" ? https : http;

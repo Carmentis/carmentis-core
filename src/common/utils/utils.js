@@ -3,6 +3,7 @@ import { TypeManager } from "../data/types.js";
 
 export const Utils = {
   numberToHexa,
+  truncateString,
   getNullHash,
   getTimestampInSeconds,
   binaryToHexa,
@@ -15,6 +16,10 @@ export const Utils = {
 
 function numberToHexa(value, size) {
   return value.toString(16).toUpperCase().padStart(size || 1, "0");
+}
+
+function truncateString(str, size) {
+  return str.slice(0, size) + (str.length > size ? "(...)" : "");
 }
 
 function getNullHash() {

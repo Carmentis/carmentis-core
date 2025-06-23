@@ -1,4 +1,4 @@
-import { CHAIN, SCHEMAS, SECTIONS } from "../constants/constants.js";
+import { CHAIN, ECO, SCHEMAS, SECTIONS } from "../constants/constants.js";
 import { NODE_SCHEMAS } from "./constants/constants.js";
 import { LevelDb } from "./levelDb.js";
 import { Base64 } from "../data/base64.js";
@@ -31,6 +31,7 @@ export class NodeCore {
       CHAIN.ACCOUNT,
       [
         [ SECTIONS.ACCOUNT_TOKEN_ISSUANCE, this.accountTokenIssuanceCallback ],
+        [ SECTIONS.ACCOUNT_CREATION, this.accountCreationCallback ],
         [ SECTIONS.ACCOUNT_TRANSFER, this.accountTokenTransferCallback ]
       ]
     );
@@ -84,16 +85,16 @@ export class NodeCore {
   registerSectionCallbacks(objectType, callbackList) {
     for(const [ sectionType, callback ] of callbackList) {
       const key = sectionType << 4 | objectType;
-      this.sectionCallbacks.set(key, callback);
+      this.sectionCallbacks.set(key, callback.bind(this));
     }
   }
 
-  async invokeSectionCallback(objectType, sectionType, object, apply) {
-    const key = sectionType << 4 | objectType;
+  async invokeSectionCallback(vbType, sectionType, context) {
+    const key = sectionType << 4 | vbType;
 
     if(this.sectionCallbacks.has(key)) {
       const callback = this.sectionCallbacks.get(key);
-      await callback(object, apply);
+      await callback(context);
     }
   }
 
@@ -153,7 +154,13 @@ export class NodeCore {
     }
 
     for(const section of importer.vb.currentMicroblock.sections) {
-      await this.invokeSectionCallback(importer.vb.type, section.type, section.object, false);
+      const context = {
+        vb: importer.vb,
+        mb: importer.vb.currentMicroblock,
+        section,
+        timestamp: importer.currentTimestamp
+      };
+      await this.invokeSectionCallback(importer.vb.type, section.type, context);
     }
 
     console.log(`Accepted`);
@@ -163,12 +170,64 @@ export class NodeCore {
   /**
     Account callbacks
   */
-  async accountTokenIssuanceCallback(object) {
-    console.log("** TOKEN ISSUANCE **");
+  async accountTokenIssuanceCallback(context) {
+    const keyMicroblock = await context.vb.getMicroblock(context.vb.state.publicKeyHeight);
+    const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.ACCOUNT_PUBLIC_KEY).object.publicKey;
+    await this.accountManager.testPublicKeyAvailability(rawPublicKey);
+
+    await this.accountManager.tokenTransfer(
+      {
+        type        : ECO.BK_SENT_ISSUANCE,
+        payerAccount: null,
+        payeeAccount: context.vb.identifier,
+        amount      : context.section.object.amount
+      },
+      {
+        mbHash: context.mb.hash,
+        sectionIndex: context.section.index
+      },
+      context.timestamp
+    );
   }
 
-  async accountTokenTransferCallback(object) {
-    console.log("** TOKEN TRANSFER **");
+  async accountCreationCallback(context) {
+    const keyMicroblock = await context.vb.getMicroblock(context.vb.state.publicKeyHeight);
+    const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.ACCOUNT_PUBLIC_KEY).object.publicKey;
+    await this.accountManager.testPublicKeyAvailability(rawPublicKey);
+
+    await this.accountManager.tokenTransfer(
+      {
+        type        : ECO.BK_SALE,
+        payerAccount: context.section.object.sellerAccount,
+        payeeAccount: context.vb.identifier,
+        amount      : context.section.object.amount
+      },
+      {
+        mbHash: context.mb.hash,
+        sectionIndex: context.section.index
+      },
+      context.timestamp
+    );
+
+//  if(apply) {
+//    await this.accountManager.saveAccountByPublicKey(context.vb.id, object.buyerPublicKey);
+//  }
+  }
+
+  async accountTokenTransferCallback(context) {
+    await this.accountManager.tokenTransfer(
+      {
+        type        : ECO.BK_SENT_PAYMENT,
+        payerAccount: context.vb.identifier,
+        payeeAccount: context.section.object.account,
+        amount      : context.section.object.amount
+      },
+      {
+        mbHash: context.mb.hash,
+        sectionIndex: context.section.index
+      },
+      context.timestamp
+    );
   }
 
   /**
@@ -187,13 +246,17 @@ export class NodeCore {
   }
 
   async getVirtualBlockchainUpdate(object) {
-    const stateData = await this.blockchain.provider.getVirtualBlockchainStateInternal(object.virtualBlockchainId);
-    const headers = await this.blockchain.provider.getVirtualBlockchainHeaders(object.virtualBlockchainId, object.knownHeight);
+    let stateData = await this.blockchain.provider.getVirtualBlockchainStateInternal(object.virtualBlockchainId);
+    const exists = !!stateData;
+    const headers = exists ? await this.blockchain.provider.getVirtualBlockchainHeaders(object.virtualBlockchainId, object.knownHeight) : [];
     const changed = headers.length > 0;
+
+    stateData = stateData || new Uint8Array();
 
     return this.messageSerializer.serialize(
       SCHEMAS.MSG_VIRTUAL_BLOCKCHAIN_UPDATE,
       {
+        exists,
         changed,
         stateData,
         headers

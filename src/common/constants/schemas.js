@@ -1,6 +1,8 @@
 import * as CHAIN from "./chain.js";
 import * as DATA from "./data.js";
+
 export const MSG_ANS_ERROR = 0xFF;
+
 export const ERROR = [
   { name: "type",type: DATA.TYPE_UINT8 },
   { name: "id",  type: DATA.TYPE_UINT8 },
@@ -171,6 +173,7 @@ export const NODE_MESSAGES = {
     { name: "knownHeight",         type: DATA.TYPE_UINT48 }
   ],
   [ MSG_VIRTUAL_BLOCKCHAIN_UPDATE ] : [
+    { name: "exists",    type: DATA.TYPE_BOOLEAN },
     { name: "changed",   type: DATA.TYPE_BOOLEAN },
     { name: "stateData", type: DATA.TYPE_BINARY },
     { name: "headers",   type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BINARY }
@@ -293,9 +296,8 @@ export const WI_ANSWERS = {
   ],
   [ WIRQ_GET_USER_DATA ]: [
     { name: "userData", type: DATA.TYPE_STRING | DATA.TYPE_ARRAY }
-  ],
+  ]
 };
-
 
 // ============================================================================================================================ //
 //  Wallet <-> operator network messages                                                                                        //

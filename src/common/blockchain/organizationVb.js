@@ -55,7 +55,7 @@ export class OrganizationVb extends VirtualBlockchain {
 
   async signatureCallback(microblock, section) {
     const keyMicroblock = await this.getMicroblock(this.state.publicKeyHeight);
-    const rawPublicKey = keyMicroblock.getSection(section => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
+    const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
     const cryptoFactory = new CryptoSchemeFactory();
     const signatureAlgorithmId = this.state.signatureAlgorithmId;
     const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)

@@ -54,7 +54,7 @@ export class Blockchain {
    * @returns {Promise<Account>}
    */
   async loadAccount(identifier) {
-    const account = new Account({  provider: this.provider });
+    const account = new Account({ provider: this.provider });
     await account._load(identifier);
     return account;
   }

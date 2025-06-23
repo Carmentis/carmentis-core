@@ -1,3 +1,4 @@
+import { ECO } from "../constants/constants.js";
 import { AccountVb } from "./accountVb.js";
 import { Crypto } from "../crypto/crypto.js";
 
@@ -24,7 +25,7 @@ export class Account {
     });
 
     await this.vb.setTokenIssuance({
-      amount: 0
+      amount: ECO.INITIAL_OFFER
     });
   }
 

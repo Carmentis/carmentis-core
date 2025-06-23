@@ -95,7 +95,7 @@ export const DB = {
     { name: "chainReference",      type: DATA.TYPE_BINARY }
   ],
 
-  // account public key -> account VB hash
+  // account public key hash -> account VB hash
   // key: public key hash
   [ DB_ACCOUNT_BY_PUBLIC_KEY ] : [
     { name: "accountHash", type: DATA.TYPE_BIN256 }
@@ -113,18 +113,18 @@ export const DB = {
 // ============================================================================================================================ //
 // reference to a block (for earned fees)
 const ACCOUNT_BLOCK_REFERENCE = [
-  { name: "height", type: DATA.UINT48 }
+  { name: "height", type: DATA.TYPE_UINT48 }
 ];
 
 // reference to a microblock (for paid fees)
 const ACCOUNT_MB_REFERENCE = [
-  { name: "mbHash", type: DATA.HASH }
+  { name: "mbHash", type: DATA.TYPE_BIN256 }
 ];
 
 // reference to a microblock section (for token transfers)
 const ACCOUNT_SECTION_REFERENCE = [
-  { name: "mbHash",       type: DATA.HASH },
-  { name: "sectionIndex", type: DATA.UINT16 }
+  { name: "mbHash",       type: DATA.TYPE_BIN256 },
+  { name: "sectionIndex", type: DATA.TYPE_UINT16 }
 ];
 
 export const ACCOUNT_REF_SCHEMAS = {

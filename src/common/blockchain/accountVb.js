@@ -1,4 +1,4 @@
-import { CHAIN, SECTIONS } from "../constants/constants.js";
+import { CHAIN, ECO, SECTIONS } from "../constants/constants.js";
 import { VirtualBlockchain } from "./virtualBlockchain.js";
 import { StructureChecker } from "./structureChecker.js";
 
@@ -59,12 +59,17 @@ export class AccountVb extends VirtualBlockchain {
   }
 
   async tokenIssuanceCallback(microblock, section) {
+    if(section.object.amount != ECO.INITIAL_OFFER) {
+      throw `the amount of the initial token issuance is not the expected one`;
+    }
   }
 
   async creationCallback(microblock, section) {
   }
 
   async transferCallback(microblock, section) {
+    const payeeVb = new AccountVb({ provider: this.provider });
+    await payeeVb.load(section.object.account);
   }
 
   async signatureCallback(microblock, section) {

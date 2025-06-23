@@ -1,4 +1,4 @@
-import { CHAIN, SCHEMAS, SECTIONS } from "../constants/constants.js";
+import { CHAIN, ECO, SCHEMAS, SECTIONS } from "../constants/constants.js";
 import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer.js";
 import { Utils } from "../utils/utils.js";
 import { Crypto } from "../crypto/crypto.js";
@@ -193,9 +193,7 @@ export class Microblock {
   */
   setGasData(includeGas, extraBytes = 0) {
     if(includeGas) {
-      const totalSize = this.sections.reduce((total, { data }) => total + data.length, extraBytes);
-
-      this.header.gas = totalSize;
+      this.header.gas = this.computeGas(extraBytes);
       this.header.gasPrice = this.gasPrice;
     }
     else {
@@ -228,5 +226,10 @@ export class Microblock {
     this.hash = microblockHash;
 
     return { microblockHash, headerData, bodyHash, bodyData };
+  }
+
+  computeGas(extraBytes = 0) {
+    const totalSize = this.sections.reduce((total, { data }) => total + data.length, extraBytes);
+    return ECO.FIXED_GAS_FEE + ECO.GAS_PER_BYTE * totalSize;
   }
 }

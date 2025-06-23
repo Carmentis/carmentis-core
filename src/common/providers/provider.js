@@ -147,15 +147,16 @@ export class Provider {
     }
 
     // query our external provider for state update and new headers, starting at the known height
-console.log("known hashes", microblockHashes);
     const knownHeight = microblockHashes.length;
     const vbUpdate = await this.externalProvider.getVirtualBlockchainUpdate(virtualBlockchainId, knownHeight);
-console.log("received headers", vbUpdate.headers);
+
+    if(!vbUpdate.exists) {
+      return null;
+    }
 
     if(vbUpdate.changed) {
       // check the consistency of the new headers
       const check = BlockchainUtils.checkHeaderList(vbUpdate.headers);
-console.log("received hashes", check.hashes);
 
       if(!check.valid) {
         throw `received headers are inconsistent`;

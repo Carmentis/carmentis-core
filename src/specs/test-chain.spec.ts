@@ -18,21 +18,33 @@ describe('Chain test', () => {
         const memoryProvider = new MemoryProvider();
         const provider = new KeyedProvider(privateKey, memoryProvider, new ServerNetworkProvider("http://localhost:3000"));
         const blockchain = new Blockchain(provider);
-        let hash;
 
         // account
         console.log("creating genesis account");
 
         let genesisAccount = await blockchain.createGenesisAccount();
 
-        hash = await genesisAccount.publishUpdates();
+        let genesisAccountId = await genesisAccount.publishUpdates();
 
-        console.log("processing transfer");
+        console.log("genesisAccountId", genesisAccountId);
 
-        genesisAccount = await blockchain.loadAccount(hash);
+        console.log("creating test account");
+
+        const testPrivateKey = MLDSA65PrivateSignatureKey.gen();
+        const testPublicKey = testPrivateKey.getPublicKey();
+
+        let testAccount = await blockchain.createAccount(genesisAccountId, testPublicKey, 10);
+
+        let testAccountId = await testAccount.publishUpdates();
+
+        console.log("testAccountId", testAccountId);
+
+        console.log("processing transfer #1");
+
+        genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
         await genesisAccount.transfer({
-            account: new Uint8Array(32),
+            account: testAccountId,
             amount: 1,
             publicReference: "transfer #1",
             privateReference: "private ref."
@@ -40,10 +52,12 @@ describe('Chain test', () => {
 
         await genesisAccount.publishUpdates();
 
-        genesisAccount = await blockchain.loadAccount(hash);
+        console.log("processing transfer #2");
+
+        genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
         await genesisAccount.transfer({
-            account: new Uint8Array(32),
+            account: testAccountId,
             amount: 2,
             publicReference: "transfer #2",
             privateReference: "private ref."
@@ -51,7 +65,7 @@ describe('Chain test', () => {
 
         await genesisAccount.publishUpdates();
 
-        genesisAccount = await blockchain.loadAccount(hash);
+        genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
         // organization
         let organization = await blockchain.createOrganization();
@@ -63,9 +77,9 @@ describe('Chain test', () => {
             website: "www.carmentis.io"
         });
 
-        hash = await organization.publishUpdates();
+        let organizationId = await organization.publishUpdates();
 
-        organization = await blockchain.loadOrganization(hash);
+        organization = await blockchain.loadOrganization(organizationId);
 
         memoryProvider.clear();
         console.log(await organization.getDescription());

@@ -14,8 +14,6 @@ const core = new NodeCore({
   dbPath: ".database"
 });
 
-core.test();
-
 let server;
 
 export function start() {

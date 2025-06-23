@@ -6,13 +6,13 @@ const SUB_PREFIX = "SUB";
 
 export class LevelDb {
   constructor(path, tableSchemas) {
-    console.log("LevelDb constructor", path);
+    console.log("new LevelDB", path);
     this.path = path;
     this.tableSchemas = tableSchemas;
   }
 
   async initialize() {
-    console.log("LevelDb initialize() ...");
+    console.log("initialize() ...");
     const encoding = {
       keyEncoding: "view",
       valueEncoding: "view"
@@ -26,7 +26,13 @@ export class LevelDb {
     for(let n = 0; n < nTables; n++) {
       this.sub[n] = this.db.sublevel(SUB_PREFIX + n.toString().padStart(2, "0"), encoding);
     }
-    console.log("LevelDb initialize() done");
+    console.log("initialize() done");
+  }
+
+  async open() {
+    console.log("open() ...");
+    await this.db.open();
+    console.log("open() done");
   }
 
   async close() {

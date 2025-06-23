@@ -1,16 +1,18 @@
 import { Level } from "level";
-import { NODE_SCHEMAS } from "./node-constants.js";
+import { NODE_SCHEMAS } from "./constants/constants.js";
 import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer.js";
 
 const SUB_PREFIX = "SUB";
 
 export class LevelDb {
   constructor(path, tableSchemas) {
+    console.log("LevelDb constructor", path);
     this.path = path;
     this.tableSchemas = tableSchemas;
   }
 
   async initialize() {
+    console.log("LevelDb initialize() ...");
     const encoding = {
       keyEncoding: "view",
       valueEncoding: "view"
@@ -24,6 +26,7 @@ export class LevelDb {
     for(let n = 0; n < nTables; n++) {
       this.sub[n] = this.db.sublevel(SUB_PREFIX + n.toString().padStart(2, "0"), encoding);
     }
+    console.log("LevelDb initialize() done");
   }
 
   async close() {

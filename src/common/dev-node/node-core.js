@@ -37,51 +37,6 @@ export class NodeCore {
     );
   }
 
-  async test() {
-    await this.db.clear();
-    await this.db.putObject(NODE_SCHEMAS.DB_CHAIN, "SOMEKEY", { height: 1, lastBlockTs: 1, nMicroblock: 123, objectCounters: [ 1, 2, 3, 4, 5 ] });
-    console.log(await this.db.getObject(NODE_SCHEMAS.DB_CHAIN, "SOMEKEY"));
-
-    const keys = [], values = [];
-    const N = 10000;
-
-    function randomHash() {
-      return new Uint8Array([...Array(32)].map(() => Math.random() * 256 | 0));
-    }
-
-    let ts = new Date();
-
-    for(let n = 0; n < N; n++) {
-      keys[n] = randomHash();
-      values[n] = randomHash();
-      await this.vbRadix.set(keys[n], values[n]);
-    }
-    await this.vbRadix.flush();
-
-    const rootHash = await this.vbRadix.getRootHash();
-    console.log("root hash", rootHash);
-
-    console.log("set()", new Date() - ts);
-    ts = new Date();
-
-    for(let n = 0; n < N; n++) {
-      const res = await this.vbRadix.get(keys[n]);
-
-      if(!Utils.binaryIsEqual(res.value, values[n])) {
-        throw `read value is invalid`;
-      }
-
-      const proofRootHash = await RadixTree.verifyProof(keys[n], res.value, res.proof);
-
-      if(!Utils.binaryIsEqual(proofRootHash, rootHash)) {
-        throw `failed proof`;
-      }
-    }
-    console.log("get() + verifyProof()", new Date() - ts);
-
-    console.log("done");
-  }
-
   registerSectionCallbacks(objectType, callbackList) {
     for(const [ sectionType, callback ] of callbackList) {
       const key = sectionType << 4 | objectType;

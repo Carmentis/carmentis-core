@@ -1,6 +1,6 @@
-import { wiWallet } from "./wiWallet.js";
-import { SCHEMAS } from "../../common/constants/constants.js";
-import {SchemaSerializer} from "../../common/data/schemaSerializer.js";
+import { wiWallet } from "./wiWallet";
+import { SCHEMAS } from "../../common/constants/constants";
+import {SchemaSerializer} from "../../common/data/schemaSerializer";
 //import * as base64 from "../../common/utils/";
 
 //import { CarmentisError } from "../../common/errors/error.js";

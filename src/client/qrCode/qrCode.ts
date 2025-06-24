@@ -1,6 +1,6 @@
 import { qrcode } from "./qrCodeGenerator.js";
 import { SCHEMAS } from "../../common/constants/constants.js";
-//import { schemaSerializer } from "../../common/serializers/serializers.js";
+import {SchemaSerializer}  from "../../common/data/schemaSerializer";
 //import * as base64 from "../../common/util/base64.js";
 //import * as uint8 from "../../common/util/uint8.js";
 
@@ -16,8 +16,8 @@ import { SCHEMAS } from "../../common/constants/constants.js";
  * @return {Object} An object containing the `imageTag` (QR code image as a string) and `data` (QR code data string).
  */
 export function create(qrId, timestamp, serverUrl) {
-  let data = schemaSerializer.encode(
-    SCHEMAS.WI_QR_CODE,
+  const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_QR_CODE);
+  let data = schemaSerializer.serialize(
     {
       qrId: qrId,
       timestamp: timestamp,

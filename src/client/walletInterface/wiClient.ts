@@ -15,6 +15,7 @@ import {SignatureAlgorithmId} from "../../common/crypto/signature-interface.js";
 //import { wiError } from "../../common/errors/error.js";
 
 export class wiClient {
+  private messageCallback: any;
   constructor() {
     window.addEventListener(
       "message",

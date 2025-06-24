@@ -1,4 +1,4 @@
-import { SCHEMAS } from "../../common/constants/constants.js";
+import { SCHEMAS } from "../../common/constants/constants";
 //import * as base64 from "../../common/util/base64.js";
 //import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
 

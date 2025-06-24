@@ -1,6 +1,6 @@
 
 import * as common from "../common/common.js";
-const { URL } = require("url");
+import {URL} from "url";
 
 const PREPARE_USER_APPROVAL_PATH = "/prepareUserApproval"
 const GET_RECORD_INFORMATION_PATH = "/getRecordInformation"

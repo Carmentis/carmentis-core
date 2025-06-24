@@ -1,6 +1,6 @@
-export * as DATA from "./data.js";
-export * as CHAIN from "./chain.js";
-export * as ECO from "./economics.js";
-export * as SCHEMAS from "./schemas.js";
-export * as SECTIONS from "./sections.js";
-export * as ERRORS from './errors.js';
+export * as DATA from "./data";
+export * as CHAIN from "./chain";
+export * as ECO from "./economics";
+export * as SCHEMAS from "./schemas";
+export * as SECTIONS from "./sections";
+export * as ERRORS from './errors';

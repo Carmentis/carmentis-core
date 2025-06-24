@@ -1,9 +1,9 @@
-import { RADIX_CST } from "./radixConstants.js";
-import { Crypto } from "../crypto/crypto.js";
-import { Utils } from "../utils/utils.js";
-import { RadixStorage } from "./radixStorage.js";
+import { RADIX_CST } from "./radixConstants";
+import { Crypto } from "../crypto/crypto";
+import { Utils } from "../utils/utils";
+import { RadixStorage } from "./radixStorage";
 
-function debug(array) {
+function debug(array: any) {
   return [...array].map((n) => n.toString(16).toUpperCase().padStart(2, 0)).join("");
 }
 
@@ -33,7 +33,10 @@ function debug(array) {
       identical up to the penultimate nibble, which is almost as unlikely as a full hash collision.)
 */
 export class RadixTree {
-  constructor(database, subId) {
+  database: any;
+  storage: any;
+  subId: any;
+  constructor(database: any, subId: any) {
     this.database = database;
     this.subId = subId;
     this.storage = new RadixStorage(database, subId);
@@ -42,7 +45,7 @@ export class RadixTree {
   /**
     Sets a (key, value) pair
   */
-  async set(key, value) {
+  async set(key: any, value: any) {
     const rootHash = await this.storage.getRootHash();
     const newRootHash = await this.write(key, value, rootHash, 0);
 
@@ -52,9 +55,9 @@ export class RadixTree {
   /**
     Given a key, returns the corresponding value.*
   */
-  async get(key) {
+  async get(key: any) {
     const rootHash = await this.storage.getRootHash();
-    const proof = [];
+    const proof: any = [];
     const value = await this.read(key, rootHash, 0, proof);
 
     return { value, proof };
@@ -85,8 +88,8 @@ export class RadixTree {
     Debugging method.
   */
   async getEntries() {
-    function hexa(a) {
-      return a.map((v) => v.toString(16).toUpperCase().padStart(2, 0)).join('');
+    function hexa(a: any) {
+      return a.map((v: any) => v.toString(16).toUpperCase().padStart(2, 0)).join('');
     }
 
     const iterator = this.database.query(this.subId);
@@ -97,7 +100,8 @@ export class RadixTree {
 
       list.push(
         hexa([...e[0]]) + ": " + (
-          e[0].some((v) => v) ?
+          e[0].some((v: any) => v) ?
+            // @ts-expect-error TS(2550): Property 'padStart' does not exist on type 'string... Remove this comment to see the full error message
             msk.toString(2).padStart(16, 0) + " " + (
               msk ?
                 hexa([...e[1]].slice(2)).match(RegExp(`.{${RADIX_CST.HASH_SIZE * 2}}`, 'g')).join(' ')
@@ -112,12 +116,12 @@ export class RadixTree {
     return list;
   }
 
-  async write(key, value, nodeHash, depth) {
+  async write(key: any, value: any, nodeHash: any, depth: any) {
     if(depth == RADIX_CST.HASH_SIZE * 2) {
       return value;
     }
 
-    let node = nodeHash && await this.storage.get(depth, nodeHash);
+    let node = nodeHash && (await this.storage.get(depth, nodeHash));
     const len = RADIX_CST.HASH_SIZE * 2 + 1 - depth >> 1;
 
 //console.log('node', nodeHash && debug(nodeHash));
@@ -132,11 +136,13 @@ export class RadixTree {
       if(msk) {
 //console.log('already standard');
         // this is already a standard node --> get the list of hashes of child nodes and update the node
+        // @ts-expect-error TS(2339): Property 'getHashList' does not exist on type 'Fun... Remove this comment to see the full error message
         hashList = this.constructor.getHashList(msk, node);
         update = 1;
       }
       else {
         // this is an early leaf node --> test whether this is the same key
+        // @ts-expect-error TS(2339): Property 'keyDifference' does not exist on type 'F... Remove this comment to see the full error message
         if(this.constructor.keyDifference(depth, key, node)) {
 //console.log('early leaf / different key');
           // this is not the same key --> turn this node into a standard node with a single child and update the node
@@ -162,7 +168,7 @@ export class RadixTree {
         // the node is now guaranteed to be a standard one and an update is required
         hashList[nibble] = await this.write(key, value, hashList[nibble], depth + 1);
 
-        const nHash = hashList.reduce((p, c) => p + (c != null), 0);
+        const nHash = hashList.reduce((p: any, c: any) => p + (c != null), 0);
 
         node = new Uint8Array(2 + RADIX_CST.HASH_SIZE * nHash);
 
@@ -207,12 +213,13 @@ export class RadixTree {
     return newHash;
   }
 
-  async read(key, nodeHash, depth, proof) {
+  // @ts-expect-error TS(7023): 'read' implicitly has return type 'any' because it... Remove this comment to see the full error message
+  async read(key: any, nodeHash: any, depth: any, proof: any) {
     if(depth == RADIX_CST.HASH_SIZE * 2) {
       return nodeHash;
     }
 
-    const node = nodeHash && await this.storage.get(depth, nodeHash);
+    const node = nodeHash && (await this.storage.get(depth, nodeHash));
 
     if(!node) {
       throw `missing node in radix tree`;
@@ -223,12 +230,14 @@ export class RadixTree {
     const msk = node[0] << 8 | node[1];
 
     if(msk) {
+      // @ts-expect-error TS(2339): Property 'getHashList' does not exist on type 'Fun... Remove this comment to see the full error message
       const hashList = this.constructor.getHashList(msk, node);
       const nibble = key[depth >> 1] >> 4 * (depth & 1) & 0xF;
 
       return msk & 1 << nibble ? await this.read(key, hashList[nibble], depth + 1, proof) : false;
     }
 
+    // @ts-expect-error TS(2339): Property 'keyDifference' does not exist on type 'F... Remove this comment to see the full error message
     if(this.constructor.keyDifference(depth, key, node)) {
       return false;
     }
@@ -238,11 +247,12 @@ export class RadixTree {
     return node.slice(2 + len);
   }
 
-  static async verifyProof(key, value, proof) {
-    return await this.verify(key, value, proof, null, 0) && Crypto.Hashes.sha256AsBinary(proof[0]);
+  static async verifyProof(key: any, value: any, proof: any) {
+    return (await this.verify(key, value, proof, null, 0)) && Crypto.Hashes.sha256AsBinary(proof[0]);
   }
 
-  static async verify(key, value, proof, nodeHash, depth) {
+  // @ts-expect-error TS(7023): 'verify' implicitly has return type 'any' because ... Remove this comment to see the full error message
+  static async verify(key: any, value: any, proof: any, nodeHash: any, depth: any) {
     if(depth == RADIX_CST.HASH_SIZE * 2) {
       return Utils.binaryIsEqual(nodeHash, value);
     }
@@ -274,7 +284,7 @@ export class RadixTree {
   /**
     Tests whether the trailing key stored in an early leaf node is different from the key that's being processed.
   */
-  static keyDifference(depth, key, node) {
+  static keyDifference(depth: any, key: any, node: any) {
     for(let n = depth; n < RADIX_CST.HASH_SIZE * 2; n++) {
       if((key[n >> 1] ^ node[2 + (n >> 1) - (depth >> 1)]) >> 4 * (n & 1) & 0xF) {
         return 1;
@@ -286,7 +296,7 @@ export class RadixTree {
   /**
     Extracts all hashes stored in a standard node and return them as a list. Empty slots are filled with null.
   */
-  static getHashList(msk, node) {
+  static getHashList(msk: any, node: any) {
     const hashList = [];
     let ptr = 2;
 

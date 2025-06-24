@@ -1,5 +1,6 @@
-import { Crypto } from "./crypto/crypto.js";
-import { Utils } from "./utils/utils.js";
+import { Crypto } from "./crypto/crypto";
+import { Utils } from "./utils/utils";
+// @ts-expect-error TS(2307): Cannot find module '@cmts-dev/carmentis-sdk/server... Remove this comment to see the full error message
 import * as sdk from "@cmts-dev/carmentis-sdk/server";
 
 testSecp256k1();
@@ -19,6 +20,7 @@ function testSecp256k1() {
     publicKey: secp256k1.publicKeyFromPrivateKey(secretKey)
   };
 
+  // @ts-expect-error TS(2769): No overload matches this call.
   const msg = new Uint8Array("As we travel the universe");
 
   let sig;
@@ -57,6 +59,7 @@ function testMlDsa() {
   time = performance.now() - ts;
   console.log("genKeys mlDsa", time.toFixed(2), 1000 / time * 1000);
 
+  // @ts-expect-error TS(2769): No overload matches this call.
   const msg = new Uint8Array("As we travel the universe");
 
   let sig;
@@ -64,6 +67,7 @@ function testMlDsa() {
   ts = performance.now();
 
   for(let n = 0; n < 300; n++) {
+    // @ts-expect-error TS(2532): Object is possibly 'undefined'.
     sig = Crypto.MLDsa.sign(keys.secretKey, msg);
   }
 
@@ -73,6 +77,7 @@ function testMlDsa() {
   ts = performance.now();
 
   for(let n = 0; n < 300; n++) {
+    // @ts-expect-error TS(2532): Object is possibly 'undefined'.
     Crypto.MLDsa.verify(keys.publicKey, msg, sig);
   }
 
@@ -102,6 +107,7 @@ function testMlKem() {
   ts = performance.now();
 
   for(let n = 0; n < 1000; n++) {
+    // @ts-expect-error TS(2532): Object is possibly 'undefined'.
     encaps = Crypto.MLKem.encapsulate(keys.publicKey);
   }
 
@@ -115,6 +121,7 @@ function testMlKem() {
   ts = performance.now();
 
   for(let n = 0; n < 300; n++) {
+    // @ts-expect-error TS(2532): Object is possibly 'undefined'.
     decaps = Crypto.MLKem.decapsulate(encaps.cipherText, keys.secretKey);
   }
 

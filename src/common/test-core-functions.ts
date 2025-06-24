@@ -1,17 +1,3 @@
-import { WriteStream, ReadStream } from "./data/byteStreams.js";
-import { IntermediateRepresentation } from "./records/intermediateRepresentation.js";
-import { RecordManager } from "./records/recordManager.js";
-import { SchemaSerializer, SchemaUnserializer } from "./data/schemaSerializer.js";
-import { Blockchain } from "./blockchain/blockchain.js";
-import { MemoryProvider } from "./providers/memoryProvider.js";
-import { ServerNetworkProvider } from "./providers/serverNetworkProvider.js";
-import { RadixTree } from "./trees/radixTree.js";
-import { Crypto } from "./crypto/crypto.js";
-import { Utils } from "./utils/utils.js";
-import { DATA } from "./constants/constants.js";
-import {Provider} from "./providers/provider.js";
-import {KeyedProvider} from "./providers/keyed-provider.js";
-import {MLDSA65PrivateSignatureKey} from "./crypto/signature/ml-dsa-65.js";
 
 (async function() {
 //testNumbers();
@@ -21,6 +7,7 @@ import {MLDSA65PrivateSignatureKey} from "./crypto/signature/ml-dsa-65.js";
 //testRadixTree();
 //testIR();
 //testRecord();
+  // @ts-expect-error TS(2304): Cannot find name 'testChain'.
   await testChain();
 //await testLedger();
 })();

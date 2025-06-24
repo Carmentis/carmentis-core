@@ -1,4 +1,4 @@
-import * as SCHEMAS from "./schemas.js";
+import * as SCHEMAS from "./schemas";
 
 // tokens
 export const TOKEN_NAME    = "CMTS";

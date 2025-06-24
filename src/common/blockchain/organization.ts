@@ -1,9 +1,14 @@
-import { SECTIONS } from "../constants/constants.js";
-import { OrganizationVb } from "./organizationVb.js";
-import { Crypto } from "../crypto/crypto.js";
+import { SECTIONS } from "../constants/constants";
+import { OrganizationVb } from "./organizationVb";
+import { Crypto } from "../crypto/crypto";
 
 export class Organization {
-  constructor({ provider }) {
+  provider: any;
+  signatureAlgorithmId: any;
+  vb: any;
+  constructor({
+    provider
+  }: any) {
     this.vb = new OrganizationVb({ provider });
     this.provider = provider;
     if (this.provider.isKeyed()) {
@@ -25,18 +30,18 @@ export class Organization {
     });
   }
 
-  async _load(identifier) {
+  async _load(identifier: any) {
     await this.vb.load(identifier);
   }
 
-  async setDescription(object) {
+  async setDescription(object: any) {
     await this.vb.setDescription(object);
   }
 
   async getDescription() {
     // TODO (for all similar methods): the state may have changed and there may be a more recent description
     const microblock = await this.vb.getMicroblock(this.vb.state.descriptionHeight);
-    const section = microblock.getSection((section) => section.type == SECTIONS.ORG_DESCRIPTION);
+    const section = microblock.getSection((section: any) => section.type == SECTIONS.ORG_DESCRIPTION);
     return section.object;
   }
 

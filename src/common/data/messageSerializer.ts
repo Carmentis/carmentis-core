@@ -1,12 +1,13 @@
-import { DATA } from "../constants/constants.js";
-import { SchemaSerializer, SchemaUnserializer } from "./schemaSerializer.js";
+import { DATA } from "../constants/constants";
+import { SchemaSerializer, SchemaUnserializer } from "./schemaSerializer";
 
 export class MessageSerializer {
+  collection: any;
   /**
     Constructor
     @param {Array} collection - Message collection
   */
-  constructor(collection) {
+  constructor(collection: any) {
     this.collection = collection;
   }
 
@@ -15,7 +16,7 @@ export class MessageSerializer {
     @param {number} type - Message type
     @param {object} object - The message object to be serialized
   */
-  serialize(type, object) {
+  serialize(type: any, object: any) {
     const schema = [
       { name: "__msgType", type: DATA.TYPE_UINT8 },
       ...this.collection[type]
@@ -29,11 +30,12 @@ export class MessageSerializer {
 }
 
 export class MessageUnserializer {
+  collection: any;
   /**
     Constructor
     @param {Array} collection - Message collection
   */
-  constructor(collection) {
+  constructor(collection: any) {
     this.collection = collection;
   }
 
@@ -41,7 +43,7 @@ export class MessageUnserializer {
     Unserializes the given message byte stream.
     @param {Uint8Array} stream - The serialized byte stream
   */
-  unserialize(stream) {
+  unserialize(stream: any) {
     const type = stream[0];
 
     const schema = [
@@ -51,6 +53,7 @@ export class MessageUnserializer {
 
     const unserializer = new SchemaUnserializer(schema);
     const object = unserializer.unserialize(stream);
+    // @ts-expect-error TS(2339): Property '__msgType' does not exist on type '{}'.
     delete object.__msgType;
 
     return { type, object };

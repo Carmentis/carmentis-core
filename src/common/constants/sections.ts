@@ -1,5 +1,5 @@
-import * as DATA from "./data.js";
-import * as CHAIN from "./chain.js";
+import * as DATA from "./data";
+import * as CHAIN from "./chain";
 
 // ============================================================================================================================ //
 //  Constraints                                                                                                                 //
@@ -128,7 +128,7 @@ const ORGANIZATION = {
 export const APP_SIG_ALGORITHM = 0;
 export const APP_DECLARATION   = 1;
 export const APP_DESCRIPTION   = 2;
-export const APP_SIGNATURE     = 2;
+export const APP_SIGNATURE     = 3;
 
 const APPLICATION = {
   [ APP_SIG_ALGORITHM ]: {

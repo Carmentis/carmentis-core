@@ -1,15 +1,15 @@
-import { SCHEMAS } from "../constants/constants.js";
-//import * as schemaSerializer from "../serializers/schema-serializer.js";
-import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer.js";
-import {Base64 as base64} from "../data/base64.js";
+import { SCHEMAS } from "../constants/constants";
+//import * as schemaSerializer from "../serializers/schema-serializer";
+import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer";
+import {Base64 as base64} from "../data/base64";
 
-let networkInterface,
-    lastAnswerId;
+let networkInterface: any,
+    lastAnswerId: any;
 
 // ============================================================================================================================ //
 //  initialize()                                                                                                                //
 // ============================================================================================================================ //
-export function initialize(intf) {
+export function initialize(intf: any) {
   networkInterface = intf;
 }
 
@@ -23,7 +23,7 @@ export function getLastAnswerId() {
 // ============================================================================================================================ //
 //  sendMessageToNode()                                                                                                         //
 // ============================================================================================================================ //
-export async function sendMessageToNode(url, schemaId, object) {
+export async function sendMessageToNode(url: any, schemaId: any, object: any) {
   return await sendMessage(url, schemaId, object, SCHEMAS.NODE_MESSAGES);
 }
 
@@ -31,14 +31,14 @@ export async function sendMessageToNode(url, schemaId, object) {
 // ============================================================================================================================ //
 //  sendWalletToOperatorMessage()                                                                                               //
 // ============================================================================================================================ //
-export async function sendWalletToOperatorMessage(url, schemaId, object) {
+export async function sendWalletToOperatorMessage(url: any, schemaId: any, object: any) {
   return await sendMessage(url.replace(/\/?$/, "/walletMessage"), schemaId, object, SCHEMAS.WALLET_OP_MESSAGES);
 }
 
 // ============================================================================================================================ //
 //  sendMessage()                                                                                                               //
 // ============================================================================================================================ //
-async function sendMessage(url, schemaId, object, schema) {
+async function sendMessage(url: any, schemaId: any, object: any, schema: any) {
   const serializer = new MessageSerializer(schema)
   let data = serializer.serialize(schemaId, object),
       b64 = base64.encodeBinary(data, base64.BASE64);
@@ -51,22 +51,24 @@ async function sendMessage(url, schemaId, object, schema) {
 
     networkInterface.postRequest(url, JSON.stringify({ data: b64 }), callback, headers);
 
-    function handleBinaryDecoding(responseObject) {
+    function handleBinaryDecoding(responseObject: any) {
 
     }
 
-    function callback(success, answer) {
+    function callback(success: any, answer: any) {
       if(success) {
         try {
           let responseObject = JSON.parse(answer);
           let binary = base64.decodeBinary(responseObject.response, base64.BASE64);
           const serializer = new MessageUnserializer(schema)
+          // @ts-expect-error TS(2488): Type '{ type: any; object: {}; }' must have a '[Sy... Remove this comment to see the full error message
           let [ id, object ] = serializer.unserialize(binary);
 
 
           lastAnswerId = id;
 
           if(id == SCHEMAS.MSG_ANS_ERROR) {
+            // @ts-expect-error TS(2556): A spread argument must either have a tuple type or... Remove this comment to see the full error message
             let error = new Error(object.error.type, object.error.id, ...object.error.arg);
             reject(error);
           }

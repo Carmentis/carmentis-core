@@ -5,7 +5,7 @@ export const MaskManager = {
   getFullText
 };
 
-function getListFromRegex(str, regex, substitution) {
+function getListFromRegex(str: any, regex: any, substitution: any) {
   const stringParts = (regex.exec(str) || []).slice(1);
 
   if(stringParts.join("") != str) {
@@ -14,20 +14,22 @@ function getListFromRegex(str, regex, substitution) {
 
   const substitutionParts =
     substitution.split(/(\$\d+)/)
-    .map((s, i) => [ i & 1, s ])
-    .filter((a) => a[1]);
+    .map((s: any, i: any) => [ i & 1, s ])
+    .filter((a: any) => a[1]);
 
   if(
     substitutionParts.length != stringParts.length ||
-    substitutionParts.some(([ shown, s ], i) => shown && s != "$" + (i + 1))
+    // @ts-expect-error TS(7031): Binding element 'shown' implicitly has an 'any' ty... Remove this comment to see the full error message
+    substitutionParts.some(([ shown, s ], i: any) => shown && s != "$" + (i + 1))
   ) {
     throw `invalid substitution string "${substitution}"`;
   }
 
-  const list = [];
+  const list: any = [];
   let ptr = 0;
 
-  substitutionParts.forEach(([ shown, s ], i) => {
+  // @ts-expect-error TS(7031): Binding element 'shown' implicitly has an 'any' ty... Remove this comment to see the full error message
+  substitutionParts.forEach(([ shown, s ], i: any) => {
     const newPtr = ptr + stringParts[i].length;
 
     if(!shown) {
@@ -39,13 +41,14 @@ function getListFromRegex(str, regex, substitution) {
   return list;
 }
 
-function applyMask(str, list) {
-  const visible = [],
-        hidden = [];
+function applyMask(str: any, list: any) {
+  const visible: any = [],
+        hidden: any = [];
 
-  list.sort((a, b) => a[0] - b[0]);
+  list.sort((a: any, b: any) => a[0] - b[0]);
 
-  list.forEach(([ start, end, maskString ], i) => {
+  // @ts-expect-error TS(7031): Binding element 'start' implicitly has an 'any' ty... Remove this comment to see the full error message
+  list.forEach(([ start, end, maskString ], i: any) => {
     const [ prevStart, prevEnd ] = i ? list[i - 1] : [ 0, 0 ];
 
     if(start < 0 || start >= str.length || end <= start) {
@@ -73,10 +76,10 @@ function applyMask(str, list) {
   return { visible, hidden };
 }
 
-function getVisibleText(visible) {
+function getVisibleText(visible: any) {
   return visible.join("");
 }
 
-function getFullText(visible, hidden) {
-  return visible.map((s, i) => i & 1 ? hidden[i >> 1] : s).join("");
+function getFullText(visible: any, hidden: any) {
+  return visible.map((s: any, i: any) => i & 1 ? hidden[i >> 1] : s).join("");
 }

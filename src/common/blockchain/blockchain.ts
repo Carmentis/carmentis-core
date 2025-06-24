@@ -1,14 +1,15 @@
-import { Provider } from "../providers/provider.js";
-import { Explorer } from "./explorer.js";
-import { MicroblockImporter } from "./microblockImporter.js";
-import { Account } from "./account.js";
-import { Organization } from "./organization.js";
-import { Application } from "./application.js";
-import { ApplicationLedger } from "./applicationLedger.js";
-import { Utils } from "../utils/utils.js";
+import { Provider } from "../providers/provider";
+import { Explorer } from "./explorer";
+import { MicroblockImporter } from "./microblockImporter";
+import { Account } from "./account";
+import { Organization } from "./organization";
+import { Application } from "./application";
+import { ApplicationLedger } from "./applicationLedger";
+import { Utils } from "../utils/utils";
 
 export class Blockchain {
-  constructor(provider) {
+  provider: any;
+  constructor(provider: any) {
     this.provider = provider;
   }
 
@@ -16,7 +17,7 @@ export class Blockchain {
     return new Explorer({ provider: this.provider });
   }
 
-  getMicroblockImporter(data) {
+  getMicroblockImporter(data: any) {
     return new MicroblockImporter({ data, provider: this.provider });
   }
 
@@ -40,7 +41,7 @@ export class Blockchain {
    * @param {number} amount
    * @returns {Promise<Account>}
    */
-  async createAccount(sellerAccount, buyerPublicKey, amount) {
+  async createAccount(sellerAccount: any, buyerPublicKey: any, amount: any) {
     if (!this.provider.isKeyed()) throw 'Cannot create an account without a keyed provider.'
     const account = new Account({ provider: this.provider });
     await account._create(Utils.binaryFromHexa(sellerAccount), buyerPublicKey, amount);
@@ -53,7 +54,7 @@ export class Blockchain {
    * @param identifierString
    * @returns {Promise<Account>}
    */
-  async loadAccount(identifierString) {
+  async loadAccount(identifierString: any) {
     const account = new Account({ provider: this.provider });
     await account._load(Utils.binaryFromHexa(identifierString));
     return account;
@@ -76,7 +77,7 @@ export class Blockchain {
    * @param identifierString
    * @returns {Promise<Organization>}
    */
-  async loadOrganization(identifierString) {
+  async loadOrganization(identifierString: any) {
     const organization = new Organization({ provider: this.provider });
     await organization._load(Utils.binaryFromHexa(identifierString));
     return organization;
@@ -89,6 +90,7 @@ export class Blockchain {
    */
   async createApplication() {
     const application = new Application({ provider: this.provider });
+    // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
     await application._create();
     return application;
   }
@@ -99,7 +101,7 @@ export class Blockchain {
    * @param identifierString
    * @returns {Promise<Application>}
    */
-  async loadApplication(identifierString) {
+  async loadApplication(identifierString: any) {
     const application = new Application({ provider: this.provider });
     await application._load(Utils.binaryFromHexa(identifierString));
     return application;
@@ -111,7 +113,7 @@ export class Blockchain {
    * @param object
    * @returns {Promise<ApplicationLedger>}
    */
-  async getApplicationLedgerFromJson(object) {
+  async getApplicationLedgerFromJson(object: any) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._processJson(object);
     return applicationLedger;
@@ -125,6 +127,7 @@ export class Blockchain {
   async createApplicationLedger() {
     if (!this.provider.isKeyed()) throw 'Cannot create application ledger without a keyed provider.'
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
+    // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
     await applicationLedger._create();
     return applicationLedger;
   }
@@ -135,7 +138,7 @@ export class Blockchain {
    * @param identifierString
    * @returns {Promise<ApplicationLedger>}
    */
-  async loadApplicationLedger(identifierString) {
+  async loadApplicationLedger(identifierString: any) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._load(Utils.binaryFromHexa(identifierString));
     return applicationLedger;

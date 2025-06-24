@@ -1,16 +1,14 @@
 import * as SCHEMAS from "../../common/constants/schemas";
 import {SchemaUnserializer} from "../../common/data/schemaSerializer";
-//import { blockchainManager } from "../../common/blockchain/blockchainManager.js";
-//import { appLedgerVb } from "../../common/blockchain/vb-app-ledger.js";
-//import * as crypto from "../../common/crypto/crypto.js";
 import * as network from "../../common/network/network";
-//import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
 
 export class wiWallet {
+  formatAnswer: any;
   constructor() {
   }
 
-  decodeRequest(requestType, request) {
+  decodeRequest(requestType: any, request: any) {
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_REQUESTS[requestType])
     let requestObject = schemaSerializer.unserialize(request);
 
@@ -29,7 +27,7 @@ export class wiWallet {
    * @param object
    * @returns {*}
    */
-  signAuthenticationByPublicKey(privateKey, object) {
+  signAuthenticationByPublicKey(privateKey: any, object: any) {
     /*
     let publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey),
         signature = crypto.secp256k1.sign(privateKey, object.challenge);
@@ -56,7 +54,7 @@ export class wiWallet {
    * @param {string} email - The email address to be approved and processed.
    * @return {Promise<void>} A promise that resolves when the message is successfully sent through the socket.
    */
-  async approveGetEmailRequest(email) {
+  async approveGetEmailRequest(email: any) {
     let answerObject = {
       email: email
     };
@@ -67,7 +65,7 @@ export class wiWallet {
     );
   }
 
-  async approveGetUserDataRequest(userData) {
+  async approveGetUserDataRequest(userData: any) {
     let answerObject = {
       userData
     };
@@ -85,7 +83,7 @@ export class wiWallet {
    * @param object
    * @returns {Promise<*>}
    */
-  async getApprovalData(privateKey, object) {
+  async getApprovalData(privateKey: any, object: any) {
     /*
     let publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey),
         answer;
@@ -101,6 +99,7 @@ export class wiWallet {
     );
 
     if(network.getLastAnswerId() == SCHEMAS.MSG_ANS_ACTOR_KEY_REQUIRED) {
+      // @ts-expect-error TS(2304): Cannot find name 'appLedgerVb'.
       let keyPair = appLedgerVb.deriveActorKeyPair(privateKey, answer.genesisSeed);
 
       answer = await network.sendWalletToOperatorMessage(
@@ -117,6 +116,7 @@ export class wiWallet {
       throw "Failed to retrieve approval data from operator";
     }
 
+    // @ts-expect-error TS(2571): Object is of type 'unknown'.
     return answer.data;
   }
 
@@ -124,7 +124,7 @@ export class wiWallet {
    * Sends the signature of the approval data identified by object.dataId to the operator at object.serverUrl.
    * Returns the answer to be sent to the client, which consists of { vbHash, mbHash, height }.
    */
-  async sendApprovalSignature(privateKey, object, signature) {
+  async sendApprovalSignature(privateKey: any, object: any, signature: any) {
     let answer = await network.sendWalletToOperatorMessage(
       object.serverUrl,
       SCHEMAS.MSG_APPROVAL_SIGNATURE,
@@ -135,8 +135,11 @@ export class wiWallet {
     );
 
     let answerObject = {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       vbHash: answer.vbHash,
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       mbHash: answer.mbHash,
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       height: answer.height
     };
 

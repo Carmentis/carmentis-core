@@ -1,7 +1,7 @@
-import { SCHEMAS } from "../constants/constants.js";
-import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer.js";
-import { Crypto } from "../crypto/crypto.js";
-import { Utils } from "../utils/utils.js";
+import { SCHEMAS } from "../constants/constants";
+import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
+import { Crypto } from "../crypto/crypto";
+import { Utils } from "../utils/utils";
 
 export const BlockchainUtils = {
   checkHeaderList,
@@ -17,7 +17,7 @@ export const BlockchainUtils = {
   Takes a list of consecutive microblock headers in binary format and in anti-chronological order.
   Returns an object with a flag telling if the hash chain is valid and the list of microblock hashes (also in anti-chronological order).
 */
-function checkHeaderList(headers) {
+function checkHeaderList(headers: any) {
   const hashes = [];
   let expectedHash = null;
 
@@ -44,35 +44,36 @@ function checkHeaderList(headers) {
 /**
   Extracts the 'previousHash' field from a microblock header in binary format.
 */
-function previousHashFromHeader(header) {
+function previousHashFromHeader(header: any) {
   return header.slice(
     SCHEMAS.MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET,
     SCHEMAS.MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET + 32
   );
 }
 
-function decodeMicroblockHeader(data) {
+function decodeMicroblockHeader(data: any) {
   const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER),
         object = unserializer.unserialize(data);
 
   return object;
 }
 
-function encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, header) {
+function encodeMicroblockInformation(virtualBlockchainType: any, virtualBlockchainId: any, header: any) {
   const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_INFORMATION),
         data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId, header });
 
   return data;
 }
 
-function decodeMicroblockInformation(data) {
+function decodeMicroblockInformation(data: any) {
   const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_INFORMATION),
         object = unserializer.unserialize(data);
 
   return object;
 }
 
-function encodeVirtualBlockchainState(type, height, lastMicroblockHash, customStateObject) {
+function encodeVirtualBlockchainState(type: any, height: any, lastMicroblockHash: any, customStateObject: any) {
+  // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
   const customStateSerializer = new SchemaSerializer(SCHEMAS.VB_STATES[type]),
         customState = customStateSerializer.serialize(customStateObject);
 
@@ -89,13 +90,16 @@ function encodeVirtualBlockchainState(type, height, lastMicroblockHash, customSt
   return data;
 }
 
-function decodeVirtualBlockchainState(data) {
+function decodeVirtualBlockchainState(data: any) {
   const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
         stateObject = stateUnserializer.unserialize(data);
 
+  // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
   const customStateUnserializer = new SchemaUnserializer(SCHEMAS.VB_STATES[stateObject.type]),
+        // @ts-expect-error TS(2339): Property 'customState' does not exist on type '{}'... Remove this comment to see the full error message
         customStateObject = customStateUnserializer.unserialize(stateObject.customState);
 
+  // @ts-expect-error TS(2339): Property 'customState' does not exist on type '{}'... Remove this comment to see the full error message
   stateObject.customState = customStateObject;
 
   return stateObject;

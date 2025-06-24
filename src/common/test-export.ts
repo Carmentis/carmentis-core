@@ -1,8 +1,10 @@
-import * as fs from "fs";
-import { IntermediateRepresentation } from "./intermediateRepresentation.js";
-import { Utils } from "./utils/utils.js";
 
-const content = fs.readFileSync("./test-data/test1-small.json");
+import * as fs from "fs";
+import { IntermediateRepresentation } from "./records/intermediateRepresentation";
+import { Utils } from "./utils/utils";
+
+
+const content = fs.readFileSync("./test-data/test1-small.json", "utf8");
 const testObject = JSON.parse(content);
 
 const ir = new IntermediateRepresentation;
@@ -12,7 +14,7 @@ ir.setChannel("this[*]", 0);
 ir.serializeFields();
 ir.populateChannels();
 
-const sectionData = ir.exportToSectionFormat(0);
+const sectionData = ir.exportToSectionFormat();
 
 console.log(`Section binary data: ${sectionData.length} bytes`);
 

@@ -1,9 +1,11 @@
-import { CHAIN, ECO, SECTIONS } from "../constants/constants.js";
-import { VirtualBlockchain } from "./virtualBlockchain.js";
-import { StructureChecker } from "./structureChecker.js";
+import { CHAIN, ECO, SECTIONS } from "../constants/constants";
+import { VirtualBlockchain } from "./virtualBlockchain";
+import { StructureChecker } from "./structureChecker";
 
 export class AccountVb extends VirtualBlockchain {
-  constructor({ provider }) {
+  constructor({
+    provider
+  }: any) {
     super({ provider, type: CHAIN.VB_ACCOUNT });
 
     this.registerSectionCallback(SECTIONS.ACCOUNT_SIG_ALGORITHM, this.signatureAlgorithmCallback);
@@ -17,23 +19,23 @@ export class AccountVb extends VirtualBlockchain {
   /**
     Update methods
   */
-  async setSignatureAlgorithm(object) {
+  async setSignatureAlgorithm(object: any) {
     await this.addSection(SECTIONS.ACCOUNT_SIG_ALGORITHM, object);
   }
 
-  async setPublicKey(object) {
+  async setPublicKey(object: any) {
     await this.addSection(SECTIONS.ACCOUNT_PUBLIC_KEY, object);
   }
 
-  async setTokenIssuance(object) {
+  async setTokenIssuance(object: any) {
     await this.addSection(SECTIONS.ACCOUNT_TOKEN_ISSUANCE, object);
   }
 
-  async setCreation(object) {
+  async setCreation(object: any) {
     await this.addSection(SECTIONS.ACCOUNT_CREATION, object);
   }
 
-  async setTransfer(object) {
+  async setTransfer(object: any) {
     await this.addSection(SECTIONS.ACCOUNT_TRANSFER, object);
   }
 
@@ -42,7 +44,7 @@ export class AccountVb extends VirtualBlockchain {
    * @param {PrivateSignatureKey} privateKey
    * @returns {Promise<void>}
    */
-  async setSignature(privateKey) {
+  async setSignature(privateKey: any) {
     const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.ACCOUNT_SIGNATURE, object);
   }
@@ -50,35 +52,36 @@ export class AccountVb extends VirtualBlockchain {
   /**
     Section callbacks
   */
-  async signatureAlgorithmCallback(microblock, section) {
+  async signatureAlgorithmCallback(microblock: any, section: any) {
     this.state.signatureAlgorithmId = section.object.algorithmId;
   }
 
-  async publicKeyCallback(microblock, section) {
+  async publicKeyCallback(microblock: any, section: any) {
     this.state.publicKeyHeight = microblock.header.height;
   }
 
-  async tokenIssuanceCallback(microblock, section) {
+  async tokenIssuanceCallback(microblock: any, section: any) {
     if(section.object.amount != ECO.INITIAL_OFFER) {
       throw `the amount of the initial token issuance is not the expected one`;
     }
   }
 
-  async creationCallback(microblock, section) {
+  async creationCallback(microblock: any, section: any) {
   }
 
-  async transferCallback(microblock, section) {
+  async transferCallback(microblock: any, section: any) {
     const payeeVb = new AccountVb({ provider: this.provider });
     await payeeVb.load(section.object.account);
   }
 
-  async signatureCallback(microblock, section) {
+  async signatureCallback(microblock: any, section: any) {
   }
 
   /**
     Structure check
   */
-  checkStructure(microblock) {
+  // @ts-expect-error TS(2425): Class 'VirtualBlockchain' defines instance member ... Remove this comment to see the full error message
+  checkStructure(microblock: any) {
     const checker = new StructureChecker(microblock);
 
     checker.expects(

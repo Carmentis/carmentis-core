@@ -1,11 +1,11 @@
 /*
-import { SCHEMAS, ERRORS } from "../../common/constants/constants.js";
-import { schemaSerializer } from "../../common/serializers/serializers.js";
-import { blockchainCore, ROLES, appLedgerVb, oracleVb } from "../../common/blockchain/blockchain.js";
-import * as crypto from "../../common/crypto/crypto.js";
-import * as network from "../../common/network/network.js";
-import * as uint8 from "../../common/util/uint8.js";
-import { CarmentisError, globalError } from "../../common/errors/error.js";
+import { SCHEMAS, ERRORS } from "../../common/constants/constants";
+import { schemaSerializer } from "../../common/serializers/serializers";
+import { blockchainCore, ROLES, appLedgerVb, oracleVb } from "../../common/blockchain/blockchain";
+import * as crypto from "../../common/crypto/crypto";
+import * as network from "../../common/network/network";
+import * as uint8 from "../../common/util/uint8";
+import { CarmentisError, globalError } from "../../common/errors/error";
 
 const approvalData = new Map();
 const oracleData = new Map();

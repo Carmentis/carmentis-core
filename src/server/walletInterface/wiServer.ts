@@ -1,29 +1,30 @@
-import { SCHEMAS } from "../../common/constants/constants.js";
-import * as crypto from "../../common/crypto/crypto.js";
-//import * as uint8 from "../../common/util/uint8.js";
-//import * as util from "../../common/util/util.js";
-import {Base64 as base64} from "../../common/data/base64.js";
+import { SCHEMAS } from "../../common/constants/constants";
+import * as crypto from "../../common/crypto/crypto";
+//import * as uint8 from "../../common/util/uint8";
+//import * as util from "../../common/util/util";
+import {Base64 as base64} from "../../common/data/base64";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {randomBytes} from "@noble/post-quantum/utils";
-import {MessageSerializer} from "../../common/data/messageSerializer.js";
+import {MessageSerializer} from "../../common/data/messageSerializer";
 
-let requests = [],
+let requests: any = [],
     qrIdentifiers = new Map(),
     walletSocketRequests = new Map();
 
 export class wiServer {
-  constructor(ioServer) {
+  constructor(ioServer: any) {
     ioServer.on("connection", this.onConnect);
   }
 
-  onConnect(socket) {
+  onConnect(socket: any) {
     socket.on("data", onData);
 
-    socket.on("disconnect", _ => {
+    socket.on("disconnect", (_: any) => {
     });
 
-    function onData(message) {
+    function onData(message: any) {
       let binary = base64.decodeBinary(message, base64.BASE64),
+          // @ts-expect-error TS(2304): Cannot find name 'schemaSerializer'.
           [ id, object ] = schemaSerializer.decodeMessage(binary, SCHEMAS.WI_MESSAGES);
 
       switch(id) {
@@ -65,7 +66,7 @@ export class wiServer {
       }
     }
 
-    function refreshQrCode(requestId) {
+    function refreshQrCode(requestId: any) {
       let timestamp = getCarmentisTimestamp(),
           qrId = randomBytes(32);
 
@@ -74,7 +75,7 @@ export class wiServer {
       sendMessage(socket, SCHEMAS.WIMSG_UPDATE_QR, { qrId: qrId, timestamp: timestamp });
     }
 
-    function sendMessage(socket, msgId, object = {}) {
+    function sendMessage(socket: any, msgId: any, object = {}) {
       const serializer = new MessageSerializer(SCHEMAS.WI_MESSAGES);
       let binary = serializer.serialize(msgId, object),
           b64 = base64.encodeBinary(binary, base64.BASE64);

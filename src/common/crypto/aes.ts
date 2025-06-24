@@ -5,14 +5,14 @@ export const Aes = {
   decryptGcm
 };
 
-function encryptGcm(key, data, iv) {
+function encryptGcm(key: any, data: any, iv: any) {
   const stream = gcm(key, iv);
   const encrypted = stream.encrypt(data);
 
   return encrypted;
 }
 
-function decryptGcm(key, data, iv) {
+function decryptGcm(key: any, data: any, iv: any) {
   try {
     const stream = gcm(key, iv);
     const decrypted = stream.decrypt(data);

@@ -7,6 +7,7 @@ export function getCookies() {
   document.cookie.split("; ").forEach(cookie => {
     if(cookie) {
       let [ name, value ] = cookie.split("=");
+      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       cookies[name] = value;
     }
   });
@@ -19,12 +20,12 @@ export function getCookies() {
 // ---------------------------------------------------------------------------------------------------------------------------- //
 //  Sets or overwrites a cookie                                                                                                 //
 // ============================================================================================================================ //
-export function setCookie(name, value, maxAge) {
+export function setCookie(name: any, value: any, maxAge: any) {
   document.cookie = [
     name + "=" + value,
-    ...maxAge ? [ "max-age=" + maxAge ] : [],
+    ...(maxAge ? [ "max-age=" + maxAge ] : []),
     "SameSite=Lax",
-    [ ...document.location.protocol == "https:" ? [ "Secure" ] : [] ]
+    [ ...(document.location.protocol == "https:" ? [ "Secure" ] : []) ]
   ]
   .join("; ");
 }
@@ -32,7 +33,7 @@ export function setCookie(name, value, maxAge) {
 // ============================================================================================================================ //
 //  get()                                                                                                                       //
 // ============================================================================================================================ //
-export function get(selector) {
+export function get(selector: any) {
   let el = document.querySelector(selector);
 
   if(el == undefined) {
@@ -45,7 +46,7 @@ export function get(selector) {
 // ============================================================================================================================ //
 //  create()                                                                                                                    //
 // ============================================================================================================================ //
-export function create(type, id) {
+export function create(type: any, id: any) {
   let el = elementToObject(document.createElement(type));
 
   if(id) {
@@ -58,16 +59,20 @@ export function create(type, id) {
 // ============================================================================================================================ //
 //  elementToObject()                                                                                                           //
 // ============================================================================================================================ //
-export function elementToObject(el) {
-  function setListener(name, callback) {
+export function elementToObject(el: any) {
+  function setListener(name: any, callback: any) {
     unsetListener(name);
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     obj.listener[name] = callback;
     el.addEventListener(name, callback);
   }
 
-  function unsetListener(name) {
+  function unsetListener(name: any) {
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     if(obj.listener[name]) {
+      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       el.removeEventListener(name, obj.listener[name]);
+      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       delete obj.listener[name];
     }
   }
@@ -76,28 +81,28 @@ export function elementToObject(el) {
     el: el,
     listener: {},
 
-    style: function(arg) {
+    style: function(arg: any) {
       if(arg) {
         Object.keys(arg).forEach(key => el.style[key] = arg[key]);
       }
       return obj;
     },
 
-    setAttribute: function(key, value = "1") {
+    setAttribute: function(key: any, value = "1") {
       el.setAttribute(key, value);
       return obj;
     },
 
-    getAttribute: function(key) {
+    getAttribute: function(key: any) {
       return el.getAttribute(key);
     },
 
-    html: function(html) {
+    html: function(html: any) {
       el.innerHTML = html;
       return obj;
     },
 
-    click: function(callback) {
+    click: function(callback: any) {
       setListener("click", callback);
       return obj;
     },
@@ -109,8 +114,9 @@ export function elementToObject(el) {
       return obj;
     },
 
-    setContent: function(...list) {
+    setContent: function(...list: any[]) {
       obj.clear();
+      // @ts-expect-error TS(2339): Property 'append' does not exist on type '{ el: an... Remove this comment to see the full error message
       list.forEach(content => obj.append(content));
       return obj;
     }

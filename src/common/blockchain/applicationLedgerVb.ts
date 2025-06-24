@@ -1,9 +1,12 @@
-import { CHAIN, SECTIONS } from "../constants/constants.js";
-import { VirtualBlockchain } from "./virtualBlockchain.js";
-import { StructureChecker } from "./structureChecker.js";
+import { CHAIN, SECTIONS } from "../constants/constants";
+import { VirtualBlockchain } from "./virtualBlockchain";
+import { StructureChecker } from "./structureChecker";
 
 export class ApplicationLedgerVb extends VirtualBlockchain {
-  constructor({ provider }) {
+  state: any;
+  constructor({
+    provider
+  }: any) {
     super({ provider, type: CHAIN.VB_APP_LEDGER });
 
     this.state = {
@@ -21,23 +24,23 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   /**
     Update methods
   */
-  async setSignatureAlgorithm(object) {
+  async setSignatureAlgorithm(object: any) {
     await this.addSection(SECTIONS.APP_LEDGER_SIG_ALGORITHM, object);
   }
 
-  async createActor(object) {
+  async createActor(object: any) {
     await this.addSection(SECTIONS.APP_LEDGER_ACTOR_CREATION, object);
   }
 
-  async createChannel(object) {
+  async createChannel(object: any) {
     await this.addSection(SECTIONS.APP_LEDGER_CHANNEL_CREATION, object);
   }
 
-  async addPublicChannelData(object) {
+  async addPublicChannelData(object: any) {
     await this.addSection(SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA, object);
   }
 
-  async addPrivateChannelData(object) {
+  async addPrivateChannelData(object: any) {
     await this.addSection(SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA, object);
   }
 
@@ -46,7 +49,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
    * @param {PrivateSignatureKey} privateKey
    * @returns {Promise<void>}
    */
-  async signAsAuthor(privateKey) {
+  async signAsAuthor(privateKey: any) {
     const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE, object);
   }
@@ -54,16 +57,16 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   /**
     Helper methods
   */
-  getChannelId(name) {
-    const id = this.state.channels.findIndex((obj) => obj.name == name);
+  getChannelId(name: any) {
+    const id = this.state.channels.findIndex((obj: any) => obj.name == name);
     if(id == -1) {
       throw `unknown channel '${name}'`;
     }
     return id;
   }
 
-  getActorId(name) {
-    const id = this.state.actors.findIndex((obj) => obj.name == name);
+  getActorId(name: any) {
+    const id = this.state.actors.findIndex((obj: any) => obj.name == name);
     if(id == -1) {
       throw `unknown actor '${name}'`;
     }
@@ -73,15 +76,15 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   /**
     Section callbacks
   */
-  async signatureAlgorithmCallback(microblock, section) {
+  async signatureAlgorithmCallback(microblock: any, section: any) {
     this.state.signatureAlgorithmId = section.object.algorithmId;
   }
 
-  async actorCreationCallback(microblock, section) {
+  async actorCreationCallback(microblock: any, section: any) {
     if(section.object.id != this.state.actors.length) {
       throw `invalid actor ID ${section.object.id}`;
     }
-    if(this.state.actors.some((obj) => obj.name == section.object.name)) {
+    if(this.state.actors.some((obj: any) => obj.name == section.object.name)) {
       throw `actor '${section.object.name}' already exists`;
     }
     this.state.actors.push({
@@ -89,11 +92,11 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     });
   }
 
-  async channelCreationCallback(microblock, section) {
+  async channelCreationCallback(microblock: any, section: any) {
     if(section.object.id != this.state.channels.length) {
       throw `invalid channel ID ${section.object.id}`;
     }
-    if(this.state.channels.some((obj) => obj.name == section.object.name)) {
+    if(this.state.channels.some((obj: any) => obj.name == section.object.name)) {
       throw `channel '${section.object.name}' already exists`;
     }
     this.state.channels.push({
@@ -102,13 +105,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     });
   }
 
-  async publicChannelDataCallback(microblock, section) {
+  async publicChannelDataCallback(microblock: any, section: any) {
     if(!this.state.channels[section.object.channelId]) {
       throw `invalid channel ID ${section.object.channelId}`;
     }
   }
 
-  async privateChannelDataCallback(microblock, section) {
+  async privateChannelDataCallback(microblock: any, section: any) {
     if(!this.state.channels[section.object.channelId]) {
       throw `invalid channel ID ${section.object.channelId}`;
     }
@@ -117,7 +120,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   /**
     Structure check
   */
-  checkStructure(microblock) {
+  // @ts-expect-error TS(2425): Class 'VirtualBlockchain' defines instance member ... Remove this comment to see the full error message
+  checkStructure(microblock: any) {
     const checker = new StructureChecker(microblock);
   }
 }

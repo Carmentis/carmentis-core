@@ -1,8 +1,13 @@
-import { ApplicationVb } from "./applicationVb.js";
-import { Crypto } from "../crypto/crypto.js";
+import { ApplicationVb } from "./applicationVb";
+import { Crypto } from "../crypto/crypto";
 
 export class Application {
-  constructor({ provider }) {
+  provider: any;
+  signatureAlgorithmId: any;
+  vb: any;
+  constructor({
+    provider
+  }: any) {
     this.vb = new ApplicationVb({ provider });
     this.provider = provider;
     if (this.provider.isKeyed()) {
@@ -11,7 +16,7 @@ export class Application {
     }
   }
 
-  async _create(organizationId) {
+  async _create(organizationId: any) {
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
     });
@@ -21,11 +26,11 @@ export class Application {
     });
   }
 
-  async _load(identifier) {
+  async _load(identifier: any) {
     await this.vb.load(identifier);
   }
 
-  async setDescription(object) {
+  async setDescription(object: any) {
     await this.vb.setDescription(object);
   }
 

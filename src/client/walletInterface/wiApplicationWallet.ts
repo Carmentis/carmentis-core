@@ -1,13 +1,14 @@
-import { wiWallet } from "./wiWallet.js";
-import { SCHEMAS } from "../../common/constants/constants.js";
-import * as crypto from "../../common/crypto/crypto.js";
-//import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
-import * as clientSocket from "./wiClientSocket.js";
-import * as qrCode from "../qrCode/qrCode.js";
-import {SchemaSerializer} from "../../common/data/schemaSerializer.js";
-//import {CarmentisError} from "../../common/errors/error.js";
+import { wiWallet } from "./wiWallet";
+import { SCHEMAS } from "../../common/constants/constants";
+import * as crypto from "../../common/crypto/crypto";
+//import * as schemaSerializer from "../../common/serializers/schema-serializer";
+import * as clientSocket from "./wiClientSocket";
+import * as qrCode from "../qrCode/qrCode";
+import {SchemaSerializer} from "../../common/data/schemaSerializer";
+//import {CarmentisError} from "../../common/errors/error";
 
 export class wiApplicationWallet extends wiWallet {
+  socket: any;
   constructor() {
     super();
   }
@@ -22,7 +23,7 @@ export class wiApplicationWallet extends wiWallet {
    *     timestamp: number,
    * }} Returns an object containing the extracted data.
    */
-  static extractDataFromQrCode(qrData) {
+  static extractDataFromQrCode(qrData: any) {
     const data = qrCode.decode(qrData);
     data.serverUrl = data.serverUrl.trim();
     return data;
@@ -35,7 +36,7 @@ export class wiApplicationWallet extends wiWallet {
    * @param {string} serverUrl - The URL of the server to connect to.
    * @return {Promise<{type: number, object: any}>} A promise that resolves with the processed request object. The resolved object contains the `type` of the request and the decoded `object` associated with it.
    */
-  async obtainDataFromServer(serverUrl, qrId) {
+  async obtainDataFromServer(serverUrl: any, qrId: any) {
     let _this = this;
 
     return new Promise(function (resolve, reject) {
@@ -47,7 +48,7 @@ export class wiApplicationWallet extends wiWallet {
         _this.socket.sendMessage(SCHEMAS.WIMSG_CONNECTION_ACCEPTED, { qrId: qrId });
       }
 
-      async function onData(id, object) {
+      async function onData(this: any, id: any, object: any) {
         console.log("[wallet] incoming data", id, object);
 
         switch(id) {
@@ -65,7 +66,9 @@ export class wiApplicationWallet extends wiWallet {
   /**
    * Formats an answer, using the application wallet format.
    */
-  formatAnswer(answerType, object) {
+  // @ts-expect-error TS(2425): Class 'wiWallet' defines instance member property ... Remove this comment to see the full error message
+  formatAnswer(answerType: any, object: any) {
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_ANSWERS[answerType]);
     let answer = schemaSerializer.serialize(object);
 
@@ -75,7 +78,7 @@ export class wiApplicationWallet extends wiWallet {
     };
   }
 
-  sendAnswer(answer) {
+  sendAnswer(answer: any) {
     this.socket.sendMessage(SCHEMAS.WIMSG_ANSWER, answer);
   }
 }

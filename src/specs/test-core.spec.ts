@@ -84,6 +84,7 @@ describe('testStrings', () => {
             .forEach(str => {
                 let stream = new WriteStream();
 
+                // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
                 stream.writeString(str);
 
                 const data = stream.getByteStream();

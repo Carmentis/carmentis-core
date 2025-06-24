@@ -3,9 +3,9 @@ import { SCHEMAS } from "../../common/constants/constants";
 import {SchemaSerializer} from "../../common/data/schemaSerializer";
 //import * as base64 from "../../common/utils/";
 
-//import { CarmentisError } from "../../common/errors/error.js";
-import * as crypto from "../../common/crypto/crypto.js";
-import {Base64 as base64} from "../../common/data/base64.js";
+//import { CarmentisError } from "../../common/errors/error";
+import * as crypto from "../../common/crypto/crypto";
+import {Base64 as base64} from "../../common/data/base64";
 
 export class wiExtensionWallet extends wiWallet {
   constructor() {
@@ -20,7 +20,7 @@ export class wiExtensionWallet extends wiWallet {
    * @param {number} messageData.requestType - The type of the request to be decoded.
    * @return {{type:number}} The decoded request object.
    */
-  getRequestFromMessage(messageData) {
+  getRequestFromMessage(messageData: any) {
     let request = base64.decodeBinary(messageData.request, base64.BASE64),
         requestObject = this.decodeRequest(messageData.requestType, request);
 
@@ -30,7 +30,9 @@ export class wiExtensionWallet extends wiWallet {
   /**
    * Formats an answer, using the extension wallet format.
    */
-  formatAnswer(answerType, object) {
+  // @ts-expect-error TS(2425): Class 'wiWallet' defines instance member property ... Remove this comment to see the full error message
+  formatAnswer(answerType: any, object: any) {
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_ANSWERS[answerType])
     let answer = schemaSerializer.serialize(object);
 

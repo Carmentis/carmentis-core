@@ -1,35 +1,37 @@
-import { BlockchainUtils } from "../blockchain/blockchainUtils.js";
-import { Utils } from "../utils/utils.js";
+import { BlockchainUtils } from "../blockchain/blockchainUtils";
+import { Utils } from "../utils/utils";
 
 export class Provider {
-  constructor(internalProvider, externalProvider) {
+  externalProvider: any;
+  internalProvider: any;
+  constructor(internalProvider: any, externalProvider: any) {
     this.internalProvider = internalProvider;
     this.externalProvider = externalProvider;
   }
 
   isKeyed() { return false; }
 
-  async sendMicroblock(...args) {
+  async sendMicroblock(...args: any[]) {
     return await this.externalProvider.sendMicroblock(...args);
   }
 
-  async awaitMicroblockAnchoring(...args) {
+  async awaitMicroblockAnchoring(...args: any[]) {
     return await this.externalProvider.awaitMicroblockAnchoring(...args);
   }
 
-  async getAccountState(...args) {
+  async getAccountState(...args: any[]) {
     return await this.externalProvider.getAccountState(...args);
   }
 
-  async getAccountHistory(...args) {
+  async getAccountHistory(...args: any[]) {
     return await this.externalProvider.getAccountHistory(...args);
   }
 
-  async getAccountByPublicKeyHash(...args) {
+  async getAccountByPublicKeyHash(...args: any[]) {
     return await this.externalProvider.getAccountByPublicKeyHash(...args);
   }
 
-  async storeMicroblock(hash, virtualBlockchainId, virtualBlockchainType, height, headerData, bodyData) {
+  async storeMicroblock(hash: any, virtualBlockchainId: any, virtualBlockchainType: any, height: any, headerData: any, bodyData: any) {
     await this.internalProvider.setMicroblockInformation(
       hash,
       BlockchainUtils.encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, headerData)
@@ -37,12 +39,12 @@ export class Provider {
     await this.internalProvider.setMicroblockBody(hash, bodyData);
   }
 
-  async updateVirtualBlockchainState(virtualBlockchainId, type, height, lastMicroblockHash, customStateObject) {
+  async updateVirtualBlockchainState(virtualBlockchainId: any, type: any, height: any, lastMicroblockHash: any, customStateObject: any) {
     const stateData = BlockchainUtils.encodeVirtualBlockchainState(type, height, lastMicroblockHash, customStateObject);
     await this.internalProvider.setVirtualBlockchainState(virtualBlockchainId, stateData);
   }
 
-  async getMicroblockInformation(hash) {
+  async getMicroblockInformation(hash: any) {
     // FIXME: we should avoid the encoding/decoding passes when getting data from the external provider
     let data = await this.internalProvider.getMicroblockInformation(hash);
 
@@ -57,7 +59,7 @@ export class Provider {
     return data && BlockchainUtils.decodeMicroblockInformation(data);
   }
 
-  async getMicroblockBodys(hashes) {
+  async getMicroblockBodys(hashes: any) {
     // get as much data as possible from the internal provider
     const res = [];
     const missingHashes = [];
@@ -90,33 +92,37 @@ export class Provider {
     return res;
   }
 
-  async getVirtualBlockchainInformation(virtualBlockchainId) {
+  async getVirtualBlockchainInformation(virtualBlockchainId: any) {
   }
 
-  async getVirtualBlockchainStateInternal(virtualBlockchainId) {
+  async getVirtualBlockchainStateInternal(virtualBlockchainId: any) {
     return await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
   }
 
-  async getVirtualBlockchainHeaders(virtualBlockchainId, knownHeight) {
+  async getVirtualBlockchainHeaders(virtualBlockchainId: any, knownHeight: any) {
     const stateData = await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
     const state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
 
+    // @ts-expect-error TS(2339): Property 'height' does not exist on type '{}'.
     let height = state.height;
+    // @ts-expect-error TS(2339): Property 'lastMicroblockHash' does not exist on ty... Remove this comment to see the full error message
     let microblockHash = state.lastMicroblockHash;
     const headers = [];
 
     while(height > knownHeight) {
       const infoData = await this.internalProvider.getMicroblockInformation(microblockHash);
       const info = BlockchainUtils.decodeMicroblockInformation(infoData);
+      // @ts-expect-error TS(2339): Property 'header' does not exist on type '{}'.
       headers.push(info.header);
+      // @ts-expect-error TS(2339): Property 'header' does not exist on type '{}'.
       microblockHash = BlockchainUtils.previousHashFromHeader(info.header);
       height--;
     }
     return headers;
   }
 
-  async getVirtualBlockchainContent(virtualBlockchainId) {
-    let microblockHashes = [];
+  async getVirtualBlockchainContent(virtualBlockchainId: any) {
+    let microblockHashes: string | any[] = [];
     let state;
 
     // get the state of this VB from our internal provider
@@ -127,7 +133,9 @@ export class Provider {
     if(stateData) {
       state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
 
+      // @ts-expect-error TS(2339): Property 'height' does not exist on type '{}'.
       let height = state.height;
+      // @ts-expect-error TS(2339): Property 'lastMicroblockHash' does not exist on ty... Remove this comment to see the full error message
       let microblockHash = state.lastMicroblockHash;
       const headers = [];
 
@@ -138,7 +146,9 @@ export class Provider {
           break;
         }
         const info = BlockchainUtils.decodeMicroblockInformation(infoData);
+        // @ts-expect-error TS(2339): Property 'header' does not exist on type '{}'.
         headers.push(info.header);
+        // @ts-expect-error TS(2339): Property 'header' does not exist on type '{}'.
         microblockHash = BlockchainUtils.previousHashFromHeader(info.header);
         height--;
       }
@@ -197,6 +207,7 @@ export class Provider {
       for(let n = 0; n < vbUpdate.headers.length; n++) {
         await this.internalProvider.setMicroblockInformation(
           check.hashes[n],
+          // @ts-expect-error TS(2339): Property 'type' does not exist on type '{}'.
           BlockchainUtils.encodeMicroblockInformation(state.type, virtualBlockchainId, vbUpdate.headers[n])
         );
       }

@@ -1,10 +1,11 @@
-import { SCHEMAS } from "../constants/constants.js";
-import { Base64 } from "../data/base64.js";
-import { Utils } from "../utils/utils.js";
-import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer.js";
+import { SCHEMAS } from "../constants/constants";
+import { Base64 } from "../data/base64";
+import { Utils } from "../utils/utils";
+import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer";
 
 export class NetworkProvider {
-  constructor(nodeUrl) {
+  nodeUrl: any;
+  constructor(nodeUrl: any) {
     try {
       new URL(nodeUrl);
     }
@@ -14,12 +15,12 @@ export class NetworkProvider {
     this.nodeUrl = nodeUrl;
   }
 
-  async sendMicroblock(headerData, bodyData) {
+  async sendMicroblock(headerData: any, bodyData: any) {
     const answer = await this.broadcastTx(Utils.binaryFrom(headerData, bodyData));
     return answer;
   }
 
-  async awaitMicroblockAnchoring(hash) {
+  async awaitMicroblockAnchoring(hash: any) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
       {
@@ -29,7 +30,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getAccountState(accountHash) {
+  async getAccountState(accountHash: any) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_ACCOUNT_STATE,
       {
@@ -39,7 +40,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getAccountHistory(accountHash, lastHistoryHash, maxRecords) {
+  async getAccountHistory(accountHash: any, lastHistoryHash: any, maxRecords: any) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_ACCOUNT_HISTORY,
       {
@@ -51,7 +52,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getAccountByPublicKeyHash(publicKeyHash) {
+  async getAccountByPublicKeyHash(publicKeyHash: any) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
       {
@@ -61,7 +62,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getMicroblockInformation(hash) {
+  async getMicroblockInformation(hash: any) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
       {
@@ -71,7 +72,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getMicroblockBodys(hashes) {
+  async getMicroblockBodys(hashes: any) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
       {
@@ -81,7 +82,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getVirtualBlockchainUpdate(virtualBlockchainId, knownHeight) {
+  async getVirtualBlockchainUpdate(virtualBlockchainId: any, knownHeight: any) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE,
       {
@@ -96,16 +97,17 @@ export class NetworkProvider {
     throw `attempt to call query() from the generic NetworkProvider class`;
   }
 
-  async broadcastTx(data) {
+  async broadcastTx(data: any) {
     const urlObject = new URL(this.nodeUrl);
 
     urlObject.pathname = "broadcast_tx_sync";
     urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));
 
+    // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
     return await this.query(urlObject);
   }
 
-  async abciQuery(msgId, msgData) {
+  async abciQuery(msgId: any, msgData: any) {
     const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
     const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
     const data = serializer.serialize(msgId, msgData);
@@ -115,6 +117,7 @@ export class NetworkProvider {
     urlObject.searchParams.append("path", '"/carmentis"');
     urlObject.searchParams.append("data", "0x" + Utils.binaryToHexa(data));
 
+    // @ts-expect-error TS(2345): Argument of type 'void' is not assignable to param... Remove this comment to see the full error message
     const answer = JSON.parse(await this.query(urlObject));
     const binary = Base64.decodeBinary(answer.data);
     const { type, object } = unserializer.unserialize(binary);

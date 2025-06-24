@@ -1,5 +1,5 @@
-import { DATA } from "../constants/constants.js";
-import { TypeManager } from "../data/types.js";
+import { DATA } from "../constants/constants";
+import { TypeManager } from "../data/types";
 
 export const Utils = {
   numberToHexa,
@@ -14,11 +14,11 @@ export const Utils = {
   intToByteArray
 };
 
-function numberToHexa(value, size) {
+function numberToHexa(value: any, size: any) {
   return value.toString(16).toUpperCase().padStart(size || 1, "0");
 }
 
-function truncateString(str, size) {
+function truncateString(str: any, size: any) {
   return str.slice(0, size) + (str.length > size ? "(...)" : "");
 }
 
@@ -30,7 +30,7 @@ function getTimestampInSeconds() {
   return Math.floor(Date.now() / 1000);
 }
 
-function binaryToHexa(array) {
+function binaryToHexa(array: any) {
   if(!(array instanceof Uint8Array)) {
     return "";
   }
@@ -38,16 +38,17 @@ function binaryToHexa(array) {
   return [...array].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("");
 }
 
-function binaryFromHexa(str) {
+function binaryFromHexa(str: any) {
   return new Uint8Array(
     typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ?
+      // @ts-expect-error TS(2531): Object is possibly 'null'.
       str.match(/../g).map((s) => parseInt(s, 16))
     :
       []
   );
 }
 
-function binaryFrom(...arg) {
+function binaryFrom(this: any, ...arg: any[]) {
   const list = Array(arg.length);
   let ndx = 0;
 
@@ -60,6 +61,7 @@ function binaryFrom(...arg) {
         break;
       }
       case DATA.TYPE_STRING: {
+        // @ts-expect-error TS(2552): Cannot find name 'encoder'. Did you mean 'encodeUR... Remove this comment to see the full error message
         arg[i] = encoder.encode(data);
         break;
       }
@@ -83,7 +85,7 @@ function binaryFrom(...arg) {
   return arr;
 }
 
-function binaryIsEqual(a, b) {
+function binaryIsEqual(a: any, b: any) {
   if(!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
     return false;
   }
@@ -96,7 +98,7 @@ function binaryIsEqual(a, b) {
   return true;
 }
 
-function binaryCompare(a, b) {
+function binaryCompare(a: any, b: any) {
   if(!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
     throw "cannot compare";
   }
@@ -112,13 +114,16 @@ function binaryCompare(a, b) {
   return 0;
 }
 
-function intToByteArray(n, size = 1) {
-  const arr = [];
+function intToByteArray(n: number, size: number = 1) {
+  const arr: number[] = [];
 
-  while(n || size) {
-    arr.push(n % 0x100);
-    n = Math.floor(n / 0x100);
-    size -= !!size;
+  let remaining = n;
+
+  while (remaining > 0 || size > 0) {
+    arr.push(remaining & 0xFF); // same as n % 0x100
+    remaining = Math.floor(remaining / 0x100);
+    if (size > 0) size--;
   }
+
   return arr.reverse();
 }

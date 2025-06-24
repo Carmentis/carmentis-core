@@ -6,10 +6,10 @@ export const Utf8Encoder = {
   decode
 };
 
-function encode(str) {
+function encode(str: any) {
   return encoder.encode(str);
 }
 
-function decode(array) {
+function decode(array: any) {
   return decoder.decode(array);
 }

@@ -1,10 +1,12 @@
-import { CHAIN, SECTIONS } from "../constants/constants.js";
-import { VirtualBlockchain } from "./virtualBlockchain.js";
-import { StructureChecker } from "./structureChecker.js";
-import {CryptoSchemeFactory} from "../crypto/factory.js";
+import { CHAIN, SECTIONS } from "../constants/constants";
+import { VirtualBlockchain } from "./virtualBlockchain";
+import { StructureChecker } from "./structureChecker";
+import {CryptoSchemeFactory} from "../crypto/factory";
 
 export class OrganizationVb extends VirtualBlockchain {
-  constructor({ provider }) {
+  constructor({
+    provider
+  }: any) {
     super({ provider, type: CHAIN.VB_ORGANIZATION });
 
     this.registerSectionCallback(SECTIONS.ORG_SIG_ALGORITHM, this.signatureAlgorithmCallback);
@@ -16,15 +18,15 @@ export class OrganizationVb extends VirtualBlockchain {
   /**
     Update methods
   */
-  async setSignatureAlgorithm(object) {
+  async setSignatureAlgorithm(object: any) {
     await this.addSection(SECTIONS.ORG_SIG_ALGORITHM, object);
   }
 
-  async setPublicKey(object) {
+  async setPublicKey(object: any) {
     await this.addSection(SECTIONS.ORG_PUBLIC_KEY, object);
   }
 
-  async setDescription(object) {
+  async setDescription(object: any) {
     await this.addSection(SECTIONS.ORG_DESCRIPTION, object);
   }
 
@@ -33,7 +35,7 @@ export class OrganizationVb extends VirtualBlockchain {
    * @param {PrivateSignatureKey} privateKey
    * @returns {Promise<void>}
    */
-  async setSignature(privateKey) {
+  async setSignature(privateKey: any) {
     const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.ORG_SIGNATURE, object);
   }
@@ -41,21 +43,21 @@ export class OrganizationVb extends VirtualBlockchain {
   /**
     Section callbacks
   */
-  async signatureAlgorithmCallback(microblock, section) {
+  async signatureAlgorithmCallback(microblock: any, section: any) {
     this.state.signatureAlgorithmId = section.object.algorithmId;
   }
 
-  async publicKeyCallback(microblock, section) {
+  async publicKeyCallback(microblock: any, section: any) {
     this.state.publicKeyHeight = microblock.header.height;
   }
 
-  async descriptionCallback(microblock, section) {
+  async descriptionCallback(microblock: any, section: any) {
     this.state.descriptionHeight = microblock.header.height;
   }
 
-  async signatureCallback(microblock, section) {
+  async signatureCallback(microblock: any, section: any) {
     const keyMicroblock = await this.getMicroblock(this.state.publicKeyHeight);
-    const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
+    const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
     const cryptoFactory = new CryptoSchemeFactory();
     const signatureAlgorithmId = this.state.signatureAlgorithmId;
     const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
@@ -75,7 +77,8 @@ export class OrganizationVb extends VirtualBlockchain {
   /**
     Structure check
   */
-  checkStructure(microblock) {
+  // @ts-expect-error TS(2425): Class 'VirtualBlockchain' defines instance member ... Remove this comment to see the full error message
+  checkStructure(microblock: any) {
     const checker = new StructureChecker(microblock);
 
     checker.expects(

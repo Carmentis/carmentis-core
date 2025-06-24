@@ -1,9 +1,11 @@
-import { CHAIN, SECTIONS } from "../constants/constants.js";
-import { VirtualBlockchain } from "./virtualBlockchain.js";
-import { StructureChecker } from "./structureChecker.js";
+import { CHAIN, SECTIONS } from "../constants/constants";
+import { VirtualBlockchain } from "./virtualBlockchain";
+import { StructureChecker } from "./structureChecker";
 
 export class ApplicationVb extends VirtualBlockchain {
-  constructor({ provider }) {
+  constructor({
+    provider
+  }: any) {
     super({ provider, type: CHAIN.VB_ORGANIZATION });
 
     this.registerSectionCallback(SECTIONS.APP_SIG_ALGORITHM, this.signatureAlgorithmCallback);
@@ -14,15 +16,15 @@ export class ApplicationVb extends VirtualBlockchain {
   /**
     Update methods
   */
-  async setSignatureAlgorithm(object) {
+  async setSignatureAlgorithm(object: any) {
     await this.addSection(SECTIONS.APP_SIG_ALGORITHM, object);
   }
 
-  async setDeclaration(object) {
+  async setDeclaration(object: any) {
     await this.addSection(SECTIONS.APP_DECLARATION, object);
   }
 
-  async setDescription(object) {
+  async setDescription(object: any) {
     await this.addSection(SECTIONS.APP_DESCRIPTION, object);
   }
 
@@ -31,7 +33,7 @@ export class ApplicationVb extends VirtualBlockchain {
    * @param {PrivateSignatureKey} privateKey
    * @returns {Promise<void>}
    */
-  async setSignature(privateKey) {
+  async setSignature(privateKey: any) {
     const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.APP_SIGNATURE, object);
   }
@@ -39,20 +41,21 @@ export class ApplicationVb extends VirtualBlockchain {
   /**
     Section callbacks
   */
-  async signatureAlgorithmCallback(microblock, section) {
+  async signatureAlgorithmCallback(microblock: any, section: any) {
     this.state.signatureAlgorithmId = section.object.algorithmId;
   }
 
-  async declarationCallback(microblock, section) {
+  async declarationCallback(microblock: any, section: any) {
   }
 
-  async signatureCallback(microblock, section) {
+  async signatureCallback(microblock: any, section: any) {
   }
 
   /**
     Structure check
   */
-  checkStructure(microblock) {
+  // @ts-expect-error TS(2425): Class 'VirtualBlockchain' defines instance member ... Remove this comment to see the full error message
+  checkStructure(microblock: any) {
     const checker = new StructureChecker(microblock);
 
     checker.expects(

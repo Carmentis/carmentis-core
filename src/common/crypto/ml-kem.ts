@@ -7,7 +7,7 @@ export const MLKem = {
   decapsulate
 };
 
-function generateKeyPair(seed) {
+function generateKeyPair(seed: any) {
   if(seed == undefined) {
     seed = randomBytes(64);
   }
@@ -17,10 +17,10 @@ function generateKeyPair(seed) {
   return keys;
 }
 
-function encapsulate(publicKey) {
+function encapsulate(publicKey: any) {
   return ml_kem768.encapsulate(publicKey);
 }
 
-function decapsulate(cipherText, privateKey) {
+function decapsulate(cipherText: any, privateKey: any) {
   return ml_kem768.decapsulate(cipherText, privateKey);
 }

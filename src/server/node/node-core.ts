@@ -1,10 +1,10 @@
 /*
-import { ECO, ID, SCHEMAS, SECTIONS, ERRORS } from "../../common/constants/constants.js";
-import { schemaSerializer } from "../../common/serializers/serializers.js";
-import { blockchainCore, ROLES, blockchainManager, accountVb } from "../../common/blockchain/blockchain.js";
-import { CarmentisError, globalError, blockchainError } from "../../common/errors/error.js";
-import * as accounts from "../../common/accounts/accounts.js";
-import * as util from "../../common/util/util.js";
+import { ECO, ID, SCHEMAS, SECTIONS, ERRORS } from "../../common/constants/constants";
+import { schemaSerializer } from "../../common/serializers/serializers";
+import { blockchainCore, ROLES, blockchainManager, accountVb } from "../../common/blockchain/blockchain";
+import { CarmentisError, globalError, blockchainError } from "../../common/errors/error";
+import * as accounts from "../../common/accounts/accounts";
+import * as util from "../../common/util/util";
 
 const FEES_ENABLED = false;
 const CHAIN_STATUS_KEY = "CHAIN_STATUS";

@@ -1,4 +1,4 @@
-import { Utf8Encoder } from "./utf8Encoder.js";
+import { Utf8Encoder } from "./utf8Encoder";
 
 const ALPHA  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 const BASE64 = ALPHA + "+/=";
@@ -13,15 +13,15 @@ export const Base64 = {
   decodeBinary
 };
 
-function encodeString(str, alphabet = BASE64, padding = false) {
+function encodeString(str: any, alphabet = BASE64, padding = false) {
   return encodeBinary(Utf8Encoder.encode(str), alphabet, padding);
 }
 
-function decodeString(str, alphabet = BASE64) {
+function decodeString(str: any, alphabet = BASE64) {
   return Utf8Encoder.decode(decodeBinary(str, alphabet));
 }
 
-function encodeBinary(bin, alphabet = BASE64, padding = false) {
+function encodeBinary(bin: any, alphabet = BASE64, padding = false) {
   let r = bin.length % 3,
       acc = 0,
       out = "";
@@ -39,7 +39,7 @@ function encodeBinary(bin, alphabet = BASE64, padding = false) {
   return r ? out.slice(0, r - 3) + alphabet[0x40].repeat(padding ? 3 - r : 0) : out;
 }
 
-function decodeBinary(str, alphabet = BASE64) {
+function decodeBinary(str: any, alphabet = BASE64) {
   let crop = 0,
       acc = 0,
       out = [];
@@ -49,6 +49,7 @@ function decodeBinary(str, alphabet = BASE64) {
   for(let i = 0; i < str.length;) {
     let n = alphabet.indexOf(str[i++]);
 
+    // @ts-expect-error TS(2365): Operator '+=' cannot be applied to types 'number' ... Remove this comment to see the full error message
     crop += n == 0x40;
     acc = acc << 6 | n;
 

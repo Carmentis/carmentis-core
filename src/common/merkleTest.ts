@@ -1,6 +1,7 @@
-import { MerkleTree } from "./merkleTree.js";
-import { Utils } from "./utils/utils.js";
-import { Crypto } from "./crypto/crypto.js";
+// @ts-expect-error TS(2307): Cannot find module './merkleTree.js' or its corres... Remove this comment to see the full error message
+import { MerkleTree } from "./merkleTree";
+import { Utils } from "./utils/utils";
+import { Crypto } from "./crypto/crypto";
 
 for(let size = 1; size <= 16; size++) {
   console.log(`Testing tree of size ${size}`);
@@ -16,7 +17,8 @@ for(let size = 1; size <= 16; size++) {
 
   for(let n = 0; n < (1 << size); n++) {
     const missing = [...Array(size)].map((_, i) => i).filter((i) => n >> i & 1);
-    const knownHashes = tree.tree[0].map((h, i) => [ i, h ]).filter(([i]) => !(n >> i & 1));
+    // @ts-expect-error TS(7031): Binding element 'i' implicitly has an 'any' type.
+    const knownHashes = tree.tree[0].map((h: any, i: any) => [ i, h ]).filter(([i]) => !(n >> i & 1));
     const witnesses = tree.getWitnesses(missing);
 
     const newTree = new MerkleTree;

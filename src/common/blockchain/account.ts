@@ -1,10 +1,16 @@
-import { ECO } from "../constants/constants.js";
-import { AccountVb } from "./accountVb.js";
-import { Utils } from "../utils/utils.js";
+import { ECO } from "../constants/constants";
+import { AccountVb } from "./accountVb";
+import { Utils } from "../utils/utils";
 
 export class Account {
+  privateKey: any;
+  provider: any;
+  signatureAlgorithmId: any;
+  vb: any;
 
-  constructor({ provider }) {
+  constructor({
+    provider
+  }: any) {
     this.vb = new AccountVb({ provider });
     this.provider = provider;
     if (provider.isKeyed()) {
@@ -37,7 +43,7 @@ export class Account {
    * @returns {Promise<void>}
    * @private
    */
-  async _create(sellerAccount, buyerPublicKey, amount) {
+  async _create(sellerAccount: any, buyerPublicKey: any, amount: any) {
     if (!this.provider.isKeyed()) throw "Cannot create an account without a keyed provider."
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
@@ -53,11 +59,11 @@ export class Account {
     });
   }
 
-  async _load(identifier) {
+  async _load(identifier: any) {
     await this.vb.load(identifier);
   }
 
-  async transfer(object) {
+  async transfer(object: any) {
     await this.vb.setTransfer({
       account: Utils.binaryFromHexa(object.account),
       amount: object.amount,

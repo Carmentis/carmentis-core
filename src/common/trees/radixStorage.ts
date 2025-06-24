@@ -1,5 +1,5 @@
-import { RADIX_CST } from "./radixConstants.js";
-import { Utils } from "../utils/utils.js";
+import { RADIX_CST } from "./radixConstants";
+import { Utils } from "../utils/utils";
 
 /**
   Three different components are used to store the tree:
@@ -8,14 +8,18 @@ import { Utils } from "../utils/utils.js";
     - batch: keeps track of updates that were performed in the current batch but are not yet committed to the DB
 */
 export class RadixStorage {
-  constructor(database, subId) {
+  batch: any;
+  cache: any;
+  database: any;
+  subId: any;
+  constructor(database: any, subId: any) {
     this.cache = new Map();
     this.batch = new Map();
     this.database = database;
     this.subId = subId;
   }
 
-  async get(depth, hash) {
+  async get(depth: any, hash: any) {
     const hashString = Utils.binaryToHexa(hash);
     let value = this.cache.get(hashString);
 
@@ -29,7 +33,7 @@ export class RadixStorage {
     }
 
     if(value === undefined || value === null) {
-      if(hash.some((v) => v)) {
+      if(hash.some((v: any) => v)) {
         console.log(value);
         throw `failed to get hash ${hashString} from storage`;
       }
@@ -41,7 +45,7 @@ export class RadixStorage {
     return value;
   }
 
-  set(depth, hash, value) {
+  set(depth: any, hash: any, value: any) {
     const hashString = Utils.binaryToHexa(hash);
 
     // update the cache
@@ -62,7 +66,7 @@ export class RadixStorage {
   /**
     a removed item is set to null so that we know that it must be actually deleted when flush() is called
   */
-  remove(depth, hash) {
+  remove(depth: any, hash: any) {
     this.set(depth, hash, null);
   }
 
@@ -70,7 +74,7 @@ export class RadixStorage {
     return await this.get(-1, RADIX_CST.ROOT_ANCHORING_HASH);
   }
 
-  async setRootHash(rootHash) {
+  async setRootHash(rootHash: any) {
     await this.set(-1, RADIX_CST.ROOT_ANCHORING_HASH, rootHash);
   }
 

@@ -7,7 +7,7 @@ const tsJestTransformCfg = createDefaultPreset().transform;
 export default {
   testEnvironment: "node",
   rootDir: '.',
-  testMatch: ['<rootDir>/dist/**/*.spec.js'],
+  testMatch: ['<rootDir>/src/**/*.spec.ts'],
   /*
   transform: {
     ...tsJestTransformCfg,

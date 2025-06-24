@@ -26,21 +26,22 @@
    * @param typeNumber 1 to 40
    * @param errorCorrectionLevel 'L','M','Q','H'
    */
-  export var qrcode = function(typeNumber, errorCorrectionLevel) {
+  export var qrcode = function(typeNumber: any, errorCorrectionLevel: any) {
 
     var PAD0 = 0xEC;
     var PAD1 = 0x11;
 
     var _typeNumber = typeNumber;
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
-    var _modules = null;
+    var _modules: any = null;
     var _moduleCount = 0;
-    var _dataCache = null;
-    var _dataList = [];
+    var _dataCache: any = null;
+    var _dataList: any = [];
 
     var _this = {};
 
-    var makeImpl = function(test, maskPattern) {
+    var makeImpl = function(test: any, maskPattern: any) {
 
       _moduleCount = _typeNumber * 4 + 17;
       _modules = function(moduleCount) {
@@ -72,7 +73,7 @@
       mapData(_dataCache, maskPattern);
     };
 
-    var setupPositionProbePattern = function(row, col) {
+    var setupPositionProbePattern = function(row: any, col: any) {
 
       for (var r = -1; r <= 7; r += 1) {
 
@@ -102,6 +103,7 @@
 
         makeImpl(true, i);
 
+        // @ts-expect-error TS(2339): Property 'getLostPoint' does not exist on type '{}... Remove this comment to see the full error message
         var lostPoint = QRUtil.getLostPoint(_this);
 
         if (i == 0 || minLostPoint > lostPoint) {
@@ -132,6 +134,7 @@
 
     var setupPositionAdjustPattern = function() {
 
+      // @ts-expect-error TS(2339): Property 'getPatternPosition' does not exist on ty... Remove this comment to see the full error message
       var pos = QRUtil.getPatternPosition(_typeNumber);
 
       for (var i = 0; i < pos.length; i += 1) {
@@ -161,8 +164,9 @@
       }
     };
 
-    var setupTypeNumber = function(test) {
+    var setupTypeNumber = function(test: any) {
 
+      // @ts-expect-error TS(2339): Property 'getBCHTypeNumber' does not exist on type... Remove this comment to see the full error message
       var bits = QRUtil.getBCHTypeNumber(_typeNumber);
 
       for (var i = 0; i < 18; i += 1) {
@@ -176,9 +180,10 @@
       }
     };
 
-    var setupTypeInfo = function(test, maskPattern) {
+    var setupTypeInfo = function(test: any, maskPattern: any) {
 
       var data = (_errorCorrectionLevel << 3) | maskPattern;
+      // @ts-expect-error TS(2339): Property 'getBCHTypeInfo' does not exist on type '... Remove this comment to see the full error message
       var bits = QRUtil.getBCHTypeInfo(data);
 
       // vertical
@@ -213,12 +218,13 @@
       _modules[_moduleCount - 8][8] = (!test);
     };
 
-    var mapData = function(data, maskPattern) {
+    var mapData = function(data: any, maskPattern: any) {
 
       var inc = -1;
       var row = _moduleCount - 1;
       var bitIndex = 7;
       var byteIndex = 0;
+      // @ts-expect-error TS(2339): Property 'getMaskFunction' does not exist on type ... Remove this comment to see the full error message
       var maskFunc = QRUtil.getMaskFunction(maskPattern);
 
       for (var col = _moduleCount - 1; col > 0; col -= 2) {
@@ -264,7 +270,7 @@
       }
     };
 
-    var createBytes = function(buffer, rsBlocks) {
+    var createBytes = function(buffer: any, rsBlocks: any) {
 
       var offset = 0;
 
@@ -289,9 +295,11 @@
         }
         offset += dcCount;
 
+        // @ts-expect-error TS(2339): Property 'getErrorCorrectPolynomial' does not exis... Remove this comment to see the full error message
         var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
         var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
 
+        // @ts-expect-error TS(2339): Property 'mod' does not exist on type '{}'.
         var modPoly = rawPoly.mod(rsPoly);
         ecdata[r] = new Array(rsPoly.getLength() - 1);
         for (var i = 0; i < ecdata[r].length; i += 1) {
@@ -329,15 +337,18 @@
       return data;
     };
 
-    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+    var createData = function(typeNumber: any, errorCorrectionLevel: any, dataList: any) {
 
+      // @ts-expect-error TS(2339): Property 'getRSBlocks' does not exist on type '{}'... Remove this comment to see the full error message
       var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
 
       var buffer = qrBitBuffer();
 
       for (var i = 0; i < dataList.length; i += 1) {
         var data = dataList[i];
+        // @ts-expect-error TS(2339): Property 'put' does not exist on type '{}'.
         buffer.put(data.getMode(), 4);
+        // @ts-expect-error TS(2339): Property 'put' does not exist on type '{}'.
         buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
         data.write(buffer);
       }
@@ -348,8 +359,10 @@
         totalDataCount += rsBlocks[i].dataCount;
       }
 
+      // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
       if (buffer.getLengthInBits() > totalDataCount * 8) {
         throw 'code length overflow. ('
+          // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
           + buffer.getLengthInBits()
           + '>'
           + totalDataCount * 8
@@ -357,33 +370,42 @@
       }
 
       // end code
+      // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
       if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        // @ts-expect-error TS(2339): Property 'put' does not exist on type '{}'.
         buffer.put(0, 4);
       }
 
       // padding
+      // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
       while (buffer.getLengthInBits() % 8 != 0) {
+        // @ts-expect-error TS(2339): Property 'putBit' does not exist on type '{}'.
         buffer.putBit(false);
       }
 
       // padding
       while (true) {
 
+        // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
         if (buffer.getLengthInBits() >= totalDataCount * 8) {
           break;
         }
+        // @ts-expect-error TS(2339): Property 'put' does not exist on type '{}'.
         buffer.put(PAD0, 8);
 
+        // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
         if (buffer.getLengthInBits() >= totalDataCount * 8) {
           break;
         }
+        // @ts-expect-error TS(2339): Property 'put' does not exist on type '{}'.
         buffer.put(PAD1, 8);
       }
 
       return createBytes(buffer, rsBlocks);
     };
 
-    _this.addData = function(data, mode) {
+    // @ts-expect-error TS(2339): Property 'addData' does not exist on type '{}'.
+    _this.addData = function(data: any, mode: any) {
 
       mode = mode || 'Byte';
 
@@ -410,28 +432,34 @@
       _dataCache = null;
     };
 
-    _this.isDark = function(row, col) {
+    // @ts-expect-error TS(2339): Property 'isDark' does not exist on type '{}'.
+    _this.isDark = function(row: any, col: any) {
       if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
         throw row + ',' + col;
       }
       return _modules[row][col];
     };
 
+    // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
     _this.getModuleCount = function() {
       return _moduleCount;
     };
 
+    // @ts-expect-error TS(2339): Property 'make' does not exist on type '{}'.
     _this.make = function() {
       if (_typeNumber < 1) {
         var typeNumber = 1;
 
         for (; typeNumber < 40; typeNumber++) {
+          // @ts-expect-error TS(2339): Property 'getRSBlocks' does not exist on type '{}'... Remove this comment to see the full error message
           var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
           var buffer = qrBitBuffer();
 
           for (var i = 0; i < _dataList.length; i++) {
             var data = _dataList[i];
+            // @ts-expect-error TS(2339): Property 'put' does not exist on type '{}'.
             buffer.put(data.getMode(), 4);
+            // @ts-expect-error TS(2339): Property 'put' does not exist on type '{}'.
             buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
             data.write(buffer);
           }
@@ -441,6 +469,7 @@
             totalDataCount += rsBlocks[i].dataCount;
           }
 
+          // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
           if (buffer.getLengthInBits() <= totalDataCount * 8) {
             break;
           }
@@ -452,7 +481,8 @@
       makeImpl(false, getBestMaskPattern() );
     };
 
-    _this.createTableTag = function(cellSize, margin) {
+    // @ts-expect-error TS(2339): Property 'createTableTag' does not exist on type '... Remove this comment to see the full error message
+    _this.createTableTag = function(cellSize: any, margin: any) {
 
       cellSize = cellSize || 2;
       margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
@@ -466,10 +496,12 @@
       qrHtml += '">';
       qrHtml += '<tbody>';
 
+      // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
       for (var r = 0; r < _this.getModuleCount(); r += 1) {
 
         qrHtml += '<tr>';
 
+        // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
         for (var c = 0; c < _this.getModuleCount(); c += 1) {
           qrHtml += '<td style="';
           qrHtml += ' border-width: 0px; border-style: none;';
@@ -478,6 +510,7 @@
           qrHtml += ' width: ' + cellSize + 'px;';
           qrHtml += ' height: ' + cellSize + 'px;';
           qrHtml += ' background-color: ';
+          // @ts-expect-error TS(2339): Property 'isDark' does not exist on type '{}'.
           qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
           qrHtml += ';';
           qrHtml += '"/>';
@@ -492,16 +525,21 @@
       return qrHtml;
     };
 
-    _this.createSvgTag = function(cellSize, margin, alt, title) {
+    // @ts-expect-error TS(2339): Property 'createSvgTag' does not exist on type '{}... Remove this comment to see the full error message
+    _this.createSvgTag = function(cellSize: any, margin: any, alt: any, title: any) {
 
       var opts = {};
       if (typeof arguments[0] == 'object') {
         // Called by options.
         opts = arguments[0];
         // overwrite cellSize and margin.
+        // @ts-expect-error TS(2339): Property 'cellSize' does not exist on type '{}'.
         cellSize = opts.cellSize;
+        // @ts-expect-error TS(2339): Property 'margin' does not exist on type '{}'.
         margin = opts.margin;
+        // @ts-expect-error TS(2339): Property 'alt' does not exist on type '{}'.
         alt = opts.alt;
+        // @ts-expect-error TS(2339): Property 'title' does not exist on type '{}'.
         title = opts.title;
       }
 
@@ -518,6 +556,7 @@
       title.text = title.text || null;
       title.id = (title.text) ? title.id || 'qrcode-title' : null;
 
+      // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
       var size = _this.getModuleCount() * cellSize + margin * 2;
       var c, mc, r, mr, qrSvg='', rect;
 
@@ -525,6 +564,7 @@
         ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
 
       qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      // @ts-expect-error TS(2339): Property 'scalable' does not exist on type '{}'.
       qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
       qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
       qrSvg += ' preserveAspectRatio="xMinYMin meet"';
@@ -538,9 +578,12 @@
       qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
       qrSvg += '<path d="';
 
+      // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
       for (r = 0; r < _this.getModuleCount(); r += 1) {
         mr = r * cellSize + margin;
+        // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
         for (c = 0; c < _this.getModuleCount(); c += 1) {
+          // @ts-expect-error TS(2339): Property 'isDark' does not exist on type '{}'.
           if (_this.isDark(r, c) ) {
             mc = c*cellSize+margin;
             qrSvg += 'M' + mc + ',' + mr + rect;
@@ -554,19 +597,22 @@
       return qrSvg;
     };
 
-    _this.createDataURL = function(cellSize, margin) {
+    // @ts-expect-error TS(2339): Property 'createDataURL' does not exist on type '{... Remove this comment to see the full error message
+    _this.createDataURL = function(cellSize: any, margin: any) {
 
       cellSize = cellSize || 2;
       margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
 
+      // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
       var size = _this.getModuleCount() * cellSize + margin * 2;
       var min = margin;
       var max = size - margin;
 
-      return createDataURL(size, size, function(x, y) {
+      return createDataURL(size, size, function(x: any, y: any) {
         if (min <= x && x < max && min <= y && y < max) {
           var c = Math.floor( (x - min) / cellSize);
           var r = Math.floor( (y - min) / cellSize);
+          // @ts-expect-error TS(2339): Property 'isDark' does not exist on type '{}'.
           return _this.isDark(r, c)? 0 : 1;
         } else {
           return 1;
@@ -574,16 +620,19 @@
       } );
     };
 
-    _this.createImgTag = function(cellSize, margin, alt) {
+    // @ts-expect-error TS(2339): Property 'createImgTag' does not exist on type '{}... Remove this comment to see the full error message
+    _this.createImgTag = function(cellSize: any, margin: any, alt: any) {
 
       cellSize = cellSize || 2;
       margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
 
+      // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
       var size = _this.getModuleCount() * cellSize + margin * 2;
 
       var img = '';
       img += '<img';
       img += '\u0020src="';
+      // @ts-expect-error TS(2339): Property 'createDataURL' does not exist on type '{... Remove this comment to see the full error message
       img += _this.createDataURL(cellSize, margin);
       img += '"';
       img += '\u0020width="';
@@ -602,7 +651,7 @@
       return img;
     };
 
-    var escapeXml = function(s) {
+    var escapeXml = function(s: any) {
       var escaped = '';
       for (var i = 0; i < s.length; i += 1) {
         var c = s.charAt(i);
@@ -617,10 +666,11 @@
       return escaped;
     };
 
-    var _createHalfASCII = function(margin) {
+    var _createHalfASCII = function(margin: any) {
       var cellSize = 1;
       margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
 
+      // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
       var size = _this.getModuleCount() * cellSize + margin * 2;
       var min = margin;
       var max = size - margin;
@@ -648,10 +698,12 @@
         for (x = 0; x < size; x += 1) {
           p = '█';
 
+          // @ts-expect-error TS(2339): Property 'isDark' does not exist on type '{}'.
           if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
             p = ' ';
           }
 
+          // @ts-expect-error TS(2339): Property 'isDark' does not exist on type '{}'.
           if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
             p += ' ';
           }
@@ -660,6 +712,7 @@
           }
 
           // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
           ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
         }
 
@@ -673,7 +726,8 @@
       return ascii.substring(0, ascii.length-1);
     };
 
-    _this.createASCII = function(cellSize, margin) {
+    // @ts-expect-error TS(2339): Property 'createASCII' does not exist on type '{}'... Remove this comment to see the full error message
+    _this.createASCII = function(cellSize: any, margin: any) {
       cellSize = cellSize || 1;
 
       if (cellSize < 2) {
@@ -683,6 +737,7 @@
       cellSize -= 1;
       margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
 
+      // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
       var size = _this.getModuleCount() * cellSize + margin * 2;
       var min = margin;
       var max = size - margin;
@@ -700,6 +755,7 @@
         for (x = 0; x < size; x += 1) {
           p = 1;
 
+          // @ts-expect-error TS(2339): Property 'isDark' does not exist on type '{}'.
           if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
             p = 0;
           }
@@ -716,11 +772,14 @@
       return ascii.substring(0, ascii.length-1);
     };
 
-    _this.renderTo2dContext = function(context, cellSize) {
+    // @ts-expect-error TS(2339): Property 'renderTo2dContext' does not exist on typ... Remove this comment to see the full error message
+    _this.renderTo2dContext = function(context: any, cellSize: any) {
       cellSize = cellSize || 2;
+      // @ts-expect-error TS(2339): Property 'getModuleCount' does not exist on type '... Remove this comment to see the full error message
       var length = _this.getModuleCount();
       for (var row = 0; row < length; row++) {
         for (var col = 0; col < length; col++) {
+          // @ts-expect-error TS(2339): Property 'isDark' does not exist on type '{}'.
           context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
           context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
         }
@@ -734,8 +793,9 @@
   // qrcode.stringToBytes
   //---------------------------------------------------------------------
 
+  // @ts-expect-error TS(2339): Property 'stringToBytesFuncs' does not exist on ty... Remove this comment to see the full error message
   qrcode.stringToBytesFuncs = {
-    'default' : function(s) {
+    'default' : function(s: any) {
       var bytes = [];
       for (var i = 0; i < s.length; i += 1) {
         var c = s.charCodeAt(i);
@@ -745,6 +805,7 @@
     }
   };
 
+  // @ts-expect-error TS(2339): Property 'stringToBytes' does not exist on type '(... Remove this comment to see the full error message
   qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
 
   //---------------------------------------------------------------------
@@ -756,7 +817,8 @@
    * [16bit Unicode],[16bit Bytes], ...
    * @param numChars
    */
-  qrcode.createStringToBytes = function(unicodeData, numChars) {
+  // @ts-expect-error TS(2339): Property 'createStringToBytes' does not exist on t... Remove this comment to see the full error message
+  qrcode.createStringToBytes = function(unicodeData: any, numChars: any) {
 
     // create conversion map.
 
@@ -764,6 +826,7 @@
 
       var bin = base64DecodeInputStream(unicodeData);
       var read = function() {
+        // @ts-expect-error TS(2339): Property 'read' does not exist on type '{}'.
         var b = bin.read();
         if (b == -1) throw 'eof';
         return b;
@@ -772,6 +835,7 @@
       var count = 0;
       var unicodeMap = {};
       while (true) {
+        // @ts-expect-error TS(2339): Property 'read' does not exist on type '{}'.
         var b0 = bin.read();
         if (b0 == -1) break;
         var b1 = read();
@@ -779,6 +843,7 @@
         var b3 = read();
         var k = String.fromCharCode( (b0 << 8) | b1);
         var v = (b2 << 8) | b3;
+        // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
         unicodeMap[k] = v;
         count += 1;
       }
@@ -791,13 +856,14 @@
 
     var unknownChar = '?'.charCodeAt(0);
 
-    return function(s) {
+    return function(s: any) {
       var bytes = [];
       for (var i = 0; i < s.length; i += 1) {
         var c = s.charCodeAt(i);
         if (c < 128) {
           bytes.push(c);
         } else {
+          // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
           var b = unicodeMap[s.charAt(i)];
           if (typeof b == 'number') {
             if ( (b & 0xff) == b) {
@@ -908,7 +974,7 @@
 
     var _this = {};
 
-    var getBCHDigit = function(data) {
+    var getBCHDigit = function(data: any) {
       var digit = 0;
       while (data != 0) {
         digit += 1;
@@ -917,7 +983,8 @@
       return digit;
     };
 
-    _this.getBCHTypeInfo = function(data) {
+    // @ts-expect-error TS(2339): Property 'getBCHTypeInfo' does not exist on type '... Remove this comment to see the full error message
+    _this.getBCHTypeInfo = function(data: any) {
       var d = data << 10;
       while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
         d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
@@ -925,7 +992,8 @@
       return ( (data << 10) | d) ^ G15_MASK;
     };
 
-    _this.getBCHTypeNumber = function(data) {
+    // @ts-expect-error TS(2339): Property 'getBCHTypeNumber' does not exist on type... Remove this comment to see the full error message
+    _this.getBCHTypeNumber = function(data: any) {
       var d = data << 12;
       while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
         d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
@@ -933,45 +1001,50 @@
       return (data << 12) | d;
     };
 
-    _this.getPatternPosition = function(typeNumber) {
+    // @ts-expect-error TS(2339): Property 'getPatternPosition' does not exist on ty... Remove this comment to see the full error message
+    _this.getPatternPosition = function(typeNumber: any) {
       return PATTERN_POSITION_TABLE[typeNumber - 1];
     };
 
-    _this.getMaskFunction = function(maskPattern) {
+    // @ts-expect-error TS(2339): Property 'getMaskFunction' does not exist on type ... Remove this comment to see the full error message
+    _this.getMaskFunction = function(maskPattern: any) {
 
       switch (maskPattern) {
 
       case QRMaskPattern.PATTERN000 :
-        return function(i, j) { return (i + j) % 2 == 0; };
+        return function(i: any, j: any) { return (i + j) % 2 == 0; };
       case QRMaskPattern.PATTERN001 :
-        return function(i, j) { return i % 2 == 0; };
+        return function(i: any, j: any) { return i % 2 == 0; };
       case QRMaskPattern.PATTERN010 :
-        return function(i, j) { return j % 3 == 0; };
+        return function(i: any, j: any) { return j % 3 == 0; };
       case QRMaskPattern.PATTERN011 :
-        return function(i, j) { return (i + j) % 3 == 0; };
+        return function(i: any, j: any) { return (i + j) % 3 == 0; };
       case QRMaskPattern.PATTERN100 :
-        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+        return function(i: any, j: any) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
       case QRMaskPattern.PATTERN101 :
-        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+        return function(i: any, j: any) { return (i * j) % 2 + (i * j) % 3 == 0; };
       case QRMaskPattern.PATTERN110 :
-        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+        return function(i: any, j: any) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
       case QRMaskPattern.PATTERN111 :
-        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+        return function(i: any, j: any) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
 
       default :
         throw 'bad maskPattern:' + maskPattern;
       }
     };
 
-    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+    // @ts-expect-error TS(2339): Property 'getErrorCorrectPolynomial' does not exis... Remove this comment to see the full error message
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength: any) {
       var a = qrPolynomial([1], 0);
       for (var i = 0; i < errorCorrectLength; i += 1) {
+        // @ts-expect-error TS(2339): Property 'multiply' does not exist on type '{}'.
         a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
       }
       return a;
     };
 
-    _this.getLengthInBits = function(mode, type) {
+    // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
+    _this.getLengthInBits = function(mode: any, type: any) {
 
       if (1 <= type && type < 10) {
 
@@ -1017,7 +1090,8 @@
       }
     };
 
-    _this.getLostPoint = function(qrcode) {
+    // @ts-expect-error TS(2339): Property 'getLostPoint' does not exist on type '{}... Remove this comment to see the full error message
+    _this.getLostPoint = function(qrcode: any) {
 
       var moduleCount = qrcode.getModuleCount();
 
@@ -1150,7 +1224,8 @@
 
     var _this = {};
 
-    _this.glog = function(n) {
+    // @ts-expect-error TS(2339): Property 'glog' does not exist on type '{}'.
+    _this.glog = function(n: any) {
 
       if (n < 1) {
         throw 'glog(' + n + ')';
@@ -1159,7 +1234,8 @@
       return LOG_TABLE[n];
     };
 
-    _this.gexp = function(n) {
+    // @ts-expect-error TS(2339): Property 'gexp' does not exist on type '{}'.
+    _this.gexp = function(n: any) {
 
       while (n < 0) {
         n += 255;
@@ -1179,7 +1255,7 @@
   // qrPolynomial
   //---------------------------------------------------------------------
 
-  function qrPolynomial(num, shift) {
+  function qrPolynomial(num: any, shift: any) {
 
     if (typeof num.length == 'undefined') {
       throw num.length + '/' + shift;
@@ -1199,20 +1275,26 @@
 
     var _this = {};
 
-    _this.getAt = function(index) {
+    // @ts-expect-error TS(2339): Property 'getAt' does not exist on type '{}'.
+    _this.getAt = function(index: any) {
       return _num[index];
     };
 
+    // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
     _this.getLength = function() {
       return _num.length;
     };
 
-    _this.multiply = function(e) {
+    // @ts-expect-error TS(2339): Property 'multiply' does not exist on type '{}'.
+    _this.multiply = function(e: any) {
 
+      // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
       var num = new Array(_this.getLength() + e.getLength() - 1);
 
+      // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
       for (var i = 0; i < _this.getLength(); i += 1) {
         for (var j = 0; j < e.getLength(); j += 1) {
+          // @ts-expect-error TS(2339): Property 'gexp' does not exist on type '{}'.
           num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
         }
       }
@@ -1220,24 +1302,32 @@
       return qrPolynomial(num, 0);
     };
 
-    _this.mod = function(e) {
+    // @ts-expect-error TS(2339): Property 'mod' does not exist on type '{}'.
+    _this.mod = function(e: any) {
 
+      // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
       if (_this.getLength() - e.getLength() < 0) {
         return _this;
       }
 
+      // @ts-expect-error TS(2339): Property 'glog' does not exist on type '{}'.
       var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
 
+      // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
       var num = new Array(_this.getLength() );
+      // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
       for (var i = 0; i < _this.getLength(); i += 1) {
+        // @ts-expect-error TS(2339): Property 'getAt' does not exist on type '{}'.
         num[i] = _this.getAt(i);
       }
 
       for (var i = 0; i < e.getLength(); i += 1) {
+        // @ts-expect-error TS(2339): Property 'gexp' does not exist on type '{}'.
         num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
       }
 
       // recursive call
+      // @ts-expect-error TS(2339): Property 'mod' does not exist on type '{}'.
       return qrPolynomial(num, 0).mod(e);
     };
 
@@ -1498,16 +1588,18 @@
       [20, 45, 15, 61, 46, 16]
     ];
 
-    var qrRSBlock = function(totalCount, dataCount) {
+    var qrRSBlock = function(totalCount: any, dataCount: any) {
       var _this = {};
+      // @ts-expect-error TS(2339): Property 'totalCount' does not exist on type '{}'.
       _this.totalCount = totalCount;
+      // @ts-expect-error TS(2339): Property 'dataCount' does not exist on type '{}'.
       _this.dataCount = dataCount;
       return _this;
     };
 
     var _this = {};
 
-    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+    var getRsBlockTable = function(typeNumber: any, errorCorrectionLevel: any) {
 
       switch(errorCorrectionLevel) {
       case QRErrorCorrectionLevel.L :
@@ -1523,7 +1615,8 @@
       }
     };
 
-    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+    // @ts-expect-error TS(2339): Property 'getRSBlocks' does not exist on type '{}'... Remove this comment to see the full error message
+    _this.getRSBlocks = function(typeNumber: any, errorCorrectionLevel: any) {
 
       var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
 
@@ -1559,31 +1652,37 @@
 
   var qrBitBuffer = function() {
 
-    var _buffer = [];
+    var _buffer: any = [];
     var _length = 0;
 
     var _this = {};
 
+    // @ts-expect-error TS(2339): Property 'getBuffer' does not exist on type '{}'.
     _this.getBuffer = function() {
       return _buffer;
     };
 
-    _this.getAt = function(index) {
+    // @ts-expect-error TS(2339): Property 'getAt' does not exist on type '{}'.
+    _this.getAt = function(index: any) {
       var bufIndex = Math.floor(index / 8);
       return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
     };
 
-    _this.put = function(num, length) {
+    // @ts-expect-error TS(2339): Property 'put' does not exist on type '{}'.
+    _this.put = function(num: any, length: any) {
       for (var i = 0; i < length; i += 1) {
+        // @ts-expect-error TS(2339): Property 'putBit' does not exist on type '{}'.
         _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
       }
     };
 
+    // @ts-expect-error TS(2339): Property 'getLengthInBits' does not exist on type ... Remove this comment to see the full error message
     _this.getLengthInBits = function() {
       return _length;
     };
 
-    _this.putBit = function(bit) {
+    // @ts-expect-error TS(2339): Property 'putBit' does not exist on type '{}'.
+    _this.putBit = function(bit: any) {
 
       var bufIndex = Math.floor(_length / 8);
       if (_buffer.length <= bufIndex) {
@@ -1604,22 +1703,25 @@
   // qrNumber
   //---------------------------------------------------------------------
 
-  var qrNumber = function(data) {
+  var qrNumber = function(data: any) {
 
     var _mode = QRMode.MODE_NUMBER;
     var _data = data;
 
     var _this = {};
 
+    // @ts-expect-error TS(2339): Property 'getMode' does not exist on type '{}'.
     _this.getMode = function() {
       return _mode;
     };
 
-    _this.getLength = function(buffer) {
+    // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
+    _this.getLength = function(buffer: any) {
       return _data.length;
     };
 
-    _this.write = function(buffer) {
+    // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
+    _this.write = function(buffer: any) {
 
       var data = _data;
 
@@ -1639,7 +1741,7 @@
       }
     };
 
-    var strToNum = function(s) {
+    var strToNum = function(s: any) {
       var num = 0;
       for (var i = 0; i < s.length; i += 1) {
         num = num * 10 + chatToNum(s.charAt(i) );
@@ -1647,7 +1749,7 @@
       return num;
     };
 
-    var chatToNum = function(c) {
+    var chatToNum = function(c: any) {
       if ('0' <= c && c <= '9') {
         return c.charCodeAt(0) - '0'.charCodeAt(0);
       }
@@ -1661,22 +1763,25 @@
   // qrAlphaNum
   //---------------------------------------------------------------------
 
-  var qrAlphaNum = function(data) {
+  var qrAlphaNum = function(data: any) {
 
     var _mode = QRMode.MODE_ALPHA_NUM;
     var _data = data;
 
     var _this = {};
 
+    // @ts-expect-error TS(2339): Property 'getMode' does not exist on type '{}'.
     _this.getMode = function() {
       return _mode;
     };
 
-    _this.getLength = function(buffer) {
+    // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
+    _this.getLength = function(buffer: any) {
       return _data.length;
     };
 
-    _this.write = function(buffer) {
+    // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
+    _this.write = function(buffer: any) {
 
       var s = _data;
 
@@ -1694,7 +1799,7 @@
       }
     };
 
-    var getCode = function(c) {
+    var getCode = function(c: any) {
 
       if ('0' <= c && c <= '9') {
         return c.charCodeAt(0) - '0'.charCodeAt(0);
@@ -1724,23 +1829,27 @@
   // qr8BitByte
   //---------------------------------------------------------------------
 
-  var qr8BitByte = function(data) {
+  var qr8BitByte = function(data: any) {
 
     var _mode = QRMode.MODE_8BIT_BYTE;
     var _data = data;
+    // @ts-expect-error TS(2339): Property 'stringToBytes' does not exist on type '(... Remove this comment to see the full error message
     var _bytes = qrcode.stringToBytes(data);
 
     var _this = {};
 
+    // @ts-expect-error TS(2339): Property 'getMode' does not exist on type '{}'.
     _this.getMode = function() {
       return _mode;
     };
 
-    _this.getLength = function(buffer) {
+    // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
+    _this.getLength = function(buffer: any) {
       return _bytes.length;
     };
 
-    _this.write = function(buffer) {
+    // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
+    _this.write = function(buffer: any) {
       for (var i = 0; i < _bytes.length; i += 1) {
         buffer.put(_bytes[i], 8);
       }
@@ -1753,15 +1862,17 @@
   // qrKanji
   //---------------------------------------------------------------------
 
-  var qrKanji = function(data) {
+  var qrKanji = function(data: any) {
 
     var _mode = QRMode.MODE_KANJI;
     var _data = data;
 
+    // @ts-expect-error TS(2339): Property 'stringToBytesFuncs' does not exist on ty... Remove this comment to see the full error message
     var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
     if (!stringToBytes) {
       throw 'sjis not supported.';
     }
+    // @ts-expect-error TS(1345): An expression of type 'void' cannot be tested for ... Remove this comment to see the full error message
     !function(c, code) {
       // self test for sjis support.
       var test = stringToBytes(c);
@@ -1774,15 +1885,18 @@
 
     var _this = {};
 
+    // @ts-expect-error TS(2339): Property 'getMode' does not exist on type '{}'.
     _this.getMode = function() {
       return _mode;
     };
 
-    _this.getLength = function(buffer) {
+    // @ts-expect-error TS(2339): Property 'getLength' does not exist on type '{}'.
+    _this.getLength = function(buffer: any) {
       return ~~(_bytes.length / 2);
     };
 
-    _this.write = function(buffer) {
+    // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
+    _this.write = function(buffer: any) {
 
       var data = _bytes;
 
@@ -1825,33 +1939,42 @@
 
   var byteArrayOutputStream = function() {
 
-    var _bytes = [];
+    var _bytes: any = [];
 
     var _this = {};
 
-    _this.writeByte = function(b) {
+    // @ts-expect-error TS(2339): Property 'writeByte' does not exist on type '{}'.
+    _this.writeByte = function(b: any) {
       _bytes.push(b & 0xff);
     };
 
-    _this.writeShort = function(i) {
+    // @ts-expect-error TS(2339): Property 'writeShort' does not exist on type '{}'.
+    _this.writeShort = function(i: any) {
+      // @ts-expect-error TS(2339): Property 'writeByte' does not exist on type '{}'.
       _this.writeByte(i);
+      // @ts-expect-error TS(2339): Property 'writeByte' does not exist on type '{}'.
       _this.writeByte(i >>> 8);
     };
 
-    _this.writeBytes = function(b, off, len) {
+    // @ts-expect-error TS(2339): Property 'writeBytes' does not exist on type '{}'.
+    _this.writeBytes = function(b: any, off: any, len: any) {
       off = off || 0;
       len = len || b.length;
       for (var i = 0; i < len; i += 1) {
+        // @ts-expect-error TS(2339): Property 'writeByte' does not exist on type '{}'.
         _this.writeByte(b[i + off]);
       }
     };
 
-    _this.writeString = function(s) {
+    // @ts-expect-error TS(2339): Property 'writeString' does not exist on type '{}'... Remove this comment to see the full error message
+    _this.writeString = function(s: any) {
       for (var i = 0; i < s.length; i += 1) {
+        // @ts-expect-error TS(2339): Property 'writeByte' does not exist on type '{}'.
         _this.writeByte(s.charCodeAt(i) );
       }
     };
 
+    // @ts-expect-error TS(2339): Property 'toByteArray' does not exist on type '{}'... Remove this comment to see the full error message
     _this.toByteArray = function() {
       return _bytes;
     };
@@ -1885,11 +2008,11 @@
 
     var _this = {};
 
-    var writeEncoded = function(b) {
+    var writeEncoded = function(b: any) {
       _base64 += String.fromCharCode(encode(b & 0x3f) );
     };
 
-    var encode = function(n) {
+    var encode = function(n: any) {
       if (n < 0) {
         // error.
       } else if (n < 26) {
@@ -1906,7 +2029,8 @@
       throw 'n:' + n;
     };
 
-    _this.writeByte = function(n) {
+    // @ts-expect-error TS(2339): Property 'writeByte' does not exist on type '{}'.
+    _this.writeByte = function(n: any) {
 
       _buffer = (_buffer << 8) | (n & 0xff);
       _buflen += 8;
@@ -1918,6 +2042,7 @@
       }
     };
 
+    // @ts-expect-error TS(2339): Property 'flush' does not exist on type '{}'.
     _this.flush = function() {
 
       if (_buflen > 0) {
@@ -1946,7 +2071,7 @@
   // base64DecodeInputStream
   //---------------------------------------------------------------------
 
-  var base64DecodeInputStream = function(str) {
+  var base64DecodeInputStream = function(str: any) {
 
     var _str = str;
     var _pos = 0;
@@ -1955,6 +2080,7 @@
 
     var _this = {};
 
+    // @ts-expect-error TS(2339): Property 'read' does not exist on type '{}'.
     _this.read = function() {
 
       while (_buflen < 8) {
@@ -1986,7 +2112,7 @@
       return n;
     };
 
-    var decode = function(c) {
+    var decode = function(c: any) {
       if (0x41 <= c && c <= 0x5a) {
         return c - 0x41;
       } else if (0x61 <= c && c <= 0x7a) {
@@ -2009,7 +2135,7 @@
   // gifImage (B/W)
   //---------------------------------------------------------------------
 
-  var gifImage = function(width, height) {
+  var gifImage = function(width: any, height: any) {
 
     var _width = width;
     var _height = height;
@@ -2017,11 +2143,13 @@
 
     var _this = {};
 
-    _this.setPixel = function(x, y, pixel) {
+    // @ts-expect-error TS(2339): Property 'setPixel' does not exist on type '{}'.
+    _this.setPixel = function(x: any, y: any, pixel: any) {
       _data[y * _width + x] = pixel;
     };
 
-    _this.write = function(out) {
+    // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
+    _this.write = function(out: any) {
 
       //---------------------------------
       // GIF Signature
@@ -2089,7 +2217,7 @@
       out.writeString(';');
     };
 
-    var bitOutputStream = function(out) {
+    var bitOutputStream = function(out: any) {
 
       var _out = out;
       var _bitLength = 0;
@@ -2097,7 +2225,8 @@
 
       var _this = {};
 
-      _this.write = function(data, length) {
+      // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
+      _this.write = function(data: any, length: any) {
 
         if ( (data >>> length) != 0) {
           throw 'length over';
@@ -2115,6 +2244,7 @@
         _bitLength = _bitLength + length;
       };
 
+      // @ts-expect-error TS(2339): Property 'flush' does not exist on type '{}'.
       _this.flush = function() {
         if (_bitLength > 0) {
           _out.writeByte(_bitBuffer);
@@ -2124,7 +2254,7 @@
       return _this;
     };
 
-    var getLZWRaster = function(lzwMinCodeSize) {
+    var getLZWRaster = function(lzwMinCodeSize: any) {
 
       var clearCode = 1 << lzwMinCodeSize;
       var endCode = (1 << lzwMinCodeSize) + 1;
@@ -2134,15 +2264,19 @@
       var table = lzwTable();
 
       for (var i = 0; i < clearCode; i += 1) {
+        // @ts-expect-error TS(2339): Property 'add' does not exist on type '{}'.
         table.add(String.fromCharCode(i) );
       }
+      // @ts-expect-error TS(2339): Property 'add' does not exist on type '{}'.
       table.add(String.fromCharCode(clearCode) );
+      // @ts-expect-error TS(2339): Property 'add' does not exist on type '{}'.
       table.add(String.fromCharCode(endCode) );
 
       var byteOut = byteArrayOutputStream();
       var bitOut = bitOutputStream(byteOut);
 
       // clear code
+      // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
       bitOut.write(clearCode, bitLength);
 
       var dataIndex = 0;
@@ -2155,20 +2289,25 @@
         var c = String.fromCharCode(_data[dataIndex]);
         dataIndex += 1;
 
+        // @ts-expect-error TS(2339): Property 'contains' does not exist on type '{}'.
         if (table.contains(s + c) ) {
 
           s = s + c;
 
         } else {
 
+          // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
           bitOut.write(table.indexOf(s), bitLength);
 
+          // @ts-expect-error TS(2339): Property 'size' does not exist on type '{}'.
           if (table.size() < 0xfff) {
 
+            // @ts-expect-error TS(2339): Property 'size' does not exist on type '{}'.
             if (table.size() == (1 << bitLength) ) {
               bitLength += 1;
             }
 
+            // @ts-expect-error TS(2339): Property 'add' does not exist on type '{}'.
             table.add(s + c);
           }
 
@@ -2176,13 +2315,17 @@
         }
       }
 
+      // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
       bitOut.write(table.indexOf(s), bitLength);
 
       // end code
+      // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
       bitOut.write(endCode, bitLength);
 
+      // @ts-expect-error TS(2339): Property 'flush' does not exist on type '{}'.
       bitOut.flush();
 
+      // @ts-expect-error TS(2339): Property 'toByteArray' does not exist on type '{}'... Remove this comment to see the full error message
       return byteOut.toByteArray();
     };
 
@@ -2193,23 +2336,31 @@
 
       var _this = {};
 
-      _this.add = function(key) {
+      // @ts-expect-error TS(2339): Property 'add' does not exist on type '{}'.
+      _this.add = function(key: any) {
+        // @ts-expect-error TS(2339): Property 'contains' does not exist on type '{}'.
         if (_this.contains(key) ) {
           throw 'dup key:' + key;
         }
+        // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
         _map[key] = _size;
         _size += 1;
       };
 
+      // @ts-expect-error TS(2339): Property 'size' does not exist on type '{}'.
       _this.size = function() {
         return _size;
       };
 
-      _this.indexOf = function(key) {
+      // @ts-expect-error TS(2339): Property 'indexOf' does not exist on type '{}'.
+      _this.indexOf = function(key: any) {
+        // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
         return _map[key];
       };
 
-      _this.contains = function(key) {
+      // @ts-expect-error TS(2339): Property 'contains' does not exist on type '{}'.
+      _this.contains = function(key: any) {
+        // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
         return typeof _map[key] != 'undefined';
       };
 
@@ -2219,22 +2370,27 @@
     return _this;
   };
 
-  var createDataURL = function(width, height, getPixel) {
+  var createDataURL = function(width: any, height: any, getPixel: any) {
     var gif = gifImage(width, height);
     for (var y = 0; y < height; y += 1) {
       for (var x = 0; x < width; x += 1) {
+        // @ts-expect-error TS(2339): Property 'setPixel' does not exist on type '{}'.
         gif.setPixel(x, y, getPixel(x, y) );
       }
     }
 
     var b = byteArrayOutputStream();
+    // @ts-expect-error TS(2339): Property 'write' does not exist on type '{}'.
     gif.write(b);
 
     var base64 = base64EncodeOutputStream();
+    // @ts-expect-error TS(2339): Property 'toByteArray' does not exist on type '{}'... Remove this comment to see the full error message
     var bytes = b.toByteArray();
     for (var i = 0; i < bytes.length; i += 1) {
+      // @ts-expect-error TS(2339): Property 'writeByte' does not exist on type '{}'.
       base64.writeByte(bytes[i]);
     }
+    // @ts-expect-error TS(2339): Property 'flush' does not exist on type '{}'.
     base64.flush();
 
     return 'data:image/gif;base64,' + base64;
@@ -2247,11 +2403,13 @@
 //}
 
 // multibyte support
+// @ts-expect-error TS(1345): An expression of type 'void' cannot be tested for ... Remove this comment to see the full error message
 !function() {
 
-  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+  // @ts-expect-error TS(2339): Property 'stringToBytesFuncs' does not exist on ty... Remove this comment to see the full error message
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s: any) {
     // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
-    function toUTF8Array(str) {
+    function toUTF8Array(str: any) {
       var utf8 = [];
       for (var i=0; i < str.length; i++) {
         var charcode = str.charCodeAt(i);

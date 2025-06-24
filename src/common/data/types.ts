@@ -1,5 +1,5 @@
-import { DATA } from "../constants/constants.js";
-import { Utf8Encoder } from "./utf8Encoder.js";
+import { DATA } from "../constants/constants";
+import { Utf8Encoder } from "./utf8Encoder";
 
 const JSON_TYPES =
   1 << DATA.TYPE_ARRAY |
@@ -10,7 +10,7 @@ const JSON_TYPES =
   1 << DATA.TYPE_NULL;
 
 export class TypeManager {
-  static getType(value) {
+  static getType(value: any) {
     switch(typeof value) {
       case "string": {
         return DATA.TYPE_STRING;
@@ -39,13 +39,16 @@ export class TypeManager {
     return DATA.TYPE_UNKNOWN;
   }
 
-  static isJsonType(type) {
+  static isJsonType(type: any) {
     return JSON_TYPES >> type & 1;
   }
 }
 
 export class TypeChecker {
-  constructor(definition, value) {
+  basicType: any;
+  definition: any;
+  value: any;
+  constructor(definition: any, value: any) {
     this.definition = definition;
     this.value = value;
     this.basicType = TypeManager.getType(value);
@@ -66,6 +69,7 @@ export class TypeChecker {
       case DATA.TYPE_UINT24  : { this.isUnsignedInteger(24); break; }
       case DATA.TYPE_UINT32  : { this.isUnsignedInteger(32); break; }
       case DATA.TYPE_UINT48  : { this.isUnsignedInteger(48); break; }
+      // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
       case DATA.TYPE_BINARY  : { this.isBinary(); break; }
       case DATA.TYPE_BIN256  : { this.isBinary(32); break; }
       case DATA.TYPE_HASH_STR: { this.isHashString(); break; }
@@ -111,7 +115,7 @@ export class TypeChecker {
     }
   }
 
-  isUnsignedInteger(nBits) {
+  isUnsignedInteger(nBits: any) {
     this.isInteger();
 
     if(this.value < 0) {
@@ -122,7 +126,7 @@ export class TypeChecker {
     }
   }
 
-  isBinary(size) {
+  isBinary(size: any) {
     if(this.basicType != DATA.TYPE_BINARY) {
       throw `Uint8Array expected`;
     }
@@ -139,7 +143,7 @@ export class TypeChecker {
     }
   }
 
-  checkSize(actualSize, expectedSize) {
+  checkSize(actualSize: any, expectedSize: any) {
     if(expectedSize !== undefined && actualSize != expectedSize) {
       throw `invalid size (expecting ${expectedSize}, got ${actualSize})`;
     }

@@ -1,12 +1,13 @@
-import { DATA } from "../constants/constants.js";
-import { TypeManager, TypeChecker } from "./types.js";
+import { DATA } from "../constants/constants";
+import { TypeManager, TypeChecker } from "./types";
 
 export class SchemaValidator {
+  schema: any;
   /**
     Constructor
     @param {Array} schema - Top-level schema
   */
-  constructor(schema) {
+  constructor(schema: any) {
     this.schema = schema;
   }
 
@@ -14,7 +15,7 @@ export class SchemaValidator {
     Checks whether the given object matches the schema.
     @param {object} object - The object to be tested.
   */
-  validate(object) {
+  validate(object: any) {
     this.validateObject(this.schema, object);
   }
 
@@ -23,7 +24,7 @@ export class SchemaValidator {
     @param {Array} schema - The (sub)schema of the object.
     @param {object} object - The object to be serialized.
   */
-  validateObject(schema, object, path = "") {
+  validateObject(schema: any, object: any, path = "") {
     for(const definition of schema) {
       const fieldPath = path + (path && ".") + definition.name,
             value = object[definition.name];
@@ -55,7 +56,7 @@ export class SchemaValidator {
     @param {object} definition - The definition of the item.
     @param {} value - The value of the item.
   */
-  validateItem(definition, value, fieldPath) {
+  validateItem(definition: any, value: any, fieldPath: any) {
     const mainType = definition.type & DATA.TYPE_MAIN;
 
     if(mainType == DATA.TYPE_OBJECT) {

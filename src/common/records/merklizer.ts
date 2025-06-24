@@ -1,16 +1,21 @@
-import { PathManager } from "./pathManager.js";
-import { MerkleTree } from "../trees/merkleTree.js";
-import { Crypto } from "../crypto/crypto.js";
-import { Utils } from "../utils/utils.js";
-import { Utf8Encoder } from "../data/utf8Encoder.js";
-import { DATA } from "../constants/constants.js";
+import { PathManager } from "./pathManager";
+import { MerkleTree } from "../trees/merkleTree";
+import { Crypto } from "../crypto/crypto";
+import { Utils } from "../utils/utils";
+import { Utf8Encoder } from "../data/utf8Encoder";
+import { DATA } from "../constants/constants";
 
 class Merklizer {
+  addHashableItem: any;
+  addMaskableItem: any;
+  addRawItem: any;
+  nLeaves: any;
+  tree: any;
   constructor() {
     this.tree = new MerkleTree;
   }
 
-  addItem(item, parents) {
+  addItem(item: any, parents: any) {
     const info = this.getLeafInfo(item, parents);
 
     if(item.attributes & DATA.MASKABLE) {
@@ -24,7 +29,7 @@ class Merklizer {
     }
   }
 
-  getLeafInfo(item, parents) {
+  getLeafInfo(item: any, parents: any) {
     const path = PathManager.fromParents(parents),
           utf8Path = Utf8Encoder.encode(path);
 
@@ -42,7 +47,7 @@ class Merklizer {
     return info;
   }
 
-  getWitnesses(knownPositions) {
+  getWitnesses(knownPositions: any) {
     const unknownPositions = [];
 
     for(let index = 0; index < this.nLeaves; index++) {
@@ -53,13 +58,18 @@ class Merklizer {
 
     const witnesses = this.tree.getWitnesses(unknownPositions);
 
-    return witnesses.map((arr) => Utils.binaryToHexa(arr)).join("");
+    return witnesses.map((arr: any) => Utils.binaryToHexa(arr)).join("");
   }
 }
 
 export class PepperMerklizer extends Merklizer {
-  constructor(pepper) {
+  leaves: any;
+  pepper: any;
+  saltCounter: any;
+  sha512: any;
+  constructor(pepper: any) {
     super();
+    // @ts-expect-error TS(2339): Property 'generatePepper' does not exist on type '... Remove this comment to see the full error message
     this.pepper = pepper || this.constructor.generatePepper();
     this.saltCounter = 0;
     this.leaves = [];
@@ -69,7 +79,7 @@ export class PepperMerklizer extends Merklizer {
     return Crypto.Random.getBytes(32);
   }
 
-  addLeaf(item, data) {
+  addLeaf(item: any, data: any) {
     this.leaves.push({
       item: item,
       hash: Crypto.Hashes.sha256AsBinary(data)
@@ -78,7 +88,7 @@ export class PepperMerklizer extends Merklizer {
 
   generateTree() {
     this.nLeaves = this.leaves.length;
-    this.leaves.sort((a, b) => Utils.binaryCompare(a.hash, b.hash));
+    this.leaves.sort((a: any, b: any) => Utils.binaryCompare(a.hash, b.hash));
 
     for(const n in this.leaves) {
       this.tree.addLeaf(this.leaves[+n].hash);
@@ -96,14 +106,16 @@ export class PepperMerklizer extends Merklizer {
     };
   }
 
-  addRawItem(item, info) {
+  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
+  addRawItem(item: any, info: any) {
     const salt = this.getSalt();
 
     item.salt = Utils.binaryToHexa(salt);
     this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
-  addHashableItem(item, info) {
+  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
+  addHashableItem(item: any, info: any) {
     const salt = this.getSalt(),
           hash = Crypto.Hashes.sha256AsBinary(item.valueBinary);
 
@@ -112,7 +124,8 @@ export class PepperMerklizer extends Merklizer {
     this.addLeaf(item, Utils.binaryFrom(salt, info, hash));
   }
 
-  addMaskableItem(item, info) {
+  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
+  addMaskableItem(item: any, info: any) {
     const visibleSalt = this.getSalt(),
           visibleHash = Crypto.Hashes.sha256AsBinary(Utils.binaryFrom(visibleSalt, info, item.visiblePartsBinary)),
           hiddenSalt = this.getSalt(),
@@ -136,13 +149,15 @@ export class PepperMerklizer extends Merklizer {
 }
 
 export class SaltMerklizer extends Merklizer {
-  constructor(nLeaves, witnesses) {
+  nLeaves: any;
+  witnesses: any;
+  constructor(nLeaves: any, witnesses: any) {
     super();
     this.nLeaves = nLeaves;
-    this.witnesses = (witnesses.match(/.{64}/g) || []).map((s) => Utils.binaryFromHexa(s));
+    this.witnesses = (witnesses.match(/.{64}/g) || []).map((s: any) => Utils.binaryFromHexa(s));
   }
 
-  addLeaf(item, data) {
+  addLeaf(item: any, data: any) {
     this.tree.setLeaf(item.leafIndex, Crypto.Hashes.sha256AsBinary(data));
   }
 
@@ -158,13 +173,15 @@ export class SaltMerklizer extends Merklizer {
     };
   }
 
-  addRawItem(item, info) {
+  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
+  addRawItem(item: any, info: any) {
     const salt = Utils.binaryFromHexa(item.salt);
 
     this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
-  addHashableItem(item, info) {
+  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
+  addHashableItem(item: any, info: any) {
     const salt = Utils.binaryFromHexa(item.salt);
 
     let hash;
@@ -180,7 +197,8 @@ export class SaltMerklizer extends Merklizer {
     this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
-  addMaskableItem(item, info) {
+  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
+  addMaskableItem(item: any, info: any) {
     const visibleSalt = Utils.binaryFromHexa(item.visibleSalt),
           visibleHash = Crypto.Hashes.sha256AsBinary(Utils.binaryFrom(visibleSalt, info, item.visiblePartsBinary));
 

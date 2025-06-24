@@ -1,9 +1,9 @@
-import { Random } from "./random.js";
-import { Hashes } from "./hashes.js";
-import { Aes } from "./aes.js";
-import { MLDsa } from "./ml-dsa.js";
-import { MLKem } from "./ml-kem.js";
-import { Secp256k1 } from "./secp256k1.js";
+import { Random } from "./random";
+import { Hashes } from "./hashes";
+import { Aes } from "./aes";
+import { MLDsa } from "./ml-dsa";
+import { MLKem } from "./ml-kem";
+import { Secp256k1 } from "./secp256k1";
 
 const SIG_ALGORITHM_IDS = {
   SECP256K1: 0,

@@ -7,7 +7,7 @@ export const MLDsa = {
   verify
 };
 
-function generateKeyPair(seed) {
+function generateKeyPair(seed: any) {
   if(seed == undefined) {
     seed = randomBytes(32);
   }
@@ -17,10 +17,10 @@ function generateKeyPair(seed) {
   return { publicKey: keys.publicKey, privateKey: keys.secretKey };
 }
 
-function sign(privateKey, data) {
+function sign(privateKey: any, data: any) {
   return ml_dsa65.sign(privateKey, data);
 }
 
-function verify(publicKey, data, signature) {
+function verify(publicKey: any, data: any, signature: any) {
   return ml_dsa65.verify(publicKey, data, signature);
 }

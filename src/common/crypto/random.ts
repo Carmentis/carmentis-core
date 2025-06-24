@@ -1,4 +1,4 @@
-import { Utils } from "../utils/utils.js";
+import { Utils } from "../utils/utils";
 import { randomBytes } from "@noble/hashes/utils";
 
 export const Random = {
@@ -7,11 +7,11 @@ export const Random = {
   getKey256
 };
 
-function getBytes(n) {
+function getBytes(n: any) {
   return randomBytes(n);
 }
 
-function getInteger(max) {
+function getInteger(max: any) {
   const rand = getBytes(6);
   let v = 0;
 

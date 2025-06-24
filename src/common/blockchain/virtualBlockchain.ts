@@ -1,9 +1,21 @@
-import { CHAIN } from "../constants/constants.js";
-import { Microblock } from "./microblock.js";
-import { Utils } from "../utils/utils.js";
+import { CHAIN } from "../constants/constants";
+import { Microblock } from "./microblock";
+import { Utils } from "../utils/utils";
 
 export class VirtualBlockchain {
-  constructor({ provider, type }) {
+  checkStructure: any;
+  currentMicroblock: any;
+  height: any;
+  identifier: any;
+  microblockHashes: any;
+  provider: any;
+  sectionCallbacks: any;
+  state: any;
+  type: any;
+  constructor({
+    provider,
+    type
+  }: any) {
     if(!CHAIN.VB_NAME[type]) {
       throw `Invalid virtual blockchain type '${type}'`;
     }
@@ -19,14 +31,14 @@ export class VirtualBlockchain {
   /**
     Registers a callback for a given section type.
   */
-  registerSectionCallback(sectionType, callback) {
+  registerSectionCallback(sectionType: any, callback: any) {
     this.sectionCallbacks.set(sectionType, callback.bind(this));
   }
 
   /**
     Loads a VB from its identifier.
   */
-  async load(identifier) {
+  async load(identifier: any) {
     const content = await this.provider.getVirtualBlockchainContent(identifier);
 
     if(!content) {
@@ -46,7 +58,7 @@ export class VirtualBlockchain {
   /**
     Imports a microblock defined by its header data and body data.
   */
-  async importMicroblock(headerData, bodyData) {
+  async importMicroblock(headerData: any, bodyData: any) {
     this.currentMicroblock = new Microblock(this.type);
 
     this.currentMicroblock.load(headerData, bodyData);
@@ -68,7 +80,7 @@ export class VirtualBlockchain {
   /**
     Returns the microblock at the given height.
   */
-  async getMicroblock(height) {
+  async getMicroblock(height: any) {
     if(height == this.microblockHashes.length + 1 && this.currentMicroblock) {
       return this.currentMicroblock;
     }
@@ -91,7 +103,7 @@ export class VirtualBlockchain {
   /**
     Adds a section to the current microblock.
   */
-  async addSection(type, object) {
+  async addSection(type: any, object: any) {
     if(!this.currentMicroblock) {
       this.currentMicroblock = new Microblock(this.type);
       const previousHash = this.height ? this.microblockHashes[this.height - 1] : null;
@@ -106,7 +118,7 @@ export class VirtualBlockchain {
   /**
     Processes a section callback (if defined).
   */
-  async processSectionCallback(microblock, section) {
+  async processSectionCallback(microblock: any, section: any) {
     if(this.sectionCallbacks.has(section.type)) {
       const callback = this.sectionCallbacks.get(section.type);
       await callback(microblock, section);
@@ -120,7 +132,7 @@ export class VirtualBlockchain {
    * @param {boolean} withGas
    * @returns {{signature: (*|{signature})}}
    */
-  createSignature(privateKey, withGas = true) {
+  createSignature(privateKey: any, withGas = true) {
     const signature = this.currentMicroblock.createSignature(privateKey, withGas);
     return { signature };
   }

@@ -1,20 +1,26 @@
-import { ERRORS, SCHEMAS } from "../../common/constants/constants.js";
-import * as crypto from "../../common/crypto/crypto.js";
-//import * as schemaSerializer from "../../common/serializers/schema-serializer.js";
-//import * as base64 from "../../common/util/base64.js";
-//import * as uint8 from "../../common/util/uint8.js";
-import * as clientSocket from "./wiClientSocket.js";
-import * as qrCode from "../qrCode/qrCode.js";
-import * as web from "../web/web.js";
-import {SchemaSerializer, SchemaUnserializer} from "../../common/data/schemaSerializer.js";
+import { ERRORS, SCHEMAS } from "../../common/constants/constants";
+import * as crypto from "../../common/crypto/crypto";
+//import * as schemaSerializer from "../../common/serializers/schema-serializer";
+//import * as base64 from "../../common/util/base64";
+//import * as uint8 from "../../common/util/uint8";
+import * as clientSocket from "./wiClientSocket";
+import * as qrCode from "../qrCode/qrCode";
+import * as web from "../web/web";
+import {SchemaSerializer, SchemaUnserializer} from "../../common/data/schemaSerializer";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
-import {Base64 as base64} from "../../common/data/base64.js";
-import {CryptoSchemeFactory} from "../../common/crypto/factory.js";
-import {SignatureAlgorithmId} from "../../common/crypto/signature-interface.js";
-//import { wiError } from "../../common/errors/error.js";
+import {Base64 as base64} from "../../common/data/base64";
+import {CryptoSchemeFactory} from "../../common/crypto/factory";
+import {SignatureAlgorithmId} from "../../common/crypto/signature-interface";
+//import { wiError } from "../../common/errors/error";
 
 export class wiClient {
+  button: any;
+  buttonAttached: any;
+  buttonCallback: any;
+  eventOfButtonAttached: any;
+  qrElement: any;
+  serverUrl: any;
   private messageCallback: any;
   constructor() {
     window.addEventListener(
@@ -30,7 +36,7 @@ export class wiClient {
    * @param {string} id - The ID of the HTML element to be used as the QR code container.
    * @return {void} This method does not return a value.
    */
-  attachQrCodeContainer(id) {
+  attachQrCodeContainer(id: any) {
     this.qrElement = web.get("#" + id);
 
     if(!this.qrElement) {
@@ -38,7 +44,7 @@ export class wiClient {
     }
   }
 
-  attachExtensionButton(id) {
+  attachExtensionButton(id: any) {
     if(this.buttonAttached) {
       throw `Extension button already attached`;
     }
@@ -51,7 +57,7 @@ export class wiClient {
     this.button = buttonElement.el;
     this.eventOfButtonAttached = this.button.addEventListener(
       "click",
-      _ => this.buttonCallback && this.buttonCallback()
+      (_: any) => this.buttonCallback && this.buttonCallback()
     );
 
     this.buttonAttached = true;
@@ -72,11 +78,11 @@ export class wiClient {
     }
   }
 
-  getQrData(id) {
+  getQrData(id: any) {
     return web.get("#" + id).getAttribute("qrData");
   }
 
-  setServerUrl(url) {
+  setServerUrl(url: any) {
     this.serverUrl = url;
   }
 
@@ -95,7 +101,7 @@ export class wiClient {
    *                           - signature: The digital signature verifying the challenge.
    * @throws {Error} If the public key signature verification fails.
    */
-  async authenticationByPublicKey(challengeString) {
+  async authenticationByPublicKey(challengeString: any) {
     let challenge;
 
     if(challengeString == undefined) {
@@ -118,8 +124,11 @@ export class wiClient {
     // load the public key
     const cryptoFactory = new CryptoSchemeFactory();
 
+    // @ts-expect-error TS(2571): Object is of type 'unknown'.
     const publicKey = cryptoFactory.createPublicSignatureKey(SignatureAlgorithmId.ML_DSA_65, answer.publicKey) // TODO add dynamic key parsing
+    // @ts-expect-error TS(2571): Object is of type 'unknown'.
     if (!publicKey.verify(challenge, answer.signature)) {
+      // @ts-expect-error TS(2345): Argument of type 'number' is not assignable to par... Remove this comment to see the full error message
       throw new Error(ERRORS.WI_INVALID_SIGNATURE);
     }
 
@@ -133,7 +142,9 @@ export class wiClient {
 
     return {
       challenge: challengeString,
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       publicKey: answer.publicKey,
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       signature: answer.signature
     };
   }
@@ -152,6 +163,7 @@ export class wiClient {
     console.log("[wiClient] Obtained response:", answer)
 
     return {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       email: answer.email,
     };
   }
@@ -162,7 +174,7 @@ export class wiClient {
    * @param {Object} requiredData - The data required to request user information.
    * @return {Promise<Object>} A promise that resolves to an object containing the user's email.
    */
-  async getUserData(requiredData) {
+  async getUserData(requiredData: any) {
     let answer = await this.request(
       SCHEMAS.WIRQ_GET_USER_DATA,
       {
@@ -173,6 +185,7 @@ export class wiClient {
     console.log("[wiClient] Obtained response:", answer)
 
     return {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       userData: answer.userData
     };
   }
@@ -186,7 +199,7 @@ export class wiClient {
    * @return {Promise<{vbHash: string, mbHash: string, height: number}>} The hash of the block and chain where the block of the event is located.
    * @throws {Error} If the process fails.
    */
-  async getApprovalData(dataId) {
+  async getApprovalData(dataId: any) {
     let answer = await this.request(
       SCHEMAS.WIRQ_DATA_APPROVAL,
       {
@@ -198,8 +211,9 @@ export class wiClient {
     return answer;
   }
 
-  async request(type, object) {
+  async request(type: any, object: any) {
     console.log("[client] request", type, object);
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_REQUESTS[type]);
     let request = schemaSerializer.serialize(object);
 
@@ -214,24 +228,29 @@ export class wiClient {
 
     return new Promise(function(resolve, reject) {
       console.log("[client] opening socket with", _this.serverUrl);
+      // @ts-expect-error TS(2339): Property 'socket' does not exist on type 'wiClient... Remove this comment to see the full error message
       _this.socket = clientSocket.getSocket(_this.serverUrl, onConnect.bind(_this), onData.bind(_this));
 
+      // @ts-expect-error TS(2339): Property 'socket' does not exist on type 'wiClient... Remove this comment to see the full error message
       _this.socket.sendMessage(SCHEMAS.WIMSG_REQUEST, reqObject);
       _this.buttonCallback = sendRequestToExtension;
 
       function sendRequestToExtension() {
+        // @ts-expect-error TS(2339): Property 'carmentisWallet' does not exist on type ... Remove this comment to see the full error message
         if(window.carmentisWallet == undefined) {
           console.warn("The Carmentis extension is not installed.");
           return;
         }
 
+        // @ts-expect-error TS(2339): Property 'socket' does not exist on type 'wiClient... Remove this comment to see the full error message
         _this.socket.disconnect();
 
-        _this.messageCallback = event => {
+        _this.messageCallback = (event: any) => {
           console.log("[wiClient] received answer:", event);
 
           if(event.data.from == "carmentis/walletResponse") {
             let object = event.data.data,
+                // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
                 schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]),
                 binary = base64.decodeBinary(object.answer, base64.BASE64),
                 answerObject = schemaSerializer.unserializeObject(binary);
@@ -245,6 +264,7 @@ export class wiClient {
           request: base64.encodeBinary(request, base64.BASE64)
         };
 
+        // @ts-expect-error TS(2339): Property 'carmentisWallet' does not exist on type ... Remove this comment to see the full error message
         window.carmentisWallet.openPopup(message);
       }
 
@@ -252,7 +272,7 @@ export class wiClient {
         console.log("[client] connected");
       }
 
-      function onData(id, object) {
+      function onData(id: any, object: any) {
         console.log("[client] incoming data", id, object);
 
         switch(id) {
@@ -265,6 +285,7 @@ export class wiClient {
           }
 
           case SCHEMAS.WIMSG_FORWARDED_ANSWER: {
+            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             const schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]);
             let answerObject = schemaSerializer.unserialize(object.answer);
 

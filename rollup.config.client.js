@@ -6,7 +6,7 @@ import typescript from "@rollup/plugin-typescript";
 
 export default [
     {
-        input: "src/client/sdk.js", // main entry point
+        input: "src/client/sdk.ts", // main entry point
         output: [
             {
                 file: "dist/client/index.mjs", // ESM output file (ES Module)

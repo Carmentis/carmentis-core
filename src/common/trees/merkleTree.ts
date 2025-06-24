@@ -1,28 +1,31 @@
-import { Crypto } from "../crypto/crypto.js";
-import { Utils } from "../utils/utils.js";
+import { Crypto } from "../crypto/crypto";
+import { Utils } from "../utils/utils";
 
 export class MerkleTree {
+  leaves: any;
+  nLeaves: any;
+  tree: any;
   constructor() {
     this.leaves = [];
   }
 
-  addLeaf(hash) {
+  addLeaf(hash: any) {
     this.checkHash(hash);
     this.leaves.push(hash);
   }
 
-  setLeaf(index, hash) {
+  setLeaf(index: any, hash: any) {
     this.checkHash(hash);
     this.leaves[index] = hash;
   }
 
-  checkHash(hash) {
+  checkHash(hash: any) {
     if(!(hash instanceof Uint8Array) || hash.length != 32) {
       throw "invalid hash";
     }
   }
 
-  finalize(nLeaves) {
+  finalize(nLeaves: any) {
     this.nLeaves = nLeaves === undefined ? this.leaves.length : nLeaves;
     this.buildTreeStructure();
   }
@@ -46,7 +49,7 @@ export class MerkleTree {
     return this.tree[rootDepth][0];
   }
 
-  getWitnesses(unknownPositions) {
+  getWitnesses(unknownPositions: any) {
     const unknownPositionSet = new Set(unknownPositions),
           witnessPositions = this.getWitnessPositions(unknownPositionSet),
           witnesses = [];
@@ -68,7 +71,7 @@ export class MerkleTree {
     return witnesses;
   }
 
-  setWitnesses(witnesses) {
+  setWitnesses(witnesses: any) {
     const unknownPositionSet = new Set;
 
     for(let index = 0; index < this.nLeaves; index++) {
@@ -114,7 +117,7 @@ export class MerkleTree {
     }
   }
 
-  getWitnessPositions(unknownPositionSet) {
+  getWitnessPositions(unknownPositionSet: any) {
     let nLeaves = this.nLeaves;
     const witnessPositions = [];
 
@@ -138,7 +141,7 @@ export class MerkleTree {
     return witnessPositions;
   }
 
-  mergeHashes(depth, left, right) {
+  mergeHashes(depth: any, left: any, right: any) {
     const data = new Uint8Array(65);
 
     data[0] = +(depth == this.tree.length - 1);

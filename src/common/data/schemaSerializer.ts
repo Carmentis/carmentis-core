@@ -1,13 +1,15 @@
-import { DATA } from "../constants/constants.js";
-import { WriteStream, ReadStream } from "./byteStreams.js";
-import { TypeManager, TypeChecker } from "./types.js";
+import { DATA } from "../constants/constants";
+import { WriteStream, ReadStream } from "./byteStreams";
+import { TypeManager, TypeChecker } from "./types";
 
 export class SchemaSerializer {
+  schema: any;
+  stream: any;
   /**
     Constructor
     @param {Array} schema - Top-level schema
   */
-  constructor(schema) {
+  constructor(schema: any) {
     this.schema = schema;
   }
 
@@ -15,7 +17,7 @@ export class SchemaSerializer {
     Serializes the given object.
     @param {object} object - The object to be serialized.
   */
-  serialize(object) {
+  serialize(object: any) {
     this.stream = new WriteStream;
     this.serializeObject(this.schema, object);
 
@@ -27,7 +29,7 @@ export class SchemaSerializer {
     @param {Array} schema - The (sub)schema of the object.
     @param {object} object - The object to be serialized.
   */
-  serializeObject(schema, object, path = "") {
+  serializeObject(schema: any, object: any, path = "") {
     for(const definition of schema) {
       const fieldPath = path + (path && ".") + definition.name,
             value = object[definition.name];
@@ -65,7 +67,7 @@ export class SchemaSerializer {
     @param {object} definition - The definition of the item.
     @param {} value - The value of the item.
   */
-  serializeItem(definition, value, fieldPath) {
+  serializeItem(definition: any, value: any, fieldPath: any) {
     const mainType = definition.type & DATA.TYPE_MAIN;
 
     if(mainType == DATA.TYPE_OBJECT) {
@@ -90,11 +92,13 @@ export class SchemaSerializer {
 }
 
 export class SchemaUnserializer {
+  schema: any;
+  stream: any;
   /**
     Constructor
     @param {Array} schema - Top-level schema
   */
-  constructor(schema) {
+  constructor(schema: any) {
     this.schema = schema;
   }
 
@@ -102,7 +106,7 @@ export class SchemaUnserializer {
     Unserializes the given byte stream.
     @param {Uint8Array} stream - The serialized byte stream
   */
-  unserialize(stream) {
+  unserialize(stream: any) {
     this.stream = new ReadStream(stream);
 
     const object = this.unserializeObject(this.schema),
@@ -120,7 +124,7 @@ export class SchemaUnserializer {
     Unserializes any sub-object of the full structure.
     @param {Array} schema - The (sub)schema of the object.
   */
-  unserializeObject(schema) {
+  unserializeObject(schema: any) {
     const object = {};
 
     for(const definition of schema) {
@@ -139,6 +143,7 @@ export class SchemaUnserializer {
         item = this.unserializeItem(definition);
       }
 
+      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       object[definition.name] = item;
     }
     return object;
@@ -148,7 +153,7 @@ export class SchemaUnserializer {
     Unserializes an item.
     @param {object} definition - The definition of the item.
   */
-  unserializeItem(definition) {
+  unserializeItem(definition: any) {
     const mainType = definition.type & DATA.TYPE_MAIN;
 
     return (

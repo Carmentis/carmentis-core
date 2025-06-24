@@ -1,11 +1,12 @@
-import { NetworkProvider } from "./networkProvider.js";
+import { NetworkProvider } from "./networkProvider";
 
 export class BrowserNetworkProvider extends NetworkProvider {
-  constructor(nodeUrl) {
+  constructor(nodeUrl: any) {
     super(nodeUrl);
   }
 
-  async query(urlObject) {
+  // @ts-expect-error TS(2416): Property 'query' in type 'BrowserNetworkProvider' ... Remove this comment to see the full error message
+  async query(urlObject: any) {
     const netXhr = new XMLHttpRequest();
 
     return new Promise(function(resolve, reject) {

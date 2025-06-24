@@ -1,12 +1,17 @@
-import { SCHEMAS } from "../constants/constants.js";
-import { ApplicationLedgerVb } from "./applicationLedgerVb.js";
-import { SchemaValidator } from "../data/schemaValidator.js";
-import { IntermediateRepresentation } from "../records/intermediateRepresentation.js";
-import { Crypto } from "../crypto/crypto.js";
-import { Utils } from "../utils/utils.js";
+import { SCHEMAS } from "../constants/constants";
+import { ApplicationLedgerVb } from "./applicationLedgerVb";
+import { SchemaValidator } from "../data/schemaValidator";
+import { IntermediateRepresentation } from "../records/intermediateRepresentation";
+import { Crypto } from "../crypto/crypto";
+import { Utils } from "../utils/utils";
 
 export class ApplicationLedger {
-  constructor({ provider }) {
+  provider: any;
+  signatureAlgorithmId: any;
+  vb: any;
+  constructor({
+    provider
+  }: any) {
     this.vb = new ApplicationLedgerVb({ provider });
     //this.publicKey = publicKey;
     //this.privateKey = privateKey;
@@ -18,18 +23,18 @@ export class ApplicationLedger {
     }
   }
 
-  async _create(applicationId) {
+  async _create(applicationId: any) {
     if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without keyed provider.'
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
     });
   }
 
-  async _load(identifier) {
+  async _load(identifier: any) {
     await this.vb.load(identifier);
   }
 
-  async _processJson(object) {
+  async _processJson(object: any) {
     const validator = new SchemaValidator(SCHEMAS.RECORD_DESCRIPTION);
     validator.validate(object);
 
@@ -102,7 +107,7 @@ export class ApplicationLedger {
 
     // process maskable fields
     for(const def of object.maskableFields || []) {
-      const list = def.maskedParts.map((obj) => [ obj.position, obj.position + obj.length, obj.replacementString ]);
+      const list = def.maskedParts.map((obj: any) => [ obj.position, obj.position + obj.length, obj.replacementString ]);
       ir.setAsMaskable(def.fieldPath, list);
     }
 
@@ -120,6 +125,7 @@ export class ApplicationLedger {
 
         await this.vb.addPrivateChannelData({
           channelId: channelData.channelId,
+          // @ts-expect-error TS(2339): Property 'merkleRootHash' does not exist on type '... Remove this comment to see the full error message
           merkleRootHash: Utils.binaryFromHexa(channelData.merkleRootHash),
           encryptedData: encryptedData
         });

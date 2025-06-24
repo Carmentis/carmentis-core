@@ -1,6 +1,6 @@
-import { DATA } from "../constants/constants.js";
-import { Utf8Encoder } from "./utf8Encoder.js";
-import { Utils } from "../utils/utils.js";
+import { DATA } from "../constants/constants";
+import { Utf8Encoder } from "./utf8Encoder";
+import { Utils } from "../utils/utils";
 
 const NUM_SMALL     = 0x80;
 const NUM_TYPE      = 0x60;
@@ -11,6 +11,7 @@ const NUM_SIZE      = 0x07;
 const NUM_SIGN      = 0x08;
 
 export class WriteStream {
+  byteStream: any;
   constructor() {
     this.clear();
   }
@@ -23,8 +24,9 @@ export class WriteStream {
     return new Uint8Array(this.byteStream);
   }
 
-  writeJsonValue(type, value) {
+  writeJsonValue(type: any, value: any) {
     switch(type) {
+      // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
       case DATA.TYPE_STRING : { this.writeString(value); break; }
       case DATA.TYPE_NUMBER : { this.writeNumber(value); break; }
       case DATA.TYPE_BOOLEAN: { this.writeBoolean(value); break; }
@@ -36,7 +38,7 @@ export class WriteStream {
     }
   }
 
-  writeSchemaValue(type, value, size) {
+  writeSchemaValue(type: any, value: any, size: any) {
     switch(type) {
       case DATA.TYPE_STRING  : { this.writeString(value, size); break; }
       case DATA.TYPE_NUMBER  : { this.writeNumber(value); break; }
@@ -49,6 +51,7 @@ export class WriteStream {
       case DATA.TYPE_UINT48  : { this.writeUint48(value); break; }
       case DATA.TYPE_BINARY  : { this.writeBinary(value, size); break; }
       case DATA.TYPE_BIN256  : { this.writeByteArray(value); break; }
+      // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
       case DATA.TYPE_HASH_STR: { this.writeHashString(); break; }
 
       default: {
@@ -57,54 +60,54 @@ export class WriteStream {
     }
   }
 
-  writeByte(n) {
+  writeByte(n: any) {
     this.byteStream.push(n & 0xFF);
   }
 
-  writeUnsigned(n, nByte) {
+  writeUnsigned(n: any, nByte: any) {
     while(nByte--) {
       this.writeByte(n / 2 ** (nByte * 8));
     }
   }
 
-  writeUint8(n) {
+  writeUint8(n: any) {
     this.writeUnsigned(n, 1);
   }
 
-  writeUint16(n) {
+  writeUint16(n: any) {
     this.writeUnsigned(n, 2);
   }
 
-  writeUint24(n) {
+  writeUint24(n: any) {
     this.writeUnsigned(n, 3);
   }
 
-  writeUint32(n) {
+  writeUint32(n: any) {
     this.writeUnsigned(n, 4);
   }
 
-  writeUint48(n) {
+  writeUint48(n: any) {
     this.writeUnsigned(n, 6);
   }
 
-  writeBinary(arr, size) {
+  writeBinary(arr: any, size: any) {
     if(size === undefined) {
       this.writeVarUint(arr.length);
     }
     this.writeByteArray(arr);
   }
 
-  writeHashString(str) {
+  writeHashString(str: any) {
     this.writeByteArray(Utils.binaryFromHexa(str));
   }
 
-  writeByteArray(arr) {
+  writeByteArray(arr: any) {
     for(const n of arr) {
       this.writeByte(n);
     }
   }
 
-  writeString(str, size) {
+  writeString(str: any, size: any) {
     const bin = Utf8Encoder.encode(str);
 
     if(size === undefined) {
@@ -113,7 +116,7 @@ export class WriteStream {
     this.writeByteArray(bin);
   }
 
-  writeVarUint(n) {
+  writeVarUint(n: any) {
     if(n == 0) {
       this.writeByte(0);
     }
@@ -122,17 +125,18 @@ export class WriteStream {
         throw `Invalid varUint ${n}`;
       }
       while(n) {
+        // @ts-expect-error TS(2362): The left-hand side of an arithmetic operation must... Remove this comment to see the full error message
         this.writeByte(n % 0x80 | (n > 0x7F) << 7);
         n = Math.floor(n / 0x80);
       }
     }
   }
 
-  writeBoolean(n) {
+  writeBoolean(n: any) {
     this.writeByte(n ? 0xFF : 0x00);
   }
 
-  writeNumber(n) {
+  writeNumber(n: any) {
     const isInteger = !(n % 1);
 
     // if this is a small integer in [-64, 63], encode as a single byte
@@ -147,6 +151,7 @@ export class WriteStream {
       if(isInteger && n >= -max && n < max) {
         const sign = n < 0;
 
+        // @ts-expect-error TS(2362): The left-hand side of an arithmetic operation must... Remove this comment to see the full error message
         this.writeByte(sign << 3 | size);
         this.writeUnsigned(sign ? -n - 1 : n, size);
         return;
@@ -172,15 +177,19 @@ export class WriteStream {
 }
 
 export class ReadStream {
-  constructor(stream) {
+  byteStream: any;
+  lastPointer: any;
+  pointer: any;
+  constructor(stream: any) {
     this.byteStream = stream;
     this.pointer = 0;
   }
 
-  readJsonValue(type) {
+  readJsonValue(type: any) {
     this.lastPointer = this.pointer;
 
     switch(type) {
+      // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
       case DATA.TYPE_STRING : { return this.readString(); }
       case DATA.TYPE_NUMBER : { return this.readNumber(); }
       case DATA.TYPE_BOOLEAN: { return this.readBoolean(); }
@@ -192,7 +201,7 @@ export class ReadStream {
     }
   }
 
-  readSchemaValue(type, size) {
+  readSchemaValue(type: any, size: any) {
     this.lastPointer = this.pointer;
 
     switch(type) {
@@ -215,7 +224,7 @@ export class ReadStream {
     return this.pointer;
   }
 
-  extractFrom(ptr) {
+  extractFrom(ptr: any) {
     return this.byteStream.slice(ptr, this.pointer);
   }
 
@@ -227,7 +236,7 @@ export class ReadStream {
     return this.byteStream[this.pointer++];
   }
 
-  readUnsigned(nByte) {
+  readUnsigned(nByte: any) {
     let n = 0;
 
     while(nByte--) {
@@ -256,7 +265,7 @@ export class ReadStream {
     return this.readUnsigned(6);
   }
 
-  readBinary(size) {
+  readBinary(size: any) {
     if(size === undefined) {
       size = this.readVarUint();
     }
@@ -267,11 +276,11 @@ export class ReadStream {
     return Utils.binaryToHexa(this.readByteArray(32));
   }
 
-  readByteArray(size) {
+  readByteArray(size: any) {
     return this.byteStream.slice(this.pointer, this.pointer += size);
   }
 
-  readString(size) {
+  readString(size: any) {
     if(size === undefined) {
       size = this.readVarUint();
     }

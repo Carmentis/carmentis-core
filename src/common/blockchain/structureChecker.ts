@@ -1,7 +1,9 @@
-import { SECTIONS } from "../constants/constants.js";
+import { SECTIONS } from "../constants/constants";
 
 export class StructureChecker {
-  constructor(microblock) {
+  microblock: any;
+  pointer: any;
+  constructor(microblock: any) {
     this.microblock = microblock;
     this.pointer = 0;
   }
@@ -10,7 +12,7 @@ export class StructureChecker {
     return this.microblock.header.height == 1;
   }
 
-  expects(constraint, type) {
+  expects(constraint: any, type: any) {
     let count = 0;
 
     while(!this.endOfList() && this.currentSection().type == type) {
@@ -23,7 +25,7 @@ export class StructureChecker {
     }
   }
 
-  group(groupConstraint, list) {
+  group(groupConstraint: any, list: any) {
     const counts = new Map;
     let groupCount = 0;
 
@@ -34,6 +36,7 @@ export class StructureChecker {
     while(!this.endOfList()) {
       const currentType = this.currentSection().type;
 
+      // @ts-expect-error TS(7031): Binding element 'count' implicitly has an 'any' ty... Remove this comment to see the full error message
       if(!list.some(([ count, type ]) => type == currentType)) {
         break;
       }
@@ -69,7 +72,7 @@ export class StructureChecker {
     return !this.currentSection();
   }
 
-  checkConstraint(constraint, count) {
+  checkConstraint(constraint: any, count: any) {
     switch(constraint) {
       case SECTIONS.ANY         : { return true; }
       case SECTIONS.ZERO        : { return count == 0; }
@@ -79,7 +82,8 @@ export class StructureChecker {
     }
   }
 
-  getTypeLabel(type) {
+  getTypeLabel(type: any) {
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const section = SECTIONS.DEF[this.microblock.type][type];
     return section ? section.label : "unknown";
   }

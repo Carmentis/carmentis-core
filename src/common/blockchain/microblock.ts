@@ -1,10 +1,15 @@
-import { CHAIN, ECO, SCHEMAS, SECTIONS } from "../constants/constants.js";
-import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer.js";
-import { Utils } from "../utils/utils.js";
-import { Crypto } from "../crypto/crypto.js";
+import { CHAIN, ECO, SCHEMAS, SECTIONS } from "../constants/constants";
+import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
+import { Utils } from "../utils/utils";
+import { Crypto } from "../crypto/crypto";
 
 export class Microblock {
-  constructor(type) {
+  gasPrice: any;
+  hash: any;
+  header: any;
+  sections: any;
+  type: any;
+  constructor(type: any) {
     this.type = type;
     this.sections = [];
     this.gasPrice = 0;
@@ -14,7 +19,7 @@ export class Microblock {
     Creates a microblock at a given height.
     If the height is greater than 1, a 'previousHash' is expected.
   */
-  create(height, previousHash) {
+  create(height: any, previousHash: any) {
     if(height == 1) {
       const genesisSeed = Crypto.Random.getBytes(24);
 
@@ -48,7 +53,7 @@ export class Microblock {
   /**
     Loads a microblock from its header data and body data.
   */
-  load(headerData, bodyData) {
+  load(headerData: any, bodyData: any) {
     const headerUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
 
     this.header = headerUnserializer.unserialize(headerData);
@@ -62,9 +67,11 @@ export class Microblock {
     this.hash = Crypto.Hashes.sha256AsBinary(headerData);
 
     const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY),
+          // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
           body = bodyUnserializer.unserialize(bodyData).body;
 
     for(const { type, data } of body) {
+      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       const sectionDef = SECTIONS.DEF[this.type][type];
       const unserializer = new SchemaUnserializer(sectionDef.schema);
       const object = unserializer.unserialize(data);
@@ -76,7 +83,8 @@ export class Microblock {
   /**
     Adds a section of a given type and defined by a given object.
   */
-  addSection(type, object) {
+  addSection(type: any, object: any) {
+    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const sectionDef = SECTIONS.DEF[this.type][type];
     const serializer = new SchemaSerializer(sectionDef.schema);
     const data = serializer.serialize(object);
@@ -87,7 +95,7 @@ export class Microblock {
   /**
     Stores a section, including its serialized data, hash and index.
   */
-  storeSection(type, object, data) {
+  storeSection(type: any, object: any, data: any) {
     const hash = Crypto.Hashes.sha256AsBinary(data);
     const index = this.sections.length;
 
@@ -100,8 +108,8 @@ export class Microblock {
   /**
     Returns the first section for which the given callback function returns true.
   */
-  getSection(callback) {
-    return this.sections.find((section) => callback(section));
+  getSection(callback: any) {
+    return this.sections.find((section: any) => callback(section));
   }
 
   /**
@@ -110,7 +118,7 @@ export class Microblock {
    * @param {boolean} includeGas
    * @returns {*}
    */
-  createSignature(privateKey, includeGas) {
+  createSignature(privateKey: any, includeGas: any) {
     const signatureSize = privateKey.getSignatureSize()
     const signedData = this.getSignedData(
       includeGas,
@@ -148,7 +156,7 @@ export class Microblock {
    * @param {number} sectionCount - The number of sections to include in the signed data.
    * @return {boolean} Returns true if the signature is successfully verified; otherwise, returns false.
    */
-  verifySignature(publicKey, signature, includeGas, sectionCount) {
+  verifySignature(publicKey: any, signature: any, includeGas: any, sectionCount: any) {
     const signedData = this.getSignedData(
       includeGas,
       sectionCount,
@@ -174,7 +182,7 @@ export class Microblock {
       - the header with or without the gas data, and without the body hash
       - the list of section hashes
   */
-  getSignedData(includeGas, sectionCount, extraBytes) {
+  getSignedData(includeGas: any, sectionCount: any, extraBytes: any) {
     this.setGasData(includeGas, extraBytes);
 
     const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER),
@@ -184,14 +192,14 @@ export class Microblock {
 
     return Utils.binaryFrom(
       headerData.slice(0, SCHEMAS.MICROBLOCK_HEADER_BODY_HASH_OFFSET),
-      ...sections.map((section) => section.hash)
+      ...sections.map((section: any) => section.hash)
     );
   }
 
   /**
     Sets the gas data to either 0 or to their actual values.
   */
-  setGasData(includeGas, extraBytes = 0) {
+  setGasData(includeGas: any, extraBytes = 0) {
     if(includeGas) {
       this.header.gas = this.computeGas(extraBytes);
       this.header.gasPrice = this.gasPrice;
@@ -208,7 +216,10 @@ export class Microblock {
   */
   serialize() {
     const body = {
-      body: this.sections.map(({ type, data }) => ({ type, data }))
+      body: this.sections.map(({
+        type,
+        data
+      }: any) => ({ type, data }))
     };
 
     this.setGasData(true);
@@ -229,7 +240,9 @@ export class Microblock {
   }
 
   computeGas(extraBytes = 0) {
-    const totalSize = this.sections.reduce((total, { data }) => total + data.length, extraBytes);
+    const totalSize = this.sections.reduce((total: any, {
+      data
+    }: any) => total + data.length, extraBytes);
     return ECO.FIXED_GAS_FEE + ECO.GAS_PER_BYTE * totalSize;
   }
 }

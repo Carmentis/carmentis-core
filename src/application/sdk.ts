@@ -1,5 +1,5 @@
 
-import * as common from "../common/common.js";
+import * as common from "../common/common";
 import {URL} from "url";
 
 const PREPARE_USER_APPROVAL_PATH = "/prepareUserApproval"
@@ -16,7 +16,7 @@ const config = {
  * @param {string} operatorUrl - The URL of the operator to initialize the configuration with.
  * @return {void} No return value.
  */
-export function setOperatorUrl(operatorUrl) {
+export function setOperatorUrl(operatorUrl: any) {
     // check the provided url
     try {
         new URL(operatorUrl)
@@ -53,7 +53,7 @@ export function setOperatorUrl(operatorUrl) {
  *     data: {dataId: string} | undefined
  * }>} A promise that resolves with the response from the endpoint.
  */
-export async function sendPrepareUserApprovalToOperator(data) {
+export async function sendPrepareUserApprovalToOperator(data: any) {
     return queryOperator(PREPARE_USER_APPROVAL_PATH, {
         applicationId: data.applicationId,
         appLedgerVirtualBlockchainId: data.appLedgerId,
@@ -68,7 +68,7 @@ export async function sendPrepareUserApprovalToOperator(data) {
  * @param {string} dataId - The unique identifier for the data to be fetched.
  * @returns {Promise<{success: boolean, error: string, data: {virtualBlockchainId: string} | undefined}>} A promise resolving to the record information retrieved from the operator.
  */
-export async function getRecordInformationFromOperator(dataId) {
+export async function getRecordInformationFromOperator(dataId: any) {
     return queryOperator(GET_RECORD_INFORMATION_PATH, dataId)
 }
 
@@ -80,7 +80,7 @@ export async function getRecordInformationFromOperator(dataId) {
  * @return {Promise<{success: boolean, error: string, data: any}>} A promise that resolves with the parsed JSON response from the operator.
  * @throws {Error} If the operator URL is not set in the configuration.
  */
-async function queryOperator(path, data) {
+async function queryOperator(path: any, data: any) {
     // reject if the provided operator configuration is missing
     if (config.operatorUrl === undefined) {
         throw new Error('The operator URL is missing: Please use setOperatorUrl("your url") before to query the operator')
@@ -103,39 +103,5 @@ async function queryOperator(path, data) {
             }
         }).catch(reject)
     });
-}
-
-// ============================================================================================================================ //
-//  crc32()                                                                                                                     //
-// ============================================================================================================================ //
-export function crc32(arr) {
-    const poly = 0xEDB88320;
-
-    const crc32Table = [];
-    function makeTable() {
-        let c;
-
-
-
-        for(let n = 0; n < 256; n++) {
-            c = n;
-            for(let k = 0; k < 8; k++) {
-                c = c & 1 ? poly ^ (c >>> 1) : c >>> 1;
-            }
-            crc32Table[n] = c >>> 0;
-        }
-    }
-
-    if(crc32Table.length === 0) {
-        makeTable();
-    }
-
-    let crc = ~0;
-
-    for(let i = 0; i < arr.length; i++) {
-        crc = (crc >>> 8) ^ crc32Table[(crc ^ arr[i]) & 0xff];
-    }
-
-    return (~crc >>> 0).toString(16).toUpperCase().padStart(8, "0");
 }
 

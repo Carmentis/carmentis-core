@@ -1,14 +1,15 @@
 import http from "http";
 import https from "https";
-import { NetworkProvider } from "./networkProvider.js";
-import { Utils } from "../utils/utils.js";
+import { NetworkProvider } from "./networkProvider";
+import { Utils } from "../utils/utils";
 
 export class ServerNetworkProvider extends NetworkProvider {
-  constructor(nodeUrl) {
+  constructor(nodeUrl: any) {
     super(nodeUrl);
   }
 
-  async query(urlObject) {
+  // @ts-expect-error TS(2416): Property 'query' in type 'ServerNetworkProvider' i... Remove this comment to see the full error message
+  async query(urlObject: any) {
     console.log("network query", Utils.truncateString(urlObject.toString(), 80));
 
     return new Promise(function(resolve, reject) {
@@ -25,10 +26,10 @@ export class ServerNetworkProvider extends NetworkProvider {
         body: {}
       };
 
-      const req = httpModule.request(options, (res) => {
-        const chunks = [];
+      const req = httpModule.request(options, (res: any) => {
+        const chunks: any = [];
 
-        res.on("data", (chunk) => {
+        res.on("data", (chunk: any) => {
           chunks.push(chunk);
         });
         res.on("end", () => {
@@ -37,7 +38,7 @@ export class ServerNetworkProvider extends NetworkProvider {
         });
       });
 
-      req.on("error", (error) => {
+      req.on("error", (error: any) => {
         reject(error);
       });
 

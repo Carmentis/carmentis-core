@@ -1,8 +1,13 @@
-import { ValidatorNodeVb } from "./validatorNodeVb.js";
-import { Crypto } from "../crypto/crypto.js";
+import { ValidatorNodeVb } from "./validatorNodeVb";
+import { Crypto } from "../crypto/crypto";
 
 export class ValidatorNode {
-  constructor({ provider }) {
+  provider: any;
+  signatureAlgorithmId: any;
+  vb: any;
+  constructor({
+    provider
+  }: any) {
     this.vb = new ValidatorNodeVb({ provider });
     this.provider = provider;
     if (this.provider.isKeyed()) {
@@ -15,7 +20,7 @@ export class ValidatorNode {
   async _create() {
   }
 
-  async _load(identifier) {
+  async _load(identifier: any) {
     await this.vb.load(identifier);
   }
 

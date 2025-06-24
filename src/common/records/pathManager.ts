@@ -1,4 +1,4 @@
-import { DATA } from "../constants/constants.js";
+import { DATA } from "../constants/constants";
 
 export const PathManager = {
   parsePrefix,
@@ -8,7 +8,7 @@ export const PathManager = {
   fromParents
 };
 
-function parsePrefix(pathString) {
+function parsePrefix(pathString: any) {
   const match = /^(this|previous|block(\d+))(?=\.|\[)/.exec(pathString);
 
   if(!match) {
@@ -21,13 +21,13 @@ function parsePrefix(pathString) {
   };
 }
 
-function toNumericPath(irObject, pathString) {
+function toNumericPath(irObject: any, pathString: any) {
   const res = processPathString(irObject, pathString, false);
 
   return res.numericPath;
 }
 
-function fromNumericPath(irObject, numericPath) {
+function fromNumericPath(irObject: any, numericPath: any) {
   let item = irObject[0],
       pathString = "";
 
@@ -45,7 +45,7 @@ function fromNumericPath(irObject, numericPath) {
   return pathString;
 }
 
-function fromParents(parents) {
+function fromParents(parents: any) {
   let pathString = "";
 
   for(let n = 1; n < parents.length; n++) {
@@ -56,7 +56,7 @@ function fromParents(parents) {
   return pathString;
 }
 
-function processCallback(irObject, pathString, callback) {
+function processCallback(irObject: any, pathString: any, callback: any) {
   const res = processPathString(irObject, pathString, true);
 
   if(res.hasWildcard) {
@@ -79,7 +79,7 @@ function processCallback(irObject, pathString, callback) {
   }
 }
 
-function processPathString(irObject, pathString, wildcardAllowed) {
+function processPathString(irObject: any, pathString: any, wildcardAllowed: any) {
   const parts = pathString.match(/\[(?:\*|\d+)\]|\.(?:\*|[^.*\[\]]+)/g);
 
   if(parts.join("") != pathString) {
@@ -113,7 +113,7 @@ function processPathString(irObject, pathString, wildcardAllowed) {
           hasWildcard = true;
         }
         else {
-          index = item.properties.findIndex((obj) => obj.name == propertyName);
+          index = item.properties.findIndex((obj: any) => obj.name == propertyName);
 
           if(index == -1) {
             throw `cannot find property '${propertyName}'`;
@@ -138,7 +138,7 @@ function processPathString(irObject, pathString, wildcardAllowed) {
           hasWildcard = true;
         }
         else {
-          index = item.entries.findIndex((obj) => obj.index == arrayIndex);
+          index = item.entries.findIndex((obj: any) => obj.index == arrayIndex);
 
           if(index == -1) {
             throw `cannot find index '${arrayIndex}'`;

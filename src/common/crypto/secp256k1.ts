@@ -10,18 +10,18 @@ export const Secp256k1 = {
   verify
 };
 
-function publicKeyFromPrivateKey(privateKey) {
+function publicKeyFromPrivateKey(privateKey: any) {
   return getPublicKey(privateKey);
 }
 
-function sign(privateKey, data) {
+function sign(privateKey: any, data: any) {
   let hash = sha256(data),
       signature = sigsign(hash, privateKey);
 
   return signature.toCompactRawBytes();
 }
 
-function verify(publicKey, data, signature) {
+function verify(publicKey: any, data: any, signature: any) {
   let hash = sha256(data);
 
   return sigver(signature, hash, publicKey);

@@ -1,7 +1,8 @@
 // ============================================================================================================================ //
 //  postRequest()                                                                                                               //
 // ============================================================================================================================ //
-export async function postRequest(url, data, callback, headers) {
+/*
+export async function postRequest(url: any, data: any, callback: any, headers: any) {
   let netXhr = new XMLHttpRequest();
 
   let [ success, answer ] = await new Promise(function(resolve, reject) {
@@ -24,3 +25,5 @@ export async function postRequest(url, data, callback, headers) {
 
   callback(success, answer);
 }
+
+ */

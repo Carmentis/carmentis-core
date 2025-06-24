@@ -1,12 +1,12 @@
-import { CHAIN, SCHEMAS } from "../constants/constants.js";
-import { SchemaUnserializer } from "../data/schemaSerializer.js";
-import { AccountVb } from "./accountVb.js";
-import { ValidatorNodeVb } from "./validatorNodeVb.js";
-import { OrganizationVb } from "./organizationVb.js";
-import { ApplicationVb } from "./applicationVb.js";
-import { ApplicationLedgerVb } from "./applicationLedgerVb.js";
-import { Crypto } from "../crypto/crypto.js";
-import { Utils } from "../utils/utils.js";
+import { CHAIN, SCHEMAS } from "../constants/constants";
+import { SchemaUnserializer } from "../data/schemaSerializer";
+import { AccountVb } from "./accountVb";
+import { ValidatorNodeVb } from "./validatorNodeVb";
+import { OrganizationVb } from "./organizationVb";
+import { ApplicationVb } from "./applicationVb";
+import { ApplicationLedgerVb } from "./applicationLedgerVb";
+import { Crypto } from "../crypto/crypto";
+import { Utils } from "../utils/utils";
 
 const VB_CLASSES = [
   AccountVb,
@@ -17,7 +17,18 @@ const VB_CLASSES = [
 ];
 
 export class MicroblockImporter {
-  constructor({ data, provider }) {
+  bodyData: any;
+  currentTimestamp: any;
+  error: any;
+  hash: any;
+  header: any;
+  headerData: any;
+  provider: any;
+  vb: any;
+  constructor({
+    data,
+    provider
+  }: any) {
     this.provider = provider;
     this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
     this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
@@ -25,10 +36,10 @@ export class MicroblockImporter {
     this.error = "";
   }
 
-  async check(currentTimestamp) {
+  async check(currentTimestamp: any) {
     this.currentTimestamp = currentTimestamp || Utils.getTimestampInSeconds();
 
-    return await this.checkHeader() || await this.checkTimestamp() || await this.checkContent();
+    return (await this.checkHeader()) || (await this.checkTimestamp()) || (await this.checkContent());
   }
 
   /**
@@ -100,7 +111,9 @@ export class MicroblockImporter {
         const headerUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
         const previousHeader = headerUnserializer.unserialize(previousMicroblockInfo.header);
 
+        // @ts-expect-error TS(2339): Property 'height' does not exist on type '{}'.
         if(this.header.height != previousHeader.height + 1) {
+          // @ts-expect-error TS(2339): Property 'height' does not exist on type '{}'.
           this.error = `inconsistent microblock height (expected ${previousHeader.height + 1}, got ${this.header.height})`;
           return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
         }
@@ -140,6 +153,7 @@ export class MicroblockImporter {
       }
     }
     catch(error) {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       this.error = error.toString();
       return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
     }

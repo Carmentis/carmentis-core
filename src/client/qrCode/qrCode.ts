@@ -1,8 +1,8 @@
-import { qrcode } from "./qrCodeGenerator.js";
-import { SCHEMAS } from "../../common/constants/constants.js";
+import { qrcode } from "./qrCodeGenerator";
+import { SCHEMAS } from "../../common/constants/constants";
 import {SchemaSerializer}  from "../../common/data/schemaSerializer";
-//import * as base64 from "../../common/util/base64.js";
-//import * as uint8 from "../../common/util/uint8.js";
+//import * as base64 from "../../common/util/base64";
+//import * as uint8 from "../../common/util/uint8";
 
 // ============================================================================================================================ //
 //  create()                                                                                                                    //
@@ -15,7 +15,7 @@ import {SchemaSerializer}  from "../../common/data/schemaSerializer";
  * @param {string} serverUrl - The server URL to be included in the QR code data.
  * @return {Object} An object containing the `imageTag` (QR code image as a string) and `data` (QR code data string).
  */
-export function create(qrId, timestamp, serverUrl) {
+export function create(qrId: any, timestamp: any, serverUrl: any) {
   const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_QR_CODE);
   let data = schemaSerializer.serialize(
     {
@@ -26,12 +26,16 @@ export function create(qrId, timestamp, serverUrl) {
   );
 
   let qr = qrcode(0, "L"),
+      // @ts-expect-error TS(2304): Cannot find name 'base64'.
       b64 = base64.encodeBinary(data, base64.URL),
       qrData = `carmentis:${b64}`;
 
+  // @ts-expect-error TS(2339): Property 'addData' does not exist on type '{}'.
   qr.addData(qrData, "Byte");
+  // @ts-expect-error TS(2339): Property 'make' does not exist on type '{}'.
   qr.make();
 
+  // @ts-expect-error TS(2339): Property 'createImgTag' does not exist on type '{}... Remove this comment to see the full error message
   let qrImgTag = qr.createImgTag(4, 0);
 
   return {
@@ -49,13 +53,15 @@ export function create(qrId, timestamp, serverUrl) {
  * @param {string} qrData - The QR code data string to decode.
  * @return {Object|boolean} Returns the decoded object if successful, or `false` if decoding fails.
  */
-export function decode(qrData) {
+export function decode(qrData: any) {
   let match = qrData.match(/^carmentis:([\w-]+)$/);
 
   if(match) {
     try {
+      // @ts-expect-error TS(2304): Cannot find name 'base64'.
       let data = base64.decodeBinary(match[1], base64.URL);
 
+      // @ts-expect-error TS(2552): Cannot find name 'schemaSerializer'. Did you mean ... Remove this comment to see the full error message
       let obj = schemaSerializer.decode(
         SCHEMAS.WI_QR_CODE,
         data

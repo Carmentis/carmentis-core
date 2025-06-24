@@ -5,15 +5,20 @@ import { Utils } from "../utils/utils";
 import { Utf8Encoder } from "../data/utf8Encoder";
 import { DATA } from "../constants/constants";
 
-class Merklizer {
-  addHashableItem: any;
-  addMaskableItem: any;
-  addRawItem: any;
+abstract class Merklizer {
+  //addHashableItem: any;
+  //addMaskableItem: any;
+  //addRawItem: any;
+
   nLeaves: any;
   tree: any;
   constructor() {
     this.tree = new MerkleTree;
   }
+
+  abstract addHashableItem(item: any, info: any): void;
+  abstract addMaskableItem(item: any, info: any): void;
+  abstract addRawItem(item: any, info: any): void;
 
   addItem(item: any, parents: any) {
     const info = this.getLeafInfo(item, parents);
@@ -106,7 +111,6 @@ export class PepperMerklizer extends Merklizer {
     };
   }
 
-  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
   addRawItem(item: any, info: any) {
     const salt = this.getSalt();
 
@@ -114,7 +118,6 @@ export class PepperMerklizer extends Merklizer {
     this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
-  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
   addHashableItem(item: any, info: any) {
     const salt = this.getSalt(),
           hash = Crypto.Hashes.sha256AsBinary(item.valueBinary);
@@ -124,7 +127,6 @@ export class PepperMerklizer extends Merklizer {
     this.addLeaf(item, Utils.binaryFrom(salt, info, hash));
   }
 
-  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
   addMaskableItem(item: any, info: any) {
     const visibleSalt = this.getSalt(),
           visibleHash = Crypto.Hashes.sha256AsBinary(Utils.binaryFrom(visibleSalt, info, item.visiblePartsBinary)),
@@ -173,14 +175,12 @@ export class SaltMerklizer extends Merklizer {
     };
   }
 
-  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
   addRawItem(item: any, info: any) {
     const salt = Utils.binaryFromHexa(item.salt);
 
     this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
-  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
   addHashableItem(item: any, info: any) {
     const salt = Utils.binaryFromHexa(item.salt);
 
@@ -197,7 +197,6 @@ export class SaltMerklizer extends Merklizer {
     this.addLeaf(item, Utils.binaryFrom(salt, info, item.valueBinary));
   }
 
-  // @ts-expect-error TS(2425): Class 'Merklizer' defines instance member property... Remove this comment to see the full error message
   addMaskableItem(item: any, info: any) {
     const visibleSalt = Utils.binaryFromHexa(item.visibleSalt),
           visibleHash = Crypto.Hashes.sha256AsBinary(Utils.binaryFrom(visibleSalt, info, item.visiblePartsBinary));

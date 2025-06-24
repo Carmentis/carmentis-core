@@ -2,8 +2,7 @@ import { CHAIN } from "../constants/constants";
 import { Microblock } from "./microblock";
 import { Utils } from "../utils/utils";
 
-export class VirtualBlockchain {
-  checkStructure: any;
+export abstract class VirtualBlockchain {
   currentMicroblock: any;
   height: any;
   identifier: any;
@@ -27,6 +26,9 @@ export class VirtualBlockchain {
     this.type = type;
     this.height = 0;
   }
+
+
+  abstract checkStructure(microblock: any): true;
 
   /**
     Registers a callback for a given section type.
@@ -54,6 +56,7 @@ export class VirtualBlockchain {
     this.state = content.state.customState;
     this.microblockHashes = content.microblockHashes;
   }
+
 
   /**
     Imports a microblock defined by its header data and body data.

@@ -141,6 +141,15 @@ export abstract class VirtualBlockchain {
   }
 
   /**
+   * Set the gas price for the current microblock.
+   *
+   * @param {number} price
+   */
+  setGasPrice(gasPrice: number) {
+    this.currentMicroblock.gasPrice = gasPrice;
+  }
+
+  /**
     Publishes the current microblock.
   */
   async publish() {

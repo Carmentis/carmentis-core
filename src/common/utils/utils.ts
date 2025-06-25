@@ -4,6 +4,7 @@ import { TypeManager } from "../data/types";
 export const Utils = {
   numberToHexa,
   truncateString,
+  truncateStringMiddle,
   getNullHash,
   getTimestampInSeconds,
   binaryToHexa,
@@ -14,12 +15,19 @@ export const Utils = {
   intToByteArray
 };
 
-function numberToHexa(value: any, size: any) {
+function numberToHexa(value: number, size: number) {
   return value.toString(16).toUpperCase().padStart(size || 1, "0");
 }
 
-function truncateString(str: any, size: any) {
+function truncateString(str: string, size: number) {
   return str.slice(0, size) + (str.length > size ? "(...)" : "");
+}
+
+function truncateStringMiddle(str: string, leadingSize: number, trailingSize: number) {
+  if(str.length <= leadingSize + trailingSize) {
+    return str;
+  }
+  return str.slice(0, leadingSize) + "(...)" + str.slice(str.length - trailingSize);
 }
 
 function getNullHash() {

@@ -28,6 +28,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     await this.addSection(SECTIONS.APP_LEDGER_SIG_ALGORITHM, object);
   }
 
+  async addDeclaration(object: any) {
+    await this.addSection(SECTIONS.APP_LEDGER_DECLARATION, object);
+  }
+
   async createActor(object: any) {
     await this.addSection(SECTIONS.APP_LEDGER_ACTOR_CREATION, object);
   }

@@ -1,8 +1,5 @@
 import { ERRORS, SCHEMAS } from "../../common/constants/constants";
 import * as crypto from "../../common/crypto/crypto";
-//import * as schemaSerializer from "../../common/serializers/schema-serializer";
-//import * as base64 from "../../common/util/base64";
-//import * as uint8 from "../../common/util/uint8";
 import * as clientSocket from "./wiClientSocket";
 import * as qrCode from "../qrCode/qrCode";
 import * as web from "../web/web";
@@ -220,7 +217,7 @@ export class wiClient {
     let reqObject = {
       requestType: type,
       request    : request,
-      deviceId   : new Uint8Array(16),
+      deviceId   : new Uint8Array(32),
       withToken  : 0
     };
 

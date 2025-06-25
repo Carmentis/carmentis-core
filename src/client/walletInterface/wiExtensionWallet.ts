@@ -1,11 +1,8 @@
 import { wiWallet } from "./wiWallet";
 import { SCHEMAS } from "../../common/constants/constants";
 import {SchemaSerializer} from "../../common/data/schemaSerializer";
-//import * as base64 from "../../common/utils/";
-
-//import { CarmentisError } from "../../common/errors/error";
-import * as crypto from "../../common/crypto/crypto";
 import {Base64 as base64} from "../../common/data/base64";
+import {WI_ANSWERS} from "../../common/constants/schemas";
 
 export class wiExtensionWallet extends wiWallet {
   constructor() {
@@ -30,10 +27,9 @@ export class wiExtensionWallet extends wiWallet {
   /**
    * Formats an answer, using the extension wallet format.
    */
-  // @ts-expect-error TS(2425): Class 'wiWallet' defines instance member property ... Remove this comment to see the full error message
   formatAnswer(answerType: any, object: any) {
-    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_ANSWERS[answerType])
+    // @ts-ignore
+    const schemaSerializer = new SchemaSerializer(WI_ANSWERS[answerType])
     let answer = schemaSerializer.serialize(object);
 
     return {

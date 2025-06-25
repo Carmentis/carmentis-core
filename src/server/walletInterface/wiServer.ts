@@ -5,7 +5,8 @@ import * as crypto from "../../common/crypto/crypto";
 import {Base64 as base64} from "../../common/data/base64";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {randomBytes} from "@noble/post-quantum/utils";
-import {MessageSerializer} from "../../common/data/messageSerializer";
+import {MessageSerializer, MessageUnserializer} from "../../common/data/messageSerializer";
+import {EncoderFactory} from "../../common/utils/encoder";
 
 let requests: any = [],
     qrIdentifiers = new Map(),
@@ -23,11 +24,19 @@ export class wiServer {
     });
 
     function onData(message: any) {
-      let binary = base64.decodeBinary(message, base64.BASE64),
-          // @ts-expect-error TS(2304): Cannot find name 'schemaSerializer'.
-          [ id, object ] = schemaSerializer.decodeMessage(binary, SCHEMAS.WI_MESSAGES);
 
-      switch(id) {
+      console.debug("onData:", message)
+      const schemaSerializer = new MessageUnserializer(SCHEMAS.WI_MESSAGES);
+      const base64Encoder = EncoderFactory.bytesToBase64Encoder();
+      const binary = base64Encoder.decode(message);
+      const {type, object} = schemaSerializer.unserialize(binary)
+      console.debug("onData: type:", type)
+      console.debug("onData: object:", object)
+
+      const containsRequestType = 'requestType' in object;
+      const containsRequest = 'request' in object;
+      if (!( containsRequest && containsRequestType )) throw new Error('Invalid request');
+      switch(type) {
         case SCHEMAS.WIMSG_REQUEST: {
           // the client has sent a request
           // --> send it a first QR code
@@ -45,7 +54,10 @@ export class wiServer {
           // the wallet has accepted the connection
           // --> associate the wallet socket with the request
           // --> send the client request to the wallet
-          let requestId = qrIdentifiers.get(hexToBytes(object.qrId));
+
+          const containsQRId = 'qrId' in object;
+          if (!containsQRId) throw new Error('Invalid request: missing qrId');
+          let requestId = qrIdentifiers.get(hexToBytes(object.qrId as string));
           let request = requests[requestId];
 
           walletSocketRequests.set(socket.id, requestId);

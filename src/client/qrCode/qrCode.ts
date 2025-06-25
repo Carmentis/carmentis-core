@@ -1,6 +1,7 @@
 import { qrcode } from "./qrCodeGenerator";
 import { SCHEMAS } from "../../common/constants/constants";
 import {SchemaSerializer}  from "../../common/data/schemaSerializer";
+import {EncoderFactory} from "../../common/utils/encoder";
 //import * as base64 from "../../common/util/base64";
 //import * as uint8 from "../../common/util/uint8";
 
@@ -25,14 +26,14 @@ export function create(qrId: any, timestamp: any, serverUrl: any) {
     }
   );
 
+  const base64Encoder = EncoderFactory.bytesToBase64Encoder();
   let qr = qrcode(0, "L"),
-      // @ts-expect-error TS(2304): Cannot find name 'base64'.
-      b64 = base64.encodeBinary(data, base64.URL),
+      b64 = base64Encoder.encode(data),
       qrData = `carmentis:${b64}`;
 
-  // @ts-expect-error TS(2339): Property 'addData' does not exist on type '{}'.
+  // @ts-ignore
   qr.addData(qrData, "Byte");
-  // @ts-expect-error TS(2339): Property 'make' does not exist on type '{}'.
+  // @ts-ignore
   qr.make();
 
   // @ts-expect-error TS(2339): Property 'createImgTag' does not exist on type '{}... Remove this comment to see the full error message

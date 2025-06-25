@@ -308,7 +308,7 @@ export const WI_MESSAGES = {
     { name: "request",     type: DATA.TYPE_BINARY },
     { name: "deviceId",    type: DATA.TYPE_BIN256 },
     { name: "withToken",   type: DATA.TYPE_UINT8 },
-    { name: "token",       type: DATA.TYPE_BIN256 }
+    //{ name: "token",       type: DATA.TYPE_BIN256 }
   ],
   [ WIMSG_UPDATE_QR ]: [
     { name: "qrId",      type: DATA.TYPE_BIN256 },

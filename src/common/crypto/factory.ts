@@ -8,15 +8,17 @@ import {
     SymmetricEncryptionKey,
 } from "./encryption/encryption-interface";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId,} from "./signature/signature-interface";
-import {MLDSA65PrivateSignatureKey} from "./signature/ml-dsa-65";
+import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./signature/ml-dsa-65";
 import {BytesSignatureEncoder} from "./signature/signature-encoder";
 import {CryptographicHash, CryptographicHashAlgorithmId, Sha256CryptographicHash} from "./hash/hash-interface";
+import {Secp256k1PrivateSignatureKey, Secp256k1PublicSignatureKey} from "./signature/secp256k1";
 
 export class CryptoSchemeFactory {
 
 
     createPrivateSignatureKey( schemeId: number, walletSeed: Uint8Array ): PrivateSignatureKey {
         switch (schemeId) {
+            case SignatureAlgorithmId.SECP256K1: return new Secp256k1PrivateSignatureKey(walletSeed);
             case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(walletSeed);
             default: throw `Not supported signature scheme ID: ${schemeId}`
         }
@@ -47,9 +49,9 @@ export class CryptoSchemeFactory {
 
 
     createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): PublicSignatureKey {
-        const encoder = new BytesSignatureEncoder();
         switch (schemeId) {
-            case SignatureAlgorithmId.ML_DSA_65: return encoder.decodePublicKey(publicKey);
+            case SignatureAlgorithmId.SECP256K1: return new Secp256k1PublicSignatureKey(publicKey);
+            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PublicSignatureKey(publicKey);
             default: throw `Not supported signature scheme ID: ${schemeId}`
         }
     }

@@ -1,13 +1,11 @@
 import {
     PrivateSignatureKey,
     PublicSignatureKey,
-    PublicSignatureKeyEncoder, SignatureAlgorithmId,
+    SignatureAlgorithmId,
     SignatureScheme
-} from "../signature-interface";
+} from "./signature-interface";
 import {getPublicKey, PrivKey, sign, utils, etc, verify} from '@noble/secp256k1';
-import {utf8ToBytes} from "@noble/hashes/utils";
 import {sha256} from "@noble/hashes/sha2";
-import {GenericSignatureEncoder} from "./generic-signature-encoder";
 
 /**
  * The `Secp256k1SignatureScheme` class implements the `SignatureScheme` interface and provides
@@ -16,9 +14,6 @@ import {GenericSignatureEncoder} from "./generic-signature-encoder";
 export class Secp256k1SignatureScheme implements SignatureScheme {
     private static SIGNATURE_SIZE = 65;
 
-    getPublicKeyEncoder(): PublicSignatureKeyEncoder<Secp256k1SignatureScheme> {
-        return new GenericSignatureEncoder();
-    }
 
     getSignatureAlgorithmId(): number {
         return SignatureAlgorithmId.SECP256K1;
@@ -42,7 +37,7 @@ export class Secp256k1PublicSignatureKey extends Secp256k1SignatureScheme implem
         super();
     }
 
-    getRawPublicKey(): Uint8Array {
+    getPublicKeyAsBytes(): Uint8Array {
         return this.publicKey;
     }
 
@@ -89,6 +84,11 @@ export class Secp256k1PrivateSignatureKey extends Secp256k1PublicSignatureKey im
 
     getPublicKey(): PublicSignatureKey {
         return this;
+    }
+
+    getPrivateKeyAsBytes(): Uint8Array {
+        if (this.privateKey instanceof Uint8Array) return this.privateKey;
+        throw new Error("Invalid private key format: expected Uint8Array, got " + typeof this.privateKey + " instead.");
     }
 
     sign(data: Uint8Array): Uint8Array {

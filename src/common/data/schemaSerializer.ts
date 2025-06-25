@@ -106,7 +106,7 @@ export class SchemaUnserializer {
     Unserializes the given byte stream.
     @param {Uint8Array} stream - The serialized byte stream
   */
-  unserialize(stream: any) {
+  unserialize(stream: any): object {
     this.stream = new ReadStream(stream);
 
     const object = this.unserializeObject(this.schema),
@@ -124,7 +124,7 @@ export class SchemaUnserializer {
     Unserializes any sub-object of the full structure.
     @param {Array} schema - The (sub)schema of the object.
   */
-  unserializeObject(schema: any) {
+  unserializeObject(schema: any): object {
     const object = {};
 
     for(const definition of schema) {

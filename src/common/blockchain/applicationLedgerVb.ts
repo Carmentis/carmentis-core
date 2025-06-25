@@ -1,6 +1,7 @@
 import { CHAIN, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
+import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 
 export class ApplicationLedgerVb extends VirtualBlockchain {
   state: any;
@@ -49,11 +50,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   }
 
   /**
+   * Signs the current object as the author using the provided private key.
    *
-   * @param {PrivateSignatureKey} privateKey
-   * @returns {Promise<void>}
+   * @param {PrivateSignatureKey} privateKey - The private key used to generate the author's signature.
+   * @return {Promise<void>} A promise that resolves when the author's signature is successfully added to the ledger.
    */
-  async signAsAuthor(privateKey: any) {
+  async signAsAuthor(privateKey: PrivateSignatureKey) {
     const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE, object);
   }

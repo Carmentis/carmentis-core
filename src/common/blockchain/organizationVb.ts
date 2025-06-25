@@ -4,12 +4,13 @@ import { StructureChecker } from "./structureChecker";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
+import {Provider} from "../providers/provider";
 
 export class OrganizationVb extends VirtualBlockchain {
   private signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
   constructor({
     provider
-  }: any) {
+  }: { provider: Provider }) {
     super({ provider, type: CHAIN.VB_ORGANIZATION });
 
     this.registerSectionCallback(SECTIONS.ORG_SIG_ALGORITHM, this.signatureAlgorithmCallback);

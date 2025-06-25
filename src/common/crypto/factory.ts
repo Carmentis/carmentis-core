@@ -1,17 +1,16 @@
 import {
-    KeyExchangeAlgorithmId,
+    AES256GCMSymmetricEncryptionKey,
     DecapsulationKey,
-    InsecureKeyExchangeScheme,
     EncapsulationKey,
+    InsecureKeyExchangeScheme,
+    KeyExchangeAlgorithmId,
+    SymmetricEncryptionAlgorithmId,
     SymmetricEncryptionKey,
-    SymmetricEncryptionAlgorithmId, AES256GCMSymmetricEncryptionKey,
 } from "./encryption/encryption-interface";
-import {
-    PrivateSignatureKey, PublicSignatureKey,
-    SignatureAlgorithmId,
-} from "./signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId,} from "./signature/signature-interface";
 import {MLDSA65PrivateSignatureKey} from "./signature/ml-dsa-65";
 import {BytesSignatureEncoder} from "./signature/signature-encoder";
+import {CryptographicHash, CryptographicHashAlgorithmId, Sha256CryptographicHash} from "./hash/hash-interface";
 
 export class CryptoSchemeFactory {
 
@@ -74,5 +73,17 @@ export class CryptoSchemeFactory {
             case SymmetricEncryptionAlgorithmId.AES_256_GCM: return AES256GCMSymmetricEncryptionKey.createFromBytes(rawKey);
             default: throw `Not supported encryption scheme ID: ${symmetricEncryptionSchemeId}`
         }
+    }
+
+    static createCryptographicHash(schemeId: CryptographicHashAlgorithmId): CryptographicHash {
+        switch (schemeId) {
+            case CryptographicHashAlgorithmId.SHA256: return new Sha256CryptographicHash();
+            default: throw `Not supported hash scheme ID: ${schemeId}`
+        }
+    }
+
+
+    static createDefaultCryptographicHash(): CryptographicHash {
+        return new Sha256CryptographicHash()
     }
 }

@@ -2,6 +2,7 @@ import { CHAIN } from "../constants/constants";
 import {Microblock, Section} from "./microblock";
 import { Utils } from "../utils/utils";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
+import {EncoderFactory} from "../utils/encoder";
 
 export abstract class VirtualBlockchain {
   currentMicroblock: Microblock | null;
@@ -151,6 +152,7 @@ export abstract class VirtualBlockchain {
    * @param {number} price
    */
   setGasPrice(gasPrice: number) {
+    if (!this.currentMicroblock) throw new Error("Cannot set gas price on a microblock that has not been created yet.");
     this.currentMicroblock.gasPrice = gasPrice;
   }
 
@@ -178,6 +180,8 @@ export abstract class VirtualBlockchain {
 //  await this.provider.setMicroblockBody(bodyHash, bodyData);
 //  await this.provider.setVirtualBlockchainState(this.identifier, this.type, this.height, microblockHash, this.state);
 
-    return Utils.binaryToHexa(microblockHash);
+    //return Utils.binaryToHexa(microblockHash);
+    const hexEncoder = EncoderFactory.bytesToHexEncoder();
+    return hexEncoder.encode(microblockHash);
   }
 }

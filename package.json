@@ -7,7 +7,8 @@
     "clean": "rimraf dist && rimraf types",
     "build:client": "rollup --config rollup.config.client.js",
     "build:server": "rollup --config rollup.config.server.js",
-    "build": "tsc && npm run build:client && npm run build:server",
+    "build:common-export": "npx barrelsby --delete -d src/common -e 'test' -e 'Test' -e \"benchmark\" -e 'spec' -n common",
+    "build": "npm run build:common-export && tsc && npm run build:client && npm run build:server",
     "docs": "jsdoc -r -c jsdoc.json -t ./node_modules/better-docs -d docs src"
   },
   "exports": {
@@ -80,6 +81,7 @@
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/release-notes-generator": "^14.0.3",
+    "barrelsby": "^2.8.1",
     "conventional-changelog-eslint": "^6.0.0",
     "level": "^10.0.0",
     "socket.io-client": "^4.8.1"

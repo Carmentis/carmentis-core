@@ -1,7 +1,11 @@
 import {
     KeyExchangeAlgorithmId,
-    DecapsulationKey, InsecureKeyExchangeScheme, EncapsulationKey,
-} from "./encryption-interface";
+    DecapsulationKey,
+    InsecureKeyExchangeScheme,
+    EncapsulationKey,
+    SymmetricEncryptionKey,
+    SymmetricEncryptionAlgorithmId, AES256GCMSymmetricEncryptionKey,
+} from "./encryption/encryption-interface";
 import {
     PrivateSignatureKey, PublicSignatureKey,
     SignatureAlgorithmId,
@@ -55,6 +59,20 @@ export class CryptoSchemeFactory {
         switch (schemeId) {
             case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
             default: throw `Not supported encryption scheme ID: ${schemeId}`
+        }
+    }
+
+    /**
+     * Creates a symmetric encryption key based on the provided encryption scheme ID and raw key data.
+     *
+     * @param {number} symmetricEncryptionSchemeId - The ID of the symmetric encryption scheme to use.
+     * @param {Uint8Array<ArrayBufferLike>} rawKey - The raw key data used to create the symmetric encryption key.
+     * @return {SymmetricEncryptionKey} The generated symmetric encryption key.
+     */
+    createSymmetricEncryptionKey(symmetricEncryptionSchemeId: number, rawKey: Uint8Array<ArrayBufferLike>): SymmetricEncryptionKey {
+        switch (symmetricEncryptionSchemeId) {
+            case SymmetricEncryptionAlgorithmId.AES_256_GCM: return AES256GCMSymmetricEncryptionKey.createFromBytes(rawKey);
+            default: throw `Not supported encryption scheme ID: ${symmetricEncryptionSchemeId}`
         }
     }
 }

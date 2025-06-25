@@ -1,11 +1,11 @@
 import {
     SignatureAlgorithmId
-} from "../signature-interface";
+} from "./signature-interface";
 import {toBytes} from "@noble/ciphers/utils";
 import {CryptoSchemeFactory} from "../factory";
-import {MLDSA65PrivateSignatureKey, MLDSA65PublicKeyEncoder, MLDSA65PublicSignatureKey} from "./ml-dsa-65";
+import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./ml-dsa-65";
 import {Secp256k1PrivateSignatureKey} from "./secp256k1";
-import {GenericSignatureEncoder} from "./generic-signature-encoder";
+import {BytesSignatureEncoder} from "./signature-encoder";
 
 describe('ML DSA 65 Signature', () => {
     test("Signature verification", () => {
@@ -18,10 +18,10 @@ describe('ML DSA 65 Signature', () => {
 
     test("Signature verification after encoding using encoder", () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const encoder = new MLDSA65PublicKeyEncoder();
+        const encoder = new BytesSignatureEncoder();
         const publicKey = privateKey.getPublicKey();
-        const decodedPublicKey = encoder.decodeFromUint8Array(
-            encoder.encodeAsUint8Array(publicKey)
+        const decodedPublicKey = encoder.decodePublicKey(
+            encoder.encodePublicKey(publicKey)
         );
 
         const msg  = toBytes("Hello world");
@@ -31,7 +31,7 @@ describe('ML DSA 65 Signature', () => {
 
     test("Signature verification after encoding using factory", () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const rawPublicKey = privateKey.getPublicKey().getRawPublicKey();
+        const rawPublicKey = privateKey.getPublicKey().getPublicKeyAsBytes();
 
         const cryptoFactory = new CryptoSchemeFactory();
         const publicKey = cryptoFactory.createPublicSignatureKey(SignatureAlgorithmId.ML_DSA_65, rawPublicKey);
@@ -42,7 +42,7 @@ describe('ML DSA 65 Signature', () => {
 
     test("Invalid factory usage", () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const rawPublicKey = privateKey.getPublicKey().getRawPublicKey();
+        const rawPublicKey = privateKey.getPublicKey().getPublicKeyAsBytes();
 
         const cryptoFactory = new CryptoSchemeFactory();
         expect(() => cryptoFactory.createPublicSignatureKey(-1, rawPublicKey)).toThrow();
@@ -66,13 +66,13 @@ describe('Secp256k1 Signature', () => {
 
 describe('Generic signature encoder', () => {
     test("", () => {
-        const encoder = new GenericSignatureEncoder();
+        const encoder = new BytesSignatureEncoder();
 
         const privateKey = MLDSA65PrivateSignatureKey.gen();
         const publicKey = privateKey.getPublicKey();
-        const rawPublicKey = encoder.encodeAsUint8Array(publicKey);
-        const publicKey2 = encoder.decodeFromUint8Array(rawPublicKey);
-        expect(publicKey2.getRawPublicKey()).toEqual(publicKey.getRawPublicKey());
+        const rawPublicKey = encoder.encodePublicKey(publicKey);
+        const publicKey2 = encoder.decodePublicKey(rawPublicKey);
+        expect(publicKey2.getPublicKeyAsBytes()).toEqual(publicKey.getPublicKeyAsBytes());
         expect(publicKey2.getSignatureAlgorithmId()).toEqual(publicKey.getSignatureAlgorithmId());
     })
 })

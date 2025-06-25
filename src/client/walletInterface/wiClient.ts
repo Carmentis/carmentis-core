@@ -11,7 +11,7 @@ import {randomBytes} from "@noble/post-quantum/utils";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {Base64 as base64} from "../../common/data/base64";
 import {CryptoSchemeFactory} from "../../common/crypto/factory";
-import {SignatureAlgorithmId} from "../../common/crypto/signature-interface";
+import {SignatureAlgorithmId} from "../../common/crypto/signature/signature-interface";
 //import { wiError } from "../../common/errors/error";
 
 export class wiClient {

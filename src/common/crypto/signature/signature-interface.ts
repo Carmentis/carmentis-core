@@ -1,3 +1,5 @@
+import {EncoderInterface} from "../../utils/encoder";
+
 /**
  * Represents a cryptographic signature scheme with methods to retrieve
  * identifying information and utilities for encoding public keys.
@@ -5,7 +7,6 @@
 export interface SignatureScheme  {
     getSignatureAlgorithmId(): number;
     getSignatureSize(): number;
-    getPublicKeyEncoder(): PublicSignatureKeyEncoder<SignatureScheme>
 }
 
 /**
@@ -17,6 +18,7 @@ export interface SignatureScheme  {
 export interface PrivateSignatureKey extends SignatureScheme {
     getPublicKey(): PublicSignatureKey;
     sign(data: Uint8Array): Uint8Array;
+    getPrivateKeyAsBytes(): Uint8Array;
 }
 
 /**
@@ -32,29 +34,15 @@ export interface PrivateSignatureKey extends SignatureScheme {
  *   @param {Uint8Array} signature - The digital signature corresponding to the provided data.
  *   @returns {boolean} - Returns true if the signature is valid for the data, false otherwise.
  *
- * @method getRawPublicKey
+ * @method getPublicKeyAsBytes
  *   Retrieves the raw representation of the public key.
  *   This is useful for serialization, transmission, or other forms of key processing.
  *   @returns {Uint8Array} - The raw bytes of the public key.
  */
 export interface PublicSignatureKey extends SignatureScheme {
     verify(data: Uint8Array, signature: Uint8Array): boolean;
-    getRawPublicKey(): Uint8Array;
+    getPublicKeyAsBytes(): Uint8Array;
 }
-
-/**
- * Interface representing an encoder for public signature keys, providing methods
- * for encoding and decoding public keys into and from a Uint8Array format.
- *
- * @template T - The type of the public key.
- */
-export interface PublicSignatureKeyEncoder<T> {
-    encodeAsUint8Array( publicKey: T ): Uint8Array;
-    decodeFromUint8Array( publicKey: Uint8Array ): T;
-}
-
-
-
 
 /**
  * An enumeration representing the identifiers for different signature algorithms.

@@ -3,10 +3,9 @@ import {randomBytes} from "@noble/post-quantum/utils";
 import {
     PrivateSignatureKey,
     PublicSignatureKey,
-    PublicSignatureKeyEncoder,
     SignatureAlgorithmId,
     SignatureScheme
-} from "../signature-interface";
+} from "./signature-interface";
 
 export class MLDSA65SignatureScheme implements SignatureScheme {
     private static SIGNATURE_SIZE = 3311;
@@ -19,9 +18,6 @@ export class MLDSA65SignatureScheme implements SignatureScheme {
         return MLDSA65SignatureScheme.SIGNATURE_SIZE;
     }
 
-    getPublicKeyEncoder(): PublicSignatureKeyEncoder<SignatureScheme> {
-        return new MLDSA65PublicKeyEncoder();
-    }
 }
 
 /**
@@ -63,7 +59,7 @@ export class MLDSA65PublicSignatureKey extends MLDSA65SignatureScheme implements
      *
      * @return {Uint8Array} The public key in its raw byte form.
      */
-    getRawPublicKey(): Uint8Array {
+    getPublicKeyAsBytes(): Uint8Array {
         return this.publicKey;
     }
 }
@@ -110,6 +106,10 @@ export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implem
         return this;
     }
 
+    getPrivateKeyAsBytes(): Uint8Array {
+        return this.signatureKey
+    }
+
     /**
      * Signs the provided data using the signature key.
      *
@@ -124,29 +124,4 @@ export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implem
     }
 
 
-}
-
-/**
- * Class responsible for encoding and decoding MLDSA44 public signature keys.
- * This implementation provides methods to handle conversions between
- * `MLDSA65PublicSignatureKey` objects and their `Uint8Array` byte representations.
- */
-export class MLDSA65PublicKeyEncoder implements PublicSignatureKeyEncoder<MLDSA65PublicSignatureKey> {
-    /**
-     * Decodes a Uint8Array input to generate an MLDSA44PublicSignatureKey instance.
-     *
-     * @param {Uint8Array} publicKey - The Uint8Array containing the public key data that needs*/
-    decodeFromUint8Array(publicKey: Uint8Array): MLDSA65PublicSignatureKey {
-        return new MLDSA65PublicSignatureKey(publicKey);
-    }
-
-    /**
-     * Encodes the specified public key as a Uint8Array.
-     *
-     * @param {MLDSA65PublicSignatureKey} publicKey - The public signature key to encode.
-     * @return {Uint8Array} The encoded public key as a Uint8Array.
-     */
-    encodeAsUint8Array(publicKey: MLDSA65PublicSignatureKey): Uint8Array {
-        return publicKey.getRawPublicKey();
-    }
 }

@@ -10,9 +10,10 @@ import {
     PrivateSignatureKey, PublicSignatureKey,
     SignatureAlgorithmId,
     SignatureScheme
-} from "./signature-interface";
+} from "./signature/signature-interface";
 import {hexToBytes} from "@noble/ciphers/utils";
-import {MLDSA65PrivateSignatureKey, MLDSA65PublicKeyEncoder} from "./signature/ml-dsa-65";
+import {MLDSA65PrivateSignatureKey} from "./signature/ml-dsa-65";
+import {BytesSignatureEncoder} from "./signature/signature-encoder";
 
 export class CryptoSchemeFactory {
 
@@ -49,8 +50,9 @@ export class CryptoSchemeFactory {
 
 
     createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): PublicSignatureKey {
+        const encoder = new BytesSignatureEncoder();
         switch (schemeId) {
-            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PublicKeyEncoder().decodeFromUint8Array(publicKey);
+            case SignatureAlgorithmId.ML_DSA_65: return encoder.decodePublicKey(publicKey);
             default: throw `Not supported signature scheme ID: ${schemeId}`
         }
     }

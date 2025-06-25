@@ -93,6 +93,16 @@ export class NetworkProvider {
     return answer;
   }
 
+  async getVirtualBlockchainState(virtualBlockchainId: any) {
+    const answer = await this.abciQuery(
+      SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_STATE,
+      {
+        virtualBlockchainId
+      }
+    );
+    return answer;
+  }
+
   async query() {
     throw `attempt to call query() from the generic NetworkProvider class`;
   }
@@ -121,6 +131,11 @@ export class NetworkProvider {
     const answer = JSON.parse(await this.query(urlObject));
     const binary = Base64.decodeBinary(answer.data);
     const { type, object } = unserializer.unserialize(binary);
+
+    if(type == SCHEMAS.MSG_ERROR) {
+      // @ts-expect-error TS(2339): Property 'error' does not exist on type '{}'.... Remove this comment to see the full error message
+      throw `Remote error: ${object.error}`;
+    }
 
     return object;
   }

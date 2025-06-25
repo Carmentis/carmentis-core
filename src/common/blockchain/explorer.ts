@@ -1,4 +1,5 @@
-import { Utils } from "../utils/utils";
+import {Utils} from "../utils/utils";
+import {BlockchainUtils} from "../blockchain/blockchainUtils";
 import {Provider} from "../providers/provider";
 
 export class Explorer {
@@ -19,6 +20,11 @@ export class Explorer {
 
   async getMicroblockBodys(hashes: any) {
     return await this.provider.getMicroblockBodys(hashes);
+  }
+
+  async getVirtualBlockchainState(identifierString: any) {
+    const { stateData } = await this.provider.getVirtualBlockchainStateExternal(Utils.binaryFromHexa(identifierString));
+    return BlockchainUtils.decodeVirtualBlockchainState(stateData);
   }
 
   async getAccountState(accountHashString: any) {

@@ -171,22 +171,28 @@ export const MICROBLOCK_INFORMATION = [
 // ============================================================================================================================ //
 //  Node messages                                                                                                               //
 // ============================================================================================================================ //
-export const MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE  = 0x00;
-export const MSG_VIRTUAL_BLOCKCHAIN_UPDATE      = 0x01;
-export const MSG_GET_MICROBLOCK_INFORMATION     = 0x02;
-export const MSG_MICROBLOCK_INFORMATION         = 0x03;
-export const MSG_AWAIT_MICROBLOCK_ANCHORING     = 0x04;
-export const MSG_MICROBLOCK_ANCHORING           = 0x05;
-export const MSG_GET_MICROBLOCK_BODYS           = 0x06;
-export const MSG_MICROBLOCK_BODYS               = 0x07;
-export const MSG_GET_ACCOUNT_STATE              = 0x08;
-export const MSG_ACCOUNT_STATE                  = 0x09;
-export const MSG_GET_ACCOUNT_HISTORY            = 0x0A;
-export const MSG_ACCOUNT_HISTORY                = 0x0B;
-export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH = 0x0C;
-export const MSG_ACCOUNT_BY_PUBLIC_KEY_HASH     = 0x0D;
+export const MSG_ERROR                          = 0x00;
+export const MSG_GET_VIRTUAL_BLOCKCHAIN_STATE   = 0x01;
+export const MSG_VIRTUAL_BLOCKCHAIN_STATE       = 0x02;
+export const MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE  = 0x03;
+export const MSG_VIRTUAL_BLOCKCHAIN_UPDATE      = 0x04;
+export const MSG_GET_MICROBLOCK_INFORMATION     = 0x05;
+export const MSG_MICROBLOCK_INFORMATION         = 0x06;
+export const MSG_AWAIT_MICROBLOCK_ANCHORING     = 0x07;
+export const MSG_MICROBLOCK_ANCHORING           = 0x08;
+export const MSG_GET_MICROBLOCK_BODYS           = 0x09;
+export const MSG_MICROBLOCK_BODYS               = 0x0A;
+export const MSG_GET_ACCOUNT_STATE              = 0x0B;
+export const MSG_ACCOUNT_STATE                  = 0x0C;
+export const MSG_GET_ACCOUNT_HISTORY            = 0x0D;
+export const MSG_ACCOUNT_HISTORY                = 0x0E;
+export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH = 0x0F;
+export const MSG_ACCOUNT_BY_PUBLIC_KEY_HASH     = 0x10;
 
 export const NODE_MESSAGE_NAMES = [
+  "ERROR",
+  "GET_VIRTUAL_BLOCKCHAIN_STATE",
+  "VIRTUAL_BLOCKCHAIN_STATE",
   "GET_VIRTUAL_BLOCKCHAIN_UPDATE",
   "VIRTUAL_BLOCKCHAIN_UPDATE",
   "GET_MICROBLOCK_INFORMATION",
@@ -204,6 +210,15 @@ export const NODE_MESSAGE_NAMES = [
 ];
 
 export const NODE_MESSAGES = {
+  [ MSG_ERROR ]: [
+    { name: "error", type: DATA.TYPE_STRING }
+  ],
+  [ MSG_GET_VIRTUAL_BLOCKCHAIN_STATE ]: [
+    { name: "virtualBlockchainId", type: DATA.TYPE_BIN256 }
+  ],
+  [ MSG_VIRTUAL_BLOCKCHAIN_STATE ]: [
+    { name: "stateData", type: DATA.TYPE_BINARY }
+  ],
   [ MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE ]: [
     { name: "virtualBlockchainId", type: DATA.TYPE_BIN256 },
     { name: "knownHeight",         type: DATA.TYPE_UINT48 }

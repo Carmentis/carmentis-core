@@ -95,11 +95,12 @@ export class Provider {
     return res;
   }
 
-  async getVirtualBlockchainInformation(virtualBlockchainId: any) {
-  }
-
   async getVirtualBlockchainStateInternal(virtualBlockchainId: any) {
     return await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
+  }
+
+  async getVirtualBlockchainStateExternal(virtualBlockchainId: any) {
+    return await this.externalProvider.getVirtualBlockchainState(virtualBlockchainId);
   }
 
   async getVirtualBlockchainHeaders(virtualBlockchainId: any, knownHeight: any) {

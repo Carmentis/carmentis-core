@@ -7,7 +7,7 @@
     "clean": "rimraf dist && rimraf types",
     "build:client": "rollup --config rollup.config.client.js",
     "build:server": "rollup --config rollup.config.server.js",
-    "build:common-export": "npx barrelsby --delete -d src/common -e 'test' -e 'Test' -e \"benchmark\" -e 'spec' -n common",
+    "build:common-export": "npx barrelsby --delete -d src/common -e test -e Test -e benchmark -e spec -n common",
     "build": "npm run build:common-export && tsc && npm run build:client && npm run build:server",
     "docs": "jsdoc -r -c jsdoc.json -t ./node_modules/better-docs -d docs src"
   },

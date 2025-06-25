@@ -9,7 +9,7 @@ import {Utils} from "../common/utils/utils";
 import {SchemaSerializer, SchemaUnserializer} from "../common/data/schemaSerializer";
 import {ReadStream, WriteStream} from "../common/data/byteStreams";
 import {RadixTree} from "../common/trees/radixTree";
-import {DATA} from '../common/constants/constants.js';
+import {DATA, ECO} from '../common/constants/constants';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 
 describe('Chain test', () => {
@@ -27,6 +27,7 @@ describe('Chain test', () => {
 
         let genesisAccount = await blockchain.createGenesisAccount();
 
+        genesisAccount.setGasPrice(ECO.TOKEN);
         let genesisAccountId = await genesisAccount.publishUpdates();
 
         console.log("genesisAccountId", genesisAccountId);
@@ -38,6 +39,7 @@ describe('Chain test', () => {
 
         let testAccount = await blockchain.createAccount(genesisAccountId, testPublicKey, 10);
 
+        testAccount.setGasPrice(ECO.TOKEN);
         let testAccountId = await testAccount.publishUpdates();
 
         console.log("testAccountId", testAccountId);
@@ -53,6 +55,7 @@ describe('Chain test', () => {
             privateReference: "private ref."
         });
 
+        genesisAccount.setGasPrice(ECO.TOKEN);
         await genesisAccount.publishUpdates();
 
         console.log("processing transfer #2");
@@ -66,6 +69,7 @@ describe('Chain test', () => {
             privateReference: "private ref."
         });
 
+        genesisAccount.setGasPrice(ECO.TOKEN);
         await genesisAccount.publishUpdates();
 
         console.log("loading back genesis account");
@@ -84,6 +88,7 @@ describe('Chain test', () => {
             website: "www.carmentis.io"
         });
 
+        organization.setGasPrice(ECO.TOKEN);
         let organizationId = await organization.publishUpdates();
 
         console.log("loading back organization");
@@ -182,7 +187,8 @@ describe('Chain test', () => {
         const blockchain = new Blockchain(keyedProvider);
 
         const object = {
-            //  virtualBlockchainId: "0123456789ABCDEF0123456789ABCDEF",
+            applicationId: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+            //  virtualBlockchainId: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
             data: {
                 email: "john.doe@gmail.com"
             },
@@ -211,6 +217,7 @@ describe('Chain test', () => {
 
         const appLedger = await blockchain.getApplicationLedgerFromJson(object);
 
+        appLedger.setGasPrice(ECO.TOKEN);
         const hash = await appLedger.publishUpdates();
     }, TEST_TIMEOUT)
 });

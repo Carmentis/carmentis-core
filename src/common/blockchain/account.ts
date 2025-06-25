@@ -9,12 +9,15 @@ export class Account {
   provider: any;
   signatureAlgorithmId: any;
   vb: AccountVb;
+  gasPrice: number;
 
   constructor({
     provider
   }: any) {
     this.vb = new AccountVb({ provider });
     this.provider = provider;
+    this.gasPrice = 0;
+
     if (provider.isKeyed()) {
       this.privateKey = this.provider.getPrivateSignatureKey();
       this.signatureAlgorithmId = this.privateKey.getSignatureAlgorithmId();
@@ -80,8 +83,13 @@ export class Account {
     });
   }
 
+  setGasPrice(gasPrice: number) {
+    this.gasPrice = gasPrice;
+  }
+
   async publishUpdates() {
     if (!this.provider.isKeyed()) throw "Cannot publish updates without a keyed provider.";
+    this.vb.setGasPrice(this.gasPrice);
     await this.vb.setSignature(this.privateKey);
     return await this.vb.publish();
   }

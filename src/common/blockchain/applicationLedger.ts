@@ -9,6 +9,8 @@ export class ApplicationLedger {
   provider: any;
   signatureAlgorithmId: any;
   vb: any;
+  gasPrice: number;
+
   constructor({
     provider
   }: any) {
@@ -16,6 +18,7 @@ export class ApplicationLedger {
     //this.publicKey = publicKey;
     //this.privateKey = privateKey;
     this.provider = provider
+    this.gasPrice = 0;
     //this.signatureAlgorithmId = Crypto.SECP256K1;
     if (this.provider.isKeyed()) {
       const privateKey = this.provider.getPrivateSignatureKey();
@@ -42,9 +45,14 @@ export class ApplicationLedger {
     if(object.virtualBlockchainId) {
       await this.vb.load(object.virtualBlockchainId);
     }
-    else {
+
+    if(this.vb.height == 0) {
+      // genesis -> declare the signature algorithm and the application
       await this.vb.setSignatureAlgorithm({
         algorithmId: this.signatureAlgorithmId
+      });
+      await this.vb.addDeclaration({
+        applicationId: object.applicationId
       });
     }
 
@@ -140,9 +148,14 @@ export class ApplicationLedger {
     console.log(this.vb);
   }
 
+  setGasPrice(gasPrice: number) {
+    this.gasPrice = gasPrice;
+  }
+
   async publishUpdates() {
     if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.'
     const privateKey = this.provider.getPrivateSignatureKey();
+    this.vb.setGasPrice(this.gasPrice);
     await this.vb.signAsAuthor(privateKey);
     return await this.vb.publish();
   }

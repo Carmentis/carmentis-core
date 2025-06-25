@@ -47,6 +47,7 @@ const RECORD_HASHABLE_FIELD = [
 ];
 
 export const RECORD_DESCRIPTION = [
+  { name: "applicationId",       type: DATA.TYPE_HASH_STR },
   { name: "virtualBlockchainId", type: DATA.TYPE_HASH_STR, optional: true },
   { name: "data",                type: DATA.TYPE_OBJECT, unspecifiedSchema: true },
   { name: "actors",              type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_ACTOR },

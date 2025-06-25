@@ -7,11 +7,14 @@ export class Organization {
   provider: any;
   signatureAlgorithmId?: SignatureAlgorithmId;
   vb: OrganizationVb;
+  gasPrice: number;
   constructor({
     provider
   }: any) {
     this.vb = new OrganizationVb({ provider });
     this.provider = provider;
+    this.gasPrice = 0;
+
     if (this.provider.isKeyed()) {
       const privateKey = this.provider.getPrivateSignatureKey();
       this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
@@ -43,9 +46,14 @@ export class Organization {
     return section.object;
   }
 
+  setGasPrice(gasPrice: number) {
+    this.gasPrice = gasPrice;
+  }
+
   async publishUpdates() {
     if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.';
     const privateKey = this.provider.getPrivateSignatureKey();
+    this.vb.setGasPrice(this.gasPrice);
     await this.vb.setSignature(privateKey);
     return await this.vb.publish();
   }

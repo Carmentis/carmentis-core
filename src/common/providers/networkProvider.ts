@@ -30,7 +30,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getAccountState(accountHash: any) {
+  async getAccountState(accountHash: string) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_ACCOUNT_STATE,
       {
@@ -52,7 +52,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getAccountByPublicKeyHash(publicKeyHash: any) {
+  async getAccountByPublicKeyHash(publicKeyHash: string) {
     const answer = await this.abciQuery(
       SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
       {

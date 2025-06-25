@@ -2,8 +2,11 @@ import { CHAIN, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
 import {CryptoSchemeFactory} from "../crypto/factory";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 
 export class OrganizationVb extends VirtualBlockchain {
+  private signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
   constructor({
     provider
   }: any) {
@@ -18,12 +21,16 @@ export class OrganizationVb extends VirtualBlockchain {
   /**
     Update methods
   */
-  async setSignatureAlgorithm(object: any) {
-    await this.addSection(SECTIONS.ORG_SIG_ALGORITHM, object);
+  async setSignatureAlgorithm(signatureAlgorithmId: SignatureAlgorithmId) {
+    await this.addSection(SECTIONS.ORG_SIG_ALGORITHM, {
+      algorithmId: signatureAlgorithmId
+    });
   }
 
-  async setPublicKey(object: any) {
-    await this.addSection(SECTIONS.ORG_PUBLIC_KEY, object);
+  async setPublicKey(publicKey: PublicSignatureKey) {
+    await this.addSection(SECTIONS.ORG_PUBLIC_KEY, {
+      publicKey: publicKey.getPublicKeyAsBytes()
+    });
   }
 
   async setDescription(object: any) {
@@ -35,7 +42,7 @@ export class OrganizationVb extends VirtualBlockchain {
    * @param {PrivateSignatureKey} privateKey
    * @returns {Promise<void>}
    */
-  async setSignature(privateKey: any) {
+  async setSignature(privateKey: PrivateSignatureKey) {
     const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.ORG_SIGNATURE, object);
   }

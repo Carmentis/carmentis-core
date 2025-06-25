@@ -1,11 +1,11 @@
 import { CHAIN, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
+import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
+import {Provider} from "../providers/provider";
 
 export class ApplicationVb extends VirtualBlockchain {
-  constructor({
-    provider
-  }: any) {
+  constructor(provider: Provider) {
     super({ provider, type: CHAIN.VB_ORGANIZATION });
 
     this.registerSectionCallback(SECTIONS.APP_SIG_ALGORITHM, this.signatureAlgorithmCallback);
@@ -20,11 +20,11 @@ export class ApplicationVb extends VirtualBlockchain {
     await this.addSection(SECTIONS.APP_SIG_ALGORITHM, object);
   }
 
-  async setDeclaration(object: any) {
+  async setDeclaration(object: {organizationId: string}) {
     await this.addSection(SECTIONS.APP_DECLARATION, object);
   }
 
-  async setDescription(object: any) {
+  async setDescription(object: {name: string, logoUrl: string, homepageUrl: string, description: string}) {
     await this.addSection(SECTIONS.APP_DESCRIPTION, object);
   }
 
@@ -33,7 +33,7 @@ export class ApplicationVb extends VirtualBlockchain {
    * @param {PrivateSignatureKey} privateKey
    * @returns {Promise<void>}
    */
-  async setSignature(privateKey: any) {
+  async setSignature(privateKey: PrivateSignatureKey) {
     const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.APP_SIGNATURE, object);
   }

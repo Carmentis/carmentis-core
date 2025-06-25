@@ -1,6 +1,9 @@
 import { BlockchainUtils } from "../blockchain/blockchainUtils";
 import { Utils } from "../utils/utils";
 
+/**
+ * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
+ */
 export class Provider {
   externalProvider: any;
   internalProvider: any;

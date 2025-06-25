@@ -6,6 +6,7 @@ import { Organization } from "./organization";
 import { Application } from "./application";
 import { ApplicationLedger } from "./applicationLedger";
 import { Utils } from "../utils/utils";
+import {EncoderFactory} from "../utils/encoder";
 
 export class Blockchain {
   provider: any;
@@ -41,10 +42,11 @@ export class Blockchain {
    * @param {number} amount
    * @returns {Promise<Account>}
    */
-  async createAccount(sellerAccount: any, buyerPublicKey: any, amount: any) {
+  async createAccount(sellerAccount: string, buyerPublicKey: any, amount: any) {
     if (!this.provider.isKeyed()) throw 'Cannot create an account without a keyed provider.'
+    const hexEncoder = EncoderFactory.bytesToHexEncoder();
     const account = new Account({ provider: this.provider });
-    await account._create(Utils.binaryFromHexa(sellerAccount), buyerPublicKey, amount);
+    await account._create(hexEncoder.decode(sellerAccount), buyerPublicKey, amount);
     return account;
   }
 

@@ -48,6 +48,15 @@ export class EncoderFactory {
     static bytesToBase64Encoder(): EncoderInterface<Uint8Array, string> {
         return new BytesToBase64Encoder();
     }
+
+    /**
+     * Retrieves an encoder instance that converts bytes (Uint8Array) into a hexadecimal string representation.
+     *
+     * @return {EncoderInterface<Uint8Array, string>} An encoder capable of transforming a Uint8Array into a hexadecimal string.
+     */
+    static bytesToHexEncoder(): EncoderInterface<Uint8Array, string> {
+        return new BytesToHexEncoder();
+    }
 }
 
 /**

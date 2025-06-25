@@ -1,11 +1,16 @@
 import { Utils } from "../utils/utils";
+import {Provider} from "../providers/provider";
 
 export class Explorer {
   provider: any;
   constructor({
     provider
-  }: any) {
+  }: {provider: Provider}) {
     this.provider = provider;
+  }
+
+  static createFromProvider(provider: Provider): Explorer {
+    return new Explorer({provider});
   }
 
   async getMicroblockInformation(hashString: any) {

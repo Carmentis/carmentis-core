@@ -1,9 +1,10 @@
 import { CHAIN } from "../constants/constants";
-import { Microblock } from "./microblock";
+import {Microblock, Section} from "./microblock";
 import { Utils } from "../utils/utils";
+import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 
 export abstract class VirtualBlockchain {
-  currentMicroblock: any;
+  currentMicroblock: Microblock | null;
   height: any;
   identifier: any;
   microblockHashes: any;
@@ -106,7 +107,7 @@ export abstract class VirtualBlockchain {
   /**
     Adds a section to the current microblock.
   */
-  async addSection(type: any, object: any) {
+  async addSection(type: number, object: any) {
     if(!this.currentMicroblock) {
       this.currentMicroblock = new Microblock(this.type);
       const previousHash = this.height ? this.microblockHashes[this.height - 1] : null;
@@ -121,7 +122,7 @@ export abstract class VirtualBlockchain {
   /**
     Processes a section callback (if defined).
   */
-  async processSectionCallback(microblock: any, section: any) {
+  async processSectionCallback(microblock: Microblock, section: Section) {
     if(this.sectionCallbacks.has(section.type)) {
       const callback = this.sectionCallbacks.get(section.type);
       await callback(microblock, section);
@@ -129,13 +130,17 @@ export abstract class VirtualBlockchain {
   }
 
   /**
-   * Creates a signature for the current microblock.
+   * Creates a cryptographic signature for a microblock.
    *
-   * @param {PrivateSignatureKey} privateKey
-   * @param {boolean} withGas
-   * @returns {{signature: (*|{signature})}}
+   * @param {PrivateSignatureKey} privateKey - The private key used to generate the signature.
+   * @param {boolean} [withGas=true] - Specifies whether the signature should include gas information.
+   * @return {{ signature: Uint8Array }} An object containing the generated signature as a Uint8Array.
+   * @throws {Error} If no microblock has been created yet.
    */
-  createSignature(privateKey: any, withGas = true) {
+  createSignature(privateKey: PrivateSignatureKey, withGas = true) : { signature: Uint8Array } {
+    if (!this.currentMicroblock) throw new Error(
+      "Cannot create a signature for a microblock that has not been created yet."
+    )
     const signature = this.currentMicroblock.createSignature(privateKey, withGas);
     return { signature };
   }
@@ -144,9 +149,7 @@ export abstract class VirtualBlockchain {
     Publishes the current microblock.
   */
   async publish() {
-//  console.log("publishing");
-//  console.log(this.currentMicroblock.header);
-//  console.log(this.currentMicroblock.sections);
+    if(!this.currentMicroblock) throw new Error("Cannot publish a microblock that has not been created yet.");
 
     this.checkStructure(this.currentMicroblock);
 

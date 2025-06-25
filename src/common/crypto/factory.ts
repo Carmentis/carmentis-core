@@ -9,9 +9,7 @@ import {
 import {
     PrivateSignatureKey, PublicSignatureKey,
     SignatureAlgorithmId,
-    SignatureScheme
 } from "./signature/signature-interface";
-import {hexToBytes} from "@noble/ciphers/utils";
 import {MLDSA65PrivateSignatureKey} from "./signature/ml-dsa-65";
 import {BytesSignatureEncoder} from "./signature/signature-encoder";
 

@@ -1,6 +1,7 @@
 import { CHAIN, ECO, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
+import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 
 export class AccountVb extends VirtualBlockchain {
   constructor({
@@ -23,8 +24,10 @@ export class AccountVb extends VirtualBlockchain {
     await this.addSection(SECTIONS.ACCOUNT_SIG_ALGORITHM, object);
   }
 
-  async setPublicKey(object: any) {
-    await this.addSection(SECTIONS.ACCOUNT_PUBLIC_KEY, object);
+  async setPublicKey(publicKey: PublicSignatureKey) {
+    await this.addSection(SECTIONS.ACCOUNT_PUBLIC_KEY, {
+      publicKey: publicKey.getPublicKeyAsBytes()
+    });
   }
 
   async setTokenIssuance(object: any) {
@@ -44,7 +47,7 @@ export class AccountVb extends VirtualBlockchain {
    * @param {PrivateSignatureKey} privateKey
    * @returns {Promise<void>}
    */
-  async setSignature(privateKey: any) {
+  async setSignature(privateKey: PrivateSignatureKey) {
     const object = this.createSignature(privateKey);
     await this.addSection(SECTIONS.ACCOUNT_SIGNATURE, object);
   }

@@ -53,6 +53,7 @@ export * from "./providers/keyed-provider";
 export * from "./providers/memoryProvider";
 export * from "./providers/networkProvider";
 export * from "./providers/nullNetworkProvider";
+export * from "./providers/provider-factory";
 export * from "./providers/provider";
 export * from "./providers/serverNetworkProvider";
 export * from "./records/intermediateRepresentation";

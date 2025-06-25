@@ -2,6 +2,15 @@ import { CHAIN, ECO, SCHEMAS, SECTIONS } from "../constants/constants";
 import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
 import { Utils } from "../utils/utils";
 import { Crypto } from "../crypto/crypto";
+import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
+
+export interface Section {
+  type: number,
+  object: any,
+  data: any,
+  hash: Uint8Array,
+  index: number,
+}
 
 export class Microblock {
   gasPrice: any;
@@ -83,7 +92,7 @@ export class Microblock {
   /**
     Adds a section of a given type and defined by a given object.
   */
-  addSection(type: any, object: any) {
+  addSection(type: any, object: any): Section {
     // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const sectionDef = SECTIONS.DEF[this.type][type];
     const serializer = new SchemaSerializer(sectionDef.schema);
@@ -95,7 +104,7 @@ export class Microblock {
   /**
     Stores a section, including its serialized data, hash and index.
   */
-  storeSection(type: any, object: any, data: any) {
+  storeSection(type: any, object: any, data: any) : Section {
     const hash = Crypto.Hashes.sha256AsBinary(data);
     const index = this.sections.length;
 
@@ -112,37 +121,23 @@ export class Microblock {
     return this.sections.find((section: any) => callback(section));
   }
 
+
   /**
+   * Creates a digital signature using the provided private key and optionally includes gas-related data.
    *
-   * @param {PrivateSignatureKey} privateKey
-   * @param {boolean} includeGas
-   * @returns {*}
+   * @param {PrivateSignatureKey} privateKey - The private key used to sign the data.
+   * @param {boolean} includeGas - A flag indicating whether gas-related data should be included in the signature.
+   * @return {Uint8Array} The generated digital signature as a byte array.
    */
-  createSignature(privateKey: any, includeGas: any) {
+  createSignature(privateKey: PrivateSignatureKey, includeGas: boolean): Uint8Array {
     const signatureSize = privateKey.getSignatureSize()
     const signedData = this.getSignedData(
-      includeGas,
-      this.sections.length,
-      signatureSize
+        includeGas,
+        this.sections.length,
+        signatureSize
     );
 
-    const signature = privateKey.sign( signedData )
-
-    /*
-    switch(algorithmId) {
-      case Crypto.SECP256K1: {
-        signature = Crypto.Secp256k1.sign(privateKey, signedData);
-        break;
-      }
-      case Crypto.ML_DSA: {
-        signature = Crypto.MLDsa.sign(privateKey, signedData);
-        break;
-      }
-    }
-
-     */
-
-    return signature;
+    return privateKey.sign(signedData)
   }
 
   /**

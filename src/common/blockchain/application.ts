@@ -8,7 +8,7 @@ export class Application {
   constructor({
     provider
   }: any) {
-    this.vb = new ApplicationVb({ provider });
+    this.vb = new ApplicationVb(provider);
     this.provider = provider;
     if (this.provider.isKeyed()) {
       const privateKey = this.provider.getPrivateSignatureKey();

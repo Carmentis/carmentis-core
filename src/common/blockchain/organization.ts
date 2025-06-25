@@ -1,11 +1,12 @@
 import { SECTIONS } from "../constants/constants";
 import { OrganizationVb } from "./organizationVb";
 import { Crypto } from "../crypto/crypto";
+import {PrivateSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 
 export class Organization {
   provider: any;
-  signatureAlgorithmId: any;
-  vb: any;
+  signatureAlgorithmId?: SignatureAlgorithmId;
+  vb: OrganizationVb;
   constructor({
     provider
   }: any) {
@@ -18,16 +19,13 @@ export class Organization {
   }
 
   async _create() {
-    await this.vb.setSignatureAlgorithm({
-      algorithmId: this.signatureAlgorithmId
-    });
+    if (!this.signatureAlgorithmId) throw 'Cannot create an organization without a signature algorithm';
+    await this.vb.setSignatureAlgorithm(this.signatureAlgorithmId);
 
     if (!this.provider.isKeyed()) throw 'Cannot create an organization without a keyed provider';
-    const privateKey = this.provider.getPrivateSignatureKey();
+    const privateKey: PrivateSignatureKey = this.provider.getPrivateSignatureKey();
     const publicKey = privateKey.getPublicKey();
-    await this.vb.setPublicKey({
-      publicKey: publicKey.getRawPublicKey()
-    });
+    await this.vb.setPublicKey(publicKey);
   }
 
   async _load(identifier: any) {

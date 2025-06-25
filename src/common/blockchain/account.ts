@@ -1,12 +1,14 @@
 import { ECO } from "../constants/constants";
 import { AccountVb } from "./accountVb";
 import { Utils } from "../utils/utils";
+import {PublicSignatureKey} from "../crypto/signature/signature-interface";
+import {EncoderFactory} from "../utils/encoder";
 
 export class Account {
   privateKey: any;
   provider: any;
   signatureAlgorithmId: any;
-  vb: any;
+  vb: AccountVb;
 
   constructor({
     provider
@@ -25,10 +27,8 @@ export class Account {
       algorithmId: this.signatureAlgorithmId
     });
 
-    const publicKey = this.privateKey.getPublicKey();
-    await this.vb.setPublicKey({
-      publicKey: publicKey.getRawPublicKey()
-    });
+    const publicKey: PublicSignatureKey = this.privateKey.getPublicKey();
+    await this.vb.setPublicKey(publicKey);
 
     await this.vb.setTokenIssuance({
       amount: ECO.INITIAL_OFFER
@@ -43,15 +43,13 @@ export class Account {
    * @returns {Promise<void>}
    * @private
    */
-  async _create(sellerAccount: any, buyerPublicKey: any, amount: any) {
+  async _create(sellerAccount: Uint8Array, buyerPublicKey: PublicSignatureKey, amount: number) {
     if (!this.provider.isKeyed()) throw "Cannot create an account without a keyed provider."
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
     });
 
-    await this.vb.setPublicKey({
-      publicKey: buyerPublicKey.getRawPublicKey()
-    });
+    await this.vb.setPublicKey(buyerPublicKey);
 
     await this.vb.setCreation({
       sellerAccount: sellerAccount,
@@ -63,9 +61,19 @@ export class Account {
     await this.vb.load(identifier);
   }
 
-  async transfer(object: any) {
+  /**
+   * Transfers a specified amount from the account with provided references.
+   *
+   * @param {Object} object - The transfer details.
+   * @param {string} object.account - The account identifier encoded as a string.
+   * @param {number} object.amount - The amount to be transferred.
+   * @param {string} object.publicReference - The public reference for the transfer.
+   * @param {string} object.privateReference - The private reference for the transfer.
+   */
+  async transfer(object: { account: string, amount: number, publicReference: string, privateReference: string }) {
+    const hexEncoder = EncoderFactory.bytesToHexEncoder()
     await this.vb.setTransfer({
-      account: Utils.binaryFromHexa(object.account),
+      account: hexEncoder.decode(object.account),
       amount: object.amount,
       publicReference: object.publicReference,
       privateReference: object.privateReference

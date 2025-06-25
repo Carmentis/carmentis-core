@@ -20,7 +20,6 @@ export class ValidatorNodeVb extends VirtualBlockchain {
   /**
     Structure check
   */
-  // @ts-expect-error TS(2425): Class 'VirtualBlockchain' defines instance member ... Remove this comment to see the full error message
   checkStructure(microblock: any) {
     const checker = new StructureChecker(microblock);
   }

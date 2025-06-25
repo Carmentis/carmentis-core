@@ -28,7 +28,7 @@ export abstract class VirtualBlockchain {
   }
 
 
-  abstract checkStructure(microblock: any): true;
+  abstract checkStructure(microblock: any): void;
 
   /**
     Registers a callback for a given section type.

@@ -66,6 +66,10 @@ export class Blockchain {
     this.provider = provider;
   }
 
+  static createFromProvider(provider: Provider): Blockchain {
+    return new Blockchain(provider);
+  }
+
   getExplorer() {
     return new Explorer({ provider: this.provider });
   }

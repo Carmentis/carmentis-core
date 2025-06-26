@@ -121,16 +121,18 @@ export interface AccountHash {
     accountHash: Uint8Array
 }
 
+export interface AccountHistoryEntry {
+    height: number,
+    previousHistoryHash: Uint8Array,
+    type: number,
+    timestamp: number,
+    linkedAccount: Uint8Array,
+    amount: number,
+    chainReference: Uint8Array
+}
+
 export interface AccountHistory {
-    list: {
-        height: number,
-        previousHistoryHash: Uint8Array,
-        type: number,
-        timestamp: number,
-        linkedAccount: Uint8Array,
-        amount: number,
-        chainReference: Uint8Array
-    }[]
+    list: AccountHistoryEntry[]
 }
 
 export interface AccountTokenIssuance {

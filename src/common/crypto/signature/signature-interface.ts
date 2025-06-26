@@ -1,4 +1,4 @@
-import {EncoderInterface} from "../../utils/encoder";
+import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
 
 /**
  * Represents a cryptographic signature scheme with methods to retrieve
@@ -19,6 +19,7 @@ export interface PrivateSignatureKey extends SignatureScheme {
     getPublicKey(): PublicSignatureKey;
     sign(data: Uint8Array): Uint8Array;
     getPrivateKeyAsBytes(): Uint8Array;
+    encodePrivateKey(encoder: EncoderInterface<Uint8Array, string>): string
 }
 
 /**
@@ -42,6 +43,7 @@ export interface PrivateSignatureKey extends SignatureScheme {
 export interface PublicSignatureKey extends SignatureScheme {
     verify(data: Uint8Array, signature: Uint8Array): boolean;
     getPublicKeyAsBytes(): Uint8Array;
+    encodePublicKey(encoder: EncoderInterface<Uint8Array, string>): string
 }
 
 /**

@@ -388,8 +388,8 @@ export const WI_REQUESTS = {
 
 export const WI_ANSWERS = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
-    { name: "publicKey", type: DATA.TYPE_BINARY },
-    { name: "signature", type: DATA.TYPE_BINARY }
+    { name: "publicKey", type: DATA.TYPE_STRING },
+    { name: "signature", type: DATA.TYPE_STRING }
   ],
   [ WIRQ_GET_EMAIL ]: [
     { name: "email", type: DATA.TYPE_STRING }

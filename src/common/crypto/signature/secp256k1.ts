@@ -6,6 +6,7 @@ import {
 } from "./signature-interface";
 import {getPublicKey, PrivKey, sign, utils, etc, verify} from '@noble/secp256k1';
 import {sha256} from "@noble/hashes/sha2";
+import {EncoderInterface} from "../../utils/encoder";
 
 /**
  * The `Secp256k1SignatureScheme` class implements the `SignatureScheme` interface and provides
@@ -46,6 +47,12 @@ export class Secp256k1PublicSignatureKey extends Secp256k1SignatureScheme implem
         return verify(signature, msgHash, this.publicKey);
     }
 
+    encodePublicKey(encoder: EncoderInterface<Uint8Array, string>): string {
+        return encoder.encode(this.getPublicKeyAsBytes())
+    }
+
+
+
 }
 
 /**
@@ -60,6 +67,10 @@ export class Secp256k1PublicSignatureKey extends Secp256k1SignatureScheme implem
 export class Secp256k1PrivateSignatureKey extends Secp256k1PublicSignatureKey implements PrivateSignatureKey {
     constructor(private privateKey: PrivKey) {
         super(getPublicKey(privateKey));
+    }
+
+    encodePrivateKey(encoder: EncoderInterface<Uint8Array, string>): string {
+        return encoder.encode(this.getPrivateKeyAsBytes())
     }
 
     /**

@@ -6,6 +6,7 @@ import {
     SignatureAlgorithmId,
     SignatureScheme
 } from "./signature-interface";
+import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
 
 export class MLDSA65SignatureScheme implements SignatureScheme {
     private static SIGNATURE_SIZE = 3311;
@@ -36,6 +37,11 @@ export class MLDSA65PublicSignatureKey extends MLDSA65SignatureScheme implements
      */
     constructor(protected publicKey: Uint8Array) {
         super();
+    }
+
+
+    encodePublicKey(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
+        return encoder.encode(this.getPublicKeyAsBytes())
     }
 
 
@@ -82,6 +88,11 @@ export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implem
     }
 
     private signatureKey: Uint8Array;
+
+
+    encodePrivateKey(encoder: EncoderInterface<Uint8Array, string>): string {
+        return encoder.encode(this.getPrivateKeyAsBytes())
+    }
 
     /**
      * Constructs a new instance of the class, initializes the public and private keys

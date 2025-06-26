@@ -23,7 +23,7 @@ export class Organization {
   }
 
   async _create() {
-    if (!this.signatureAlgorithmId) throw 'Cannot create an organization without a signature algorithm';
+    if (typeof this.signatureAlgorithmId === 'undefined') throw 'Cannot create an organization without a signature algorithm';
     await this.vb.setSignatureAlgorithm(this.signatureAlgorithmId);
 
     if (!this.provider.isKeyed()) throw 'Cannot create an organization without a keyed provider';

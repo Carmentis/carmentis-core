@@ -9,6 +9,8 @@ import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {Base64 as base64} from "../../common/data/base64";
 import {CryptoSchemeFactory} from "../../common/crypto/factory";
 import {SignatureAlgorithmId} from "../../common/crypto/signature/signature-interface";
+import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
+import {WI_INVALID_SIGNATURE} from "../../common/constants/errors";
 //import { wiError } from "../../common/errors/error";
 
 export class wiClient {
@@ -111,37 +113,21 @@ export class wiClient {
 
     console.log("[wiClient] performing the authentication request...")
 
-    let answer = await this.request(
+    let answer = await this.request<{publicKey: string, signature: string}>(
       SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY,
       {
         challenge: challenge
       }
     );
 
-    // load the public key
-    const cryptoFactory = new CryptoSchemeFactory();
 
-    // @ts-expect-error TS(2571): Object is of type 'unknown'.
-    const publicKey = cryptoFactory.createPublicSignatureKey(SignatureAlgorithmId.ML_DSA_65, answer.publicKey) // TODO add dynamic key parsing
-    // @ts-expect-error TS(2571): Object is of type 'unknown'.
-    if (!publicKey.verify(challenge, answer.signature)) {
-      // @ts-expect-error TS(2345): Argument of type 'number' is not assignable to par... Remove this comment to see the full error message
-      throw new Error(ERRORS.WI_INVALID_SIGNATURE);
-    }
 
-    /*
-    if(!crypto.secp256k1.verify(answer.publicKey, challenge, answer.signature)) {
-      throw new Error(ERRORS.WI_INVALID_SIGNATURE);
-    }
-     */
 
     console.log("[wiClient] Obtained response:", answer)
 
     return {
       challenge: challengeString,
-      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       publicKey: answer.publicKey,
-      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       signature: answer.signature
     };
   }
@@ -208,7 +194,7 @@ export class wiClient {
     return answer;
   }
 
-  async request(type: any, object: any) {
+  async request<T = unknown>(type: any, object: any): Promise<T> {
     console.log("[client] request", type, object);
     // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_REQUESTS[type]);
@@ -250,9 +236,9 @@ export class wiClient {
                 // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
                 schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]),
                 binary = base64.decodeBinary(object.answer, base64.BASE64),
-                answerObject = schemaSerializer.unserializeObject(binary);
+                answerObject = schemaSerializer.unserialize(binary);
 
-            resolve(answerObject);
+            resolve(answerObject as T);
           }
         };
 
@@ -286,7 +272,7 @@ export class wiClient {
             const schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]);
             let answerObject = schemaSerializer.unserialize(object.answer);
 
-            resolve(answerObject);
+            resolve(answerObject as T);
             break;
           }
         }

@@ -146,7 +146,22 @@ export class ApplicationLedger {
     return ir.exportToJson();
   }
 
-  async exportProof(customInfo: any) {
+  /**
+   * Exports a proof containing intermediate representations for all microblocks up to the current height of the virtual blockchain.
+   *
+   * @param {Object} customInfo - Custom information to include in the proof.
+   * @param {string} customInfo.author - The author of the proof file.
+   * @return {Promise<Object>} A promise that resolves to an object containing metadata and the exported proof data.
+   * @return {Object} return.info - Metadata about the proof.
+   * @return {string} return.info.title - A title describing the proof file.
+   * @return {string} return.info.date - The date the proof was created, in ISO format.
+   * @return {string} return.info.author - The author of the proof file.
+   * @return {string} return.info.virtualBlockchainIdentifier - The identifier of the virtual blockchain.
+   * @return {Array<Object>} return.proofs - An array of exported proof data for each microblock.
+   * @return {number} return.proofs[].height - The height of the microblock.
+   * @return {Object} return.proofs[].data - The proof data for the corresponding microblock.
+   */
+  async exportProof(customInfo: { author: string }) {
     const proofs = [];
 
     for(let height = 1; height <= this.vb.height; height++) {

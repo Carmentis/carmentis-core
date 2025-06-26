@@ -124,7 +124,7 @@ export class SchemaUnserializer<T = object> {
     Unserializes any sub-object of the full structure.
     @param {Array} schema - The (sub)schema of the object.
   */
-  unserializeObject(schema: any): object {
+  protected unserializeObject(schema: any): object {
     const object = {};
 
     for(const definition of schema) {

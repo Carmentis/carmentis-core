@@ -1,6 +1,8 @@
 import * as SCHEMAS from "../../common/constants/schemas";
 import {SchemaUnserializer} from "../../common/data/schemaSerializer";
 import * as network from "../../common/network/network";
+import {PrivateSignatureKey} from "../../common/crypto/signature/signature-interface";
+import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
 
 export abstract class wiWallet<T> {
 
@@ -29,18 +31,18 @@ export abstract class wiWallet<T> {
    * @param object
    * @returns {*}
    */
-  signAuthenticationByPublicKey(privateKey: any, object: any) {
+  signAuthenticationByPublicKey(privateKey: PrivateSignatureKey, object: any) {
     /*
     let publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey),
         signature = crypto.secp256k1.sign(privateKey, object.challenge);
      */
     const challenge = object.challenge;
     const signature = privateKey.sign(challenge);
-    const publicKey = privateKey.getPublicKey().getRawPublicKey();
+    const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
 
     let answerObject = {
-      publicKey: publicKey,
-      signature: signature
+      publicKey: signatureEncoder.encodePublicKey(privateKey.getPublicKey()),
+      signature: signatureEncoder.encodeSignature(signature),
     };
 
     return this.formatAnswer(
@@ -49,34 +51,6 @@ export abstract class wiWallet<T> {
     );
   }
 
-  /**
-   * Approves a request to get an email by encoding it with the defined schema
-   * and sending the encoded message through the socket.
-   *
-   * @param {string} email - The email address to be approved and processed.
-   * @return {Promise<void>} A promise that resolves when the message is successfully sent through the socket.
-   */
-  async approveGetEmailRequest(email: any) {
-    let answerObject = {
-      email: email
-    };
-
-    return this.formatAnswer(
-      SCHEMAS.WIRQ_GET_EMAIL,
-      answerObject
-    );
-  }
-
-  async approveGetUserDataRequest(userData: any) {
-    let answerObject = {
-      userData
-    };
-
-    return this.formatAnswer(
-      SCHEMAS.WIRQ_GET_USER_DATA,
-      answerObject
-    );
-  }
 
   /**
    * Gets the approval data identified by object.dataId, from the operator at object.serverUrl.*

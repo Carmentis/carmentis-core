@@ -1,8 +1,6 @@
-
 import * as fs from "fs";
 import { IntermediateRepresentation } from "./records/intermediateRepresentation";
 import { Utils } from "./utils/utils";
-
 
 const content = fs.readFileSync("./test-data/test1-small.json", "utf8");
 const testObject = JSON.parse(content);
@@ -18,16 +16,11 @@ const sectionData = ir.exportToSectionFormat();
 
 console.log(`Section binary data: ${sectionData.length} bytes`);
 
-const info = {
-  microblock: Utils.binaryToHexa(new Uint8Array(32)),
-  author: "Arnauld Chevallier"
-};
-
-  ir.setAsRedacted("this[0].*");
+ir.setAsRedacted("this[0].*");
 //ir.setAsRedacted("this[1].*");
 //ir.setAsRedacted("this[2].*");
 
-const proof = ir.exportToProof(info);
+const proof = ir.exportToProof();
 const proofAsText = JSON.stringify(proof, null, 2);
 
 console.log(`Formatted proof: ${proofAsText.length} bytes`);

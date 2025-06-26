@@ -209,7 +209,7 @@ export class Hash {
      *
      * @return {Uint8Array} The hash value as a Uint8Array.
      */
-    toByes(): Uint8Array { return this.hash }
+    toBytes(): Uint8Array { return this.hash }
 }
 
 export enum SectionType  {

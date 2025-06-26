@@ -5,6 +5,17 @@ export interface AccountVBState {
     publicKeyHeight: number;
 }
 
+export interface ApplicationDescription {
+    name: string,
+    logoUrl: string,
+    homepageUrl: string,
+    description: string
+}
+
+export interface ApplicationDeclaration {
+    organizationId: Uint8Array
+}
+
 export interface OrganizationDescription {
     name: string,
     city: string,

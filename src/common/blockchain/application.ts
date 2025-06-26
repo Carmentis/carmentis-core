@@ -1,6 +1,7 @@
 import { ApplicationVb } from "./applicationVb";
 import { Crypto } from "../crypto/crypto";
-import {Hash} from "./types";
+import {ApplicationDescription, Hash} from "./types";
+import {Provider} from "../providers/provider";
 
 export class Application {
     provider: any;
@@ -10,7 +11,7 @@ export class Application {
 
     constructor({
                     provider
-                }: any) {
+                }: { provider: Provider }) {
         this.vb = new ApplicationVb(provider);
         this.provider = provider;
         this.gasPrice = 0;
@@ -35,7 +36,7 @@ export class Application {
         await this.vb.load(identifier);
     }
 
-    async setDescription(object: any) {
+    async setDescription(object: ApplicationDescription) {
         await this.vb.setDescription(object);
     }
 
@@ -43,25 +44,19 @@ export class Application {
         this.gasPrice = gasPrice;
     }
 
-    getDescription() {
-        throw 'Not implemented';
-        //return this.vb.g
+    async getDescription() {
+        return this.vb.getDescription();
     }
 
-    getName(): string {
-        throw 'Not implemented'
-        //return this.vb.state.name;
+    async getOrganizationId() {
+        const declaration = await this.vb.getDeclaration();
+        return Hash.from(declaration.organizationId)
     }
 
-    /**
-     * Retrieves the unique identifier of the organization from the current state.
-     *
-     * @return {Hash} The hashed value representing the organization's unique identifier.
-     */
-    getOrganizationId() {
-        throw 'Not implemented';
-        //return Hash.from(this.vb.state.organizationId);
+    async getDeclaration() {
+        return this.vb.getDeclaration();
     }
+
 
     async publishUpdates() {
         if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.'

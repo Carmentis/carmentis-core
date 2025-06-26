@@ -36,6 +36,12 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         });
     }
 
+    /**
+     * Sets the description for the organization by adding a new section.
+     *
+     * @param {OrganizationDescription} object - The object containing the organization description details.
+     * @return {Promise<void>} A promise that resolves when the description has been successfully set.
+     */
     async setDescription(object: OrganizationDescription) {
         await this.addSection(SECTIONS.ORG_DESCRIPTION, object);
     }

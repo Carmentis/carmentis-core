@@ -6,6 +6,7 @@ import {Utils} from "../utils/utils";
 import {RecordDescription} from "./blockchain";
 import {Provider} from "../providers/provider";
 import {Hash} from "./types";
+import {Section} from "./microblock";
 
 export class ApplicationLedger {
   provider: any;
@@ -146,22 +147,22 @@ export class ApplicationLedger {
     const privateChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA);
     const ir = this.vb.getIntermediateRepresentationInstance();
 
-    const list = [
-      ...publicChannelDataSections.map((section: any) => {
+    // @ts-expect-error TS(2339): Property 'merkleRootHash' does not exist on type '... Remove this comment to see the full error message'
+    const list: { channelId: number, data: object, merkleRootHash?: string } = [
+      ...publicChannelDataSections.map((section: Section<{channelId: number, data: object}>) => {
         return {
           channelId: section.object.channelId,
           data: section.object.data
         };
       }),
-      ...privateChannelDataSections.map((section: any) => {
+      ...privateChannelDataSections.map((section: Section<{channelId: number, data: object, merkleRootHash: Uint8Array, encryptedData: string}>) => {
         const channelKey = new Uint8Array(32);  // FIXME
         const iv = new Uint8Array(32);          //
         const data = Crypto.Aes.decryptGcm(channelKey, section.object.encryptedData, iv);
-
         return {
           channelId: section.object.channelId,
           merkleRootHash: Utils.binaryToHexa(section.object.merkleRootHash),
-          data: data
+          data: data as Uint8Array
         };
       })
     ];

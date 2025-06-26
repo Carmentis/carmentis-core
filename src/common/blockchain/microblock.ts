@@ -129,7 +129,7 @@ export class Microblock {
   /**
     Returns all sections for which the given callback function returns true.
   */
-  getSections(callback: (section: Section) => boolean) {
+  getSections<T = any>(callback: (section: Section) => boolean): Section<T>[] {
     return this.sections.filter((section: Section) => callback(section));
   }
 

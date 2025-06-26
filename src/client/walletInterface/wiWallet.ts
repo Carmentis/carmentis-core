@@ -2,7 +2,7 @@ import * as SCHEMAS from "../../common/constants/schemas";
 import {SchemaUnserializer} from "../../common/data/schemaSerializer";
 import * as network from "../../common/network/network";
 
-export abstract class wiWallet {
+export abstract class wiWallet<T> {
 
   constructor() {
   }
@@ -20,7 +20,7 @@ export abstract class wiWallet {
     return req;
   }
 
-  abstract formatAnswer(answerType: any, object: any): {answerType: any, answer: string};
+  abstract formatAnswer(answerType: number, object: any): {answerType: number, answer: T};
 
   /**
    * Signs a request of authentication by public key. Returns the answer in the format expected by the application front.

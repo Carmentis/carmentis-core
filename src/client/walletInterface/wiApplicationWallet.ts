@@ -7,7 +7,7 @@ import * as qrCode from "../qrCode/qrCode";
 import {SchemaSerializer} from "../../common/data/schemaSerializer";
 //import {CarmentisError} from "../../common/errors/error";
 
-export class wiApplicationWallet extends wiWallet {
+export class wiApplicationWallet extends wiWallet<Uint8Array> {
   socket: any;
   constructor() {
     super();
@@ -66,7 +66,7 @@ export class wiApplicationWallet extends wiWallet {
   /**
    * Formats an answer, using the application wallet format.
    */
-  formatAnswer(answerType: any, object: any) {
+  formatAnswer(answerType: number, object: any) {
     // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_ANSWERS[answerType]);
     let answer = schemaSerializer.serialize(object);

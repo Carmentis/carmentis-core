@@ -4,7 +4,7 @@ import {SchemaSerializer} from "../../common/data/schemaSerializer";
 import {Base64 as base64} from "../../common/data/base64";
 import {WI_ANSWERS} from "../../common/constants/schemas";
 
-export class wiExtensionWallet extends wiWallet {
+export class wiExtensionWallet extends wiWallet<string> {
   constructor() {
     super();
   }
@@ -27,7 +27,7 @@ export class wiExtensionWallet extends wiWallet {
   /**
    * Formats an answer, using the extension wallet format.
    */
-  formatAnswer(answerType: any, object: any) {
+  formatAnswer(answerType: number, object: any) {
     // @ts-ignore
     const schemaSerializer = new SchemaSerializer(WI_ANSWERS[answerType])
     let answer = schemaSerializer.serialize(object);

@@ -201,7 +201,7 @@ describe('Chain test', () => {
             channels: [
                 { name: "mainChannel", public: false }
             ],
-            fieldAssignations: [
+            channelAssignations: [
                 { channelName: "mainChannel", fieldPath: "this.*" }
             ],
             actorAssignations: [

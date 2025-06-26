@@ -141,6 +141,11 @@ export class ApplicationLedger {
     console.log(this.vb);
   }
 
+  actorIsSubscribed(name: string) {
+    const actor = this.vb.getActor(name);
+    return actor.subscribed;
+  }
+
   async getRecord(height: number) {
     const ir = await this.getMicroblockIntermediateRepresentation(height);
     return ir.exportToJson();

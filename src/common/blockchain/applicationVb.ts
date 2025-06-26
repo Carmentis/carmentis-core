@@ -1,16 +1,17 @@
-import { CHAIN, SECTIONS } from "../constants/constants";
-import { VirtualBlockchain } from "./virtualBlockchain";
-import { StructureChecker } from "./structureChecker";
+import {CHAIN, SECTIONS} from "../constants/constants";
+import {VirtualBlockchain} from "./virtualBlockchain";
+import {StructureChecker} from "./structureChecker";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {Provider} from "../providers/provider";
 import {ApplicationDeclaration, ApplicationDescription, ApplicationVBState} from "./types";
 
 export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   constructor(provider: Provider) {
-    super({ provider, type: CHAIN.VB_ORGANIZATION });
+    super({ provider, type: CHAIN.VB_APPLICATION });
 
     this.registerSectionCallback(SECTIONS.APP_SIG_ALGORITHM, this.signatureAlgorithmCallback);
     this.registerSectionCallback(SECTIONS.APP_DECLARATION, this.declarationCallback);
+    this.registerSectionCallback(SECTIONS.APP_DESCRIPTION, this.descriptionCallback);
     this.registerSectionCallback(SECTIONS.APP_SIGNATURE, this.signatureCallback);
   }
 
@@ -29,20 +30,9 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
     await this.addSection(SECTIONS.APP_DESCRIPTION, object);
   }
 
-  async getDeclaration() {
-    if (!this.currentMicroblock) throw new Error("no current microblock");
-    return this.currentMicroblock.getSection<ApplicationDeclaration>((
-        section: any) => section.type == SECTIONS.APP_DECLARATION
-    ).object;
+  getDescriptionHeight(): number {
+    return this.getState().descriptionHeight;
   }
-
-  async getDescription() {
-    if (!this.currentMicroblock) throw new Error("no current microblock");
-    return this.currentMicroblock.getSection<ApplicationDescription>((
-        section: any) => section.type == SECTIONS.APP_DESCRIPTION
-    ).object;
-  }
-
 
   /**
    *
@@ -62,15 +52,23 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   }
 
   async declarationCallback(microblock: any, section: any) {
+    // TODO: check the organization
+  }
+
+  async descriptionCallback(microblock: any, section: any) {
+    this.getState().descriptionHeight = microblock.header.height;
   }
 
   async signatureCallback(microblock: any, section: any) {
   }
 
   private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
+  private static UNDEFINED_DESCRIPTION_HEIGHT = -1;
+
   getInitialState(): ApplicationVBState {
     return {
-      signatureAlgorithmId: ApplicationVb.UNDEFINED_SIGNATURE_ALGORITHM_ID
+      signatureAlgorithmId: ApplicationVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
+      descriptionHeight: ApplicationVb.UNDEFINED_DESCRIPTION_HEIGHT
     }
   }
 

@@ -84,7 +84,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     return ir;
   }
 
-  getChannelId(name: any) {
+  getChannelId(name: string) {
     const id = this.getState().channels.findIndex((obj: any) => obj.name == name);
     if(id == -1) {
       throw `unknown channel '${name}'`;
@@ -92,12 +92,28 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     return id;
   }
 
-  getActorId(name: any) {
+  getChannel(name: string) {
+    const channel = this.getState().channels.find((obj: any) => obj.name == name);
+    if(channel === undefined) {
+      throw `unknown channel '${name}'`;
+    }
+    return channel;
+  }
+
+  getActorId(name: string) {
     const id = this.getState().actors.findIndex((obj: any) => obj.name == name);
     if(id == -1) {
       throw `unknown actor '${name}'`;
     }
     return id;
+  }
+
+  getActor(name: string) {
+    const actor = this.getState().actors.find((obj: any) => obj.name == name);
+    if(actor === undefined) {
+      throw `unknown actor '${name}'`;
+    }
+    return actor;
   }
 
   /**

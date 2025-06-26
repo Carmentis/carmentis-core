@@ -32,7 +32,8 @@ export interface OrganizationVBState {
 }
 
 export interface ApplicationVBState {
-    signatureAlgorithmId: number,
+    signatureAlgorithmId: number;
+    descriptionHeight: number;
 }
 
 export interface ApplicationLedgeChannel {

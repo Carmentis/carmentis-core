@@ -1,11 +1,11 @@
-import { Provider } from "../providers/provider";
-import { Explorer } from "./explorer";
-import { MicroblockImporter } from "./microblockImporter";
-import { Account } from "./account";
-import { Organization } from "./organization";
-import { Application } from "./application";
-import { ApplicationLedger } from "./applicationLedger";
-import { Utils } from "../utils/utils";
+import {Provider} from "../providers/provider";
+import {Explorer} from "./explorer";
+import {MicroblockImporter} from "./microblockImporter";
+import {Account} from "./account";
+import {Organization} from "./organization";
+import {Application} from "./application";
+import {ApplicationLedger} from "./applicationLedger";
+import {Utils} from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {Hash} from "./types";
@@ -148,10 +148,9 @@ export class Blockchain {
    *
    * @returns {Promise<Application>}
    */
-  async createApplication() {
+  async createApplication(organizationIdentifierString: Hash) {
     const application = new Application({ provider: this.provider });
-    // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-    await application._create();
+    await application._create(organizationIdentifierString.toBytes());
     return application;
   }
 

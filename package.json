@@ -81,6 +81,7 @@
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/release-notes-generator": "^14.0.3",
+    "axios": "^1.10.0",
     "barrelsby": "^2.8.1",
     "conventional-changelog-eslint": "^6.0.0",
     "level": "^10.0.0",

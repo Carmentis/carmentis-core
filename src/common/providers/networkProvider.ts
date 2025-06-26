@@ -11,6 +11,7 @@ import {
   VirtualBlockchainUpdate
 } from "../blockchain/types";
 import {ProviderInterface} from "./provider";
+import axios from "axios";
 
 export class NetworkProvider {
   nodeUrl: any;
@@ -112,8 +113,23 @@ export class NetworkProvider {
     return answer;
   }
 
-  async query() {
-    throw `attempt to call query() from the generic NetworkProvider class`;
+  async query(urlObject: any): Promise<{data: string}> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const response = await axios.post(urlObject, {}, {
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Accept': 'application/json',
+          }
+        });
+        const data = response.data
+        console.log("Received data", data)
+        return resolve(data);
+      } catch (e) {
+        reject(e);
+      }
+    })
+    //throw `attempt to call query() from the generic NetworkProvider class`;
   }
 
   async broadcastTx(data: any) {
@@ -122,7 +138,6 @@ export class NetworkProvider {
     urlObject.pathname = "broadcast_tx_sync";
     urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));
 
-    // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
     return await this.query(urlObject);
   }
 
@@ -136,9 +151,8 @@ export class NetworkProvider {
     urlObject.searchParams.append("path", '"/carmentis"');
     urlObject.searchParams.append("data", "0x" + Utils.binaryToHexa(data));
 
-    // @ts-expect-error TS(2345): Argument of type 'void' is not assignable to param... Remove this comment to see the full error message
-    const answer = JSON.parse(await this.query(urlObject));
-    const binary = Base64.decodeBinary(answer.data);
+    const responseData = await this.query(urlObject);
+     const binary = Base64.decodeBinary(responseData.data);
     const { type, object } = unserializer.unserialize(binary);
 
     if(type == SCHEMAS.MSG_ERROR) {

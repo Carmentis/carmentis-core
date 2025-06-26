@@ -1,12 +1,28 @@
 import { NetworkProvider } from "./networkProvider";
+import axios from "axios";
 
 export class BrowserNetworkProvider extends NetworkProvider {
   constructor(nodeUrl: any) {
     super(nodeUrl);
   }
 
-  // @ts-expect-error TS(2416): Property 'query' in type 'BrowserNetworkProvider' ... Remove this comment to see the full error message
-  async query(urlObject: any) {
+  async query2(urlObject: any) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const response = await axios.post(urlObject, {}, {
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Accept': 'application/json',
+          }
+        });
+        return resolve(response.data);
+      } catch (e) {
+        reject(e);
+      }
+    })
+
+
+    /*
     const netXhr = new XMLHttpRequest();
 
     return new Promise(function(resolve, reject) {
@@ -27,5 +43,7 @@ export class BrowserNetworkProvider extends NetworkProvider {
 
       netXhr.send();
     });
+
+     */
   }
 }

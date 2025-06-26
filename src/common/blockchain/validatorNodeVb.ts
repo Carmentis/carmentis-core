@@ -10,6 +10,10 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
     super({ provider, type: CHAIN.VB_VALIDATOR_NODE });
   }
 
+  protected getInitialState(): ValidatorNodeVBState {
+    return {}
+  }
+
   /**
     Update methods
   */

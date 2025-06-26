@@ -5,6 +5,13 @@ export interface AccountVBState {
     publicKeyHeight: number;
 }
 
+export interface OrganizationDescription {
+    name: string,
+    city: string,
+    countryCode: string,
+    website: string
+}
+
 export interface ValidatorNodeVBState {}
 
 export interface OrganizationVBState {
@@ -193,3 +200,17 @@ export class Hash {
      */
     toBytes(): Uint8Array { return this.hash }
 }
+
+export enum SectionType  {
+    APP_LEDGER_SIG_ALGORITHM = "APP_LEDGER_SIG_ALGORITHM",
+    APP_LEDGER_STATE = "APP_LEDGER_STATE",
+    APP_LEDGER_CHANNEL = "APP_LEDGER_CHANNEL",
+    APP_LEDGER_ACTOR = "APP_LEDGER_ACTOR",
+    ACCOUNT_SIG_ALGORITHM = "ACCOUNT_SIG_ALGORITHM",
+    ACCOUNT_STATE = "ACCOUNT_STATE",
+    ACCOUNT_HISTORY = "ACCOUNT_HISTORY",
+    ACCOUNT_TOKEN_ISSUANCE = "ACCOUNT_TOKEN_ISSUANCE",
+    ACCOUNT_CREATION = "ACCOUNT_CREATION",
+    ACCOUNT_TRANSFER = "ACCOUNT_TRANSFER",
+}
+

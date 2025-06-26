@@ -2,6 +2,7 @@ import { SECTIONS } from "../constants/constants";
 import { OrganizationVb } from "./organizationVb";
 import { Crypto } from "../crypto/crypto";
 import {PrivateSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {OrganizationDescription} from "./types";
 
 export class Organization {
   provider: any;
@@ -35,14 +36,16 @@ export class Organization {
     await this.vb.load(identifier);
   }
 
-  async setDescription(object: any) {
+  async setDescription(object: OrganizationDescription) {
     await this.vb.setDescription(object);
   }
 
-  async getDescription() {
+  async getDescription() : Promise<OrganizationDescription> {
     // TODO (for all similar methods): the state may have changed and there may be a more recent description
     const microblock = await this.vb.getMicroblock(this.vb.getDescriptionHeight());
-    const section = microblock.getSection((section: any) => section.type == SECTIONS.ORG_DESCRIPTION);
+    const section = microblock.getSection<OrganizationDescription>(
+        (section: any) => section.type == SECTIONS.ORG_DESCRIPTION
+    );
     return section.object;
   }
 

@@ -16,6 +16,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     };
 
     this.registerSectionCallback(SECTIONS.APP_LEDGER_SIG_ALGORITHM, this.signatureAlgorithmCallback);
+    this.registerSectionCallback(SECTIONS.APP_LEDGER_DECLARATION, this.declarationCallback);
     this.registerSectionCallback(SECTIONS.APP_LEDGER_ACTOR_CREATION, this.actorCreationCallback);
     this.registerSectionCallback(SECTIONS.APP_LEDGER_CHANNEL_CREATION, this.channelCreationCallback);
     this.registerSectionCallback(SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA, this.publicChannelDataCallback);
@@ -86,6 +87,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     this.state.signatureAlgorithmId = section.object.algorithmId;
   }
 
+  async declarationCallback(microblock: any, section: any) {
+    this.state.applicationId = section.object.applicationId;
+  }
+
   async actorCreationCallback(microblock: any, section: any) {
     if(section.object.id != this.state.actors.length) {
       throw `invalid actor ID ${section.object.id}`;
@@ -94,7 +99,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
       throw `actor '${section.object.name}' already exists`;
     }
     this.state.actors.push({
-      name: section.object.name
+      name: section.object.name,
+      subscribed: false,
+      invitations: []
     });
   }
 
@@ -107,7 +114,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     }
     this.state.channels.push({
       name: section.object.name,
-      isPrivate: section.object.isPrivate
+      isPrivate: section.object.isPrivate,
+      creatorId: section.object.creatorId
     });
   }
 

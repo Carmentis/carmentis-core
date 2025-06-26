@@ -27,7 +27,7 @@ export class ApplicationLedger {
   }
 
   async _create(applicationId: any) {
-    if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without keyed provider.'
+    if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without a keyed provider.'
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
     });
@@ -43,7 +43,7 @@ export class ApplicationLedger {
 
     // if there's a reference to an existing VB, load it
     if(object.virtualBlockchainId) {
-      await this.vb.load(object.virtualBlockchainId);
+      await this.vb.load(Utils.binaryFromHexa(object.virtualBlockchainId));
     }
 
     if(this.vb.height == 0) {
@@ -52,7 +52,7 @@ export class ApplicationLedger {
         algorithmId: this.signatureAlgorithmId
       });
       await this.vb.addDeclaration({
-        applicationId: object.applicationId
+        applicationId: Utils.binaryFromHexa(object.applicationId)
       });
     }
 
@@ -76,7 +76,7 @@ export class ApplicationLedger {
       await this.vb.createChannel({
         id: this.vb.state.channels.length,
         isPrivate: !def.isPublic,
-        keyOwnerId: authorId,
+        creatorId: authorId,
         name: def.name
       });
     }
@@ -104,8 +104,8 @@ export class ApplicationLedger {
 
     // process actor assignations
     for(const def of object.actorAssignations || []) {
-      const channelId = this.vb.getChannelId(def.channelName),
-            actorId = this.vb.getActorId(def.actorName);
+      const channelId = this.vb.getChannelId(def.channelName);
+      const actorId = this.vb.getActorId(def.actorName);
     }
 
     // process hashable fields
@@ -150,6 +150,10 @@ export class ApplicationLedger {
 
   setGasPrice(gasPrice: number) {
     this.gasPrice = gasPrice;
+  }
+
+  getMicroblockData() {
+    return this.vb.getMicroblockData();
   }
 
   async publishUpdates() {

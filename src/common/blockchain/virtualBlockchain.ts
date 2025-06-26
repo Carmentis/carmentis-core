@@ -6,13 +6,14 @@ import {EncoderFactory} from "../utils/encoder";
 
 export abstract class VirtualBlockchain {
   currentMicroblock: Microblock | null;
-  height: any;
+  height: number;
   identifier: any;
   microblockHashes: any;
   provider: any;
   sectionCallbacks: any;
   state: any;
-  type: any;
+  type: number;
+
   constructor({
     provider,
     type
@@ -154,6 +155,19 @@ export abstract class VirtualBlockchain {
   setGasPrice(gasPrice: number) {
     if (!this.currentMicroblock) throw new Error("Cannot set gas price on a microblock that has not been created yet.");
     this.currentMicroblock.gasPrice = gasPrice;
+  }
+
+  /**
+    Returns the raw data of the current microblock.
+  */
+  getMicroblockData() {
+    if(!this.currentMicroblock) throw new Error("Cannot get the data of a microblock that has not been created yet.");
+
+    this.checkStructure(this.currentMicroblock);
+
+    const { headerData, bodyData } = this.currentMicroblock.serialize();
+
+    return Utils.binaryFrom(headerData, bodyData);
   }
 
   /**

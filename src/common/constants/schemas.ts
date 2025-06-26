@@ -121,7 +121,34 @@ const APPLICATION_VB_STATE: any = [
 // ============================================================================================================================ //
 //  Application ledger VB state                                                                                                 //
 // ============================================================================================================================ //
-const APP_LEDGER_VB_STATE: any = [
+const APP_LEDGER_VB_STATE = [
+  { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
+  { name: "applicationId",        type: DATA.TYPE_BIN256 },
+  {
+    name: "channels",
+    type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+    schema: [
+      { name: "name",      type: DATA.TYPE_STRING },
+      { name: "isPrivate", type: DATA.TYPE_BOOLEAN },
+      { name: "creatorId", type: DATA.TYPE_UINT8 }
+    ]
+  },
+  {
+    name: "actors",
+    type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+    schema: [
+      { name: "name",       type: DATA.TYPE_STRING },
+      { name: "subscribed", type: DATA.TYPE_BOOLEAN },
+      {
+        name: "invitations",
+        type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+        schema: [
+          { name: "channelId", type: DATA.TYPE_UINT8 },
+          { name: "height",    type: DATA.TYPE_UINT48 }
+        ]
+      }
+    ]
+  }
 ];
 
 // ============================================================================================================================ //

@@ -225,6 +225,7 @@ export class IntermediateRepresentation {
 
     if(channelInfo.isPrivate) {
       channelInfo.pepper = stream.readByteArray(32);
+console.log("channelInfo.pepper", channelInfo.pepper);
     }
 
     const dictionarySize = stream.readVarUint(),
@@ -235,15 +236,19 @@ export class IntermediateRepresentation {
       dictionary.push(stream.readString());
     }
 
+console.log("dictionary", dictionary);
+
     readNode(this.irObject, false, true);
 
     function readNode(container: any, insideArray: any, isRoot = false) {
-      const id = isRoot ? null : stream.readVarUint(),
+      const id = isRoot ? null : stream.readVarUint();
             // @ts-expect-error TS(2538): Type 'null' cannot be used as an index type.
-            name = insideArray ? null : isRoot ? "root" : dictionary[id],
-            param = stream.readByte(),
-            type = param & 0x7,
-            attributes = param >> 3;
+      const name = insideArray ? null : isRoot ? "root" : dictionary[id];
+console.log("name", name);
+      const param = stream.readByte();
+console.log("param", param);
+      const type = param & 0x7;
+      const attributes = param >> 3;
 
       let newItem = true,
           item;

@@ -1,8 +1,9 @@
-import { CHAIN, SECTIONS } from "../constants/constants";
-import { VirtualBlockchain } from "./virtualBlockchain";
-import { StructureChecker } from "./structureChecker";
+import {CHAIN, SECTIONS} from "../constants/constants";
+import {VirtualBlockchain} from "./virtualBlockchain";
+import {StructureChecker} from "./structureChecker";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {ApplicationLedgerVBState} from "./types";
+import {IntermediateRepresentation} from "../records/intermediateRepresentation";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
   constructor({
@@ -65,6 +66,24 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
   /**
     Helper methods
   */
+  getIntermediateRepresentationInstance() {
+    const ir = new IntermediateRepresentation;
+
+    const numberOfChannels = this.getNumberOfChannels();
+
+    for(let channelId = 0; channelId < numberOfChannels; channelId++) {
+      const channel = this.getChannelById(channelId);
+
+      if(channel.isPrivate) {
+        ir.addPrivateChannel(channelId);
+      }
+      else {
+        ir.addPublicChannel(channelId);
+      }
+    }
+    return ir;
+  }
+
   getChannelId(name: any) {
     const id = this.getState().channels.findIndex((obj: any) => obj.name == name);
     if(id == -1) {

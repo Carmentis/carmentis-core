@@ -1,9 +1,8 @@
-import { SCHEMAS } from "../constants/constants";
-import { ApplicationLedgerVb } from "./applicationLedgerVb";
-import { SchemaValidator } from "../data/schemaValidator";
-import { IntermediateRepresentation } from "../records/intermediateRepresentation";
-import { Crypto } from "../crypto/crypto";
-import { Utils } from "../utils/utils";
+import {SCHEMAS, SECTIONS} from "../constants/constants";
+import {ApplicationLedgerVb} from "./applicationLedgerVb";
+import {SchemaValidator} from "../data/schemaValidator";
+import {Crypto} from "../crypto/crypto";
+import {Utils} from "../utils/utils";
 import {RecordDescription} from "./blockchain";
 import {Provider} from "../providers/provider";
 import {Hash} from "./types";
@@ -84,21 +83,10 @@ export class ApplicationLedger {
       });
     }
 
-    // initialize an IR object, load the data and set the channels
-    const ir = new IntermediateRepresentation;
+    // initialize an IR object, set the channels and load the data
+    const ir = this.vb.getIntermediateRepresentationInstance();
+
     ir.buildFromJson(object.data);
-
-    const numberOfChannels = this.vb.getNumberOfChannels();
-    for(let channelId = 0; channelId < numberOfChannels; channelId++) {
-      const channel = this.vb.getChannelById(channelId)//this.vb.state.channels[channelId];
-
-      if(channel.isPrivate) {
-        ir.addPrivateChannel(channelId);
-      }
-      else {
-        ir.addPublicChannel(channelId);
-      }
-    }
 
     // process field assignations
     for(const def of object.channelAssignations || []) {
@@ -131,9 +119,9 @@ export class ApplicationLedger {
 
     for(const channelData of channelDataList) {
       if(channelData.isPrivate) {
-        const channelKey = new Uint8Array(32), // !!
-              iv = new Uint8Array(32), // !!
-              encryptedData = Crypto.Aes.encryptGcm(channelKey, channelData.data, iv);
+        const channelKey = new Uint8Array(32); // FIXME
+        const iv = new Uint8Array(32);         //
+        const encryptedData = Crypto.Aes.encryptGcm(channelKey, channelData.data, iv);
 
         await this.vb.addPrivateChannelData({
           channelId: channelData.channelId,
@@ -150,6 +138,37 @@ export class ApplicationLedger {
       }
     }
     console.log(this.vb);
+  }
+
+  async getRecord(height: number) {
+    const microblock = await this.vb.getMicroblock(height);
+    const publicChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA);
+    const privateChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA);
+    const ir = this.vb.getIntermediateRepresentationInstance();
+
+    const list = [
+      ...publicChannelDataSections.map((section: any) => {
+        return {
+          channelId: section.object.channelId,
+          data: section.object.data
+        };
+      }),
+      ...privateChannelDataSections.map((section: any) => {
+        const channelKey = new Uint8Array(32);  // FIXME
+        const iv = new Uint8Array(32);          //
+        const data = Crypto.Aes.decryptGcm(channelKey, section.object.encryptedData, iv);
+
+        return {
+          channelId: section.object.channelId,
+          merkleRootHash: Utils.binaryToHexa(section.object.merkleRootHash),
+          data: data
+        };
+      })
+    ];
+
+    ir.importFromSectionFormat(list);
+
+    return ir.exportToJson();
   }
 
   setGasPrice(gasPrice: number) {

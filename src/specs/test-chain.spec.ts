@@ -219,6 +219,9 @@ describe('Chain test', () => {
         };
 
         const appLedger = await blockchain.getApplicationLedgerFromJson(object);
+        const record = await appLedger.getRecord(1);
+
+        console.log("record at height 1", record);
 
         const microblockData = appLedger.getMicroblockData();
         console.log("microblockData", microblockData);

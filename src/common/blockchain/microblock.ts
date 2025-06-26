@@ -123,6 +123,12 @@ export class Microblock {
     return this.sections.find((section: any) => callback(section));
   }
 
+  /**
+    Returns all sections for which the given callback function returns true.
+  */
+  getSections(callback: any) {
+    return this.sections.filter((section: any) => callback(section));
+  }
 
   /**
    * Creates a digital signature using the provided private key and optionally includes gas-related data.

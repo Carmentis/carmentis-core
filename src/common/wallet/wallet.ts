@@ -1,5 +1,7 @@
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {randomBytes} from "@noble/post-quantum/utils";
+import {HKDF} from "../crypto/kdf/kdf-interface";
+import {PrivateSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 
 /**
  * The Wallet class is responsible for generating and managing cryptographic keys
@@ -19,15 +21,31 @@ export class Wallet {
         return new Wallet(seed);
     }
 
-
+    static fromSeed(seed: Uint8Array): Wallet {
+        return new Wallet(seed);
+    }
 
     /**
-     * Retrieves a private signature key based on the provided scheme
+     * Derives a private signature key based on the provided signature algorithm ID and nonce.
+     *
+     * @param {SignatureAlgorithmId} schemeId - The ID of the signature algorithm to be used for key creation.
+     * @param {number} nonce - A numeric value used to ensure uniqueness in the key derivation process.
+     * @return {PrivateSignatureKey} The derived private signature key for the specified scheme and nonce.
      */
-    getPrivateSignatureKey( schemeId: number ) {
-        const factory = new CryptoSchemeFactory();
-        return factory.createPrivateSignatureKey( schemeId, this.walletSeed );
+    getPrivateSignatureKey( schemeId: SignatureAlgorithmId, nonce: number ): PrivateSignatureKey {
+        const kdf = new HKDF();
+        const accountSeed = kdf.deriveKey(
+            this.walletSeed,
+            nonce.toString(),
+            String(32),
+            32
+        );
+        return CryptoSchemeFactory.createPrivateSignatureKey( schemeId, accountSeed );
     }
+
+
+
+
 
     /**
      * Retrieves the decapsulation key for a given cryptographic scheme ID.

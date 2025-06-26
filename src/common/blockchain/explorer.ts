@@ -1,13 +1,13 @@
 import {Utils} from "../utils/utils";
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
-import {Provider} from "../providers/provider";
+import {AccountHash, Provider, ProviderInterface} from "../providers/provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {BytesSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 
-export class Explorer {
-  provider: any;
+export class Explorer implements ProviderInterface {
+  provider: Provider;
   constructor({
     provider
   }: {provider: Provider}) {
@@ -44,16 +44,14 @@ export class Explorer {
   }
 
 
-  async getAccountByPublicKeyHash(publicKeyHashString: string) {
+  async getAccountByPublicKeyHash(publicKeyHashString: string): Promise<AccountHash> {
     return await this.provider.getAccountByPublicKeyHash(Utils.binaryFromHexa(publicKeyHashString));
   }
 
   async getAccountByPublicKey(
       publicKey: PublicSignatureKey,
       hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
-  ) {
-    const rawPublicKey = publicKey.getPublicKeyAsBytes();
-    const publicKeyHash = hashScheme.hash(rawPublicKey);
-    return  await this.provider.getAccountByPublicKeyHash(publicKeyHash);
+  ): Promise<AccountHash> {
+    return  await this.provider.getAccountByPublicKey(publicKey, hashScheme);
   }
 }

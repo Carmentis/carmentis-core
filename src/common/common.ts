@@ -37,6 +37,7 @@ export * from "./crypto/secp256k1";
 export * from "./crypto/encryption/encryption-interface";
 export * from "./crypto/encryption/generic-symmetric-key-encoder";
 export * from "./crypto/hash/hash-interface";
+export * from "./crypto/kdf/kdf-interface";
 export * from "./crypto/signature/ml-dsa-65";
 export * from "./crypto/signature/secp256k1";
 export * from "./crypto/signature/signature-encoder";

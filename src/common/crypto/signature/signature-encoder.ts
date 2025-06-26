@@ -123,8 +123,7 @@ export class BytesSignatureEncoder implements SignatureEncoderInterface<Uint8Arr
         const items = JSON.parse(bytesToUtf8(privateKey));
         if (items && typeof items.signatureSchemeId === "number" && typeof items.privateKey === "string") {
             const rawPublicKey = hexToBytes(items.privateKey);
-            const factory = new CryptoSchemeFactory();
-            return factory.createPrivateSignatureKey(items.signatureSchemeId, rawPublicKey);
+            return CryptoSchemeFactory.createPrivateSignatureKey(items.signatureSchemeId, rawPublicKey);
         } else {
             throw "Invalid public key format: expected raw-encoded JSON object with signatureSchemeId and privateKey fields."
         }

@@ -12,11 +12,12 @@ import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./signature
 import {BytesSignatureEncoder} from "./signature/signature-encoder";
 import {CryptographicHash, CryptographicHashAlgorithmId, Sha256CryptographicHash} from "./hash/hash-interface";
 import {Secp256k1PrivateSignatureKey, Secp256k1PublicSignatureKey} from "./signature/secp256k1";
+import {PBKDF2} from "./kdf/kdf-interface";
 
 export class CryptoSchemeFactory {
 
 
-    createPrivateSignatureKey( schemeId: number, walletSeed: Uint8Array ): PrivateSignatureKey {
+    static createPrivateSignatureKey( schemeId: number, walletSeed: Uint8Array ): PrivateSignatureKey {
         switch (schemeId) {
             case SignatureAlgorithmId.SECP256K1: return new Secp256k1PrivateSignatureKey(walletSeed);
             case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(walletSeed);
@@ -87,5 +88,9 @@ export class CryptoSchemeFactory {
 
     static createDefaultCryptographicHash(): CryptographicHash {
         return new Sha256CryptographicHash()
+    }
+
+    static createDefaultPBKDF() {
+        return new PBKDF2();
     }
 }

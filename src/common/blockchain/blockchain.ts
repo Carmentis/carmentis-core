@@ -8,6 +8,7 @@ import { ApplicationLedger } from "./applicationLedger";
 import { Utils } from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
+import {Hash} from "./types";
 
 
 export interface RecordActor {
@@ -88,28 +89,30 @@ export class Blockchain {
   /**
    * Should be used with a keyed provider.
    *
-   * @param {string} sellerAccount
+   * @param {Hash} sellerAccount
    * @param {PublicSignatureKey} buyerPublicKey
    * @param {number} amount
    * @returns {Promise<Account>}
    */
-  async createAccount(sellerAccount: string, buyerPublicKey: PublicSignatureKey, amount: number) {
+  async createAccount(sellerAccount: Hash, buyerPublicKey: PublicSignatureKey, amount: number) {
     if (!this.provider.isKeyed()) throw 'Cannot create an account without a keyed provider.'
     const hexEncoder = EncoderFactory.bytesToHexEncoder();
     const account = new Account({ provider: this.provider });
-    await account._create(hexEncoder.decode(sellerAccount), buyerPublicKey, amount);
+    await account._create(sellerAccount.toByes(), buyerPublicKey, amount);
     return account;
   }
 
+
   /**
-   * Can be used with a keyed provider.
+   * Loads an account using the given identifier.
    *
-   * @param identifierString
-   * @returns {Promise<Account>}
+   * @param {Hash} identifier - The identifier for the account.
+   * @return {Promise<Account>} A promise that resolves to an instance of the loaded account.
    */
-  async loadAccount(identifierString: string) {
+  async loadAccount(identifier: Hash) {
+    const hexEncoder = EncoderFactory.bytesToHexEncoder();
     const account = new Account({ provider: this.provider });
-    await account._load(Utils.binaryFromHexa(identifierString));
+    await account._load(identifier.toByes());
     return account;
   }
 
@@ -130,9 +133,9 @@ export class Blockchain {
    * @param identifierString
    * @returns {Promise<Organization>}
    */
-  async loadOrganization(identifierString: any) {
+  async loadOrganization(identifierString: Hash) {
     const organization = new Organization({ provider: this.provider });
-    await organization._load(Utils.binaryFromHexa(identifierString));
+    await organization._load(identifierString.toByes());
     return organization;
   }
 

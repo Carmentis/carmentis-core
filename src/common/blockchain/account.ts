@@ -3,6 +3,7 @@ import { AccountVb } from "./accountVb";
 import { Utils } from "../utils/utils";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
+import {AccountTransfer} from "./types";
 
 export class Account {
   privateKey: any;
@@ -64,19 +65,10 @@ export class Account {
     await this.vb.load(identifier);
   }
 
-  /**
-   * Transfers a specified amount from the account with provided references.
-   *
-   * @param {Object} object - The transfer details.
-   * @param {string} object.account - The account identifier encoded as a string.
-   * @param {number} object.amount - The amount to be transferred.
-   * @param {string} object.publicReference - The public reference for the transfer.
-   * @param {string} object.privateReference - The private reference for the transfer.
-   */
-  async transfer(object: { account: string, amount: number, publicReference: string, privateReference: string }) {
-    const hexEncoder = EncoderFactory.bytesToHexEncoder()
+
+  async transfer(object: AccountTransfer) {
     await this.vb.setTransfer({
-      account: hexEncoder.decode(object.account),
+      account: object.account,
       amount: object.amount,
       publicReference: object.publicReference,
       privateReference: object.privateReference

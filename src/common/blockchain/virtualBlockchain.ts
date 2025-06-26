@@ -3,6 +3,7 @@ import {Microblock, Section} from "./microblock";
 import { Utils } from "../utils/utils";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
+import {Hash} from "./types";
 
 export abstract class VirtualBlockchain {
   currentMicroblock: Microblock | null;
@@ -196,6 +197,7 @@ export abstract class VirtualBlockchain {
 
     //return Utils.binaryToHexa(microblockHash);
     const hexEncoder = EncoderFactory.bytesToHexEncoder();
-    return hexEncoder.encode(microblockHash);
+    //return hexEncoder.encode();
+    return Hash.from(microblockHash);
   }
 }

@@ -2,6 +2,15 @@ import { SCHEMAS } from "../constants/constants";
 import { Base64 } from "../data/base64";
 import { Utils } from "../utils/utils";
 import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer";
+import {
+  AccountHash,
+  AccountHistory,
+  AccountState,
+  MicroBlockBodys,
+  MicroblockInformation, MsgVirtualBlockchainState, VirtualBlockchainState,
+  VirtualBlockchainUpdate
+} from "../blockchain/types";
+import {ProviderInterface} from "./provider";
 
 export class NetworkProvider {
   nodeUrl: any;
@@ -30,8 +39,8 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getAccountState(accountHash: string) {
-    const answer = await this.abciQuery(
+  async getAccountState(accountHash: Uint8Array) {
+    const answer = await this.abciQuery<AccountState>(
       SCHEMAS.MSG_GET_ACCOUNT_STATE,
       {
         accountHash
@@ -40,8 +49,8 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getAccountHistory(accountHash: any, lastHistoryHash: any, maxRecords: any) {
-    const answer = await this.abciQuery(
+  async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number) {
+    const answer = await this.abciQuery<AccountHistory>(
       SCHEMAS.MSG_GET_ACCOUNT_HISTORY,
       {
         accountHash,
@@ -52,8 +61,8 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getAccountByPublicKeyHash(publicKeyHash: string) {
-    const answer = await this.abciQuery(
+  async getAccountByPublicKeyHash(publicKeyHash: Uint8Array) {
+    const answer = await this.abciQuery<AccountHash>(
       SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
       {
         publicKeyHash
@@ -62,8 +71,8 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getMicroblockInformation(hash: any) {
-    const answer = await this.abciQuery(
+  async getMicroblockInformation(hash: Uint8Array) {
+    const answer = await this.abciQuery<MicroblockInformation>(
       SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
       {
         hash
@@ -72,8 +81,8 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getMicroblockBodys(hashes: any) {
-    const answer = await this.abciQuery(
+  async getMicroblockBodys(hashes: Uint8Array[]) {
+    const answer = await this.abciQuery<MicroBlockBodys>(
       SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
       {
         hashes
@@ -82,8 +91,8 @@ export class NetworkProvider {
     return answer;
   }
 
-  async getVirtualBlockchainUpdate(virtualBlockchainId: any, knownHeight: any) {
-    const answer = await this.abciQuery(
+  async getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number) {
+    const answer = await this.abciQuery<VirtualBlockchainUpdate>(
       SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE,
       {
         virtualBlockchainId,
@@ -94,7 +103,7 @@ export class NetworkProvider {
   }
 
   async getVirtualBlockchainState(virtualBlockchainId: any) {
-    const answer = await this.abciQuery(
+    const answer = await this.abciQuery<MsgVirtualBlockchainState>(
       SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_STATE,
       {
         virtualBlockchainId
@@ -117,7 +126,7 @@ export class NetworkProvider {
     return await this.query(urlObject);
   }
 
-  async abciQuery(msgId: any, msgData: any) {
+  async abciQuery<T = object>(msgId: any, msgData: any): Promise<T> {
     const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
     const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
     const data = serializer.serialize(msgId, msgData);
@@ -137,6 +146,6 @@ export class NetworkProvider {
       throw `Remote error: ${object.error}`;
     }
 
-    return object;
+    return object as T;
   }
 }

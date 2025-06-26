@@ -2,6 +2,7 @@ import { CHAIN, ECO, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
+import {AccountTokenIssuance, AccountTransfer} from "./types";
 
 export class AccountVb extends VirtualBlockchain {
   constructor({
@@ -30,7 +31,7 @@ export class AccountVb extends VirtualBlockchain {
     });
   }
 
-  async setTokenIssuance(object: any) {
+  async setTokenIssuance(object: AccountTokenIssuance) {
     await this.addSection(SECTIONS.ACCOUNT_TOKEN_ISSUANCE, object);
   }
 
@@ -38,7 +39,7 @@ export class AccountVb extends VirtualBlockchain {
     await this.addSection(SECTIONS.ACCOUNT_CREATION, object);
   }
 
-  async setTransfer(object: any) {
+  async setTransfer(object: AccountTransfer) {
     await this.addSection(SECTIONS.ACCOUNT_TRANSFER, object);
   }
 

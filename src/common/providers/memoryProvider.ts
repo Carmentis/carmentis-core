@@ -1,6 +1,8 @@
 import { Utils } from "../utils/utils";
+import {MicroblockInformation} from "../blockchain/types";
+import {ProviderInterface} from "./provider";
 
-export class MemoryProvider {
+export class MemoryProvider  {
   microblockBodyStore: any;
   microblockInformationStore: any;
   virtualBlockchainStateStore: any;
@@ -16,9 +18,9 @@ export class MemoryProvider {
     this.virtualBlockchainStateStore = new Map;
   }
 
-  async getMicroblockInformation(identifier: any) {
+  async getMicroblockInformation(hash: Uint8Array): Promise<Uint8Array> {
     // @ts-expect-error TS(2339): Property 'get' does not exist on type 'Function'.
-    return await this.constructor.get(this.microblockInformationStore, identifier);
+    return await this.constructor.get(this.microblockInformationStore, hash);
   }
 
   async getMicroblockBody(identifier: any) {

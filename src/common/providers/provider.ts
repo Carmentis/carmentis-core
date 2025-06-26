@@ -10,6 +10,8 @@ import {
     MicroblockInformation,
     VirtualBlockchainState
 } from "../blockchain/types";
+import {MemoryProvider} from "./memoryProvider";
+import {NetworkProvider} from "./networkProvider";
 
 export interface ProviderInterface {
     getAccountState(...args: any[]): Promise<AccountState>;
@@ -19,15 +21,25 @@ export interface ProviderInterface {
         hashScheme: CryptographicHash
     ): Promise<AccountHash>;
     getAccountHistory(...args: any[]): Promise<AccountHistory>;
+    sendMicroblock(...args: any[]): Promise<any>;
+    awaitMicroblockAnchoring(...args: any[]): Promise<any>;
+    getMicroblockInformation(...args: any[]): Promise<MicroblockInformation>;
+    getMicroblockBody(...args: any[]): Promise<any>;
+    getMicroblockBodys(...args: any[]): Promise<any>;
+    setMicroblockInformation(...args: any[]): Promise<any>;
+    setMicroblockBody(...args: any[]): Promise<any>;
+    setVirtualBlockchainState(...args: any[]): Promise<any>;
+    getVirtualBlockchainState(...args: any[]): Promise<any>;
+    getVirtualBlockchainUpdate(...args: any[]): Promise<any>;
 }
 
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
  */
-export class Provider implements ProviderInterface{
-    externalProvider: any;
-    internalProvider: any;
+export class Provider {
+    externalProvider: NetworkProvider;
+    internalProvider: MemoryProvider;
     constructor(internalProvider: any, externalProvider: any) {
         this.internalProvider = internalProvider;
         this.externalProvider = externalProvider;
@@ -35,24 +47,24 @@ export class Provider implements ProviderInterface{
 
     isKeyed() { return false; }
 
-    async sendMicroblock(...args: any[]) {
-        return await this.externalProvider.sendMicroblock(...args);
+    async sendMicroblock(headerData: any, bodyData: any) {
+        return await this.externalProvider.sendMicroblock(headerData, bodyData);
     }
 
-    async awaitMicroblockAnchoring(...args: any[]) {
-        return await this.externalProvider.awaitMicroblockAnchoring(...args);
+    async awaitMicroblockAnchoring(hash: Uint8Array) {
+        return await this.externalProvider.awaitMicroblockAnchoring(hash);
     }
 
-    async getAccountState(...args: any[]) : Promise<AccountState> {
-        return await this.externalProvider.getAccountState(...args);
+    async getAccountState(accountHash: Uint8Array) : Promise<AccountState> {
+        return await this.externalProvider.getAccountState(accountHash);
     }
 
-    async getAccountHistory(...args: any[]): Promise<AccountHistory> {
-        return await this.externalProvider.getAccountHistory(...args);
+    async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number): Promise<AccountHistory> {
+        return await this.externalProvider.getAccountHistory(accountHash, lastHistoryHash, maxRecords);
     }
 
-    async getAccountByPublicKeyHash(...args: any[]) {
-        return await this.externalProvider.getAccountByPublicKeyHash(...args);
+    async getAccountByPublicKeyHash(publicKeyHash: Uint8Array) {
+        return await this.externalProvider.getAccountByPublicKeyHash(publicKeyHash);
     }
 
 
@@ -130,7 +142,7 @@ export class Provider implements ProviderInterface{
         return await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
     }
 
-    async getVirtualBlockchainStateExternal(virtualBlockchainId: any) {
+    async getVirtualBlockchainStateExternal(virtualBlockchainId: Uint8Array) {
         return await this.externalProvider.getVirtualBlockchainState(virtualBlockchainId);
     }
 

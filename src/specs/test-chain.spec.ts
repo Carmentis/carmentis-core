@@ -11,6 +11,7 @@ import {ReadStream, WriteStream} from "../common/data/byteStreams";
 import {RadixTree} from "../common/trees/radixTree";
 import {DATA, ECO} from '../common/constants/constants';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
+import {EncoderFactory} from "../common/utils/encoder";
 
 describe('Chain test', () => {
     const TEST_TIMEOUT = 5000;
@@ -48,8 +49,9 @@ describe('Chain test', () => {
 
         genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
+        const hexEncoder = EncoderFactory.bytesToHexEncoder();
         await genesisAccount.transfer({
-            account: testAccountId,
+            account: testAccountId.toByes(),
             amount: 1,
             publicReference: "transfer #1",
             privateReference: "private ref."
@@ -63,7 +65,7 @@ describe('Chain test', () => {
         genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
         await genesisAccount.transfer({
-            account: testAccountId,
+            account: testAccountId.toByes(),
             amount: 2,
             publicReference: "transfer #2",
             privateReference: "private ref."

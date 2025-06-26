@@ -4,10 +4,10 @@ import {Provider, ProviderInterface} from "../providers/provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
-import {AccountHash} from "./types";
+import {AccountHash, Hash} from "./types";
 
 
-export class Explorer implements ProviderInterface {
+export class Explorer {
   provider: Provider;
   constructor({
     provider
@@ -22,11 +22,11 @@ export class Explorer implements ProviderInterface {
   /**
    * Retrieves information about a specific microblock by its hash.
    *
-   * @param {string} hashString The hash of the microblock in hexadecimal string format.
+   * @param {Hash} hash The hash of the microblock in hexadecimal string format.
    * @return {Promise<any>} A promise that resolves to the information related to the specified microblock.
    */
-  async getMicroblockInformation(hashString: string) {
-    return await this.provider.getMicroblockInformation(Utils.binaryFromHexa(hashString));
+  async getMicroblockInformation(hash: Hash) {
+    return await this.provider.getMicroblockInformation(hash.toByes());
   }
 
   async getMicroblockBodys(hashes: any) {
@@ -36,45 +36,43 @@ export class Explorer implements ProviderInterface {
   /**
    * Retrieves the virtual blockchain state for the given identifier.
    *
-   * @param {string} identifierString - A string representing the identifier used to fetch the virtual blockchain state.
+   * @param {Hash} identifier - A string representing the identifier used to fetch the virtual blockchain state.
    * @return {Promise<Object>} A promise that resolves to the decoded virtual blockchain state object.
    */
-  async getVirtualBlockchainState(identifierString: string) {
-    const { stateData } = await this.provider.getVirtualBlockchainStateExternal(Utils.binaryFromHexa(identifierString));
+  async getVirtualBlockchainState(identifier: Hash) {
+    const { stateData } = await this.provider.getVirtualBlockchainStateExternal(identifier.toByes());
     return BlockchainUtils.decodeVirtualBlockchainState(stateData);
   }
 
   /**
    * Retrieves the state of an account based on the provided account hash string.
    *
-   * @param {string} accountHashString - The account hash in hexadecimal string format.
+   * @param {Hash} accountHashString - The account hash in hexadecimal string format.
    * @return {Promise<any>} A promise that resolves to the account state associated with the given account hash.
    */
-  async getAccountState(accountHashString: string) {
-    return await this.provider.getAccountState(Utils.binaryFromHexa(accountHashString));
+  async getAccountState(accountHashString: Hash) {
+    return await this.provider.getAccountState(accountHashString.toByes());
   }
 
   /**
-   * Fetches the account history based on the provided account hash, last history hash, and maximum number of records.
+   * Retrieves the account history for a specific account.
    *
-   * @param {string} accountHashString - The hexadecimal string representing the account hash.
-   * @*/
-  async getAccountHistory(accountHashString: string, lastHistoryHashString: string, maxRecords: number) {
+   * @param {Hash} accountHash - The hash of the account for which the history is being retrieved.
+   * @param {Hash} lastHistoryHashString - The hash of the last history record to start retrieving from.
+   * @param {number} maxRecords - The maximum number of records to retrieve.
+   * @return {Promise<any>} A promise that resolves with the account history data.
+   */
+  async getAccountHistory(accountHash: Hash, lastHistoryHashString: Hash, maxRecords: number) {
     return await this.provider.getAccountHistory(
-      Utils.binaryFromHexa(accountHashString),
-      Utils.binaryFromHexa(lastHistoryHashString),
+      accountHash.toByes(),
+      lastHistoryHashString.toByes(),
       maxRecords
     );
   }
 
-  /**
-   * Retrieves an account using the provided public key hash string.
-   *
-   * @param {string} publicKeyHashString - The public key hash as a hexadecimal string.
-   * @return {Promise<AccountHash>} A promise that resolves to the account hash associated with the given public key hash.
-   */
-  async getAccountByPublicKeyHash(publicKeyHashString: string): Promise<AccountHash> {
-    return await this.provider.getAccountByPublicKeyHash(Utils.binaryFromHexa(publicKeyHashString));
+
+  async getAccountByPublicKeyHash(publicKeyHash: Hash ): Promise<AccountHash> {
+    return await this.provider.getAccountByPublicKeyHash(publicKeyHash.toByes());
   }
 
   /**

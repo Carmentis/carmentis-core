@@ -51,7 +51,7 @@ describe('Chain test', () => {
 
         const hexEncoder = EncoderFactory.bytesToHexEncoder();
         await genesisAccount.transfer({
-            account: testAccountId.toByes(),
+            account: testAccountId.toBytes(),
             amount: 1,
             publicReference: "transfer #1",
             privateReference: "private ref."
@@ -65,7 +65,7 @@ describe('Chain test', () => {
         genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
         await genesisAccount.transfer({
-            account: testAccountId.toByes(),
+            account: testAccountId.toBytes(),
             amount: 2,
             publicReference: "transfer #2",
             privateReference: "private ref."
@@ -144,12 +144,7 @@ describe('Chain test', () => {
 
         ir.setAsRedacted("this.someObject.someNumberArrayProp[*]");
 
-        const info = {
-            microblock: Utils.binaryToHexa(new Uint8Array(32)),
-            author: "Arnauld Chevallier"
-        };
-
-        const proof1 = ir.exportToProof(info);
+        const proof1 = ir.exportToProof();
         console.log("proof 1", JSON.stringify(proof1, null, 2));
 
         ir = new IntermediateRepresentation;
@@ -157,7 +152,7 @@ describe('Chain test', () => {
         ir.addPrivateChannel(1);
         console.log(ir.importFromProof(proof1));
         ir.setAsMasked("this.email");
-        const proof2 = ir.exportToProof(info);
+        const proof2 = ir.exportToProof();
         console.log("proof 2", JSON.stringify(proof2, null, 2));
 
         ir = new IntermediateRepresentation;
@@ -166,7 +161,7 @@ describe('Chain test', () => {
         console.log(ir.importFromProof(proof2));
         ir.setAsRedacted("this.email");
         ir.setAsRedacted("this.someObject.someStringProp");
-        const proof3 = ir.exportToProof(info);
+        const proof3 = ir.exportToProof();
         console.log("proof 3", JSON.stringify(proof3, null, 2));
 
         ir = new IntermediateRepresentation;
@@ -193,6 +188,8 @@ describe('Chain test', () => {
             applicationId: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
             //  virtualBlockchainId: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
             data: {
+                firstname: "John",
+                lastname: "Doe",
                 email: "john.doe@gmail.com"
             },
             actors: [
@@ -207,18 +204,22 @@ describe('Chain test', () => {
             actorAssignations: [
                 { channelName: "mainChannel", actorName: "seller" }
             ],
-            maskableFields: [
-                {
-                    fieldPath: "this.email",
-                    maskedParts: [
-                        { position: 1, length: 7, replacementString: "***" }
-                    ]
-                }
-            ],
+//          maskableFields: [
+//              {
+//                  fieldPath: "this.email",
+//                  maskedParts: [
+//                      { position: 1, length: 7, replacementString: "***" }
+//                  ]
+//              }
+//          ],
             author: "seller"
         };
 
         const appLedger = await blockchain.getApplicationLedgerFromJson(object);
+
+        appLedger.setGasPrice(ECO.TOKEN);
+        const hash = await appLedger.publishUpdates();
+
         const record = await appLedger.getRecord(1);
 
         console.log("record at height 1", record);
@@ -226,11 +227,14 @@ describe('Chain test', () => {
         const microblockData = appLedger.getMicroblockData();
         console.log("microblockData", microblockData);
 
+        const ledgerProof = await appLedger.exportProof({ author: "John Doe" });
+        console.log("exported proof", JSON.stringify(ledgerProof, null, 2));
+
+        const dataFromProof = await blockchain.importApplicationLedgerProof(ledgerProof);
+        console.log("imported proof", dataFromProof);
+
         const importer = blockchain.getMicroblockImporter(microblockData);
         const importStatus = await importer.check();
         console.log(`import: status=${importStatus}, error=${importer.error}`);
-
-        appLedger.setGasPrice(ECO.TOKEN);
-        const hash = await appLedger.publishUpdates();
     }, TEST_TIMEOUT)
 });

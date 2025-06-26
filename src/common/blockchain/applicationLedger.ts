@@ -141,6 +141,54 @@ export class ApplicationLedger {
   }
 
   async getRecord(height: number) {
+    const ir = await this.getMicroblockIntermediateRepresentation(height);
+    return ir.exportToJson();
+  }
+
+  async exportProof(customInfo: any) {
+    const proofs = [];
+
+    for(let height = 1; height <= this.vb.height; height++) {
+      const ir = await this.getMicroblockIntermediateRepresentation(height);
+
+      proofs.push({
+        height: height,
+        data: ir.exportToProof()
+      });
+    }
+
+    const info = {
+      title: "Carmentis proof file - Visit www.carmentis.io for more information",
+      date: new Date().toJSON(),
+      author: customInfo.author,
+      virtualBlockchainIdentifier: Utils.binaryToHexa(this.vb.identifier)
+    };
+
+    return {
+      info,
+      proofs
+    };
+  }
+
+  async importProof(proofObject: any) {
+    const data = [];
+
+    for(let height = 1; height <= this.vb.height; height++) {
+      const proof = proofObject.proofs.find((proof: any) => proof.height == height);
+      const ir = await this.getMicroblockIntermediateRepresentation(height);
+      const merkleData = ir.importFromProof(proof.data);
+
+      // TODO: check Merkle root hash
+
+      data.push({
+        height,
+        data: ir.exportToJson()
+      });
+    }
+    return data;
+  }
+
+  async getMicroblockIntermediateRepresentation(height: number) {
     const microblock = await this.vb.getMicroblock(height);
     const publicChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA);
     const privateChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA);
@@ -167,8 +215,7 @@ export class ApplicationLedger {
     ];
 
     ir.importFromSectionFormat(list);
-
-    return ir.exportToJson();
+    return ir;
   }
 
   setGasPrice(gasPrice: number) {

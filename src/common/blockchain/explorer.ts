@@ -26,7 +26,7 @@ export class Explorer {
    * @return {Promise<any>} A promise that resolves to the information related to the specified microblock.
    */
   async getMicroblockInformation(hash: Hash) {
-    return await this.provider.getMicroblockInformation(hash.toByes());
+    return await this.provider.getMicroblockInformation(hash.toBytes());
   }
 
   async getMicroblockBodys(hashes: any) {
@@ -40,7 +40,7 @@ export class Explorer {
    * @return {Promise<Object>} A promise that resolves to the decoded virtual blockchain state object.
    */
   async getVirtualBlockchainState(identifier: Hash) {
-    const { stateData } = await this.provider.getVirtualBlockchainStateExternal(identifier.toByes());
+    const { stateData } = await this.provider.getVirtualBlockchainStateExternal(identifier.toBytes());
     return BlockchainUtils.decodeVirtualBlockchainState(stateData);
   }
 
@@ -51,7 +51,7 @@ export class Explorer {
    * @return {Promise<any>} A promise that resolves to the account state associated with the given account hash.
    */
   async getAccountState(accountHashString: Hash) {
-    return await this.provider.getAccountState(accountHashString.toByes());
+    return await this.provider.getAccountState(accountHashString.toBytes());
   }
 
   /**
@@ -64,8 +64,8 @@ export class Explorer {
    */
   async getAccountHistory(accountHash: Hash, lastHistoryHashString: Hash, maxRecords: number) {
     return await this.provider.getAccountHistory(
-      accountHash.toByes(),
-      lastHistoryHashString.toByes(),
+      accountHash.toBytes(),
+      lastHistoryHashString.toBytes(),
       maxRecords
     );
   }
@@ -77,7 +77,7 @@ export class Explorer {
    * @return {Promise<Hash>} A promise that resolves to the account hash corresponding to the given public key hash.
    */
   async getAccountByPublicKeyHash(publicKeyHash: Hash ): Promise<Hash> {
-    const accountHash: AccountHash = await this.provider.getAccountByPublicKeyHash(publicKeyHash.toByes());
+    const accountHash: AccountHash = await this.provider.getAccountByPublicKeyHash(publicKeyHash.toBytes());
     return Hash.from(accountHash.accountHash);
   }
 

@@ -98,7 +98,7 @@ export class Blockchain {
     if (!this.provider.isKeyed()) throw 'Cannot create an account without a keyed provider.'
     const hexEncoder = EncoderFactory.bytesToHexEncoder();
     const account = new Account({ provider: this.provider });
-    await account._create(sellerAccount.toByes(), buyerPublicKey, amount);
+    await account._create(sellerAccount.toBytes(), buyerPublicKey, amount);
     return account;
   }
 
@@ -112,7 +112,7 @@ export class Blockchain {
   async loadAccount(identifier: Hash) {
     const hexEncoder = EncoderFactory.bytesToHexEncoder();
     const account = new Account({ provider: this.provider });
-    await account._load(identifier.toByes());
+    await account._load(identifier.toBytes());
     return account;
   }
 
@@ -135,7 +135,7 @@ export class Blockchain {
    */
   async loadOrganization(identifierString: Hash) {
     const organization = new Organization({ provider: this.provider });
-    await organization._load(identifierString.toByes());
+    await organization._load(identifierString.toBytes());
     return organization;
   }
 
@@ -159,7 +159,7 @@ export class Blockchain {
    */
   async loadApplication(identifier: Hash) {
     const application = new Application({ provider: this.provider });
-    await application._load(identifier.toByes());
+    await application._load(identifier.toBytes());
     return application;
   }
 
@@ -173,6 +173,16 @@ export class Blockchain {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._processJson(object);
     return applicationLedger;
+  }
+
+  /**
+   * Imports a proof.
+   */
+  async importApplicationLedgerProof(proof: any) {
+    const applicationLedger = new ApplicationLedger({ provider: this.provider });
+    await applicationLedger._load(Utils.binaryFromHexa(proof.info.virtualBlockchainIdentifier));
+    const data = await applicationLedger.importProof(proof);
+    return data;
   }
 
   /**
@@ -196,7 +206,7 @@ export class Blockchain {
    */
   async loadApplicationLedger(identifier: Hash) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
-    await applicationLedger._load(identifier.toByes());
+    await applicationLedger._load(identifier.toBytes());
     return applicationLedger;
   }
 }

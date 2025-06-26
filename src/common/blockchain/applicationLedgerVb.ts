@@ -195,4 +195,15 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
   getNumberOfActors(): number {
     return this.getState().actors.length
   }
+
+  private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
+  private static UNDEFINED_APPLICATION_ID = new Uint8Array(0);
+  protected getInitialState(): ApplicationLedgerVBState {
+    return {
+      signatureAlgorithmId: ApplicationLedgerVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
+      applicationId: ApplicationLedgerVb.UNDEFINED_APPLICATION_ID,
+      actors: [],
+      channels: []
+    }
+  }
 }

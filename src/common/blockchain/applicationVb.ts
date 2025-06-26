@@ -52,6 +52,13 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   async signatureCallback(microblock: any, section: any) {
   }
 
+  private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
+  getInitialState(): ApplicationVBState {
+    return {
+      signatureAlgorithmId: ApplicationVb.UNDEFINED_SIGNATURE_ALGORITHM_ID
+    }
+  }
+
   /**
     Structure check
   */

@@ -101,6 +101,27 @@ describe('Chain test', () => {
         console.log(await organization.getDescription());
         console.log(await organization.getDescription());
 
+        // application
+        console.log("creating application");
+
+        let application = await blockchain.createApplication(organizationId);
+
+        await application.setDescription({
+            name: "My Application",
+            logoUrl: "http://example.com/logo.png",
+            homepageUrl: "http://example.com",
+            description: "This is my application."
+        });
+
+        application.setGasPrice(ECO.TOKEN);
+        let applicationId = await application.publishUpdates();
+
+        console.log("loading back application");
+
+        application = await blockchain.loadApplication(applicationId);
+        console.log("declaration", await application.getDeclaration());
+        console.log("description", await application.getDescription());
+
         const explorerProvider = new Provider(memoryProvider, networkProvider);
 
         blockchain = new Blockchain(explorerProvider);

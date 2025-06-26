@@ -11,8 +11,8 @@ import {Section} from "./microblock";
 export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     private signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
     constructor({
-                    provider
-                }: { provider: Provider }) {
+            provider
+        }: { provider: Provider }) {
         super({ provider, type: CHAIN.VB_ORGANIZATION });
 
         this.registerSectionCallback(SECTIONS.ORG_SIG_ALGORITHM, this.signatureAlgorithmCallback);
@@ -122,6 +122,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
     private static UNDEFINED_PUBLIC_KEY_HEIGHT = -1;
     private static UNDEFINED_DESCRIPTION_HEIGHT = -1;
+
     protected getInitialState(): OrganizationVBState {
         return {
             signatureAlgorithmId: OrganizationVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,

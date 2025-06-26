@@ -1,6 +1,6 @@
-import { SECTIONS } from "../constants/constants";
-import { OrganizationVb } from "./organizationVb";
-import { Crypto } from "../crypto/crypto";
+import {SECTIONS} from "../constants/constants";
+import {OrganizationVb} from "./organizationVb";
+import {Crypto} from "../crypto/crypto";
 import {PrivateSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {OrganizationDescription} from "./types";
 
@@ -9,6 +9,7 @@ export class Organization {
   signatureAlgorithmId?: SignatureAlgorithmId;
   vb: OrganizationVb;
   gasPrice: number;
+
   constructor({
     provider
   }: any) {

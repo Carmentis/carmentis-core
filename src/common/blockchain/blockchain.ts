@@ -144,10 +144,9 @@ export class Blockchain {
    *
    * @returns {Promise<Application>}
    */
-  async createApplication() {
+  async createApplication(organizationIdentifierString: Hash) {
     const application = new Application({ provider: this.provider });
-    // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-    await application._create();
+    await application._create(organizationIdentifierString.toBytes());
     return application;
   }
 

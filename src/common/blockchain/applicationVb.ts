@@ -3,7 +3,7 @@ import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {Provider} from "../providers/provider";
-import {ApplicationVBState} from "./types";
+import {ApplicationDeclaration, ApplicationDescription, ApplicationVBState} from "./types";
 
 export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   constructor(provider: Provider) {
@@ -21,13 +21,28 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
     await this.addSection(SECTIONS.APP_SIG_ALGORITHM, object);
   }
 
-  async setDeclaration(object: {organizationId: string}) {
+  async setDeclaration(object: ApplicationDeclaration) {
     await this.addSection(SECTIONS.APP_DECLARATION, object);
   }
 
-  async setDescription(object: {name: string, logoUrl: string, homepageUrl: string, description: string}) {
+  async setDescription(object: ApplicationDescription) {
     await this.addSection(SECTIONS.APP_DESCRIPTION, object);
   }
+
+  async getDeclaration() {
+    if (!this.currentMicroblock) throw new Error("no current microblock");
+    return this.currentMicroblock.getSection<ApplicationDeclaration>((
+        section: any) => section.type == SECTIONS.APP_DECLARATION
+    ).object;
+  }
+
+  async getDescription() {
+    if (!this.currentMicroblock) throw new Error("no current microblock");
+    return this.currentMicroblock.getSection<ApplicationDescription>((
+        section: any) => section.type == SECTIONS.APP_DESCRIPTION
+    ).object;
+  }
+
 
   /**
    *

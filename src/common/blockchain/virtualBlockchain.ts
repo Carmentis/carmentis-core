@@ -3,16 +3,16 @@ import {Microblock, Section} from "./microblock";
 import { Utils } from "../utils/utils";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
-import {Hash} from "./types";
+import {Hash, VirtualBlockchainState} from "./types";
 
-export abstract class VirtualBlockchain {
+export abstract class VirtualBlockchain<CustomState> {
   currentMicroblock: Microblock | null;
   height: number;
   identifier: any;
   microblockHashes: any;
   provider: any;
   sectionCallbacks: any;
-  state: any;
+  state?: CustomState;
   type: number;
 
   constructor({
@@ -26,9 +26,14 @@ export abstract class VirtualBlockchain {
     this.sectionCallbacks = new Map;
     this.microblockHashes = [];
     this.currentMicroblock = null;
-    this.state = {};
+    //this.state = {};
     this.type = type;
     this.height = 0;
+  }
+
+  protected getState(): CustomState {
+    if (!this.state) throw new Error("Cannot get the state of a virtual blockchain that has not been created yet.");
+    return this.state;
   }
 
 

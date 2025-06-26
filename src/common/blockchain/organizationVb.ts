@@ -5,8 +5,9 @@ import {CryptoSchemeFactory} from "../crypto/factory";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/provider";
+import {OrganizationVBState} from "./types";
 
-export class OrganizationVb extends VirtualBlockchain {
+export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
   private signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
   constructor({
     provider
@@ -52,22 +53,22 @@ export class OrganizationVb extends VirtualBlockchain {
     Section callbacks
   */
   async signatureAlgorithmCallback(microblock: any, section: any) {
-    this.state.signatureAlgorithmId = section.object.algorithmId;
+    this.getState().signatureAlgorithmId = section.object.algorithmId;
   }
 
   async publicKeyCallback(microblock: any, section: any) {
-    this.state.publicKeyHeight = microblock.header.height;
+    this.getState().publicKeyHeight = microblock.header.height;
   }
 
   async descriptionCallback(microblock: any, section: any) {
-    this.state.descriptionHeight = microblock.header.height;
+    this.getState().descriptionHeight = microblock.header.height;
   }
 
   async signatureCallback(microblock: any, section: any) {
-    const keyMicroblock = await this.getMicroblock(this.state.publicKeyHeight);
+    const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
     const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
     const cryptoFactory = new CryptoSchemeFactory();
-    const signatureAlgorithmId = this.state.signatureAlgorithmId;
+    const signatureAlgorithmId = this.getState().signatureAlgorithmId;
     const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
 
     const valid = microblock.verifySignature(
@@ -80,6 +81,10 @@ export class OrganizationVb extends VirtualBlockchain {
     if(!valid) {
       throw `invalid signature`;
     }
+  }
+
+  getDescriptionHeight(): number {
+    return this.getState().descriptionHeight;
   }
 
   /**

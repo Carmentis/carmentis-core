@@ -2,9 +2,9 @@ import { CHAIN, ECO, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
-import {AccountTokenIssuance, AccountTransfer} from "./types";
+import {AccountTokenIssuance, AccountTransfer, AccountVBState} from "./types";
 
-export class AccountVb extends VirtualBlockchain {
+export class AccountVb extends VirtualBlockchain<AccountVBState> {
   constructor({
     provider
   }: any) {
@@ -57,11 +57,11 @@ export class AccountVb extends VirtualBlockchain {
     Section callbacks
   */
   async signatureAlgorithmCallback(microblock: any, section: any) {
-    this.state.signatureAlgorithmId = section.object.algorithmId;
+    this.getState().signatureAlgorithmId = section.object.algorithmId;
   }
 
   async publicKeyCallback(microblock: any, section: any) {
-    this.state.publicKeyHeight = microblock.header.height;
+    this.getState().publicKeyHeight = microblock.header.height;
   }
 
   async tokenIssuanceCallback(microblock: any, section: any) {

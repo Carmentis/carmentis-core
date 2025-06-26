@@ -3,8 +3,9 @@ import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {Provider} from "../providers/provider";
+import {ApplicationVBState} from "./types";
 
-export class ApplicationVb extends VirtualBlockchain {
+export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   constructor(provider: Provider) {
     super({ provider, type: CHAIN.VB_ORGANIZATION });
 
@@ -42,7 +43,7 @@ export class ApplicationVb extends VirtualBlockchain {
     Section callbacks
   */
   async signatureAlgorithmCallback(microblock: any, section: any) {
-    this.state.signatureAlgorithmId = section.object.algorithmId;
+    this.getState().signatureAlgorithmId = section.object.algorithmId;
   }
 
   async declarationCallback(microblock: any, section: any) {

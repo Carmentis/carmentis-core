@@ -6,11 +6,12 @@ import { Crypto } from "../crypto/crypto";
 import { Utils } from "../utils/utils";
 import {RecordDescription} from "./blockchain";
 import {Provider} from "../providers/provider";
+import {Hash} from "./types";
 
 export class ApplicationLedger {
   provider: any;
   signatureAlgorithmId: any;
-  vb: any;
+  vb: ApplicationLedgerVb;
   gasPrice: number;
 
   constructor({
@@ -61,7 +62,7 @@ export class ApplicationLedger {
     // add the new actors
     for(const def of object.actors || []) {
       await this.vb.createActor({
-        id: this.vb.state.actors.length,
+        id: this.vb.getNumberOfActors(),
         type: 0,
         name: def.name
       });
@@ -76,7 +77,7 @@ export class ApplicationLedger {
     // add the new channels
     for(const def of object.channels || []) {
       await this.vb.createChannel({
-        id: this.vb.state.channels.length,
+        id:  this.vb.getNumberOfChannels(),// this.vb.state.channels.length,
         isPrivate: !def.public,
         creatorId: authorId,
         name: def.name
@@ -87,8 +88,9 @@ export class ApplicationLedger {
     const ir = new IntermediateRepresentation;
     ir.buildFromJson(object.data);
 
-    for(let channelId = 0; channelId < this.vb.state.channels.length; channelId++) {
-      const channel = this.vb.state.channels[channelId];
+    const numberOfChannels = this.vb.getNumberOfChannels();
+    for(let channelId = 0; channelId < numberOfChannels; channelId++) {
+      const channel = this.vb.getChannelById(channelId)//this.vb.state.channels[channelId];
 
       if(channel.isPrivate) {
         ir.addPrivateChannel(channelId);
@@ -156,6 +158,19 @@ export class ApplicationLedger {
 
   getMicroblockData() {
     return this.vb.getMicroblockData();
+  }
+
+  /**
+   * Retrieves the application ID.
+   *
+   * @return {Hash} The hashed application ID obtained from the underlying system.
+   */
+  getApplicationId() {
+    return Hash.from(this.vb.getApplicationId());
+  }
+
+  getHeight(): number {
+    return this.vb.height;
   }
 
   async publishUpdates() {

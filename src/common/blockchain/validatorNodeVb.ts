@@ -1,8 +1,9 @@
 import { CHAIN, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
+import {ValidatorNodeVBState} from "./types";
 
-export class ValidatorNodeVb extends VirtualBlockchain {
+export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
   constructor({
     provider
   }: any) {

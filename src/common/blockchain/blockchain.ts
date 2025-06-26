@@ -154,12 +154,12 @@ export class Blockchain {
   /**
    * Can be used with a keyed provider.
    *
-   * @param identifierString
+   * @param identifier
    * @returns {Promise<Application>}
    */
-  async loadApplication(identifierString: string) {
+  async loadApplication(identifier: Hash) {
     const application = new Application({ provider: this.provider });
-    await application._load(Utils.binaryFromHexa(identifierString));
+    await application._load(identifier.toByes());
     return application;
   }
 
@@ -191,12 +191,12 @@ export class Blockchain {
   /**
    * Can be used with a keyed provider.
    *
-   * @param identifierString
+   * @param identifier
    * @returns {Promise<ApplicationLedger>}
    */
-  async loadApplicationLedger(identifierString: string) {
+  async loadApplicationLedger(identifier: Hash) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
-    await applicationLedger._load(Utils.binaryFromHexa(identifierString));
+    await applicationLedger._load(identifier.toByes());
     return applicationLedger;
   }
 }

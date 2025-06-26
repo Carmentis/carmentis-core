@@ -60,7 +60,7 @@ export class Explorer {
    * @param {Hash} accountHash - The hash of the account for which the history is being retrieved.
    * @param {Hash} lastHistoryHashString - The hash of the last history record to start retrieving from.
    * @param {number} maxRecords - The maximum number of records to retrieve.
-   * @return {Promise<any>} A promise that resolves with the account history data.
+   * @return {Promise<AccountHistory>} A promise that resolves with the account history data.
    */
   async getAccountHistory(accountHash: Hash, lastHistoryHashString: Hash, maxRecords: number) {
     return await this.provider.getAccountHistory(
@@ -70,22 +70,26 @@ export class Explorer {
     );
   }
 
-
-  async getAccountByPublicKeyHash(publicKeyHash: Hash ): Promise<AccountHash> {
-    return await this.provider.getAccountByPublicKeyHash(publicKeyHash.toByes());
+  /**
+   * Retrieves an account hash associated with the given public key hash.
+   *
+   * @param {Hash} publicKeyHash - The hash of the public key to look up the account for.
+   * @return {Promise<Hash>} A promise that resolves to the account hash corresponding to the given public key hash.
+   */
+  async getAccountByPublicKeyHash(publicKeyHash: Hash ): Promise<Hash> {
+    const accountHash: AccountHash = await this.provider.getAccountByPublicKeyHash(publicKeyHash.toByes());
+    return Hash.from(accountHash.accountHash);
   }
 
   /**
-   * Retrieves the account hash associated with a given public key.
+   * Retrieves the account hash for a given public key.
    *
-   * @param {PublicSignatureKey} publicKey - The public key to retrieve the associated account hash for.
-   * @param {CryptographicHash} [hashScheme] - The cryptographic hash scheme to use. By default, it uses the scheme created by `CryptoSchemeFactory.createDefaultCryptographicHash()`.
-   * @return {Promise<AccountHash>} A promise that resolves to the account hash associated with the provided public key.
-   */
+   * @param {PublicSignatureKey} publicKey - The public signature key associated with the account*/
   async getAccountByPublicKey(
       publicKey: PublicSignatureKey,
       hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
-  ): Promise<AccountHash> {
-    return  await this.provider.getAccountByPublicKey(publicKey, hashScheme);
+  ): Promise<Hash> {
+    const accountHash : AccountHash = await this.provider.getAccountByPublicKey(publicKey, hashScheme);
+    return Hash.from(accountHash.accountHash);
   }
 }

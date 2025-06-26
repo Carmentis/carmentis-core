@@ -2,15 +2,16 @@ import { CHAIN, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
+import {ApplicationLedgerVBState} from "./types";
 
-export class ApplicationLedgerVb extends VirtualBlockchain {
-  state: any;
+export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
   constructor({
     provider
   }: any) {
     super({ provider, type: CHAIN.VB_APP_LEDGER });
-
     this.state = {
+      signatureAlgorithmId: -1,
+      applicationId: new Uint8Array(0),
       actors: [],
       channels: []
     };
@@ -65,7 +66,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     Helper methods
   */
   getChannelId(name: any) {
-    const id = this.state.channels.findIndex((obj: any) => obj.name == name);
+    const id = this.getState().channels.findIndex((obj: any) => obj.name == name);
     if(id == -1) {
       throw `unknown channel '${name}'`;
     }
@@ -73,7 +74,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   }
 
   getActorId(name: any) {
-    const id = this.state.actors.findIndex((obj: any) => obj.name == name);
+    const id = this.getState().actors.findIndex((obj: any) => obj.name == name);
     if(id == -1) {
       throw `unknown actor '${name}'`;
     }
@@ -84,21 +85,22 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     Section callbacks
   */
   async signatureAlgorithmCallback(microblock: any, section: any) {
-    this.state.signatureAlgorithmId = section.object.algorithmId;
+    this.getState().signatureAlgorithmId = section.object.algorithmId;
   }
 
   async declarationCallback(microblock: any, section: any) {
-    this.state.applicationId = section.object.applicationId;
+    this.getState().applicationId = section.object.applicationId;
   }
 
   async actorCreationCallback(microblock: any, section: any) {
-    if(section.object.id != this.state.actors.length) {
+    const state = this.getState();
+    if(section.object.id != state.actors.length) {
       throw `invalid actor ID ${section.object.id}`;
     }
-    if(this.state.actors.some((obj: any) => obj.name == section.object.name)) {
+    if(state.actors.some((obj: any) => obj.name == section.object.name)) {
       throw `actor '${section.object.name}' already exists`;
     }
-    this.state.actors.push({
+    state.actors.push({
       name: section.object.name,
       subscribed: false,
       invitations: []
@@ -106,13 +108,14 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   }
 
   async channelCreationCallback(microblock: any, section: any) {
-    if(section.object.id != this.state.channels.length) {
+    const state = this.getState();
+    if(section.object.id != state.channels.length) {
       throw `invalid channel ID ${section.object.id}`;
     }
-    if(this.state.channels.some((obj: any) => obj.name == section.object.name)) {
+    if(state.channels.some((obj: any) => obj.name == section.object.name)) {
       throw `channel '${section.object.name}' already exists`;
     }
-    this.state.channels.push({
+    state.channels.push({
       name: section.object.name,
       isPrivate: section.object.isPrivate,
       creatorId: section.object.creatorId
@@ -120,13 +123,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   }
 
   async publicChannelDataCallback(microblock: any, section: any) {
-    if(!this.state.channels[section.object.channelId]) {
+    if(!this.getState().channels[section.object.channelId]) {
       throw `invalid channel ID ${section.object.channelId}`;
     }
   }
 
   async privateChannelDataCallback(microblock: any, section: any) {
-    if(!this.state.channels[section.object.channelId]) {
+    if(!this.getState().channels[section.object.channelId]) {
       throw `invalid channel ID ${section.object.channelId}`;
     }
   }
@@ -136,5 +139,41 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
   */
   checkStructure(microblock: any) {
     const checker = new StructureChecker(microblock);
+  }
+
+  /**
+   * Retrieves the application ID from the current state.
+   *
+   * @return {Uint8Array} The application ID as a Uint8Array.
+   */
+  getApplicationId(): Uint8Array {
+    return this.getState().applicationId;
+  }
+
+  /**
+   * Retrieves the total number of channels currently available.
+   *
+   * @return {number} The number of channels.
+   */
+  getNumberOfChannels() : number {
+    return this.getState().channels.length;
+  }
+
+  /**
+   * Retrieves a channel object by its unique identifier.
+   *
+   * @param {number} channelId - The unique identifier of the channel
+   */
+  getChannelById(channelId: number) {
+    return this.getState().channels[channelId];
+  }
+
+  /**
+   * Retrieves the total number of actors currently present in the state.
+   *
+   * @return {number} The number of actors.
+   */
+  getNumberOfActors(): number {
+    return this.getState().actors.length
   }
 }

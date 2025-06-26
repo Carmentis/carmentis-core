@@ -1,11 +1,51 @@
 import {BytesToHexEncoder, EncoderFactory, EncoderInterface} from "../utils/encoder";
 
+export interface AccountVBState {
+    signatureAlgorithmId: number;
+    publicKeyHeight: number;
+}
+
+export interface ValidatorNodeVBState {}
+
+export interface OrganizationVBState {
+    signatureAlgorithmId: number;
+    publicKeyHeight: number;
+    descriptionHeight: number;
+}
+
+export interface ApplicationVBState {
+    signatureAlgorithmId: number,
+}
+
+export interface ApplicationLedgeChannel {
+    name: string;
+    isPrivate: boolean;
+    creatorId: number;
+}
+
+export interface ApplicationLedgerActor {
+    name: string;
+    subscribed: boolean;
+    invitations: {
+        channelId: number;
+        height: number;
+    }[];
+}
+
+export interface ApplicationLedgerVBState {
+    signatureAlgorithmId: number;
+    applicationId: Uint8Array;
+    channels: ApplicationLedgeChannel[];
+    actors: ApplicationLedgerActor[];
+}
+
+
 export interface MicroblockHeader {
     magicString: string;
     protocolVersion: number;
-    height: bigint;
+    height: number;
     previousHash: Uint8Array;
-    timestamp: bigint;
+    timestamp: number;
     gas: number;
     gasPrice: number;
     bodyHash: Uint8Array;
@@ -42,11 +82,11 @@ export interface VirtualBlockchainUpdate {
     headers: Uint8Array[]
 }
 
-export interface VirtualBlockchainState {
+export interface VirtualBlockchainState<CustomState = object> {
     type: number,
     height: number,
     lastMicroblockHash: Uint8Array,
-    customState: object
+    customState: CustomState
 }
 
 export interface MsgVirtualBlockchainState {

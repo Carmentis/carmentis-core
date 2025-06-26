@@ -41,13 +41,18 @@ export class Organization {
 
   async getDescription() {
     // TODO (for all similar methods): the state may have changed and there may be a more recent description
-    const microblock = await this.vb.getMicroblock(this.vb.state.descriptionHeight);
+    const microblock = await this.vb.getMicroblock(this.vb.getDescriptionHeight());
     const section = microblock.getSection((section: any) => section.type == SECTIONS.ORG_DESCRIPTION);
     return section.object;
   }
 
   setGasPrice(gasPrice: number) {
     this.gasPrice = gasPrice;
+  }
+
+  getName() : string {
+    throw 'Not implemented'
+    //return this.vb.state.name;
   }
 
   async publishUpdates() {

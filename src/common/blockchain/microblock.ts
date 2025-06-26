@@ -3,11 +3,12 @@ import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
 import { Utils } from "../utils/utils";
 import { Crypto } from "../crypto/crypto";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
+import {MicroblockSection} from "./types";
 
-export interface Section {
+export interface Section<T = any> {
   type: number,
-  object: any,
-  data: any,
+  object: T,
+  data: Uint8Array,
   hash: Uint8Array,
   index: number,
 }
@@ -16,7 +17,7 @@ export class Microblock {
   gasPrice: number;
   hash: any;
   header: any;
-  sections: any;
+  sections: Section[];
   type: number;
 
   constructor(type: number) {
@@ -119,15 +120,17 @@ export class Microblock {
   /**
     Returns the first section for which the given callback function returns true.
   */
-  getSection(callback: any) {
-    return this.sections.find((section: any) => callback(section));
+  getSection<T = any>(callback: (section: Section) => boolean): Section<T> {
+    const section = this.sections.find((section: Section) => callback(section));
+    if (section === undefined) throw new Error(`Section not found.`)
+    return section;
   }
 
   /**
     Returns all sections for which the given callback function returns true.
   */
-  getSections(callback: any) {
-    return this.sections.filter((section: any) => callback(section));
+  getSections(callback: (section: Section) => boolean) {
+    return this.sections.filter((section: Section) => callback(section));
   }
 
   /**

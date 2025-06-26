@@ -5,7 +5,8 @@ import {CryptoSchemeFactory} from "../crypto/factory";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/provider";
-import {OrganizationVBState} from "./types";
+import {MicroblockSection, OrganizationDescription, OrganizationVBState} from "./types";
+import {Section} from "./microblock";
 
 export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     private signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
@@ -35,7 +36,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         });
     }
 
-    async setDescription(object: any) {
+    async setDescription(object: OrganizationDescription) {
         await this.addSection(SECTIONS.ORG_DESCRIPTION, object);
     }
 

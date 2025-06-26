@@ -4,6 +4,8 @@ import { SchemaValidator } from "../data/schemaValidator";
 import { IntermediateRepresentation } from "../records/intermediateRepresentation";
 import { Crypto } from "../crypto/crypto";
 import { Utils } from "../utils/utils";
+import {RecordDescription} from "./blockchain";
+import {Provider} from "../providers/provider";
 
 export class ApplicationLedger {
   provider: any;
@@ -13,7 +15,7 @@ export class ApplicationLedger {
 
   constructor({
     provider
-  }: any) {
+  }: {provider: Provider}) {
     this.vb = new ApplicationLedgerVb({ provider });
     //this.publicKey = publicKey;
     //this.privateKey = privateKey;
@@ -26,18 +28,18 @@ export class ApplicationLedger {
     }
   }
 
-  async _create(applicationId: any) {
+  async _create(applicationId: string) {
     if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without a keyed provider.'
     await this.vb.setSignatureAlgorithm({
       algorithmId: this.signatureAlgorithmId
     });
   }
 
-  async _load(identifier: any) {
+  async _load(identifier: Uint8Array) {
     await this.vb.load(identifier);
   }
 
-  async _processJson(object: any) {
+  async _processJson(object: RecordDescription) {
     const validator = new SchemaValidator(SCHEMAS.RECORD_DESCRIPTION);
     validator.validate(object);
 
@@ -75,7 +77,7 @@ export class ApplicationLedger {
     for(const def of object.channels || []) {
       await this.vb.createChannel({
         id: this.vb.state.channels.length,
-        isPrivate: !def.isPublic,
+        isPrivate: !def.public,
         creatorId: authorId,
         name: def.name
       });
@@ -97,7 +99,7 @@ export class ApplicationLedger {
     }
 
     // process field assignations
-    for(const def of object.fieldAssignations || []) {
+    for(const def of object.channelAssignations || []) {
       const channelId = this.vb.getChannelId(def.channelName);
       ir.setChannel(def.fieldPath, channelId);
     }

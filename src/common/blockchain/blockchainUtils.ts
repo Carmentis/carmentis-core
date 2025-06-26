@@ -3,6 +3,8 @@ import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
 import { Crypto } from "../crypto/crypto";
 import { Utils } from "../utils/utils";
 
+import {MicroblockInformation, VirtualBlockchainState} from "./types";
+
 export const BlockchainUtils = {
   checkHeaderList,
   previousHashFromHeader,
@@ -51,7 +53,8 @@ function previousHashFromHeader(header: any) {
   );
 }
 
-function decodeMicroblockHeader(data: any) {
+
+function decodeMicroblockHeader(data: Uint8Array) {
   const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER),
         object = unserializer.unserialize(data);
 
@@ -65,14 +68,21 @@ function encodeMicroblockInformation(virtualBlockchainType: any, virtualBlockcha
   return data;
 }
 
-function decodeMicroblockInformation(data: any) {
-  const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_INFORMATION),
+function decodeMicroblockInformation(data: Uint8Array) {
+  const unserializer = new SchemaUnserializer<MicroblockInformation>(SCHEMAS.MICROBLOCK_INFORMATION),
         object = unserializer.unserialize(data);
 
   return object;
 }
 
-function encodeVirtualBlockchainState(type: any, height: any, lastMicroblockHash: any, customStateObject: any) {
+/**
+ *
+ * @param type
+ * @param height
+ * @param lastMicroblockHash
+ * @param customStateObject
+ */
+function encodeVirtualBlockchainState(type: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: object) {
   // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
   const customStateSerializer = new SchemaSerializer(SCHEMAS.VB_STATES[type]),
         customState = customStateSerializer.serialize(customStateObject);
@@ -90,16 +100,20 @@ function encodeVirtualBlockchainState(type: any, height: any, lastMicroblockHash
   return data;
 }
 
-function decodeVirtualBlockchainState(data: any) {
+/**
+ * Decodes a virtual blockchain state object from the given binary data.
+ *
+ * @param {Uint8Array} data The binary encoded virtual blockchain state data.
+ * @return {VirtualBlockchainState} The decoded virtual blockchain state object.
+ */
+function decodeVirtualBlockchainState(data: Uint8Array) : VirtualBlockchainState {
   const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
-        stateObject = stateUnserializer.unserialize(data);
+        stateObject = stateUnserializer.unserialize(data) as VirtualBlockchainState;
 
   // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  const customStateUnserializer = new SchemaUnserializer(SCHEMAS.VB_STATES[stateObject.type]),
-        // @ts-expect-error TS(2339): Property 'customState' does not exist on type '{}'... Remove this comment to see the full error message
+  const customStateUnserializer = new SchemaUnserializer<VirtualBlockchainState>(SCHEMAS.VB_STATES[stateObject.type]),
         customStateObject = customStateUnserializer.unserialize(stateObject.customState);
 
-  // @ts-expect-error TS(2339): Property 'customState' does not exist on type '{}'... Remove this comment to see the full error message
   stateObject.customState = customStateObject;
 
   return stateObject;

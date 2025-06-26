@@ -2,7 +2,7 @@ import { DATA } from "../constants/constants";
 import { WriteStream, ReadStream } from "./byteStreams";
 import { TypeManager, TypeChecker } from "./types";
 
-export class SchemaSerializer {
+export class SchemaSerializer<T = any> {
   schema: any;
   stream: any;
   /**
@@ -17,7 +17,7 @@ export class SchemaSerializer {
     Serializes the given object.
     @param {object} object - The object to be serialized.
   */
-  serialize(object: any) {
+  serialize(object: T): Uint8Array {
     this.stream = new WriteStream;
     this.serializeObject(this.schema, object);
 
@@ -91,7 +91,7 @@ export class SchemaSerializer {
   }
 }
 
-export class SchemaUnserializer {
+export class SchemaUnserializer<T = object> {
   schema: any;
   stream: any;
   /**
@@ -106,7 +106,7 @@ export class SchemaUnserializer {
     Unserializes the given byte stream.
     @param {Uint8Array} stream - The serialized byte stream
   */
-  unserialize(stream: any): object {
+  unserialize(stream: any): T {
     this.stream = new ReadStream(stream);
 
     const object = this.unserializeObject(this.schema),
@@ -117,7 +117,7 @@ export class SchemaUnserializer {
       throw `Invalid stream length (decoded ${pointer} bytes, actual length is ${size} bytes)`;
     }
 
-    return object;
+    return object as T;
   }
 
   /**

@@ -70,3 +70,7 @@ export * from "./trees/radixTree";
 export * from "./utils/encoder";
 export * from "./utils/utils";
 export * from "./wallet/wallet";
+export {VirtualBlockchainState} from "./blockchain/types";
+export {AccountHistory} from "./blockchain/types";
+export {AccountHash} from "./blockchain/types";
+export {AccountState} from "./blockchain/types";

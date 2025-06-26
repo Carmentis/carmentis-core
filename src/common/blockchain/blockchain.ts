@@ -7,6 +7,57 @@ import { Application } from "./application";
 import { ApplicationLedger } from "./applicationLedger";
 import { Utils } from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
+import {PublicSignatureKey} from "../crypto/signature/signature-interface";
+
+
+export interface RecordActor {
+  name: string;
+}
+
+export interface RecordChannel {
+  name: string;
+  public: boolean;
+}
+
+export interface RecordChannelAssignation {
+  fieldPath: string;
+  channelName: string;
+}
+
+export interface RecordActorAssignation {
+  actorName: string;
+  channelName: string;
+}
+
+export interface RecordMaskedPart {
+  position: number;
+  length: number;
+  replacementString: string;
+}
+
+export interface RecordMaskableField {
+  fieldPath: string;
+  maskedParts: RecordMaskedPart[];
+}
+
+export interface RecordHashableField {
+  fieldPath: string;
+}
+
+export interface RecordDescription {
+  applicationId: string;
+  virtualBlockchainId?: string;
+  data: any;
+  actors?: RecordActor[];
+  channels?: RecordChannel[];
+  channelAssignations?: RecordChannelAssignation[];
+  actorAssignations?: RecordActorAssignation[];
+  hashableFields?: RecordHashableField[];
+  maskableFields?: RecordMaskableField[];
+  author: string;
+  endorser?: string;
+}
+
 
 export class Blockchain {
   provider: any;
@@ -42,7 +93,7 @@ export class Blockchain {
    * @param {number} amount
    * @returns {Promise<Account>}
    */
-  async createAccount(sellerAccount: string, buyerPublicKey: any, amount: any) {
+  async createAccount(sellerAccount: string, buyerPublicKey: PublicSignatureKey, amount: number) {
     if (!this.provider.isKeyed()) throw 'Cannot create an account without a keyed provider.'
     const hexEncoder = EncoderFactory.bytesToHexEncoder();
     const account = new Account({ provider: this.provider });
@@ -56,7 +107,7 @@ export class Blockchain {
    * @param identifierString
    * @returns {Promise<Account>}
    */
-  async loadAccount(identifierString: any) {
+  async loadAccount(identifierString: string) {
     const account = new Account({ provider: this.provider });
     await account._load(Utils.binaryFromHexa(identifierString));
     return account;
@@ -103,7 +154,7 @@ export class Blockchain {
    * @param identifierString
    * @returns {Promise<Application>}
    */
-  async loadApplication(identifierString: any) {
+  async loadApplication(identifierString: string) {
     const application = new Application({ provider: this.provider });
     await application._load(Utils.binaryFromHexa(identifierString));
     return application;
@@ -112,10 +163,10 @@ export class Blockchain {
   /**
    * Should be used with a keyed provider.
    *
-   * @param object
+   * @param object {RecordDescription}
    * @returns {Promise<ApplicationLedger>}
    */
-  async getApplicationLedgerFromJson(object: any) {
+  async getApplicationLedgerFromJson(object: RecordDescription) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._processJson(object);
     return applicationLedger;
@@ -140,7 +191,7 @@ export class Blockchain {
    * @param identifierString
    * @returns {Promise<ApplicationLedger>}
    */
-  async loadApplicationLedger(identifierString: any) {
+  async loadApplicationLedger(identifierString: string) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._load(Utils.binaryFromHexa(identifierString));
     return applicationLedger;

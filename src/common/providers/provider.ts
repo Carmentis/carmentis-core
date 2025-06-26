@@ -1,30 +1,15 @@
-import { BlockchainUtils } from "../blockchain/blockchainUtils";
-import { Utils } from "../utils/utils";
+import {BlockchainUtils} from "../blockchain/blockchainUtils";
+import {Utils} from "../utils/utils";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
-
-export interface AccountState {
-    height: number;
-    balance: number;
-    lastHistoryHash: Uint8Array
-}
-
-export interface AccountHash {
-    accountHash: Uint8Array
-}
-
-export interface AccountHistory {
-    list: {
-      height: number,
-      previousHistoryHash: Uint8Array,
-      type: number,
-      timestamp: number,
-      linkedAccount: Uint8Array,
-      amount: number,
-      chainReference: Uint8Array
-    }[]
-}
+import {
+    AccountHash,
+    AccountHistory,
+    AccountState,
+    MicroblockInformation,
+    VirtualBlockchainState
+} from "../blockchain/types";
 
 export interface ProviderInterface {
     getAccountState(...args: any[]): Promise<AccountState>;
@@ -93,7 +78,7 @@ export class Provider implements ProviderInterface{
         await this.internalProvider.setVirtualBlockchainState(virtualBlockchainId, stateData);
     }
 
-    async getMicroblockInformation(hash: any) {
+    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation> {
         // FIXME: we should avoid the encoding/decoding passes when getting data from the external provider
         let data = await this.internalProvider.getMicroblockInformation(hash);
 
@@ -108,7 +93,7 @@ export class Provider implements ProviderInterface{
         return data && BlockchainUtils.decodeMicroblockInformation(data);
     }
 
-    async getMicroblockBodys(hashes: any) {
+    async getMicroblockBodys(hashes: Uint8Array[]) {
         // get as much data as possible from the internal provider
         const res = [];
         const missingHashes = [];
@@ -141,7 +126,7 @@ export class Provider implements ProviderInterface{
         return res;
     }
 
-    async getVirtualBlockchainStateInternal(virtualBlockchainId: any) {
+    async getVirtualBlockchainStateInternal(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainState> {
         return await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
     }
 
@@ -153,18 +138,14 @@ export class Provider implements ProviderInterface{
         const stateData = await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
         const state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
 
-        // @ts-expect-error TS(2339): Property 'height' does not exist on type '{}'.
         let height = state.height;
-        // @ts-expect-error TS(2339): Property 'lastMicroblockHash' does not exist on ty... Remove this comment to see the full error message
         let microblockHash = state.lastMicroblockHash;
         const headers = [];
 
         while(height > knownHeight) {
             const infoData = await this.internalProvider.getMicroblockInformation(microblockHash);
             const info = BlockchainUtils.decodeMicroblockInformation(infoData);
-            // @ts-expect-error TS(2339): Property 'header' does not exist on type '{}'.
             headers.push(info.header);
-            // @ts-expect-error TS(2339): Property 'header' does not exist on type '{}'.
             microblockHash = BlockchainUtils.previousHashFromHeader(info.header);
             height--;
         }
@@ -182,10 +163,7 @@ export class Provider implements ProviderInterface{
         // and that they are consistent
         if(stateData) {
             state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
-
-            // @ts-expect-error TS(2339): Property 'height' does not exist on type '{}'.
             let height = state.height;
-            // @ts-expect-error TS(2339): Property 'lastMicroblockHash' does not exist on ty... Remove this comment to see the full error message
             let microblockHash = state.lastMicroblockHash;
             const headers = [];
 
@@ -196,9 +174,7 @@ export class Provider implements ProviderInterface{
                     break;
                 }
                 const info = BlockchainUtils.decodeMicroblockInformation(infoData);
-                // @ts-expect-error TS(2339): Property 'header' does not exist on type '{}'.
                 headers.push(info.header);
-                // @ts-expect-error TS(2339): Property 'header' does not exist on type '{}'.
                 microblockHash = BlockchainUtils.previousHashFromHeader(info.header);
                 height--;
             }
@@ -257,7 +233,6 @@ export class Provider implements ProviderInterface{
             for(let n = 0; n < vbUpdate.headers.length; n++) {
                 await this.internalProvider.setMicroblockInformation(
                     check.hashes[n],
-                    // @ts-expect-error TS(2339): Property 'type' does not exist on type '{}'.
                     BlockchainUtils.encodeMicroblockInformation(state.type, virtualBlockchainId, vbUpdate.headers[n])
                 );
             }

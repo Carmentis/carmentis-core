@@ -86,7 +86,7 @@ export abstract class VirtualBlockchain {
   /**
     Returns the microblock at the given height.
   */
-  async getMicroblock(height: any) {
+  async getMicroblock(height: number) {
     if(height == this.microblockHashes.length + 1 && this.currentMicroblock) {
       return this.currentMicroblock;
     }

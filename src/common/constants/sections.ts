@@ -201,10 +201,10 @@ const APP_LEDGER = {
   [ APP_LEDGER_CHANNEL_CREATION ]: {
     label: "APP_LEDGER_CHANNEL_CREATION",
     schema: [
-      { name: "id",         type: DATA.TYPE_UINT8 },
-      { name: "isPrivate",  type: DATA.TYPE_BOOLEAN },
-      { name: "keyOwnerId", type: DATA.TYPE_UINT8 },
-      { name: "name",       type: DATA.TYPE_STRING }
+      { name: "id",        type: DATA.TYPE_UINT8 },
+      { name: "isPrivate", type: DATA.TYPE_BOOLEAN },
+      { name: "creatorId", type: DATA.TYPE_UINT8 },
+      { name: "name",      type: DATA.TYPE_STRING }
     ]
   },
   [ APP_LEDGER_SHARED_SECRET ]: {

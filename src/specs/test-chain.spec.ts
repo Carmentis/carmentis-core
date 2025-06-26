@@ -31,7 +31,7 @@ describe('Chain test', () => {
         let genesisAccountId = await genesisAccount.publishUpdates();
 
         console.log("genesisAccountId", genesisAccountId);
-/*
+
         console.log("creating test account");
 
         const testPrivateKey = MLDSA65PrivateSignatureKey.gen();
@@ -98,15 +98,15 @@ describe('Chain test', () => {
         memoryProvider.clear();
         console.log(await organization.getDescription());
         console.log(await organization.getDescription());
-*/
+
         const explorerProvider = new Provider(memoryProvider, networkProvider);
 
         blockchain = new Blockchain(explorerProvider);
 
         const explorer = blockchain.getExplorer();
 
-//      console.log("explorer.getAccountState / genesis", await explorer.getAccountState(genesisAccountId));
-//      console.log("explorer.getAccountState / test", await explorer.getAccountState(testAccountId));
+        console.log("explorer.getAccountState / genesis", await explorer.getAccountState(genesisAccountId));
+        console.log("explorer.getAccountState / test", await explorer.getAccountState(testAccountId));
         console.log("explorer.getVirtualBlockchainState", await explorer.getVirtualBlockchainState(genesisAccountId));
     }, TEST_TIMEOUT);
 
@@ -217,6 +217,13 @@ describe('Chain test', () => {
         };
 
         const appLedger = await blockchain.getApplicationLedgerFromJson(object);
+
+        const microblockData = appLedger.getMicroblockData();
+        console.log("microblockData", microblockData);
+
+        const importer = blockchain.getMicroblockImporter(microblockData);
+        const importStatus = await importer.check();
+        console.log(`import: status=${importStatus}, error=${importer.error}`);
 
         appLedger.setGasPrice(ECO.TOKEN);
         const hash = await appLedger.publishUpdates();

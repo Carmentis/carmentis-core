@@ -77,9 +77,9 @@ export class Microblock {
     this.hash = Crypto.Hashes.sha256AsBinary(headerData);
     this.gasPrice = this.header.gasPrice;
 
-    const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY),
-          // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
-          body = bodyUnserializer.unserialize(bodyData).body;
+    const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY);
+    // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
+    const body = bodyUnserializer.unserialize(bodyData).body;
 
     for(const { type, data } of body) {
       // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
@@ -161,17 +161,6 @@ export class Microblock {
     );
 
     return publicKey.verify(signedData, signature);
-    /*
-    switch(algorithmId) {
-      case Crypto.SECP256K1: {
-        return Crypto.Secp256k1.verify(publicKey, signedData, signature);
-      }
-      case Crypto.ML_DSA: {
-        return Crypto.MLDsa.verify(publicKey, signedData, signature);
-      }
-    }
-
-     */
   }
 
   /**
@@ -182,9 +171,8 @@ export class Microblock {
   getSignedData(includeGas: boolean, sectionCount: number, extraBytes: number) {
     this.setGasData(includeGas, extraBytes);
 
-    const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER),
-          headerData = serializer.serialize(this.header);
-
+    const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
+    const headerData = serializer.serialize(this.header);
     const sections = this.sections.slice(0, sectionCount);
 
     return Utils.binaryFrom(
@@ -221,15 +209,15 @@ export class Microblock {
 
     this.setGasData(true);
 
-    const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY),
-          bodyData = bodySerializer.serialize(body),
-          bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
+    const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
+    const bodyData = bodySerializer.serialize(body);
+    const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
 
     this.header.bodyHash = bodyHash;
 
-    const headerSerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER),
-          headerData = headerSerializer.serialize(this.header),
-          microblockHash = Crypto.Hashes.sha256AsBinary(headerData);
+    const headerSerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
+    const headerData = headerSerializer.serialize(this.header);
+    const microblockHash = Crypto.Hashes.sha256AsBinary(headerData);
 
     this.hash = microblockHash;
 

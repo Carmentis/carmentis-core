@@ -18,13 +18,14 @@ const VB_CLASSES = [
 
 export class MicroblockImporter {
   bodyData: any;
-  currentTimestamp: any;
-  error: any;
+  currentTimestamp: number;
+  error: string;
   hash: any;
   header: any;
   headerData: any;
   provider: any;
   vb: any;
+
   constructor({
     data,
     provider
@@ -33,10 +34,11 @@ export class MicroblockImporter {
     this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
     this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
     this.hash = Crypto.Hashes.sha256AsBinary(this.headerData);
+    this.currentTimestamp = 0;
     this.error = "";
   }
 
-  async check(currentTimestamp: any) {
+  async check(currentTimestamp?: number) {
     this.currentTimestamp = currentTimestamp || Utils.getTimestampInSeconds();
 
     return (await this.checkHeader()) || (await this.checkTimestamp()) || (await this.checkContent());

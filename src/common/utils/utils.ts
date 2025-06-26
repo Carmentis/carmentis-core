@@ -1,5 +1,6 @@
 import { DATA } from "../constants/constants";
 import { TypeManager } from "../data/types";
+import { Utf8Encoder } from "../data/utf8Encoder";
 
 export const Utils = {
   numberToHexa,
@@ -69,8 +70,7 @@ function binaryFrom(this: any, ...arg: any[]) {
         break;
       }
       case DATA.TYPE_STRING: {
-        // @ts-expect-error TS(2552): Cannot find name 'encoder'. Did you mean 'encodeUR... Remove this comment to see the full error message
-        arg[i] = encoder.encode(data);
+        arg[i] = Utf8Encoder.encode(data);
         break;
       }
       case DATA.TYPE_BINARY: {

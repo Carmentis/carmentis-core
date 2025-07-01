@@ -13,6 +13,7 @@ import {DATA, ECO} from '../common/constants/constants';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 import {EncoderFactory} from "../common/utils/encoder";
 import {Hash} from "../common/blockchain/types";
+import {Crypto} from "../common/crypto/crypto";
 
 describe('Chain test', () => {
     const TEST_TIMEOUT = 5000;
@@ -132,8 +133,11 @@ describe('Chain test', () => {
         console.log("explorer.getAccountState / genesis", await explorer.getAccountState(genesisAccountId));
         console.log("explorer.getAccountState / test", await explorer.getAccountState(testAccountId));
 
+        const testPublicKeyHash = Crypto.Hashes.sha256AsBinary(testPublicKey.getPublicKeyAsBytes());
+        console.log("explorer.getAccountByPublicKeyHash (valid)", await explorer.getAccountByPublicKeyHash(Hash.from(testPublicKeyHash)));
+
         try {
-          console.log("explorer.getAccountByPublicKeyHash");
+          console.log("explorer.getAccountByPublicKeyHash (invalid)");
           await explorer.getAccountByPublicKeyHash(Hash.from("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"));
         }
         catch(e) {
@@ -141,6 +145,7 @@ describe('Chain test', () => {
         }
 
         console.log("explorer.getVirtualBlockchainState", await explorer.getVirtualBlockchainState(genesisAccountId));
+        console.log("explorer.getAccounts", await explorer.getAccounts());
     }, TEST_TIMEOUT);
 
     test('testIr()', async () => {

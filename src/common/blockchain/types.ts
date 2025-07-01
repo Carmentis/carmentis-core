@@ -152,6 +152,9 @@ export interface AccountTransfer {
     privateReference: string;
 }
 
+export interface ObjectList {
+    list: Uint8Array[];
+}
 
 /**
  * Represents a hash object that allows encoding and creation from a string or Uint8Array.

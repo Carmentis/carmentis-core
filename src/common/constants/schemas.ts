@@ -226,6 +226,8 @@ export const MSG_GET_ACCOUNT_HISTORY            = 0x0D;
 export const MSG_ACCOUNT_HISTORY                = 0x0E;
 export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH = 0x0F;
 export const MSG_ACCOUNT_BY_PUBLIC_KEY_HASH     = 0x10;
+export const MSG_GET_OBJECT_LIST                = 0x11;
+export const MSG_OBJECT_LIST                    = 0x12;
 
 export const NODE_MESSAGE_NAMES = [
   "ERROR",
@@ -244,7 +246,9 @@ export const NODE_MESSAGE_NAMES = [
   "GET_ACCOUNT_HISTORY",
   "ACCOUNT_HISTORY",
   "GET_ACCOUNT_BY_PUBLIC_KEY_HASH",
-  "ACCOUNT_BY_PUBLIC_KEY_HASH"
+  "ACCOUNT_BY_PUBLIC_KEY_HASH",
+  "MSG_GET_OBJECT_LIST",
+  "MSG_OBJECT_LIST"
 ];
 
 export const NODE_MESSAGES: { [key: number]: SchemaItem[] } = {
@@ -309,6 +313,12 @@ export const NODE_MESSAGES: { [key: number]: SchemaItem[] } = {
   ],
   [ MSG_ACCOUNT_BY_PUBLIC_KEY_HASH ]: [
     { name: "accountHash", type: DATA.TYPE_BIN256 }
+  ],
+  [ MSG_GET_OBJECT_LIST ] : [
+    { name: "type", type: DATA.TYPE_UINT8 }
+  ],
+  [ MSG_OBJECT_LIST ] : [
+    { name: "list", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
   ]
 };
 

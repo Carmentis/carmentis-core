@@ -8,7 +8,8 @@ import {
   AccountState,
   MicroBlockBodys,
   MicroblockInformation, MsgVirtualBlockchainState, VirtualBlockchainState,
-  VirtualBlockchainUpdate
+  VirtualBlockchainUpdate,
+  ObjectList
 } from "../blockchain/types";
 import {ProviderInterface} from "./provider";
 import axios from "axios";
@@ -67,6 +68,16 @@ export class NetworkProvider {
       SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
       {
         publicKeyHash
+      }
+    );
+    return answer;
+  }
+
+  async getObjectList(type: number) {
+    const answer = await this.abciQuery<ObjectList>(
+      SCHEMAS.MSG_GET_OBJECT_LIST,
+      {
+        type
       }
     );
     return answer;

@@ -72,7 +72,7 @@ export class Provider {
         publicKey: PublicSignatureKey,
         hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
     ) {
-        const rawPublicKey = publicKey.getPublicKeyAsBytes();
+        const rawPublicKey = publicKey.getPublicKeyAsBytes(); // TODO: decide if we want to use hash of the public key or the public key itself
         const publicKeyHash = hashScheme.hash(rawPublicKey);
         return  await this.getAccountByPublicKeyHash(publicKeyHash);
     }

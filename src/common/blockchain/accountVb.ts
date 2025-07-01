@@ -3,6 +3,7 @@ import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {AccountTokenIssuance, AccountTransfer, AccountVBState} from "./types";
+import {CryptoSchemeFactory} from "../crypto/factory";
 
 export class AccountVb extends VirtualBlockchain<AccountVBState> {
   constructor({
@@ -26,8 +27,9 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   }
 
   async setPublicKey(publicKey: PublicSignatureKey) {
+    const hashScheme = CryptoSchemeFactory.createDefaultCryptographicHash();
     await this.addSection(SECTIONS.ACCOUNT_PUBLIC_KEY, {
-      publicKey: publicKey.getPublicKeyAsBytes()
+      publicKey: hashScheme.hash(publicKey.getPublicKeyAsBytes())
     });
   }
 

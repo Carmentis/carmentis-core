@@ -1,6 +1,8 @@
 import {ml_dsa65} from "@noble/post-quantum/ml-dsa";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {
+    BasePrivateSignatureKey,
+    BasePublicSignatureKey,
     PrivateSignatureKey,
     PublicSignatureKey,
     SignatureAlgorithmId,
@@ -28,7 +30,7 @@ export class MLDSA65SignatureScheme implements SignatureScheme {
  * the raw public key used in the signing process. It extends the `MLDSA44SignatureScheme`
  * and implements the `PublicSignatureKey` interface.
  */
-export class MLDSA65PublicSignatureKey extends MLDSA65SignatureScheme implements PublicSignatureKey {
+export class MLDSA65PublicSignatureKey extends BasePublicSignatureKey {
     /**
      * Constructs an instance of the class.
      *
@@ -40,7 +42,7 @@ export class MLDSA65PublicSignatureKey extends MLDSA65SignatureScheme implements
     }
 
 
-    encodePublicKey(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
+    getPublicKeyAsString(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
         return encoder.encode(this.getPublicKeyAsBytes())
     }
 
@@ -68,12 +70,16 @@ export class MLDSA65PublicSignatureKey extends MLDSA65SignatureScheme implements
     getPublicKeyAsBytes(): Uint8Array {
         return this.publicKey;
     }
+
+    getScheme(): SignatureScheme {
+        return new MLDSA65SignatureScheme();
+    }
 }
 
 /**
  *
  */
-export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implements PrivateSignatureKey {
+export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
 
     /**
      * Generates and returns a new private signature key.
@@ -87,10 +93,11 @@ export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implem
         return new MLDSA65PrivateSignatureKey(seed);
     }
 
+    private verificationKey: Uint8Array;
     private signatureKey: Uint8Array;
 
 
-    encodePrivateKey(encoder: EncoderInterface<Uint8Array, string>): string {
+    getPrivateKeyAsString(encoder: EncoderInterface<Uint8Array, string>): string {
         return encoder.encode(this.getPrivateKeyAsBytes())
     }
 
@@ -102,9 +109,10 @@ export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implem
      * @return {void}
      */
     constructor(private seed: Uint8Array) {
+        super();
         const keys = ml_dsa65.keygen(seed);
-        super(keys.publicKey);
         this.signatureKey = keys.secretKey;
+        this.verificationKey = keys.publicKey;
     }
 
 
@@ -114,7 +122,7 @@ export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implem
      * @return {MLDSA65PublicSignatureKey} The public signature key.
      */
     getPublicKey(): MLDSA65PublicSignatureKey {
-        return this;
+        return new MLDSA65PublicSignatureKey(this.verificationKey);
     }
 
     getPrivateKeyAsBytes(): Uint8Array {
@@ -132,6 +140,10 @@ export class MLDSA65PrivateSignatureKey extends MLDSA65PublicSignatureKey implem
             this.signatureKey,
             data
         );
+    }
+
+    getScheme(): SignatureScheme {
+        return new MLDSA65SignatureScheme();
     }
 
 

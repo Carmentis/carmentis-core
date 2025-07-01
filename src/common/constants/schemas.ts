@@ -9,6 +9,15 @@ export const ERROR = [
   { name: "arg",  type: DATA.TYPE_ARRAY_OF | DATA.TYPE_STRING }
 ];
 
+export interface SchemaItem {
+  name: string;
+  type: number;
+  size?: number;
+  schema?: SchemaItem[];
+  optional?: boolean;
+  unspecifiedSchema?: boolean;
+}
+
 // ============================================================================================================================ //
 //  Record description                                                                                                          //
 // ============================================================================================================================ //

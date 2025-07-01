@@ -12,6 +12,7 @@ import {RadixTree} from "../common/trees/radixTree";
 import {DATA, ECO} from '../common/constants/constants';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 import {EncoderFactory} from "../common/utils/encoder";
+import {Hash} from "../common/blockchain/types";
 
 describe('Chain test', () => {
     const TEST_TIMEOUT = 5000;
@@ -130,6 +131,15 @@ describe('Chain test', () => {
 
         console.log("explorer.getAccountState / genesis", await explorer.getAccountState(genesisAccountId));
         console.log("explorer.getAccountState / test", await explorer.getAccountState(testAccountId));
+
+        try {
+          console.log("explorer.getAccountByPublicKeyHash");
+          await explorer.getAccountByPublicKeyHash(Hash.from("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"));
+        }
+        catch(e) {
+          console.log(e);
+        }
+
         console.log("explorer.getVirtualBlockchainState", await explorer.getVirtualBlockchainState(genesisAccountId));
     }, TEST_TIMEOUT);
 

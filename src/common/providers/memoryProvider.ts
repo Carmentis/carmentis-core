@@ -1,4 +1,4 @@
-import { Utils } from "../utils/utils";
+import {Utils} from "../utils/utils";
 import {MicroblockInformation} from "../blockchain/types";
 import {ProviderInterface} from "./provider";
 
@@ -6,6 +6,7 @@ export class MemoryProvider  {
   microblockBodyStore: any;
   microblockInformationStore: any;
   virtualBlockchainStateStore: any;
+
   constructor() {
     this.microblockInformationStore = new Map;
     this.microblockBodyStore = new Map;

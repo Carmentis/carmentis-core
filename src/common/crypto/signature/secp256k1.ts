@@ -1,4 +1,6 @@
 import {
+    BasePrivateSignatureKey,
+    BasePublicSignatureKey,
     PrivateSignatureKey,
     PublicSignatureKey,
     SignatureAlgorithmId,
@@ -32,7 +34,7 @@ export class Secp256k1SignatureScheme implements SignatureScheme {
  *
  * This class extends the Secp256k1SignatureScheme and implements the PublicSignatureKey interface.
  */
-export class Secp256k1PublicSignatureKey extends Secp256k1SignatureScheme implements PublicSignatureKey {
+export class Secp256k1PublicSignatureKey extends BasePublicSignatureKey {
 
     constructor(private publicKey: Uint8Array) {
         super();
@@ -47,10 +49,9 @@ export class Secp256k1PublicSignatureKey extends Secp256k1SignatureScheme implem
         return verify(signature, msgHash, this.publicKey);
     }
 
-    encodePublicKey(encoder: EncoderInterface<Uint8Array, string>): string {
-        return encoder.encode(this.getPublicKeyAsBytes())
+    getScheme(): SignatureScheme {
+        return new Secp256k1SignatureScheme();
     }
-
 
 
 }
@@ -64,12 +65,12 @@ export class Secp256k1PublicSignatureKey extends Secp256k1SignatureScheme implem
  * Methods enable key generation, retrieving the associated public key,
  * and signing cryptographic hashes.
  */
-export class Secp256k1PrivateSignatureKey extends Secp256k1PublicSignatureKey implements PrivateSignatureKey {
+export class Secp256k1PrivateSignatureKey extends BasePrivateSignatureKey {
     constructor(private privateKey: PrivKey) {
-        super(getPublicKey(privateKey));
+        super()
     }
 
-    encodePrivateKey(encoder: EncoderInterface<Uint8Array, string>): string {
+    getPrivateKeyAsString(encoder: EncoderInterface<Uint8Array, string>): string {
         return encoder.encode(this.getPrivateKeyAsBytes())
     }
 
@@ -94,7 +95,7 @@ export class Secp256k1PrivateSignatureKey extends Secp256k1PublicSignatureKey im
     }
 
     getPublicKey(): PublicSignatureKey {
-        return this;
+        return new Secp256k1PublicSignatureKey(getPublicKey(this.privateKey));
     }
 
     getPrivateKeyAsBytes(): Uint8Array {
@@ -105,5 +106,9 @@ export class Secp256k1PrivateSignatureKey extends Secp256k1PublicSignatureKey im
     sign(data: Uint8Array): Uint8Array {
         const msgHash = sha256(data);
         return sign(msgHash, this.privateKey).toCompactRawBytes();
+    }
+
+    getScheme(): SignatureScheme {
+        return new Secp256k1SignatureScheme();
     }
 }

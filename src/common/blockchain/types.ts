@@ -227,4 +227,3 @@ export enum SectionType  {
     ACCOUNT_CREATION = "ACCOUNT_CREATION",
     ACCOUNT_TRANSFER = "ACCOUNT_TRANSFER",
 }
-

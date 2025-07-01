@@ -21,41 +21,41 @@ export interface SchemaItem {
 // ============================================================================================================================ //
 //  Record description                                                                                                          //
 // ============================================================================================================================ //
-const RECORD_ACTOR = [
+const RECORD_ACTOR: SchemaItem[] = [
   { name: "name", type: DATA.TYPE_STRING }
 ];
 
-const RECORD_CHANNEL = [
+const RECORD_CHANNEL: SchemaItem[] = [
   { name: "name",   type: DATA.TYPE_STRING },
   { name: "public", type: DATA.TYPE_BOOLEAN }
 ];
 
-const RECORD_CHANNEL_ASSIGNATION = [
+const RECORD_CHANNEL_ASSIGNATION: SchemaItem[] = [
   { name: "fieldPath",   type: DATA.TYPE_STRING },
   { name: "channelName", type: DATA.TYPE_STRING }
 ];
 
-const RECORD_ACTOR_ASSIGNATION = [
+const RECORD_ACTOR_ASSIGNATION: SchemaItem[] = [
   { name: "actorName",   type: DATA.TYPE_STRING },
   { name: "channelName", type: DATA.TYPE_STRING }
 ];
 
-const RECORD_MASKED_PART = [
+const RECORD_MASKED_PART: SchemaItem[] = [
   { name: "position",          type: DATA.TYPE_UINT32 },
   { name: "length",            type: DATA.TYPE_UINT32 },
   { name: "replacementString", type: DATA.TYPE_STRING }
 ];
 
-const RECORD_MASKABLE_FIELD = [
+const RECORD_MASKABLE_FIELD: SchemaItem[] = [
   { name: "fieldPath",   type: DATA.TYPE_STRING },
   { name: "maskedParts", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: RECORD_MASKED_PART }
 ];
 
-const RECORD_HASHABLE_FIELD = [
+const RECORD_HASHABLE_FIELD: SchemaItem[] = [
   { name: "fieldPath", type: DATA.TYPE_STRING }
 ];
 
-export const RECORD_DESCRIPTION = [
+export const RECORD_DESCRIPTION: SchemaItem[] = [
   { name: "applicationId",       type: DATA.TYPE_HASH_STR },
   { name: "virtualBlockchainId", type: DATA.TYPE_HASH_STR, optional: true },
   { name: "data",                type: DATA.TYPE_OBJECT, unspecifiedSchema: true },
@@ -72,13 +72,13 @@ export const RECORD_DESCRIPTION = [
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
-export const ACCOUNT_STATE = [
+export const ACCOUNT_STATE: SchemaItem[] = [
   { name: "height",          type: DATA.TYPE_UINT48 },
   { name: "balance",         type: DATA.TYPE_UINT48 },
   { name: "lastHistoryHash", type: DATA.TYPE_BIN256 }
 ];
 
-export const ACCOUNT_HISTORY = [
+export const ACCOUNT_HISTORY: SchemaItem[] = [
   { name: "height",              type: DATA.TYPE_UINT48 },
   { name: "previousHistoryHash", type: DATA.TYPE_BIN256 },
   { name: "type",                type: DATA.TYPE_UINT8 },
@@ -91,7 +91,7 @@ export const ACCOUNT_HISTORY = [
 // ============================================================================================================================ //
 //  Virtual blockchain state                                                                                                    //
 // ============================================================================================================================ //
-export const VIRTUAL_BLOCKCHAIN_STATE = [
+export const VIRTUAL_BLOCKCHAIN_STATE: SchemaItem[] = [
   { name: "type",               type: DATA.TYPE_UINT8 },
   { name: "height",             type: DATA.TYPE_UINT48 },
   { name: "lastMicroblockHash", type: DATA.TYPE_BIN256 },
@@ -101,7 +101,7 @@ export const VIRTUAL_BLOCKCHAIN_STATE = [
 // ============================================================================================================================ //
 //  Account VB state                                                                                                            //
 // ============================================================================================================================ //
-const ACCOUNT_VB_STATE = [
+const ACCOUNT_VB_STATE: SchemaItem[] = [
   { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
   { name: "publicKeyHeight",      type: DATA.TYPE_UINT48 }
 ];
@@ -109,13 +109,13 @@ const ACCOUNT_VB_STATE = [
 // ============================================================================================================================ //
 //  Validator node VB state                                                                                                     //
 // ============================================================================================================================ //
-const VALIDATOR_NODE_VB_STATE: any = [
+const VALIDATOR_NODE_VB_STATE: SchemaItem[] = [
 ];
 
 // ============================================================================================================================ //
 //  Organization VB state                                                                                                       //
 // ============================================================================================================================ //
-const ORGANIZATION_VB_STATE = [
+const ORGANIZATION_VB_STATE: SchemaItem[] = [
   { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
   { name: "publicKeyHeight",      type: DATA.TYPE_UINT48 },
   { name: "descriptionHeight",    type: DATA.TYPE_UINT48 }
@@ -124,7 +124,7 @@ const ORGANIZATION_VB_STATE = [
 // ============================================================================================================================ //
 //  Application VB state                                                                                                        //
 // ============================================================================================================================ //
-const APPLICATION_VB_STATE: any = [
+const APPLICATION_VB_STATE: SchemaItem[] = [
   { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
   { name: "descriptionHeight",    type: DATA.TYPE_UINT48 }
 ];
@@ -132,7 +132,7 @@ const APPLICATION_VB_STATE: any = [
 // ============================================================================================================================ //
 //  Application ledger VB state                                                                                                 //
 // ============================================================================================================================ //
-const APP_LEDGER_VB_STATE = [
+const APP_LEDGER_VB_STATE: SchemaItem[] = [
   { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
   { name: "applicationId",        type: DATA.TYPE_BIN256 },
   {
@@ -165,7 +165,7 @@ const APP_LEDGER_VB_STATE = [
 // ============================================================================================================================ //
 //  All VB state schemas                                                                                                        //
 // ============================================================================================================================ //
-export const VB_STATES = {
+export const VB_STATES: { [key: number]: SchemaItem[] } = {
   [ CHAIN.VB_ACCOUNT        ]: ACCOUNT_VB_STATE,
   [ CHAIN.VB_VALIDATOR_NODE ]: VALIDATOR_NODE_VB_STATE,
   [ CHAIN.VB_ORGANIZATION   ]: ORGANIZATION_VB_STATE,
@@ -180,7 +180,7 @@ export const MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET = 12;
 export const MICROBLOCK_HEADER_BODY_HASH_OFFSET = 57;
 export const MICROBLOCK_HEADER_SIZE = 89;
 
-export const MICROBLOCK_HEADER = [
+export const MICROBLOCK_HEADER: SchemaItem[] = [
   { name: "magicString",     type: DATA.TYPE_STRING, size: 4 }, // +0
   { name: "protocolVersion", type: DATA.TYPE_UINT16 },          // +4
   { name: "height",          type: DATA.TYPE_UINT48 },          // +6
@@ -191,16 +191,16 @@ export const MICROBLOCK_HEADER = [
   { name: "bodyHash",        type: DATA.TYPE_BIN256 }           // +57
 ];
 
-export const MICROBLOCK_SECTION = [
+export const MICROBLOCK_SECTION: SchemaItem[] = [
   { name: "type", type: DATA.TYPE_UINT8 },
   { name: "data", type: DATA.TYPE_BINARY }
 ];
 
-export const MICROBLOCK_BODY = [
+export const MICROBLOCK_BODY: SchemaItem[] = [
   { name: "body", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: MICROBLOCK_SECTION }
 ];
 
-export const MICROBLOCK_INFORMATION = [
+export const MICROBLOCK_INFORMATION: SchemaItem[] = [
   { name: "virtualBlockchainId",   type: DATA.TYPE_BIN256 },
   { name: "virtualBlockchainType", type: DATA.TYPE_UINT8 },
   { name: "header",                type: DATA.TYPE_BINARY }
@@ -247,7 +247,7 @@ export const NODE_MESSAGE_NAMES = [
   "ACCOUNT_BY_PUBLIC_KEY_HASH"
 ];
 
-export const NODE_MESSAGES = {
+export const NODE_MESSAGES: { [key: number]: SchemaItem[] } = {
   [ MSG_ERROR ]: [
     { name: "error", type: DATA.TYPE_STRING }
   ],
@@ -317,7 +317,7 @@ export const NODE_MESSAGES = {
 // ============================================================================================================================ //
 export const WI_MAX_SERVER_URL_LENGTH = 100;
 
-export const WI_QR_CODE = [
+export const WI_QR_CODE: SchemaItem[] = [
   { name: "qrId",      type: DATA.TYPE_BIN256 },
   { name: "timestamp", type: DATA.TYPE_UINT48 },
   { name: "serverUrl", type: DATA.TYPE_STRING, size: WI_MAX_SERVER_URL_LENGTH }
@@ -340,7 +340,7 @@ export const WIMSG_CONNECTION_INFO     = 0x6;
 export const WIMSG_CONNECTION_ACCEPTED = 0x7;
 export const WIMSG_FORWARDED_REQUEST   = 0x8;
 
-export const WI_MESSAGES = {
+export const WI_MESSAGES: { [key: number]: SchemaItem[] } = {
   [ WIMSG_REQUEST ]: [
     { name: "requestType", type: DATA.TYPE_UINT8 },
     { name: "request",     type: DATA.TYPE_BINARY },
@@ -382,7 +382,7 @@ export const WIRQ_DATA_APPROVAL      = 0x1;
 export const WIRQ_GET_EMAIL          = 0x2;
 export const WIRQ_GET_USER_DATA      = 0x3;
 
-export const WI_REQUESTS = {
+export const WI_REQUESTS: { [key: number]: SchemaItem[] } = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
     { name: "challenge", type: DATA.TYPE_BIN256 }
   ],
@@ -396,7 +396,7 @@ export const WI_REQUESTS = {
   ]
 };
 
-export const WI_ANSWERS = {
+export const WI_ANSWERS: { [key: number]: SchemaItem[] } = {
   [ WIRQ_AUTH_BY_PUBLIC_KEY ]: [
     { name: "publicKey", type: DATA.TYPE_STRING },
     { name: "signature", type: DATA.TYPE_STRING }
@@ -425,7 +425,7 @@ export const MSG_ANS_ACTOR_KEY_REQUIRED = 0x80;
 export const MSG_ANS_APPROVAL_DATA      = 0x81;
 export const MSG_ANS_APPROVAL_SIGNATURE = 0x82;
 
-export const WALLET_OP_MESSAGES = {
+export const WALLET_OP_MESSAGES: { [key: number]: SchemaItem[] } = {
   [ MSG_APPROVAL_HANDSHAKE ]: [
     { name: "dataId", type: DATA.TYPE_BINARY }
   ],

@@ -83,7 +83,6 @@ function decodeMicroblockInformation(data: Uint8Array) {
  * @param customStateObject
  */
 function encodeVirtualBlockchainState(type: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: object) {
-  // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
   const customStateSerializer = new SchemaSerializer(SCHEMAS.VB_STATES[type]),
         customState = customStateSerializer.serialize(customStateObject);
 
@@ -110,7 +109,6 @@ function decodeVirtualBlockchainState(data: Uint8Array) : VirtualBlockchainState
   const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
         stateObject = stateUnserializer.unserialize(data) as VirtualBlockchainState;
 
-  // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
   const customStateUnserializer = new SchemaUnserializer<VirtualBlockchainState>(SCHEMAS.VB_STATES[stateObject.type]),
         customStateObject = customStateUnserializer.unserialize(stateObject.customState);
 

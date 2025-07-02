@@ -45,10 +45,17 @@ export interface RecordHashableField {
   fieldPath: string;
 }
 
-export interface RecordDescription {
+export interface RecordDescription<DataType = any> {
+  /**
+   * Links the record to an application.
+   */
   applicationId: string;
+
+  /**
+   * Links the record to an existing transactional flow. When omitted, the record is put in a new virtual blockchain.
+   */
   virtualBlockchainId?: string;
-  data: any;
+  data: DataType;
   actors?: RecordActor[];
   channels?: RecordChannel[];
   channelAssignations?: RecordChannelAssignation[];
@@ -58,6 +65,9 @@ export interface RecordDescription {
   author: string;
   endorser?: string;
 }
+
+
+export type OperatorAnchorRequest = Omit<RecordDescription, 'applicationId'> & { approvalMessage: string }
 
 
 export class Blockchain {

@@ -5,7 +5,7 @@ import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
  * identifying information and utilities for encoding public keys.
  */
 export interface SignatureScheme  {
-    getSignatureAlgorithmId(): number;
+    getSignatureAlgorithmId(): SignatureAlgorithmId;
     getSignatureSize(): number;
 }
 
@@ -63,7 +63,7 @@ export abstract class BasePrivateSignatureKey implements PrivateSignatureKey {
 
     abstract getPublicKey(): PublicSignatureKey;
 
-    getSignatureAlgorithmId(): number {
+    getSignatureAlgorithmId(): SignatureAlgorithmId {
         return this.getScheme().getSignatureAlgorithmId();
     }
 
@@ -98,7 +98,7 @@ export abstract class BasePublicSignatureKey implements  PublicSignatureKey {
         return this.getScheme().getSignatureSize();
     }
 
-    getSignatureAlgorithmId(): number {
+    getSignatureAlgorithmId(): SignatureAlgorithmId {
         return this.getScheme().getSignatureAlgorithmId();
     }
 

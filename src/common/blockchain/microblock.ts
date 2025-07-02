@@ -156,6 +156,19 @@ export class Microblock {
   }
 
   /**
+   * Retrieves a section by its type.
+   *
+   * @param {number} type - The type of the section to find.
+   * @return {Section} The section object that matches the specified type.
+   * @throws {Error} If no section with the specified type is found.
+   */
+  getSectionByType(type: number) : Section {
+    const section = this.sections.find((section: Section) => section.type === type);
+    if (section === undefined) throw new Error(`Section not found.`);
+    return section
+  }
+
+  /**
    * Retrieves the total number of sections.
    *
    * @return {number} The total count of sections.

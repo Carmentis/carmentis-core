@@ -11,6 +11,7 @@ import {CryptoSchemeFactory} from "../../common/crypto/factory";
 import {SignatureAlgorithmId} from "../../common/crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
 import {WI_INVALID_SIGNATURE} from "../../common/constants/errors";
+import {EncoderFactory} from "../../common/utils/encoder";
 //import { wiError } from "../../common/errors/error";
 
 export class wiClient {
@@ -182,11 +183,12 @@ export class wiClient {
    * @return {Promise<{vbHash: string, mbHash: string, height: number}>} The hash of the block and chain where the block of the event is located.
    * @throws {Error} If the process fails.
    */
-  async getApprovalData(dataId: any) {
-    let answer = await this.request(
+  async getApprovalData(dataId: string) {
+    const encoder = EncoderFactory.defaultBytesToStringEncoder();
+    let answer = await this.request<{vbHash: Uint8Array, mbHash: Uint8Array, height: number}>(
       SCHEMAS.WIRQ_DATA_APPROVAL,
       {
-        dataId: dataId,
+        dataId: encoder.decode(dataId),
         serverUrl: this.serverUrl
       }
     );

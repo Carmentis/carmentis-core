@@ -1,7 +1,4 @@
 import { SCHEMAS } from "../../common/constants/constants";
-import * as crypto from "../../common/crypto/crypto";
-//import * as uint8 from "../../common/util/uint8";
-//import * as util from "../../common/util/util";
 import {Base64 as base64} from "../../common/data/base64";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {randomBytes} from "@noble/post-quantum/utils";
@@ -25,13 +22,10 @@ export class wiServer {
 
     function onData(message: any) {
 
-      console.debug("onData:", message)
       const schemaSerializer = new MessageUnserializer(SCHEMAS.WI_MESSAGES);
-      const base64Encoder = EncoderFactory.bytesToBase64Encoder();
-      const binary = base64Encoder.decode(message);
+      const encoder = EncoderFactory.defaultBytesToStringEncoder();
+      const binary = encoder.decode(message);
       const {type, object} = schemaSerializer.unserialize(binary)
-      console.debug("onData: type:", type)
-      console.debug("onData: object:", object)
 
       const containsRequestType = 'requestType' in object;
       const containsRequest = 'request' in object;

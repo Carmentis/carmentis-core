@@ -2,6 +2,7 @@ import { SCHEMAS } from "../constants/constants";
 //import * as schemaSerializer from "../serializers/schema-serializer";
 import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer";
 import {Base64 as base64} from "../data/base64";
+import {EncoderFactory} from "../utils/encoder";
 
 let networkInterface: any,
     lastAnswerId: any;
@@ -31,17 +32,18 @@ export async function sendMessageToNode(url: any, schemaId: any, object: any) {
 // ============================================================================================================================ //
 //  sendWalletToOperatorMessage()                                                                                               //
 // ============================================================================================================================ //
-export async function sendWalletToOperatorMessage(url: any, schemaId: any, object: any) {
-  return await sendMessage(url.replace(/\/?$/, "/walletMessage"), schemaId, object, SCHEMAS.WALLET_OP_MESSAGES);
+export async function sendWalletToOperatorMessage<T = unknown>(url: any, schemaId: any, object: any) {
+  return await sendMessage(url.replace(/\/?$/, "/walletMessage"), schemaId, object, SCHEMAS.WALLET_OP_MESSAGES) as T;
 }
 
 // ============================================================================================================================ //
 //  sendMessage()                                                                                                               //
 // ============================================================================================================================ //
 async function sendMessage(url: any, schemaId: any, object: any, schema: any) {
+  const encoder = EncoderFactory.defaultBytesToStringEncoder();
   const serializer = new MessageSerializer(schema)
   let data = serializer.serialize(schemaId, object),
-      b64 = base64.encodeBinary(data, base64.BASE64);
+      b64 = encoder.encode(data);
 
   return new Promise(function(resolve, reject) {
     const headers = {
@@ -59,7 +61,7 @@ async function sendMessage(url: any, schemaId: any, object: any, schema: any) {
       if(success) {
         try {
           let responseObject = JSON.parse(answer);
-          let binary = base64.decodeBinary(responseObject.response, base64.BASE64);
+          let binary = encoder.decode(responseObject.response);
           const serializer = new MessageUnserializer(schema)
           // @ts-expect-error TS(2488): Type '{ type: any; object: {}; }' must have a '[Sy... Remove this comment to see the full error message
           let [ id, object ] = serializer.unserialize(binary);

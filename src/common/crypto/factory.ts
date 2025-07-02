@@ -9,7 +9,6 @@ import {
 } from "./encryption/encryption-interface";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId,} from "./signature/signature-interface";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./signature/ml-dsa-65";
-import {BytesSignatureEncoder} from "./signature/signature-encoder";
 import {CryptographicHash, CryptographicHashAlgorithmId, Sha256CryptographicHash} from "./hash/hash-interface";
 import {Secp256k1PrivateSignatureKey, Secp256k1PublicSignatureKey} from "./signature/secp256k1";
 import {PBKDF2} from "./kdf/kdf-interface";
@@ -25,9 +24,17 @@ export class CryptoSchemeFactory {
         }
     }
 
-    createVirtualBlockchainPrivateSignatureScheme( schemeId: number, walletSeed: Uint8Array , vbSeed: Uint8Array ): PrivateSignatureKey {
+    createVirtualBlockchainPrivateSignatureScheme( schemeId: SignatureAlgorithmId, walletSeed: Uint8Array , vbSeed: Uint8Array ): PrivateSignatureKey {
+        // TODO: implement correctly instead of just hashing
+        const hash = CryptoSchemeFactory.createDefaultCryptographicHash();
+        const actorSeed = hash.hash(
+            new Uint8Array([...walletSeed, ...vbSeed])
+        );
+
+
         switch (schemeId) {
-            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(walletSeed);
+            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(actorSeed);
+            case SignatureAlgorithmId.SECP256K1: return Secp256k1PrivateSignatureKey.genFromSeed(actorSeed);
             default: throw `Not supported signature scheme ID: ${schemeId}`
         }
     }

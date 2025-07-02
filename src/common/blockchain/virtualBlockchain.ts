@@ -4,6 +4,7 @@ import { Utils } from "../utils/utils";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
 import {Hash, VirtualBlockchainState} from "./types";
+import {Provider} from "../providers/provider";
 
 export abstract class VirtualBlockchain<CustomState> {
     currentMicroblock: Microblock | null;
@@ -15,10 +16,7 @@ export abstract class VirtualBlockchain<CustomState> {
     state?: CustomState;
     type: number;
 
-    constructor({
-                    provider,
-                    type
-                }: any) {
+    constructor({provider, type}: { provider: Provider, type: number }) {
         if(!CHAIN.VB_NAME[type]) {
             throw `Invalid virtual blockchain type '${type}'`;
         }
@@ -42,6 +40,15 @@ export abstract class VirtualBlockchain<CustomState> {
         throw new Error("State is undefined and no initial state has been defined.");
     }
 
+    getHeight(): number {
+        return this.height;
+    }
+
+
+
+    getId(): Uint8Array {
+        return this.identifier
+    }
 
     abstract checkStructure(microblock: any): void;
 
@@ -212,14 +219,6 @@ export abstract class VirtualBlockchain<CustomState> {
         await this.provider.sendMicroblock(headerData, bodyData);
         await this.provider.awaitMicroblockAnchoring(microblockHash);
 
-//  await this.provider.setMicroblockInformation(microblockHash, this.type, this.identifier, this.currentMicroblock.header.previousHash);
-//  await this.provider.setMicroblockHeader(microblockHash, headerData);
-//  await this.provider.setMicroblockBody(bodyHash, bodyData);
-//  await this.provider.setVirtualBlockchainState(this.identifier, this.type, this.height, microblockHash, this.state);
-
-        //return Utils.binaryToHexa(microblockHash);
-        const hexEncoder = EncoderFactory.bytesToHexEncoder();
-        //return hexEncoder.encode();
         return Hash.from(microblockHash);
     }
 }

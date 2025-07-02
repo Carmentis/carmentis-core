@@ -76,8 +76,6 @@ export class Provider {
     ) {
         const rawPublicKey = publicKey.getPublicKeyAsBytes();
         const publicKeyHash = hashScheme.hash(rawPublicKey);
-        const encoder = EncoderFactory.defaultBytesToStringEncoder();
-        console.debug(`getAccountByPublicKey: recovering account for public key ${publicKey.getPublicKeyAsString()} and hash ${encoder.encode(publicKeyHash)} `)
         return  await this.getAccountByPublicKeyHash(publicKeyHash);
     }
 

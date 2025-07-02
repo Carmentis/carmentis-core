@@ -8,7 +8,8 @@ import {
     AccountHistory,
     AccountState, Hash,
     MicroblockInformation,
-    VirtualBlockchainState
+    VirtualBlockchainState,
+    ObjectList
 } from "../blockchain/types";
 import {MemoryProvider} from "./memoryProvider";
 import {NetworkProvider} from "./networkProvider";
@@ -21,6 +22,7 @@ export interface ProviderInterface {
         publicKey: PublicSignatureKey,
         hashScheme: CryptographicHash
     ): Promise<AccountHash>;
+    getObjectList(...args: any[]): Promise<ObjectList>;
     getAccountHistory(...args: any[]): Promise<AccountHistory>;
     sendMicroblock(...args: any[]): Promise<any>;
     awaitMicroblockAnchoring(...args: any[]): Promise<any>;
@@ -68,7 +70,6 @@ export class Provider {
         return await this.externalProvider.getAccountByPublicKeyHash(publicKeyHash);
     }
 
-
     async getAccountByPublicKey(
         publicKey: PublicSignatureKey,
         hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
@@ -78,6 +79,10 @@ export class Provider {
         const encoder = EncoderFactory.defaultBytesToStringEncoder();
         console.debug(`getAccountByPublicKey: recovering account for public key ${publicKey.getPublicKeyAsString()} and hash ${encoder.encode(publicKeyHash)} `)
         return  await this.getAccountByPublicKeyHash(publicKeyHash);
+    }
+
+    async getObjectList(type: number): Promise<ObjectList> {
+        return await this.externalProvider.getObjectList(type);
     }
 
     async storeMicroblock(hash: any, virtualBlockchainId: any, virtualBlockchainType: any, height: any, headerData: any, bodyData: any) {

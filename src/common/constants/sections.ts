@@ -1,5 +1,6 @@
 import * as DATA from "./data";
 import * as CHAIN from "./chain";
+import {SchemaItem} from "./schemas";
 
 // ============================================================================================================================ //
 //  Constraints                                                                                                                 //
@@ -279,7 +280,12 @@ const APP_LEDGER = {
 // ============================================================================================================================ //
 //  All sections                                                                                                                //
 // ============================================================================================================================ //
-export const DEF = {
+interface SectionDefinition {
+  label: string;
+  schema: SchemaItem[];
+}
+
+export const DEF: { [key: number]: { [key: number]: SectionDefinition } } = {
   [ CHAIN.VB_ACCOUNT        ]: ACCOUNT,
   [ CHAIN.VB_VALIDATOR_NODE ]: VALIDATOR_NODE,
   [ CHAIN.VB_ORGANIZATION   ]: ORGANIZATION,

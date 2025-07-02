@@ -196,7 +196,7 @@ export class wiClient {
 
   async request<T = unknown>(type: any, object: any): Promise<T> {
     console.log("[client] request", type, object);
-    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+
     const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_REQUESTS[type]);
     let request = schemaSerializer.serialize(object);
 
@@ -233,7 +233,6 @@ export class wiClient {
 
           if(event.data.from == "carmentis/walletResponse") {
             let object = event.data.data,
-                // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
                 schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]),
                 binary = base64.decodeBinary(object.answer, base64.BASE64),
                 answerObject = schemaSerializer.unserialize(binary);
@@ -268,7 +267,6 @@ export class wiClient {
           }
 
           case SCHEMAS.WIMSG_FORWARDED_ANSWER: {
-            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             const schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]);
             let answerObject = schemaSerializer.unserialize(object.answer);
 

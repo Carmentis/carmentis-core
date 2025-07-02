@@ -10,7 +10,6 @@ export abstract class wiWallet<T> {
   }
 
   decodeRequest(requestType: any, request: any) {
-    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_REQUESTS[requestType])
     let requestObject = schemaSerializer.unserialize(request);
 

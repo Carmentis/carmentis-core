@@ -83,7 +83,6 @@ export class Microblock {
     const body = bodyUnserializer.unserialize(bodyData).body;
 
     for(const { type, data } of body) {
-      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       const sectionDef = SECTIONS.DEF[this.type][type];
       const unserializer = new SchemaUnserializer(sectionDef.schema);
       const object = unserializer.unserialize(data);
@@ -96,7 +95,6 @@ export class Microblock {
     Adds a section of a given type and defined by a given object.
   */
   addSection(type: number, object: any): Section {
-    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const sectionDef = SECTIONS.DEF[this.type][type];
     const serializer = new SchemaSerializer(sectionDef.schema);
     const data = serializer.serialize(object);

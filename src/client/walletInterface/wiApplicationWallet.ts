@@ -67,7 +67,6 @@ export class wiApplicationWallet extends wiWallet<Uint8Array> {
    * Formats an answer, using the application wallet format.
    */
   formatAnswer(answerType: number, object: any) {
-    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_ANSWERS[answerType]);
     let answer = schemaSerializer.serialize(object);
 

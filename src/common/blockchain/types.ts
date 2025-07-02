@@ -164,6 +164,9 @@ export interface AccountTransfer {
     privateReference: string;
 }
 
+export interface ObjectList {
+    list: Uint8Array[];
+}
 
 /**
  * Represents a hash object that allows encoding and creation from a string or Uint8Array.
@@ -239,4 +242,3 @@ export enum SectionType  {
     ACCOUNT_CREATION = "ACCOUNT_CREATION",
     ACCOUNT_TRANSFER = "ACCOUNT_TRANSFER",
 }
-

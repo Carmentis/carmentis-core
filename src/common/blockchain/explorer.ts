@@ -1,3 +1,4 @@
+import {CHAIN} from "../constants/constants";
 import {Utils} from "../utils/utils";
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
 import {Provider, ProviderInterface} from "../providers/provider";
@@ -138,5 +139,21 @@ export class Explorer {
   ): Promise<Hash> {
     const accountHash : AccountHash = await this.provider.getAccountByPublicKey(publicKey, hashScheme);
     return Hash.from(accountHash.accountHash);
+  }
+
+  /**
+   * These methods are used to retrieve a list of VB identifiers, given an object type.
+   */
+  async getAccounts() {
+    return await this.provider.getObjectList(CHAIN.VB_ACCOUNT);
+  }
+  async getValidatorNodes() {
+    return await this.provider.getObjectList(CHAIN.VB_VALIDATOR_NODE);
+  }
+  async getOrganizations() {
+    return await this.provider.getObjectList(CHAIN.VB_ORGANIZATION);
+  }
+  async getApplications() {
+    return await this.provider.getObjectList(CHAIN.VB_APPLICATION);
   }
 }

@@ -134,7 +134,7 @@ export class NetworkProvider {
           }
         });
         const data = response.data
-        console.log("Received data", data)
+        //console.log("Received data", data)
         return resolve(data);
       } catch (e) {
         reject(e);

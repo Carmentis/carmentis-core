@@ -6,13 +6,14 @@ import {CryptoSchemeFactory} from "../crypto/factory";
 import {
     AccountHash,
     AccountHistory,
-    AccountState,
+    AccountState, Hash,
     MicroblockInformation,
     VirtualBlockchainState,
     ObjectList
 } from "../blockchain/types";
 import {MemoryProvider} from "./memoryProvider";
 import {NetworkProvider} from "./networkProvider";
+import {EncoderFactory} from "../utils/encoder";
 
 export interface ProviderInterface {
     getAccountState(...args: any[]): Promise<AccountState>;
@@ -141,6 +142,12 @@ export class Provider {
         }
 
         return res;
+    }
+
+    async getVirtualBlockchainHashes( virtualBlockchainId: Uint8Array ): Promise<Uint8Array[]> {
+        const content = await this.getVirtualBlockchainContent(virtualBlockchainId);
+        if (content === undefined || content?.microblockHashes === undefined) throw new Error('Cannot access the virtual blockchain')
+        return content.microblockHashes;
     }
 
     async getVirtualBlockchainStateInternal(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainState> {

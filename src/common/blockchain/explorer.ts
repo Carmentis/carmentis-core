@@ -5,7 +5,10 @@ import {Provider, ProviderInterface} from "../providers/provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
-import {AccountHash, Hash} from "./types";
+import {AccountHash, Hash, MicroBlockHeader} from "./types";
+import {SchemaUnserializer} from "../data/schemaSerializer";
+import {MICROBLOCK_HEADER} from "../constants/schemas";
+import {Microblock} from "./microblock";
 
 
 export class Explorer {
@@ -82,9 +85,48 @@ export class Explorer {
     return Hash.from(accountHash.accountHash);
   }
 
+
+  /**
+   * Retrieves the list of hashes associated with the given virtual blockchain identifier.
+   *
+   * @param {Hash} virtualBlockchainId - The identifier of the virtual blockchain to query.
+   * @return {Promise<Hash[]>} A promise that resolves to an array of Hash instances.
+   */
+  async getVirtualBlockchainHashes(virtualBlockchainId: Hash) {
+    const hashes = await this.provider.getVirtualBlockchainHashes(virtualBlockchainId.toBytes());
+    return hashes.map(hash => Hash.from(hash));
+  }
+
+  /**
+   * Retrieves the header of a microblock based on its hash.
+   *
+   * @param {Hash} microBlockHash The hash of the microblock for which the header information is to be retrieved.
+   * @return {Promise<MicroBlockHeader>} A promise that resolves to the deserialized microblock header.
+   */
+  async getMicroBlockHeader( microBlockHash: Hash ) {
+    const header = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    const schemaUnserializer = new SchemaUnserializer<MicroBlockHeader>(MICROBLOCK_HEADER);
+    return schemaUnserializer.unserialize(header.header);
+  }
+
+  /**
+   * Retrieves a microblock using the provided microblock hash.
+   *
+   * @param {Hash} microBlockHash - The hash of the microblock to retrieve.
+   * @return {Promise<Microblock>} A promise that resolves to the retrieved microblock.
+   */
+  async getMicroBlock( microBlockHash: Hash ) {
+    const header = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    const body = await this.provider.getMicroblockBodys([microBlockHash.toBytes()]);
+    const microBlock = new Microblock(header.virtualBlockchainType);
+    microBlock.load(header.header, body[0].body);
+    return microBlock;
+  }
+
   /**
    * Retrieves the account hash for a given public key.
    *
+   * @param hashScheme
    * @param {PublicSignatureKey} publicKey - The public signature key associated with the account*/
   async getAccountByPublicKey(
       publicKey: PublicSignatureKey,
@@ -94,19 +136,45 @@ export class Explorer {
     return Hash.from(accountHash.accountHash);
   }
 
+
   /**
-   * These methods are used to retrieve a list of VB identifiers, given an object type.
+   * Retrieves a list of accounts from the specified chain.
+   *
+   * @return {Promise<Hash[]>} A promise that resolves to an array of account objects.
    */
   async getAccounts() {
-    return await this.provider.getObjectList(CHAIN.VB_ACCOUNT);
+    return await this.getObjectList(CHAIN.VB_ACCOUNT);
   }
+
+  /**
+   * Retrieves the list of validator nodes from the specified chain.
+   *
+   * @return {Promise<Hash[]>} A promise that resolves to an array of validator node objects.
+   */
   async getValidatorNodes() {
-    return await this.provider.getObjectList(CHAIN.VB_VALIDATOR_NODE);
+    return await this.getObjectList(CHAIN.VB_VALIDATOR_NODE);
   }
+
+  /**
+   * Retrieves a list of organizations.
+   *
+   * @return {Promise<Hash[]>} A promise that resolves to an array of organizations.
+   */
   async getOrganizations() {
-    return await this.provider.getObjectList(CHAIN.VB_ORGANIZATION);
+    return await this.getObjectList(CHAIN.VB_ORGANIZATION);
   }
+
+  /**
+   * Retrieves a list of applications from the specified chain.
+   *
+   * @return {Promise<Hash[]>} A promise that resolves to an array of application objects.
+   */
   async getApplications() {
-    return await this.provider.getObjectList(CHAIN.VB_APPLICATION);
+    return await this.getObjectList(CHAIN.VB_APPLICATION);
+  }
+
+  private async getObjectList( objectType: number ): Promise<Hash[]> {
+      const response = await this.provider.getObjectList(objectType);
+      return response.list.map(Hash.from)
   }
 }

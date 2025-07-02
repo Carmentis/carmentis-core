@@ -20,33 +20,33 @@ export class MemoryProvider  {
   }
 
   async getMicroblockInformation(hash: Uint8Array): Promise<Uint8Array> {
-    // @ts-expect-error TS(2339): Property 'get' does not exist on type 'Function'.
-    return await this.constructor.get(this.microblockInformationStore, hash);
+    
+    return await MemoryProvider.get(this.microblockInformationStore, hash);
   }
 
   async getMicroblockBody(identifier: any) {
-    // @ts-expect-error TS(2339): Property 'get' does not exist on type 'Function'.
-    return await this.constructor.get(this.microblockBodyStore, identifier);
+    
+    return await MemoryProvider.get(this.microblockBodyStore, identifier);
   }
 
   async getVirtualBlockchainState(identifier: any) {
-    // @ts-expect-error TS(2339): Property 'get' does not exist on type 'Function'.
-    return await this.constructor.get(this.virtualBlockchainStateStore, identifier);
+    
+    return await MemoryProvider.get(this.virtualBlockchainStateStore, identifier);
   }
 
   async setMicroblockInformation(identifier: any, data: any) {
-    // @ts-expect-error TS(2339): Property 'set' does not exist on type 'Function'.
-    return await this.constructor.set(this.microblockInformationStore, identifier, data);
+    
+    return await MemoryProvider.set(this.microblockInformationStore, identifier, data);
   }
 
   async setMicroblockBody(identifier: any, data: any) {
-    // @ts-expect-error TS(2339): Property 'set' does not exist on type 'Function'.
-    return await this.constructor.set(this.microblockBodyStore, identifier, data);
+    
+    return await MemoryProvider.set(this.microblockBodyStore, identifier, data);
   }
 
   async setVirtualBlockchainState(identifier: any, data: any) {
-    // @ts-expect-error TS(2339): Property 'set' does not exist on type 'Function'.
-    return await this.constructor.set(this.virtualBlockchainStateStore, identifier, data);
+    
+    return await MemoryProvider.set(this.virtualBlockchainStateStore, identifier, data);
   }
 
   static async get(store: any, identifier: any) {

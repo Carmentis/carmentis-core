@@ -1,6 +1,6 @@
-import { ECO } from "../constants/constants";
-import { AccountVb } from "./accountVb";
-import { Utils } from "../utils/utils";
+import {ECO} from "../constants/constants";
+import {AccountVb} from "./accountVb";
+import {Utils} from "../utils/utils";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
 import {AccountTransfer} from "./types";
@@ -65,6 +65,9 @@ export class Account {
     await this.vb.load(identifier);
   }
 
+  async getPublicKey() {
+    return await this.vb.getPublicKey();
+  }
 
   async transfer(object: AccountTransfer) {
     await this.vb.setTransfer({

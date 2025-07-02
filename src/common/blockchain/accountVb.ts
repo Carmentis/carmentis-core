@@ -45,6 +45,16 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   }
 
   /**
+    Helper methods
+  */
+  async getPublicKey() {
+    const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
+    const keySection = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ACCOUNT_PUBLIC_KEY);
+
+    return keySection.object.publicKey;
+  }
+
+  /**
    *
    * @param {PrivateSignatureKey} privateKey
    * @returns {Promise<void>}

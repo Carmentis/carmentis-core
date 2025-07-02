@@ -123,11 +123,6 @@ export class Explorer {
     return microBlock;
   }
 
-  async getHashOfAllAccounts() {
-    throw 'Not implemented' // TODO
-  }
-
-
   /**
    * Retrieves the account hash for a given public key.
    *
@@ -141,19 +136,45 @@ export class Explorer {
     return Hash.from(accountHash.accountHash);
   }
 
+
   /**
-   * These methods are used to retrieve a list of VB identifiers, given an object type.
+   * Retrieves a list of accounts from the specified chain.
+   *
+   * @return {Promise<Hash[]>} A promise that resolves to an array of account objects.
    */
   async getAccounts() {
-    return await this.provider.getObjectList(CHAIN.VB_ACCOUNT);
+    return await this.getObjectList(CHAIN.VB_ACCOUNT);
   }
+
+  /**
+   * Retrieves the list of validator nodes from the specified chain.
+   *
+   * @return {Promise<Hash[]>} A promise that resolves to an array of validator node objects.
+   */
   async getValidatorNodes() {
-    return await this.provider.getObjectList(CHAIN.VB_VALIDATOR_NODE);
+    return await this.getObjectList(CHAIN.VB_VALIDATOR_NODE);
   }
+
+  /**
+   * Retrieves a list of organizations.
+   *
+   * @return {Promise<Hash[]>} A promise that resolves to an array of organizations.
+   */
   async getOrganizations() {
-    return await this.provider.getObjectList(CHAIN.VB_ORGANIZATION);
+    return await this.getObjectList(CHAIN.VB_ORGANIZATION);
   }
+
+  /**
+   * Retrieves a list of applications from the specified chain.
+   *
+   * @return {Promise<Hash[]>} A promise that resolves to an array of application objects.
+   */
   async getApplications() {
-    return await this.provider.getObjectList(CHAIN.VB_APPLICATION);
+    return await this.getObjectList(CHAIN.VB_APPLICATION);
+  }
+
+  private async getObjectList( objectType: number ): Promise<Hash[]> {
+      const response = await this.provider.getObjectList(objectType);
+      return response.list.map(Hash.from)
   }
 }

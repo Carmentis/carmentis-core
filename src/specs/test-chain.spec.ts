@@ -131,7 +131,9 @@ describe('Chain test', () => {
         const explorer = blockchain.getExplorer();
 
         console.log("explorer.getAccountState / genesis", await explorer.getAccountState(genesisAccountId));
-        console.log("explorer.getAccountState / test", await explorer.getAccountState(testAccountId));
+        const accountState = await explorer.getAccountState(testAccountId);
+        console.log("explorer.getAccountState / test", accountState);
+        console.log("explorer.getAccountHistory / test", await explorer.getAccountHistory(testAccountId, Hash.from(accountState.lastHistoryHash), 50));
 
         const testPublicKeyHash = Crypto.Hashes.sha256AsBinary(testPublicKey.getPublicKeyAsBytes());
         console.log("explorer.getAccountByPublicKeyHash (valid)", await explorer.getAccountByPublicKeyHash(Hash.from(testPublicKeyHash)));

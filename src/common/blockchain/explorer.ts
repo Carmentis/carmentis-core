@@ -4,7 +4,10 @@ import {Provider, ProviderInterface} from "../providers/provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
-import {AccountHash, Hash} from "./types";
+import {AccountHash, Hash, MicroBlockHeader} from "./types";
+import {SchemaUnserializer} from "../data/schemaSerializer";
+import {MICROBLOCK_HEADER} from "../constants/schemas";
+import {Microblock} from "./microblock";
 
 
 export class Explorer {
@@ -81,9 +84,53 @@ export class Explorer {
     return Hash.from(accountHash.accountHash);
   }
 
+
+  /**
+   * Retrieves the list of hashes associated with the given virtual blockchain identifier.
+   *
+   * @param {Hash} virtualBlockchainId - The identifier of the virtual blockchain to query.
+   * @return {Promise<Hash[]>} A promise that resolves to an array of Hash instances.
+   */
+  async getVirtualBlockchainHashes(virtualBlockchainId: Hash) {
+    const hashes = await this.provider.getVirtualBlockchainHashes(virtualBlockchainId.toBytes());
+    return hashes.map(hash => Hash.from(hash));
+  }
+
+  /**
+   * Retrieves the header of a microblock based on its hash.
+   *
+   * @param {Hash} microBlockHash The hash of the microblock for which the header information is to be retrieved.
+   * @return {Promise<MicroBlockHeader>} A promise that resolves to the deserialized microblock header.
+   */
+  async getMicroBlockHeader( microBlockHash: Hash ) {
+    const header = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    const schemaUnserializer = new SchemaUnserializer<MicroBlockHeader>(MICROBLOCK_HEADER);
+    return schemaUnserializer.unserialize(header.header);
+  }
+
+  /**
+   * Retrieves a microblock using the provided microblock hash.
+   *
+   * @param {Hash} microBlockHash - The hash of the microblock to retrieve.
+   * @return {Promise<Microblock>} A promise that resolves to the retrieved microblock.
+   */
+  async getMicroBlock( microBlockHash: Hash ) {
+    const header = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    const body = await this.provider.getMicroblockBodys([microBlockHash.toBytes()]);
+    const microBlock = new Microblock(header.virtualBlockchainType);
+    microBlock.load(header.header, body[0].body);
+    return microBlock;
+  }
+
+  async getHashOfAllAccounts() {
+    throw 'Not implemented' // TODO
+  }
+
+
   /**
    * Retrieves the account hash for a given public key.
    *
+   * @param hashScheme
    * @param {PublicSignatureKey} publicKey - The public signature key associated with the account*/
   async getAccountByPublicKey(
       publicKey: PublicSignatureKey,

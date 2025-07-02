@@ -127,6 +127,15 @@ export class Microblock {
   }
 
   /**
+   * Retrieves the total number of sections.
+   *
+   * @return {number} The total count of sections.
+   */
+  getNumberOfSections(): number {
+    return this.sections.length;
+  }
+
+  /**
     Returns all sections for which the given callback function returns true.
   */
   getSections<T = any>(callback: (section: Section) => boolean): Section<T>[] {

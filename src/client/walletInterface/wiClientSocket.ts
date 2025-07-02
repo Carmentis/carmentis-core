@@ -33,18 +33,17 @@ export function getSocket(endpoint: any, connectCallback: any, dataCallback: any
     socket.on("data", onData);
     socket.on("connect_error", (err: any) => console.error("Connection error", err));
 
+    const encoder = EncoderFactory.defaultBytesToStringEncoder();
     socket.sendMessage = async function(msgId: any, object = {}) {
-        const base64Encoder = EncoderFactory.bytesToBase64Encoder();
         const schemaSerializer = new MessageSerializer(SCHEMAS.WI_MESSAGES);
         const binary = schemaSerializer.serialize(msgId, object);
-        const data = base64Encoder.encode(binary);
+        const data = encoder.encode(binary);
         socket.emit("data", data);
     }
 
     function onData(message: string) {
-        const base64Encoder = EncoderFactory.bytesToBase64Encoder();
         const schemaSerializer = new MessageUnserializer(SCHEMAS.WI_MESSAGES);
-        const binary = base64Encoder.decode(message)
+        const binary = encoder.decode(message)
         const {type, object} = schemaSerializer.unserialize(binary);
         dataCallback(type, object);
     }

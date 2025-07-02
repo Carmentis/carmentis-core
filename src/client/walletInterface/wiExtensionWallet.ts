@@ -1,12 +1,14 @@
 import { wiWallet } from "./wiWallet";
 import { SCHEMAS } from "../../common/constants/constants";
 import {SchemaSerializer} from "../../common/data/schemaSerializer";
-import {Base64 as base64} from "../../common/data/base64";
 import {WI_ANSWERS} from "../../common/constants/schemas";
+import {EncoderFactory, EncoderInterface} from "../../common/utils/encoder";
 
 export class wiExtensionWallet extends wiWallet<string> {
+  private encoder: EncoderInterface<Uint8Array, string>;
   constructor() {
     super();
+    this.encoder = EncoderFactory.defaultBytesToStringEncoder();
   }
 
   /**
@@ -18,7 +20,7 @@ export class wiExtensionWallet extends wiWallet<string> {
    * @return {{type:number}} The decoded request object.
    */
   getRequestFromMessage(messageData: any) {
-    let request = base64.decodeBinary(messageData.request, base64.BASE64),
+    let request = this.encoder.decode(messageData.request),
         requestObject = this.decodeRequest(messageData.requestType, request);
 
     return requestObject;
@@ -34,7 +36,7 @@ export class wiExtensionWallet extends wiWallet<string> {
 
     return {
       answerType: answerType,
-      answer: base64.encodeBinary(answer, base64.BASE64)
+      answer: this.encoder.encode(answer)
     };
   }
 }

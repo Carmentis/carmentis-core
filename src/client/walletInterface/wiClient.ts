@@ -6,12 +6,11 @@ import * as web from "../web/web";
 import {SchemaSerializer, SchemaUnserializer} from "../../common/data/schemaSerializer";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
-import {Base64 as base64} from "../../common/data/base64";
 import {CryptoSchemeFactory} from "../../common/crypto/factory";
 import {SignatureAlgorithmId} from "../../common/crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
 import {WI_INVALID_SIGNATURE} from "../../common/constants/errors";
-import {EncoderFactory} from "../../common/utils/encoder";
+import {EncoderFactory, EncoderInterface} from "../../common/utils/encoder";
 //import { wiError } from "../../common/errors/error";
 
 export class wiClient {
@@ -22,12 +21,14 @@ export class wiClient {
   qrElement: any;
   serverUrl: any;
   private messageCallback: any;
+  private encoder: EncoderInterface<Uint8Array, string>;
   constructor() {
     window.addEventListener(
       "message",
       event => this.messageCallback && this.messageCallback(event),
       false
     );
+    this.encoder = EncoderFactory.defaultBytesToStringEncoder();
   }
 
   /**
@@ -234,9 +235,11 @@ export class wiClient {
           console.log("[wiClient] received answer:", event);
 
           if(event.data.from == "carmentis/walletResponse") {
+
             let object = event.data.data,
                 schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]),
-                binary = base64.decodeBinary(object.answer, base64.BASE64),
+                //binary = base64.decodeBinary(object.answer, base64.BASE64),
+                binary = _this.encoder.decode(object.answer),
                 answerObject = schemaSerializer.unserialize(binary);
 
             resolve(answerObject as T);
@@ -245,7 +248,8 @@ export class wiClient {
 
         let message = {
           requestType: type,
-          request: base64.encodeBinary(request, base64.BASE64)
+          request: _this.encoder.encode(request)
+          //request: base64.encodeBinary(request, base64.BASE64)
         };
 
         // @ts-expect-error TS(2339): Property 'carmentisWallet' does not exist on type ... Remove this comment to see the full error message

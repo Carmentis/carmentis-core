@@ -1,5 +1,4 @@
 import { SCHEMAS } from "../../common/constants/constants";
-import {Base64 as base64} from "../../common/data/base64";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {MessageSerializer, MessageUnserializer} from "../../common/data/messageSerializer";
@@ -83,8 +82,9 @@ export class wiServer {
 
     function sendMessage(socket: any, msgId: any, object = {}) {
       const serializer = new MessageSerializer(SCHEMAS.WI_MESSAGES);
+      const encoder = EncoderFactory.defaultBytesToStringEncoder();
       let binary = serializer.serialize(msgId, object),
-          b64 = base64.encodeBinary(binary, base64.BASE64);
+          b64 = encoder.encode(binary);
 
       socket.emit("data", b64);
     }

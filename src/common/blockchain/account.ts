@@ -4,6 +4,7 @@ import {Utils} from "../utils/utils";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
 import {AccountTransfer} from "./types";
+import {CryptoSchemeFactory} from "../crypto/factory";
 
 export class Account {
   privateKey: any;
@@ -65,8 +66,19 @@ export class Account {
     await this.vb.load(identifier);
   }
 
+  /**
+   * Retrieves the public key for the current instance of the cryptographic context.
+   *
+   * The method fetches the raw public key and the signature algorithm ID, then utilizes the CryptoSchemeFactory
+   * to create and return a public signature key object.
+   *
+   * @return {Promise<PublicSignatureKey>} A promise that resolves to a public signature key object.
+   */
   async getPublicKey() {
-    return await this.vb.getPublicKey();
+    const rawPublicKey = await this.vb.getPublicKey();
+    const algorithmId = await this.vb.getSignatureAlgorithmId();
+    const factory = new CryptoSchemeFactory();
+    return factory.createPublicSignatureKey(algorithmId, rawPublicKey);
   }
 
   async transfer(object: AccountTransfer) {

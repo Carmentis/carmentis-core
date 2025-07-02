@@ -96,6 +96,17 @@ export abstract class VirtualBlockchain<CustomState> {
     }
 
     /**
+     * Retrieves the first microblock.
+     *
+     * @return {Promise<Microblock>} A promise that resolves to the first microblock data.
+     */
+    async getFirstMicroBlock() {
+        return this.getMicroblock(1)
+    }
+
+
+
+    /**
      Returns the microblock at the given height.
      */
     async getMicroblock(height: number) {

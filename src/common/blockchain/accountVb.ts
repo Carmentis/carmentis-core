@@ -1,7 +1,7 @@
 import { CHAIN, ECO, SECTIONS } from "../constants/constants";
 import { VirtualBlockchain } from "./virtualBlockchain";
 import { StructureChecker } from "./structureChecker";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {AccountTokenIssuance, AccountTransfer, AccountVBState} from "./types";
 import {CryptoSchemeFactory} from "../crypto/factory";
 
@@ -45,13 +45,28 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   }
 
   /**
-    Helper methods
-  */
+   * Retrieves the public key from the current state.
+   *
+   * This method fetches the microblock corresponding to the public key height in the state,
+   * extracts the section containing the public key, and returns the public key as a Uint8Array.
+   *
+   * @return {Promise<Uint8Array>} A promise resolving to the public key.
+   */
   async getPublicKey() {
     const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
-    const keySection = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ACCOUNT_PUBLIC_KEY);
-
+    const keySection = keyMicroblock.getSection<{publicKey: Uint8Array}>((section: any) => section.type == SECTIONS.ACCOUNT_PUBLIC_KEY);
     return keySection.object.publicKey;
+  }
+
+  /**
+   * Retrieves the signature algorithm ID from the relevant section of the microblock.
+   *
+   * @return {Promise<SignatureAlgorithmId>} A promise that resolves to the signature algorithm ID.
+   */
+  async getSignatureAlgorithmId(): Promise<SignatureAlgorithmId> {
+    const keyMicroblock = await this.getFirstMicroBlock();
+    const keySection = keyMicroblock.getSection<{algorithmId: number}>((section: any) => section.type == SECTIONS.ACCOUNT_SIG_ALGORITHM);
+    return keySection.object.algorithmId as SignatureAlgorithmId;
   }
 
   /**

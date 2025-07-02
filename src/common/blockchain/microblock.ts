@@ -3,7 +3,7 @@ import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
 import { Utils } from "../utils/utils";
 import { Crypto } from "../crypto/crypto";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
-import {MicroblockSection} from "./types";
+import {Hash, MicroblockSection} from "./types";
 
 export interface Section<T = any> {
   type: number,
@@ -92,6 +92,37 @@ export class Microblock {
   }
 
   /**
+   * Retrieves the height of the header.
+   *
+   * @return {number} The height of the header as a numeric value.
+   */
+  getHeight(): number {
+    return this.header.height;
+  }
+
+
+  /**
+   * Retrieves the hash value of the previous block in the blockchain.
+   *
+   * @return {Hash} The hash object representing the previous block's hash.
+   */
+  getPreviousHash(): Hash {
+    return Hash.from(this.header.previousHash);
+  }
+
+  getTimestamp(): number {
+    return this.header.timestamp;
+  }
+
+  getGas(): number {
+    return this.header.gas;
+  }
+
+  getGasPrice(): number {
+    return this.header.gasPrice;
+  }
+
+  /**
     Adds a section of a given type and defined by a given object.
   */
   addSection(type: number, object: any): Section {
@@ -138,6 +169,16 @@ export class Microblock {
   */
   getSections<T = any>(callback: (section: Section) => boolean): Section<T>[] {
     return this.sections.filter((section: Section) => callback(section));
+  }
+
+  /**
+   * Retrieves all sections without applying any filter criteria.
+   *
+   * @template T - The type of data contained within the sections.
+   * @return {Section<T>[]} An array of sections with the specified type.
+   */
+  getAllSections<T = any>(): Section<T>[] {
+    return this.getSections<T>(_ => true)
   }
 
   /**

@@ -135,6 +135,7 @@ describe('Chain test', () => {
 
         const testPublicKeyHash = Crypto.Hashes.sha256AsBinary(testPublicKey.getPublicKeyAsBytes());
         console.log("explorer.getAccountByPublicKeyHash (valid)", await explorer.getAccountByPublicKeyHash(Hash.from(testPublicKeyHash)));
+        console.log("explorer.getAccountByPublicKey (valid)", await explorer.getAccountByPublicKey(testPublicKey));
 
         try {
           console.log("explorer.getAccountByPublicKeyHash (invalid)");

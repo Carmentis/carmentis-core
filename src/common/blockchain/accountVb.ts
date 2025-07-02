@@ -27,9 +27,8 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   }
 
   async setPublicKey(publicKey: PublicSignatureKey) {
-    const hashScheme = CryptoSchemeFactory.createDefaultCryptographicHash();
     await this.addSection(SECTIONS.ACCOUNT_PUBLIC_KEY, {
-      publicKey: hashScheme.hash(publicKey.getPublicKeyAsBytes())
+      publicKey: publicKey.getPublicKeyAsBytes()
     });
   }
 

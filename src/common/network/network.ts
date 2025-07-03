@@ -3,6 +3,7 @@ import { SCHEMAS } from "../constants/constants";
 import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer";
 import {Base64 as base64} from "../data/base64";
 import {EncoderFactory} from "../utils/encoder";
+import axios from "axios";
 
 let networkInterface: any,
     lastAnswerId: any;
@@ -11,21 +12,21 @@ let networkInterface: any,
 //  initialize()                                                                                                                //
 // ============================================================================================================================ //
 export function initialize(intf: any) {
-  networkInterface = intf;
+    networkInterface = intf;
 }
 
 // ============================================================================================================================ //
 //  getLastAnswerId()                                                                                                           //
 // ============================================================================================================================ //
 export function getLastAnswerId() {
-  return lastAnswerId;
+    return lastAnswerId;
 }
 
 // ============================================================================================================================ //
 //  sendMessageToNode()                                                                                                         //
 // ============================================================================================================================ //
 export async function sendMessageToNode(url: any, schemaId: any, object: any) {
-  return await sendMessage(url, schemaId, object, SCHEMAS.NODE_MESSAGES);
+    return await sendMessage(url, schemaId, object, SCHEMAS.NODE_MESSAGES);
 }
 
 
@@ -33,62 +34,117 @@ export async function sendMessageToNode(url: any, schemaId: any, object: any) {
 //  sendWalletToOperatorMessage()                                                                                               //
 // ============================================================================================================================ //
 export async function sendWalletToOperatorMessage<T = unknown>(url: any, schemaId: any, object: any) {
-  return await sendMessage(url.replace(/\/?$/, "/walletMessage"), schemaId, object, SCHEMAS.WALLET_OP_MESSAGES) as T;
+    return await sendMessage(url.replace(/\/?$/, "/api/walletMessage"), schemaId, object, SCHEMAS.WALLET_OP_MESSAGES) as T;
 }
 
 // ============================================================================================================================ //
 //  sendMessage()                                                                                                               //
 // ============================================================================================================================ //
 async function sendMessage(url: any, schemaId: any, object: any, schema: any) {
-  const encoder = EncoderFactory.defaultBytesToStringEncoder();
-  const serializer = new MessageSerializer(schema)
-  let data = serializer.serialize(schemaId, object),
-      b64 = encoder.encode(data);
+    // encode the payload
+    const encoder = EncoderFactory.defaultBytesToStringEncoder();
+    const serializer = new MessageSerializer(schema)
+    let data = serializer.serialize(schemaId, object),
+        b64 = encoder.encode(data);
 
-  return new Promise(function(resolve, reject) {
-    const headers = {
-      "Accept": "application/json",
-      "Content-Type": "application/json"
-    };
-
-    networkInterface.postRequest(url, JSON.stringify({ data: b64 }), callback, headers);
-
-    function handleBinaryDecoding(responseObject: any) {
-
-    }
-
-    function callback(success: any, answer: any) {
-      if(success) {
+    return new Promise(async (resolve, reject) => {
         try {
-          let responseObject = JSON.parse(answer);
-          let binary = encoder.decode(responseObject.response);
-          const serializer = new MessageUnserializer(schema)
-          // @ts-expect-error TS(2488): Type '{ type: any; object: {}; }' must have a '[Sy... Remove this comment to see the full error message
-          let [ id, object ] = serializer.unserialize(binary);
+
+            // send the request to the provided url
+            const response = await axios.post(url, { data: b64 }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                }
+            });
+
+            // parse the response
+            console.log("response", response);
+            const responseObject = response.data;
+
+            // TODO: remove if not correct
+            if (responseObject.success) {
+                resolve(responseObject)
+                return
+            }
 
 
-          lastAnswerId = id;
+            let binary = encoder.decode(responseObject.response);
+            const serializer = new MessageUnserializer(schema)
+            // @ts-expect-error TS(2488): Type '{ type: any; object: {}; }' must have a '[Sy... Remove this comment to see the full error message
+            let [ id, object ] = serializer.unserialize(binary);
 
-          if(id == SCHEMAS.MSG_ANS_ERROR) {
-            // @ts-expect-error TS(2556): A spread argument must either have a tuple type or... Remove this comment to see the full error message
-            let error = new Error(object.error.type, object.error.id, ...object.error.arg);
+            // update the response
+            lastAnswerId = id;
+
+            if(id == SCHEMAS.MSG_ANS_ERROR) {
+                // @ts-expect-error TS(2556): A spread argument must either have a tuple type or... Remove this comment to see the full error message
+                let error = new Error(object.error.type, object.error.id, ...object.error.arg);
+                reject(error);
+            } else {
+                resolve(object);
+            }
+
+
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error('Erreur Axios :', error.response?.status, error.response?.data);
+            } else {
+                console.error('Autre erreur :', error);
+            }
             reject(error);
-          }
-          else {
-            resolve(object);
-          }
         }
-        catch(e) {
-          console.error("An error has occurred during the response handling:", e)
-          console.error("Received answer:", answer.toString())
-          reject(answer)
-        }
+    })
+
+
+
+
+    /*
+    return new Promise(function(resolve, reject) {
+      const headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      };
+
+      networkInterface.postRequest(url, JSON.stringify({ data: b64 }), callback, headers);
+
+      function handleBinaryDecoding(responseObject: any) {
 
       }
-      else {
-        console.error(answer);
-        reject(answer);
+
+      function callback(success: any, answer: any) {
+        if(success) {
+          try {
+            let responseObject = JSON.parse(answer);
+            let binary = encoder.decode(responseObject.response);
+            const serializer = new MessageUnserializer(schema)
+            // @ts-expect-error TS(2488): Type '{ type: any; object: {}; }' must have a '[Sy... Remove this comment to see the full error message
+            let [ id, object ] = serializer.unserialize(binary);
+
+
+            lastAnswerId = id;
+
+            if(id == SCHEMAS.MSG_ANS_ERROR) {
+              // @ts-expect-error TS(2556): A spread argument must either have a tuple type or... Remove this comment to see the full error message
+              let error = new Error(object.error.type, object.error.id, ...object.error.arg);
+              reject(error);
+            }
+            else {
+              resolve(object);
+            }
+          }
+          catch(e) {
+            console.error("An error has occurred during the response handling:", e)
+            console.error("Received answer:", answer.toString())
+            reject(answer)
+          }
+
+        }
+        else {
+          console.error(answer);
+          reject(answer);
+        }
       }
-    }
-  });
+    });
+    */
 }

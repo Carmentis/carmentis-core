@@ -1,6 +1,6 @@
-import { CHAIN, ECO, SECTIONS } from "../constants/constants";
-import { VirtualBlockchain } from "./virtualBlockchain";
-import { StructureChecker } from "./structureChecker";
+import {CHAIN, ECO, SECTIONS} from "../constants/constants";
+import {VirtualBlockchain} from "./virtualBlockchain";
+import {StructureChecker} from "./structureChecker";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {AccountTokenIssuance, AccountTransfer, AccountVBState} from "./types";
 import {CryptoSchemeFactory} from "../crypto/factory";

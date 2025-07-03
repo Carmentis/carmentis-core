@@ -7,7 +7,6 @@ import {IntermediateRepresentation} from "../common/records/intermediateRepresen
 import {Utils} from "../common/utils/utils";
 import {SchemaSerializer, SchemaUnserializer} from "../common/data/schemaSerializer";
 import {ReadStream, WriteStream} from "../common/data/byteStreams";
-import {RadixTree} from "../common/trees/radixTree";
 import {DATA} from '../common/constants/constants';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 

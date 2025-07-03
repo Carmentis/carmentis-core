@@ -1,22 +1,22 @@
 import { CHAIN, SCHEMAS } from "../constants/constants";
 import { SchemaUnserializer } from "../data/schemaSerializer";
-import { AccountVb } from "./accountVb";
-import { ValidatorNodeVb } from "./validatorNodeVb";
-import { OrganizationVb } from "./organizationVb";
-import { ApplicationVb } from "./applicationVb";
-import { ApplicationLedgerVb } from "./applicationLedgerVb";
+import { Account } from "./account";
+import { ValidatorNode } from "./validatorNode";
+import { Organization } from "./organization";
+import { Application } from "./application";
+import { ApplicationLedger } from "./applicationLedger";
 import { Crypto } from "../crypto/crypto";
 import { Utils } from "../utils/utils";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {Microblock} from "./microblock";
 import {VirtualBlockchain} from "./virtualBlockchain";
 
-const VB_CLASSES = [
-    AccountVb,
-    ValidatorNodeVb,
-    OrganizationVb,
-    ApplicationVb,
-    ApplicationLedgerVb
+const OBJECT_CLASSES = [
+    Account,
+    ValidatorNode,
+    Organization,
+    Application,
+    ApplicationLedger
 ];
 
 
@@ -30,6 +30,7 @@ export class MicroblockImporter {
     provider: any;
     // @ts-ignore Add an initial value to the vb (possibly undefined).
     vb: VirtualBlockchain<any>;
+    object: any;
 
     constructor({
                     data,
@@ -69,7 +70,6 @@ export class MicroblockImporter {
     async getVirtualBlockchain<VB>() {
         if (!this.vb) throw new Error("Cannot return vb: undefined vb");
         return this.vb as VB
-
     }
 
     async check(currentTimestamp?: number) {
@@ -164,14 +164,15 @@ export class MicroblockImporter {
             }
 
             // attempt to instantiate the VB class
-            const vbClass = VB_CLASSES[type];
+            const objectClass = OBJECT_CLASSES[type];
 
-            if(!vbClass) {
+            if(!objectClass) {
                 this.error = `invalid virtual blockchain type ${type}`;
                 return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
             }
 
-            this.vb = new vbClass({ provider: this.provider });
+            this.object = new objectClass({ provider: this.provider });
+            this.vb = this.object.vb;
 
             // load the VB if this is an existing one
             if(this.header.height > 1) {

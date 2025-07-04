@@ -8,7 +8,7 @@ import {ApplicationLedger} from "./applicationLedger";
 import {Utils} from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
-import {Hash} from "./types";
+import {Hash, ImportedProof, Proof} from "./types";
 
 
 export interface RecordActor {
@@ -195,7 +195,7 @@ export class Blockchain {
   /**
    * Imports a proof.
    */
-  async importApplicationLedgerProof(proof: any) {
+  async importApplicationLedgerProof(proof: Proof): Promise<ImportedProof[]> {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._load(Utils.binaryFromHexa(proof.info.virtualBlockchainIdentifier));
     const data = await applicationLedger.importProof(proof);

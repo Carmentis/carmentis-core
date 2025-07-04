@@ -5,7 +5,7 @@ import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
 import {RecordDescription} from "./blockchain";
 import {Provider} from "../providers/provider";
-import {Hash, Proof} from "./types";
+import {Hash, ImportedProof, Proof} from "./types";
 import {Section} from "./microblock";
 
 export class ApplicationLedger {
@@ -200,13 +200,13 @@ export class ApplicationLedger {
     };
   }
 
-  async importProof(proofObject: any) {
+  async importProof(proofObject: Proof): Promise<ImportedProof[]> {
     const data = [];
 
     for(let height = 1; height <= this.vb.height; height++) {
       const proof = proofObject.proofs.find((proof: any) => proof.height == height);
       const ir = await this.getMicroblockIntermediateRepresentation(height);
-      const merkleData = ir.importFromProof(proof.data);
+      const merkleData = ir.importFromProof(proof?.data);
 
       // TODO: check Merkle root hash
 

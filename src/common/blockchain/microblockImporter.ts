@@ -44,6 +44,10 @@ export class MicroblockImporter {
         this.error = "";
     }
 
+    getVirtualBlockchainObject<VB>() {
+        return this.object as VB
+    }
+
     getMicroBlock(): Microblock {
         const mb = this.vb.currentMicroblock;
         if (mb === null) throw new Error("Cannot return null microblock.");
@@ -58,7 +62,7 @@ export class MicroblockImporter {
      */
     async isValidMicroBlock(currentTimestamp?: number): Promise<boolean> {
         const verificationResult = await this.check(currentTimestamp);
-        return verificationResult === 3;
+        return verificationResult === 0;
     }
 
     /**

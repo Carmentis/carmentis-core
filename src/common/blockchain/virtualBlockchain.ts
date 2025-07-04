@@ -40,6 +40,11 @@ export abstract class VirtualBlockchain<CustomState> {
         throw new Error("State is undefined and no initial state has been defined.");
     }
 
+    async getGenesisSeed() {
+        const mb = await this.getFirstMicroBlock();
+        return mb.header.previousHash;
+    }
+
     getHeight(): number {
         return this.height;
     }

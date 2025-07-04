@@ -33,7 +33,8 @@ export class SchemaValidator {
         if(definition.optional) {
           continue;
         }
-        throw `field '${fieldPath}' is missing`;
+        //console.log(`Validation failed: Field ${fieldPath} missing for schema ${schema} in obtained object`, object)
+        throw new Error(`field '${fieldPath}' is missing`);
       }
 
       if(definition.type & DATA.TYPE_ARRAY_OF) {

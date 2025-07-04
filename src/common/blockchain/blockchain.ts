@@ -71,8 +71,8 @@ export type OperatorAnchorRequest = Omit<RecordDescription, 'applicationId'> & {
 
 
 export class Blockchain {
-  provider: any;
-  constructor(provider: any) {
+  provider: Provider;
+  constructor(provider: Provider) {
     this.provider = provider;
   }
 
@@ -86,6 +86,10 @@ export class Blockchain {
 
   getMicroblockImporter(data: any) {
     return new MicroblockImporter({ data, provider: this.provider });
+  }
+
+  isKeyed() {
+    return this.provider.isKeyed();
   }
 
   /**

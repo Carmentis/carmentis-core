@@ -26,10 +26,13 @@ export class CryptoSchemeFactory {
 
     createVirtualBlockchainPrivateSignatureScheme( schemeId: SignatureAlgorithmId, walletSeed: Uint8Array , vbSeed: Uint8Array ): PrivateSignatureKey {
         // TODO: implement correctly instead of just hashing
+        /*
         const hash = CryptoSchemeFactory.createDefaultCryptographicHash();
         const actorSeed = hash.hash(
             new Uint8Array([...walletSeed, ...vbSeed])
         );
+         */
+        const actorSeed = new Uint8Array([...walletSeed, ...vbSeed])
 
 
         switch (schemeId) {

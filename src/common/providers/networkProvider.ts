@@ -163,12 +163,12 @@ export class NetworkProvider {
     urlObject.searchParams.append("data", "0x" + Utils.binaryToHexa(data));
 
     const responseData = await this.query(urlObject);
-     const binary = Base64.decodeBinary(responseData.data);
+    const binary = Base64.decodeBinary(responseData.data);
     const { type, object } = unserializer.unserialize(binary);
 
     if(type == SCHEMAS.MSG_ERROR) {
       // @ts-expect-error TS(2339): Property 'error' does not exist on type '{}'.... Remove this comment to see the full error message
-      throw `Remote error: ${object.error}`;
+      throw new Error(`Remote error: ${object.error}`);
     }
 
     return object as T;

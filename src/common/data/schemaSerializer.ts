@@ -35,6 +35,7 @@ export class SchemaSerializer<T = any> {
             value = object[definition.name];
 
       if(value === undefined) {
+        //console.log(`Field ${fieldPath} missing for schema ${schema} in obtained object`, object)
         throw `field '${fieldPath}' is missing`;
       }
 

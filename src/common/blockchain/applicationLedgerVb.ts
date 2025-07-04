@@ -63,6 +63,16 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     await this.addSection(SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE, object);
   }
 
+  async signAsEndorser(privateKey: PrivateSignatureKey) {
+    const object = this.createSignature(privateKey);
+    await this.addSection(SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, object);
+    return object.signature
+  }
+
+  async addEndorserSignature(signature: Uint8Array) {
+    return this.addSection(SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, {signature})
+  }
+
   /**
     Helper methods
   */

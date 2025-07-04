@@ -441,7 +441,7 @@ export const WALLET_OP_MESSAGES: { [key: number]: SchemaItem[] } = {
   ],
   [ MSG_ACTOR_KEY ]: [
     { name: "dataId",   type: DATA.TYPE_BINARY },
-    { name: "actorKey", type: DATA.TYPE_BINARY }
+    { name: "actorKey", type: DATA.TYPE_STRING }
   ],
   [ MSG_APPROVAL_SIGNATURE ]: [
     { name: "dataId",    type: DATA.TYPE_BINARY },

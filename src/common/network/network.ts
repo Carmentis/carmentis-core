@@ -59,25 +59,25 @@ async function sendMessage(url: any, schemaId: any, object: any, schema: any) {
             });
 
             // parse the response
-            console.log("response", response);
-            const responseObject = response.data;
+
+            const responseObject: { success: boolean, data: string } = response.data;
 
             // TODO: remove if not correct
-            if (responseObject.success) {
+            if (!responseObject.success) {
                 resolve(responseObject)
                 return
             }
 
 
-            let binary = encoder.decode(responseObject.response);
+            let binary = encoder.decode(responseObject.data);
             const serializer = new MessageUnserializer(schema)
-            // @ts-expect-error TS(2488): Type '{ type: any; object: {}; }' must have a '[Sy... Remove this comment to see the full error message
-            let [ id, object ] = serializer.unserialize(binary);
+            let { type, object } = serializer.unserialize(binary);
+            console.debug("Receiving object from operator:", object);
 
             // update the response
-            lastAnswerId = id;
+            lastAnswerId = type;
 
-            if(id == SCHEMAS.MSG_ANS_ERROR) {
+            if(type == SCHEMAS.MSG_ANS_ERROR) {
                 // @ts-expect-error TS(2556): A spread argument must either have a tuple type or... Remove this comment to see the full error message
                 let error = new Error(object.error.type, object.error.id, ...object.error.arg);
                 reject(error);
@@ -90,7 +90,8 @@ async function sendMessage(url: any, schemaId: any, object: any, schema: any) {
             if (axios.isAxiosError(error)) {
                 console.error('Erreur Axios :', error.response?.status, error.response?.data);
             } else {
-                console.error('Autre erreur :', error);
+                // @ts-ignore
+                console.error('Error :', error, error.stack);
             }
             reject(error);
         }
@@ -106,7 +107,9 @@ async function sendMessage(url: any, schemaId: any, object: any, schema: any) {
         "Content-Type": "application/json"
       };
 
-      networkInterface.postRequest(url, JSON.stringify({ data: b64 }), callback, headers);
+      networkInterface.postRequest(u
+
+rl, JSON.stringify({ data: b64 }), callback, headers);
 
       function handleBinaryDecoding(responseObject: any) {
 

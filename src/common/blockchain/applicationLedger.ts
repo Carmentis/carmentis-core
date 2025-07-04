@@ -29,6 +29,15 @@ export class ApplicationLedger {
     }
   }
 
+  async getGenesisSeed() {
+    return this.vb.getGenesisSeed();
+  }
+
+  getVirtualBlockchain() {
+    if (!this.vb) throw new Error("Cannot return appliaction ledger virtual blockchain: undefined virtual blockchain. ")
+    return this.vb;
+  }
+
   async _create(applicationId: string) {
     if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without a keyed provider.'
     await this.vb.setSignatureAlgorithm({

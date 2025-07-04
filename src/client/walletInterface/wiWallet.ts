@@ -64,28 +64,30 @@ export abstract class wiWallet<T> {
     async getApprovalData(privateKey: PrivateSignatureKey, walletSeed: Uint8Array, object: { serverUrl: string, dataId: string }) {
 
         // send an initial message approval handshake containing the dataId provided by the web client.
-        let answer = await network.sendWalletToOperatorMessage<{ genesisSeed?: string, data: Uint8Array }>(
+        let answer = await network.sendWalletToOperatorMessage<{ genesisSeed?: Uint8Array, data: Uint8Array }>(
             object.serverUrl,
             SCHEMAS.MSG_APPROVAL_HANDSHAKE,
             {
                 dataId: object.dataId
             }
         );
+        console.log("Received getApprovalData answer: ", answer)
 
         // In case where the actor public key is required for this interaction, the user provides a derived key
         if(network.getLastAnswerId() == SCHEMAS.MSG_ANS_ACTOR_KEY_REQUIRED) {
+            console.debug("Operator asking for actor key: proceeding to the actor key generation")
+
             // asserts that the genesisSeed is provided by the operator
             const genesisSeed = answer.genesisSeed;
-            if (typeof genesisSeed !== 'string') throw 'Invalid genesisSeed provided, expected string, got: ' + typeof genesisSeed;
+            if (genesisSeed === undefined) throw 'Invalid genesisSeed provided, expected string, got: ' + typeof genesisSeed;
 
             // derive the actor key from the private key and the genesis seed
             const cryptoFactory = new CryptoSchemeFactory();
             const algorithmId = privateKey.getSignatureAlgorithmId();
-            const encoder = EncoderFactory.defaultBytesToStringEncoder();
             const actorPrivateKey = cryptoFactory.createVirtualBlockchainPrivateSignatureScheme(
                 algorithmId,
                 walletSeed,
-                encoder.decode(genesisSeed)
+                genesisSeed
             );
             const actorPublicKey = actorPrivateKey.getPublicKey();
 

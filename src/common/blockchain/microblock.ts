@@ -3,7 +3,7 @@ import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
 import { Utils } from "../utils/utils";
 import { Crypto } from "../crypto/crypto";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
-import {Hash, MicroblockSection} from "./types";
+import {Hash, MicroblockHeader, MicroblockSection} from "./types";
 
 export interface Section<T = any> {
   type: number,
@@ -16,7 +16,8 @@ export interface Section<T = any> {
 export class Microblock {
   gasPrice: number;
   hash: any;
-  header: any;
+  // @ts-ignore add initial value to the microblock header
+  header: MicroblockHeader;
   sections: Section[];
   type: number;
 
@@ -65,7 +66,7 @@ export class Microblock {
     Loads a microblock from its header data and body data.
   */
   load(headerData: any, bodyData: any) {
-    const headerUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
+    const headerUnserializer = new SchemaUnserializer<MicroblockHeader>(SCHEMAS.MICROBLOCK_HEADER);
 
     this.header = headerUnserializer.unserialize(headerData);
 

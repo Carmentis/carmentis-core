@@ -1,7 +1,10 @@
 import {CHAIN, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./virtualBlockchain";
+import {Organization} from "./organization";
 import {StructureChecker} from "./structureChecker";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
+import {Crypto} from "../crypto/crypto";
+import {Utils} from "../utils/utils";
 import {Provider} from "../providers/provider";
 import {ApplicationDeclaration, ApplicationDescription, ApplicationVBState} from "./types";
 
@@ -53,6 +56,7 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
 
   async declarationCallback(microblock: any, section: any) {
     // TODO: check the organization
+    this.getState().organizationId = section.object.organizationId;
   }
 
   async descriptionCallback(microblock: any, section: any) {
@@ -60,14 +64,22 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   }
 
   async signatureCallback(microblock: any, section: any) {
+    const organization = new Organization({ provider: this.provider });
+    await organization._load(this.getState().organizationId);
+    const rawPublicKey = await organization.getRawPublicKey();
+    const publicKeyHash = Crypto.Hashes.sha256AsBinary(rawPublicKey);
+    const feesPayerAccount = await this.provider.getAccountByPublicKeyHash(publicKeyHash);
+    microblock.setFeesPayerAccount(feesPayerAccount);
   }
 
   private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
+  private static UNDEFINED_ORGANIZATION_ID = Utils.getNullHash();
   private static UNDEFINED_DESCRIPTION_HEIGHT = -1;
 
   getInitialState(): ApplicationVBState {
     return {
       signatureAlgorithmId: ApplicationVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
+      organizationId: ApplicationVb.UNDEFINED_ORGANIZATION_ID,
       descriptionHeight: ApplicationVb.UNDEFINED_DESCRIPTION_HEIGHT
     }
   }

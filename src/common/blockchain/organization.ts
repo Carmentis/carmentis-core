@@ -50,6 +50,10 @@ export class Organization {
     return section.object;
   }
 
+  async getRawPublicKey() : Promise<Uint8Array> {
+    return await this.vb.getRawPublicKey();
+  }
+
   setGasPrice(gasPrice: number) {
     this.gasPrice = gasPrice;
   }

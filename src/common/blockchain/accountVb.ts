@@ -97,11 +97,13 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   }
 
   async creationCallback(microblock: any, section: any) {
+    microblock.setFeesPayerAccount(section.object.sellerAccount);
   }
 
   async transferCallback(microblock: any, section: any) {
     const payeeVb = new AccountVb({ provider: this.provider });
     await payeeVb.load(section.object.account);
+    microblock.setFeesPayerAccount(this.identifier);
   }
 
   async signatureCallback(microblock: any, section: any) {

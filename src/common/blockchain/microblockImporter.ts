@@ -33,9 +33,9 @@ export class MicroblockImporter {
     object: any;
 
     constructor({
-                    data,
-                    provider
-                }: any) {
+        data,
+        provider
+    }: any) {
         this.provider = provider;
         this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
         this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);

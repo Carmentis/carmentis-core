@@ -53,7 +53,7 @@ describe('Chain test', () => {
         const hexEncoder = EncoderFactory.bytesToHexEncoder();
         await genesisAccount.transfer({
             account: testAccountId.toBytes(),
-            amount: 1,
+            amount: 1 * ECO.TOKEN,
             publicReference: "transfer #1",
             privateReference: "private ref."
         });
@@ -67,7 +67,7 @@ describe('Chain test', () => {
 
         await genesisAccount.transfer({
             account: testAccountId.toBytes(),
-            amount: 2,
+            amount: 2 * ECO.TOKEN,
             publicReference: "transfer #2",
             privateReference: "private ref."
         });

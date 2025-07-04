@@ -20,32 +20,31 @@ export class MemoryProvider  {
   }
 
   async getMicroblockInformation(hash: Uint8Array): Promise<Uint8Array> {
-    
     return await MemoryProvider.get(this.microblockInformationStore, hash);
   }
 
   async getMicroblockBody(identifier: any) {
-    
     return await MemoryProvider.get(this.microblockBodyStore, identifier);
   }
 
   async getVirtualBlockchainState(identifier: any) {
-    
     return await MemoryProvider.get(this.virtualBlockchainStateStore, identifier);
   }
 
+  async getAccountByPublicKeyHash(publicKeyHash: Uint8Array) {
+    // TODO: this could (and should) be cached locally in order to avoid querying the network each time
+    return null;
+  }
+
   async setMicroblockInformation(identifier: any, data: any) {
-    
     return await MemoryProvider.set(this.microblockInformationStore, identifier, data);
   }
 
   async setMicroblockBody(identifier: any, data: any) {
-    
     return await MemoryProvider.set(this.microblockBodyStore, identifier, data);
   }
 
   async setVirtualBlockchainState(identifier: any, data: any) {
-    
     return await MemoryProvider.set(this.virtualBlockchainStateStore, identifier, data);
   }
 

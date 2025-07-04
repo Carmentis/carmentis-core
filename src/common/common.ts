@@ -50,6 +50,7 @@ export * from "./data/schemaSerializer";
 export * from "./data/schemaValidator";
 export * from "./data/types";
 export * from "./data/utf8Encoder";
+export * from "./economics/economics";
 export * from "./network/network";
 export * from "./providers/browserNetworkProvider";
 export * from "./providers/keyed-provider";

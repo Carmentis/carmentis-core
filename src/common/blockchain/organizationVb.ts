@@ -1,7 +1,8 @@
-import { CHAIN, SECTIONS } from "../constants/constants";
-import { VirtualBlockchain } from "./virtualBlockchain";
-import { StructureChecker } from "./structureChecker";
+import {CHAIN, SECTIONS} from "../constants/constants";
+import {VirtualBlockchain} from "./virtualBlockchain";
+import {StructureChecker} from "./structureChecker";
 import {CryptoSchemeFactory} from "../crypto/factory";
+import {Crypto} from "../crypto/crypto";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/provider";
@@ -72,11 +73,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     }
 
     async signatureCallback(microblock: any, section: any) {
-        const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
-        const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
-        const cryptoFactory = new CryptoSchemeFactory();
-        const signatureAlgorithmId = this.getState().signatureAlgorithmId;
-        const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
+        const publicKey = await this.getPublicKey();
 
         const valid = microblock.verifySignature(
             publicKey,
@@ -88,10 +85,24 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         if(!valid) {
             throw `invalid signature`;
         }
+
+        const publicKeyHash = Crypto.Hashes.sha256AsBinary(publicKey.getPublicKeyAsBytes());
+        const feesPayerAccount = await this.provider.getAccountByPublicKeyHash(publicKeyHash);
+        microblock.setFeesPayerAccount(feesPayerAccount);
     }
 
     getDescriptionHeight(): number {
         return this.getState().descriptionHeight;
+    }
+
+    async getPublicKey(): Promise<PublicSignatureKey> {
+        const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
+        const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
+        const cryptoFactory = new CryptoSchemeFactory();
+        const signatureAlgorithmId = this.getState().signatureAlgorithmId;
+        const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
+
+        return publicKey;
     }
 
     /**

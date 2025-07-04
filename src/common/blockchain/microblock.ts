@@ -20,11 +20,13 @@ export class Microblock {
   header: MicroblockHeader;
   sections: Section[];
   type: number;
+  feesPayerAccount: Uint8Array | null;
 
   constructor(type: number) {
     this.type = type;
     this.sections = [];
     this.gasPrice = 0;
+    this.feesPayerAccount = null;
   }
 
   /**
@@ -121,6 +123,14 @@ export class Microblock {
 
   getGasPrice(): number {
     return this.header.gasPrice;
+  }
+
+  getFeesPayerAccount() {
+    return this.feesPayerAccount;
+  }
+
+  setFeesPayerAccount(account: Uint8Array) {
+    this.feesPayerAccount = account;
   }
 
   /**

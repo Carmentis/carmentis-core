@@ -33,6 +33,7 @@ export interface OrganizationVBState {
 
 export interface ApplicationVBState {
     signatureAlgorithmId: number;
+    organizationId: Uint8Array;
     descriptionHeight: number;
 }
 
@@ -57,7 +58,6 @@ export interface ApplicationLedgerVBState {
     channels: ApplicationLedgeChannel[];
     actors: ApplicationLedgerActor[];
 }
-
 
 export interface MicroblockHeader {
     magicString: string;

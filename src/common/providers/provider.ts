@@ -67,7 +67,16 @@ export class Provider {
     }
 
     async getAccountByPublicKeyHash(publicKeyHash: Uint8Array) {
-        return await this.externalProvider.getAccountByPublicKeyHash(publicKeyHash);
+        const internalAccountHash = await this.internalProvider.getAccountByPublicKeyHash(publicKeyHash);
+
+        if(internalAccountHash !== null) {
+          return internalAccountHash;
+        }
+
+        const externalAccountHash = await this.externalProvider.getAccountByPublicKeyHash(publicKeyHash);
+
+        // TODO: save it locally
+        return externalAccountHash;
     }
 
     async getAccountByPublicKey(
@@ -130,6 +139,10 @@ export class Provider {
         // if necessary, request missing data from the external provider
         if(missingHashes.length) {
             const externalData = await this.externalProvider.getMicroblockBodys(missingHashes);
+
+            if(externalData === null) {
+              throw `Unable to load microblock bodies`;
+            }
 
             // save missing data in the internal provider and update res[]
             for(const { hash, body } of externalData.list) {

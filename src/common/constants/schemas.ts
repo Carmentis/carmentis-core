@@ -126,6 +126,7 @@ const ORGANIZATION_VB_STATE: SchemaItem[] = [
 // ============================================================================================================================ //
 const APPLICATION_VB_STATE: SchemaItem[] = [
   { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
+  { name: "organizationId",       type: DATA.TYPE_BIN256 },
   { name: "descriptionHeight",    type: DATA.TYPE_UINT48 }
 ];
 

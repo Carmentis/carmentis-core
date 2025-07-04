@@ -1,6 +1,7 @@
 import {SECTIONS} from "../constants/constants";
 import {ApplicationVb} from "./applicationVb";
 import {Crypto} from "../crypto/crypto";
+import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ApplicationDeclaration, ApplicationDescription, Hash} from "./types";
 import {Provider} from "../providers/provider";
 
@@ -61,9 +62,13 @@ export class Application {
     return section.object;
   }
 
-  async getOrganizationId() {
+  async getOrganizationId(): Promise<Hash> {
     const declaration = await this.getDeclaration();
-    return Hash.from(declaration.organizationId)
+    return Hash.from(declaration.organizationId);
+  }
+
+  async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
+    return await this.vb.getOrganizationPublicKey();
   }
 
   async publishUpdates() {

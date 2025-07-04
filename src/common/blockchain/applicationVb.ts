@@ -2,7 +2,7 @@ import {CHAIN, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./virtualBlockchain";
 import {Organization} from "./organization";
 import {StructureChecker} from "./structureChecker";
-import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/provider";
@@ -64,12 +64,16 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   }
 
   async signatureCallback(microblock: any, section: any) {
+    const publicKey = await this.getOrganizationPublicKey();
+    const feesPayerAccount = await this.provider.getAccountByPublicKey(publicKey);
+    microblock.setFeesPayerAccount(feesPayerAccount);
+  }
+
+  async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
     const organization = new Organization({ provider: this.provider });
     await organization._load(this.getState().organizationId);
-    const publicKey = await organization.getPublicKey();
-    const publicKeyHash = Crypto.Hashes.sha256AsBinary(publicKey.getPublicKeyAsBytes());
-    const feesPayerAccount = await this.provider.getAccountByPublicKeyHash(publicKeyHash);
-    microblock.setFeesPayerAccount(feesPayerAccount);
+
+    return await organization.getPublicKey();
   }
 
   private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;

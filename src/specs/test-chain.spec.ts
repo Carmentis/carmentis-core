@@ -24,7 +24,9 @@ describe('Chain test', () => {
 
         let blockchain = new Blockchain(keyedProvider);
 
-        // account
+        /**
+          Testing account
+        */
         console.log("creating genesis account");
 
         let genesisAccount = await blockchain.createGenesisAccount();
@@ -79,7 +81,9 @@ describe('Chain test', () => {
 
         genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
-        // organization
+        /**
+          Testing organization
+        */
         console.log("creating organization");
 
         let organization = await blockchain.createOrganization();
@@ -102,7 +106,9 @@ describe('Chain test', () => {
         console.log(await organization.getDescription());
         console.log(await organization.getDescription());
 
-        // application
+        /**
+          Testing application
+        */
         console.log("creating application");
 
         let application = await blockchain.createApplication(organizationId);
@@ -123,6 +129,64 @@ describe('Chain test', () => {
         console.log("declaration", await application.getDeclaration());
         console.log("description", await application.getDescription());
 
+        /**
+          Testing application ledger
+        */
+        const object = {
+            applicationId: Utils.binaryToHexa(applicationId.toBytes()),
+            data: {
+                firstname: "John",
+                lastname: "Doe",
+                email: "john.doe@gmail.com"
+            },
+            actors: [
+                { name: "seller" }
+            ],
+            channels: [
+                { name: "mainChannel", public: false }
+            ],
+            channelAssignations: [
+                { channelName: "mainChannel", fieldPath: "this.*" }
+            ],
+            actorAssignations: [
+                { channelName: "mainChannel", actorName: "seller" }
+            ],
+//          maskableFields: [
+//              {
+//                  fieldPath: "this.email",
+//                  maskedParts: [
+//                      { position: 1, length: 7, replacementString: "***" }
+//                  ]
+//              }
+//          ],
+            author: "seller"
+        };
+
+        const appLedger = await blockchain.getApplicationLedgerFromJson(object);
+
+        appLedger.setGasPrice(ECO.TOKEN);
+        const hash = await appLedger.publishUpdates();
+
+        const record = await appLedger.getRecord(1);
+
+        console.log("record at height 1", record);
+
+        const microblockData = appLedger.getMicroblockData();
+        console.log("microblockData", microblockData);
+
+        const ledgerProof = await appLedger.exportProof({ author: "John Doe" });
+        console.log("exported proof", JSON.stringify(ledgerProof, null, 2));
+
+        const dataFromProof = await blockchain.importApplicationLedgerProof(ledgerProof);
+        console.log("imported proof", dataFromProof);
+
+        const importer = blockchain.getMicroblockImporter(microblockData);
+        const importStatus = await importer.check();
+        console.log(`import: status=${importStatus}, error=${importer.error}`);
+
+        /**
+          Testing explorer
+        */
         const explorerProvider = new Provider(memoryProvider, networkProvider);
 
         blockchain = new Blockchain(explorerProvider);
@@ -216,63 +280,4 @@ describe('Chain test', () => {
         ir.importFromSectionFormat(sectionData);
         console.log("recovered from sections", JSON.stringify(ir.exportToJson(), null, 2));
     })
-
-    test("testRecord()", async () => {
-        const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const keyedProvider = new KeyedProvider(privateKey, new MemoryProvider(), new ServerNetworkProvider("http://localhost:3000"));
-        const blockchain = new Blockchain(keyedProvider);
-
-        const object = {
-            applicationId: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
-            //  virtualBlockchainId: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
-            data: {
-                firstname: "John",
-                lastname: "Doe",
-                email: "john.doe@gmail.com"
-            },
-            actors: [
-                { name: "seller" }
-            ],
-            channels: [
-                { name: "mainChannel", public: false }
-            ],
-            channelAssignations: [
-                { channelName: "mainChannel", fieldPath: "this.*" }
-            ],
-            actorAssignations: [
-                { channelName: "mainChannel", actorName: "seller" }
-            ],
-//          maskableFields: [
-//              {
-//                  fieldPath: "this.email",
-//                  maskedParts: [
-//                      { position: 1, length: 7, replacementString: "***" }
-//                  ]
-//              }
-//          ],
-            author: "seller"
-        };
-
-        const appLedger = await blockchain.getApplicationLedgerFromJson(object);
-
-        appLedger.setGasPrice(ECO.TOKEN);
-        const hash = await appLedger.publishUpdates();
-
-        const record = await appLedger.getRecord(1);
-
-        console.log("record at height 1", record);
-
-        const microblockData = appLedger.getMicroblockData();
-        console.log("microblockData", microblockData);
-
-        const ledgerProof = await appLedger.exportProof({ author: "John Doe" });
-        console.log("exported proof", JSON.stringify(ledgerProof, null, 2));
-
-        const dataFromProof = await blockchain.importApplicationLedgerProof(ledgerProof);
-        console.log("imported proof", dataFromProof);
-
-        const importer = blockchain.getMicroblockImporter(microblockData);
-        const importStatus = await importer.check();
-        console.log(`import: status=${importStatus}, error=${importer.error}`);
-    }, TEST_TIMEOUT)
 });

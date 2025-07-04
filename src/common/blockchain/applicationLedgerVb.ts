@@ -1,5 +1,6 @@
 import {CHAIN, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./virtualBlockchain";
+import {Application} from "./application";
 import {StructureChecker} from "./structureChecker";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {ApplicationLedgerVBState} from "./types";
@@ -23,6 +24,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     this.registerSectionCallback(SECTIONS.APP_LEDGER_CHANNEL_CREATION, this.channelCreationCallback);
     this.registerSectionCallback(SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA, this.publicChannelDataCallback);
     this.registerSectionCallback(SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA, this.privateChannelDataCallback);
+    this.registerSectionCallback(SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, this.endorserSignatureCallback);
+    this.registerSectionCallback(SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE, this.authorSignatureCallback);
   }
 
   /**
@@ -167,6 +170,17 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     if(!this.getState().channels[section.object.channelId]) {
       throw `invalid channel ID ${section.object.channelId}`;
     }
+  }
+
+  async endorserSignatureCallback(microblock: any, section: any) {
+  }
+
+  async authorSignatureCallback(microblock: any, section: any) {
+    const application = new Application({ provider: this.provider });
+    await application._load(this.getState().applicationId);
+    const publicKey = await application.getOrganizationPublicKey();
+    const feesPayerAccount = await this.provider.getAccountByPublicKey(publicKey);
+    microblock.setFeesPayerAccount(feesPayerAccount);
   }
 
   /**

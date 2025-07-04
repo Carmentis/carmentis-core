@@ -6,7 +6,7 @@ import typescript from "@rollup/plugin-typescript";
 
 export default [
     {
-        input: "src/client/sdk.js", // main entry point
+        input: "src/client/sdk.ts", // main entry point
         output: [
             {
                 file: "dist/client/index.mjs", // ESM output file (ES Module)
@@ -26,25 +26,34 @@ export default [
             }
         ],
         plugins: [
-            resolve(), // resolve 3rd-party module imports
+            resolve({
+                preferBuiltins: false,
+                browser: true,
+                exportConditions: ['import', 'module', 'default']
+            }), // resolve 3rd-party module imports
             typescript({
                 compilerOptions: {
                     target: 'es6',
                 },
-                allowJs: true, // Autoriser les fichiers .js
-                include: ["src/**/*.ts", "src/**/*.js"], // Inclure JS et TS,
+                allowJs: true, // authorize .js files
+                include: ["src/**/*.ts", "src/**/*.js"], // includes .js and .ts
+                exclude: ['node_modules/**'],
                 declaration: false,
             }),
             commonjs(), // converts CommonJS to ESM
             json() // supports JSON imports
         ],
+        external: (id) => {
+            // Marquer les dépendances comme externes si elles posent problème
+            return /node_modules/.test(id) && id.includes('.ts') && !id.includes('src/');
+        },
         onLog(level, log, handler) {
-          if(log.code == "MISSING_EXPORT") {
-            handler("error", log); // turn missing exports into errors
-          }
-          else {
-            handler(level, log); // use the default handler for anything else
-          }
+            if(log.code == "MISSING_EXPORT") {
+                handler("error", log); // turn missing exports into errors
+            }
+            else {
+                handler(level, log); // use the default handler for anything else
+            }
         }
     },
     // Build for TypeScript definitions

@@ -1,9 +1,0 @@
-export * as PROTOCOL    from "./protocol.js";
-export * as CURRENCY    from "./currency.js";
-export * as DATA        from "./data.js";
-export * as ECO         from "./economics.js";
-export * as ERRORS      from "./errors.js";
-export * as ERROR_TYPES from "./error-types.js";
-export * as ID          from "./id.js";
-export * as SCHEMAS     from "./schemas.js";
-export * as SECTIONS    from "./sections.js";

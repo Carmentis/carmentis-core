@@ -1,0 +1,211 @@
+import { CHAIN, SCHEMAS } from "../constants/constants";
+import { SchemaUnserializer } from "../data/schemaSerializer";
+import { Account } from "./account";
+import { ValidatorNode } from "./validatorNode";
+import { Organization } from "./organization";
+import { Application } from "./application";
+import { ApplicationLedger } from "./applicationLedger";
+import { Crypto } from "../crypto/crypto";
+import { Utils } from "../utils/utils";
+import {CryptoSchemeFactory} from "../crypto/factory";
+import {Microblock} from "./microblock";
+import {VirtualBlockchain} from "./virtualBlockchain";
+
+const OBJECT_CLASSES = [
+    Account,
+    ValidatorNode,
+    Organization,
+    Application,
+    ApplicationLedger
+];
+
+
+export class MicroblockImporter {
+    bodyData: any;
+    currentTimestamp: number;
+    error: string;
+    hash: any;
+    header: any;
+    headerData: any;
+    provider: any;
+    // @ts-ignore Add an initial value to the vb (possibly undefined).
+    vb: VirtualBlockchain<any>;
+    object: any;
+
+    constructor({
+        data,
+        provider
+    }: any) {
+        this.provider = provider;
+        this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
+        this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
+        this.hash = Crypto.Hashes.sha256AsBinary(this.headerData);
+        this.currentTimestamp = 0;
+        this.error = "";
+    }
+
+    getVirtualBlockchainObject<VB>() {
+        return this.object as VB
+    }
+
+    getMicroBlock(): Microblock {
+        const mb = this.vb.currentMicroblock;
+        if (mb === null) throw new Error("Cannot return null microblock.");
+        return mb;
+    }
+
+    /**
+     * Validates a micro block based on the given timestamp.
+     *
+     * @param {number} [currentTimestamp] - An optional timestamp to use for validation.
+     * @return {Promise<boolean>} A promise that resolves to a boolean indicating whether the micro block is valid.
+     */
+    async isValidMicroBlock(currentTimestamp?: number): Promise<boolean> {
+        const verificationResult = await this.check(currentTimestamp);
+        return verificationResult === 0;
+    }
+
+    /**
+     * Retrieves the virtual blockchain instance associated with the current context.
+     *
+     * @template VB - The type of the virtual blockchain.
+     * @return {Promise<VB>} A promise that resolves to the virtual blockchain instance.
+     */
+    async getVirtualBlockchain<VB>() {
+        if (!this.vb) throw new Error("Cannot return vb: undefined vb");
+        return this.vb as VB
+    }
+
+    async check(currentTimestamp?: number) {
+        this.currentTimestamp = currentTimestamp || Utils.getTimestampInSeconds();
+
+        return (await this.checkHeader()) || (await this.checkTimestamp()) || (await this.checkContent());
+    }
+
+    /**
+     Checks the consistency of the serialized header, the magic string and the protocol version.
+     */
+    async checkHeader() {
+        try {
+            const headerUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
+            this.header = headerUnserializer.unserialize(this.headerData);
+
+            if(this.header.magicString != CHAIN.MAGIC_STRING) {
+                this.error = `magic string '${CHAIN.MAGIC_STRING}' is missing`;
+                return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR
+            }
+            if(this.header.protocolVersion != CHAIN.PROTOCOL_VERSION) {
+                this.error = `invalid protocol version (expected ${CHAIN.PROTOCOL_VERSION}, got ${this.header.protocolVersion})`;
+                return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR
+            }
+        }
+        catch(error) {
+            this.error = `invalid header format (${error})`;
+            return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+        }
+        return 0;
+    }
+
+    /**
+     Checks the timestamp declared in the header.
+     */
+    async checkTimestamp() {
+        if(this.header.timestamp < this.currentTimestamp - CHAIN.MAX_MICROBLOCK_PAST_DELAY) {
+            this.error = `timestamp is too far in the past`;
+            return CHAIN.MB_STATUS_TIMESTAMP_ERROR;
+        }
+        if(this.header.timestamp > this.currentTimestamp + CHAIN.MAX_MICROBLOCK_FUTURE_DELAY) {
+            this.error = `timestamp is too far in the future`;
+            return CHAIN.MB_STATUS_TIMESTAMP_ERROR;
+        }
+        return 0;
+    }
+
+    /**
+     Checks the body hash declared in the header, the existence of the previous microblock (if any) and the microblock height.
+     Then instantiates a virtual blockchain of the relevant type and attempts to import the microblock (which includes the
+     state update). Finally, verifies that the declared gas matches the computed gas.
+     */
+    async checkContent() {
+        try {
+            // check the body hash
+            const hashScheme = CryptoSchemeFactory.createDefaultCryptographicHash();
+            //const bodyHash = Crypto.Hashes.sha256AsBinary(this.bodyData);
+            const bodyHash = hashScheme.hash(this.bodyData);
+
+            if(!Utils.binaryIsEqual(bodyHash, this.header.bodyHash)) {
+                this.error = `inconsistent body hash`;
+                return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+            }
+
+            // check the previous microblock, or get the type from the leading byte of the previousHash field if genesis
+            let type;
+            let vbIdentifier;
+
+            if(this.header.height > 1) {
+                const previousMicroblockInfo = await this.provider.getMicroblockInformation(this.header.previousHash);
+
+                if(!previousMicroblockInfo) {
+                    this.error = `previous microblock ${Utils.binaryToHexa(this.header.previousHash)} not found`;
+                    return CHAIN.MB_STATUS_PREVIOUS_HASH_ERROR;
+                }
+
+                const headerUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
+                const previousHeader = headerUnserializer.unserialize(previousMicroblockInfo.header);
+
+                // @ts-expect-error TS(2339): Property 'height' does not exist on type '{}'.
+                if(this.header.height != previousHeader.height + 1) {
+                    // @ts-expect-error TS(2339): Property 'height' does not exist on type '{}'.
+                    this.error = `inconsistent microblock height (expected ${previousHeader.height + 1}, got ${this.header.height})`;
+                    return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+                }
+
+                type = previousMicroblockInfo.virtualBlockchainType;
+                vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
+            }
+            else {
+                type = this.header.previousHash[0];
+            }
+
+            // attempt to instantiate the VB class
+            const objectClass = OBJECT_CLASSES[type];
+
+            if(!objectClass) {
+                this.error = `invalid virtual blockchain type ${type}`;
+                return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+            }
+
+            this.object = new objectClass({ provider: this.provider });
+            this.vb = this.object.vb;
+
+            // load the VB if this is an existing one
+            if(this.header.height > 1) {
+                await this.vb.load(vbIdentifier);
+            }
+
+            // attempt to import the microblock
+            await this.vb.importMicroblock(this.headerData, this.bodyData);
+
+            // check the gas
+            const mb = this.getMicroBlock();
+            const declaredGas = mb.header.gas;
+            const expectedGas = mb.computeGas();
+
+            if(declaredGas != expectedGas) {
+                this.error = `inconsistent gas value in microblock header (expected ${expectedGas}, got ${declaredGas})`;
+                return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+            }
+        }
+        catch(error) {
+            // @ts-expect-error TS(2571): Object is of type 'unknown'.
+            this.error = error.toString();
+            return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+        }
+        return 0;
+    }
+
+    async store() {
+        await this.provider.storeMicroblock(this.hash, this.vb.identifier, this.vb.type, this.vb.height, this.headerData, this.bodyData);
+        await this.provider.updateVirtualBlockchainState(this.vb.identifier, this.vb.type, this.vb.height, this.hash, this.vb.state);
+    }
+}

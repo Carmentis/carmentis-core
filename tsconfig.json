@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "module": "esnext",
     "declaration": true,             // Enable type declaration generation
     "emitDeclarationOnly": false,     // Emit only *.d.ts files
     "outDir": "dist",               // Directory the built content

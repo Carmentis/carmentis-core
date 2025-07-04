@@ -1,8 +1,11 @@
+coverage
+.database*
 out
 node_modules
-package-lock.json
 openShells.bat
 .idea
 dist
 types
 doc
+docs
+package-lock.json

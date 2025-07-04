@@ -168,6 +168,18 @@ export interface ObjectList {
     list: Uint8Array[];
 }
 
+export interface Proof {
+    info: {
+        title: string,
+        date: string,
+        author: string,
+        virtualBlockchainIdentifier: string
+    }, proofs: {
+        height: number,
+        data: any
+    }[]
+}
+
 /**
  * Represents a hash object that allows encoding and creation from a string or Uint8Array.
  */

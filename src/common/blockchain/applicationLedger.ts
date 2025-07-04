@@ -5,7 +5,7 @@ import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
 import {RecordDescription} from "./blockchain";
 import {Provider} from "../providers/provider";
-import {Hash} from "./types";
+import {Hash, Proof} from "./types";
 import {Section} from "./microblock";
 
 export class ApplicationLedger {
@@ -175,7 +175,7 @@ export class ApplicationLedger {
    * @return {number} return.proofs[].height - The height of the microblock.
    * @return {Object} return.proofs[].data - The proof data for the corresponding microblock.
    */
-  async exportProof(customInfo: { author: string }) {
+  async exportProof(customInfo: { author: string }): Promise<Proof> {
     const proofs = [];
 
     for(let height = 1; height <= this.vb.height; height++) {

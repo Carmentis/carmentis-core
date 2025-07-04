@@ -73,10 +73,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     }
 
     async signatureCallback(microblock: any, section: any) {
-        const rawPublicKey = await this.getRawPublicKey();
-        const cryptoFactory = new CryptoSchemeFactory();
-        const signatureAlgorithmId = this.getState().signatureAlgorithmId;
-        const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
+        const publicKey = await this.getPublicKey();
 
         const valid = microblock.verifySignature(
             publicKey,
@@ -89,7 +86,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
             throw `invalid signature`;
         }
 
-        const publicKeyHash = Crypto.Hashes.sha256AsBinary(rawPublicKey);
+        const publicKeyHash = Crypto.Hashes.sha256AsBinary(publicKey.getPublicKeyAsBytes());
         const feesPayerAccount = await this.provider.getAccountByPublicKeyHash(publicKeyHash);
         microblock.setFeesPayerAccount(feesPayerAccount);
     }
@@ -98,10 +95,14 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         return this.getState().descriptionHeight;
     }
 
-    async getRawPublicKey() {
+    async getPublicKey(): Promise<PublicSignatureKey> {
         const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
         const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
-        return rawPublicKey;
+        const cryptoFactory = new CryptoSchemeFactory();
+        const signatureAlgorithmId = this.getState().signatureAlgorithmId;
+        const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
+
+        return publicKey;
     }
 
     /**

@@ -66,8 +66,8 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   async signatureCallback(microblock: any, section: any) {
     const organization = new Organization({ provider: this.provider });
     await organization._load(this.getState().organizationId);
-    const rawPublicKey = await organization.getRawPublicKey();
-    const publicKeyHash = Crypto.Hashes.sha256AsBinary(rawPublicKey);
+    const publicKey = await organization.getPublicKey();
+    const publicKeyHash = Crypto.Hashes.sha256AsBinary(publicKey.getPublicKeyAsBytes());
     const feesPayerAccount = await this.provider.getAccountByPublicKeyHash(publicKeyHash);
     microblock.setFeesPayerAccount(feesPayerAccount);
   }

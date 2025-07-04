@@ -1,7 +1,7 @@
 import {SECTIONS} from "../constants/constants";
 import {OrganizationVb} from "./organizationVb";
 import {Crypto} from "../crypto/crypto";
-import {PrivateSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {OrganizationDescription} from "./types";
 
 export class Organization {
@@ -50,8 +50,8 @@ export class Organization {
     return section.object;
   }
 
-  async getRawPublicKey() : Promise<Uint8Array> {
-    return await this.vb.getRawPublicKey();
+  async getPublicKey() : Promise<PublicSignatureKey> {
+    return await this.vb.getPublicKey();
   }
 
   setGasPrice(gasPrice: number) {

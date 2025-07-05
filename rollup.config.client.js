@@ -3,6 +3,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import dts from "rollup-plugin-dts";
 import typescript from "@rollup/plugin-typescript";
+import alias from '@rollup/plugin-alias';
 
 export default [
     {
@@ -26,6 +27,14 @@ export default [
             }
         ],
         plugins: [
+            alias({
+              entries: [
+                {
+                  find: 'axios',
+                  replacement: 'node_modules/axios/dist/browser/axios.cjs'
+                }
+              ]
+            }),
             resolve({
                 preferBuiltins: false,
                 browser: true,

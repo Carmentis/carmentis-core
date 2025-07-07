@@ -17,9 +17,13 @@ import {Currency} from "./currency";
  * This enum can be used for token denomination conversions and comparisons.
  */
 export enum TokenUnit {
-    TOKEN = 1,
+    TOKEN = 100_000,       // unité entière
+    MILLI_TOKEN = 10_000,  // milli-token = 0.1
+    CENTI_TOKEN = 1_000,   // centi-token = 0.01
+    DECI_TOKEN = 100,      // deci-token = 0.001
+    MICRO_TOKEN = 10,      // micro-token = 0.0001
+    ATOMIC = 1,              // plus petite unité, ex. "atomic unit"
 }
-
 
 /**
  * Enum representing token unit labels.
@@ -35,14 +39,21 @@ export enum TokenUnit {
  * Typically used in contexts where token structure or labeling standardization is required.
  */
 export enum TokenUnitLabel {
-    TOKEN = 'CMTS',
+    TOKEN = 'CMTS',          // 100_000
+    DECI_TOKEN = 'dCMTS',    // 10_000 (0.1 CMTS)
+    CENTI_TOKEN = 'cCMTS',   // 1_000 (0.01 CMTS)
+    MILLI_TOKEN = 'mCMTS',   // 100 (0.001 CMTS)
+    MICRO_TOKEN = 'μCMTS',   // 10 (0.0001 CMTS)
+    ATOMIC = 'aCMTS',           // 1 (plus petite unité, non affichée en CMTS)
 }
+
 
 
 /**
  * A class representing a specific amount of a token in a defined unit.
  */
 export class CMTSToken implements Currency{
+
     private constructor(private amount: number, private unit: TokenUnit) {}
 
     /**
@@ -55,7 +66,27 @@ export class CMTSToken implements Currency{
      */
     static create(amount: number, unit: TokenUnit = TokenUnit.TOKEN) {
         if (unit != TokenUnit.TOKEN) throw new InvalidTokenUnitError();
-        return new CMTSToken(amount, unit);
+        return this.createCMTS(amount);
+    }
+
+    static createCMTS(amount: number) {
+        return new CMTSToken(amount * TokenUnit.TOKEN, TokenUnit.ATOMIC);
+    }
+
+    static createDeciToken(amount: number) {
+        return new CMTSToken(amount * TokenUnit.DECI_TOKEN, TokenUnit.ATOMIC);
+    }
+
+    static createMicroToken(amount: number) {
+        return new CMTSToken(amount * TokenUnit.MICRO_TOKEN, TokenUnit.ATOMIC);
+    }
+
+    static createMillionToken(amount: number) {
+        return new CMTSToken(amount * TokenUnit.MICRO_TOKEN, TokenUnit.ATOMIC);
+    }
+
+    static createAtomic(amount: number) {
+        return new CMTSToken(amount, TokenUnit.ATOMIC);
     }
 
     /**
@@ -74,11 +105,18 @@ export class CMTSToken implements Currency{
         const [, amountStr, unit] = match;
         if (unit != TokenUnitLabel.TOKEN) throw new InvalidTokenUnitError();
         const amount = parseFloat(amountStr);
-        return new CMTSToken(amount, TokenUnit.TOKEN);
+        return CMTSToken.createCMTS(amount);
     }
 
-    getAmount(): number {
-        return this.amount;
+    getAmount(unit : TokenUnit = TokenUnit.TOKEN): number {
+        switch (unit) {
+            case TokenUnit.TOKEN: return this.amount / TokenUnit.TOKEN;
+            case TokenUnit.CENTI_TOKEN: return this.amount / TokenUnit.CENTI_TOKEN;
+            case TokenUnit.MILLI_TOKEN: return this.amount / TokenUnit.MILLI_TOKEN;
+            case TokenUnit.DECI_TOKEN: return this.amount / TokenUnit.DECI_TOKEN;
+            case TokenUnit.MICRO_TOKEN: return this.amount / TokenUnit.MICRO_TOKEN;
+            case TokenUnit.ATOMIC: return this.amount;
+        }
     }
 
 
@@ -119,8 +157,9 @@ export class CMTSToken implements Currency{
      *
      * @return {string} A string representation of the object in the format "{amount} {unitLabel}".
      */
-    toString() {
-        return `${this.amount} ${this.getUnitLabel()}`;
+    toString( unit : TokenUnit = TokenUnit.TOKEN ) {
+        if (unit != TokenUnit.TOKEN) throw new InvalidTokenUnitError();
+        return `${this.amount / TokenUnit.TOKEN} ${CMTSToken.getUnitLabel(unit)}`;
     }
 
     /**
@@ -129,9 +168,10 @@ export class CMTSToken implements Currency{
      * @return {TokenUnitLabel} The label associated with the unit.
      * @throws {InvalidTokenUnitError} If the unit does not have a defined label.
      */
-    private getUnitLabel() {
-        switch (this.unit) {
+    private static getUnitLabel(unit: TokenUnit) {
+        switch (unit) {
             case TokenUnit.TOKEN: return TokenUnitLabel.TOKEN;
+            case TokenUnit.ATOMIC: return TokenUnitLabel.ATOMIC;
             default: throw new InvalidTokenUnitError()
         }
     }

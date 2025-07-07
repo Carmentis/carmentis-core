@@ -51,7 +51,7 @@ export * from "./data/schemaValidator";
 export * from "./data/types";
 export * from "./data/utf8Encoder";
 export * from "./economics/economics";
-export * from "./economics/token";
+export * from "./economics/currencies/token";
 export * from "./errors/carmentis-error";
 export * from "./network/network";
 export * from "./providers/browserNetworkProvider";

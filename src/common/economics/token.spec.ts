@@ -1,39 +1,39 @@
-import {TokenAmount, TokenUnit} from './token';
+import {CMTSToken, TokenUnit} from './currencies/token';
 import {EconomicsError} from '../errors/carmentis-error';
 
 
 describe('TokenAmount', () => {
     describe('TokenAmount.parse', () => {
         it('should correctly parse a valid token amount string with unit', () => {
-            const result = TokenAmount.parse('123.45 CMTS');
+            const result = CMTSToken.parse('123.45 CMTS');
             expect(result.toString()).toBe('123.45 CMTS');
         });
 
         it('should correctly parse a valid token amount string with trailing spaces', () => {
-            const result = TokenAmount.parse('  123.45 CMTS  ');
+            const result = CMTSToken.parse('  123.45 CMTS  ');
             expect(result.toString()).toBe('123.45 CMTS');
         });
 
         it('should throw an error for an invalid token amount format', () => {
-            expect(() => TokenAmount.parse('123.456 TOKEN')).toThrow(EconomicsError);
+            expect(() => CMTSToken.parse('123.456 TOKEN')).toThrow(EconomicsError);
         });
 
         it('should throw an error for a string without unit', () => {
-            expect(() => TokenAmount.parse('123.45')).toThrow(EconomicsError);
+            expect(() => CMTSToken.parse('123.45')).toThrow(EconomicsError);
         });
 
         it('should throw an error for an invalid unit format', () => {
-            expect(() => TokenAmount.parse('123.45 TOKENS')).toThrow(EconomicsError);
+            expect(() => CMTSToken.parse('123.45 TOKENS')).toThrow(EconomicsError);
         });
 
         it('should throw an error for a completely invalid format', () => {
-            expect(() => TokenAmount.parse('invalid string')).toThrow(EconomicsError);
+            expect(() => CMTSToken.parse('invalid string')).toThrow(EconomicsError);
         });
     });
 
     describe('TokenAmount.create', () => {
         it('should create a valid TokenAmount instance', () => {
-            const result = TokenAmount.create(123.45, TokenUnit.TOKEN);
+            const result = CMTSToken.create(123.45, TokenUnit.TOKEN);
             expect(result.toString()).toBe('123.45 CMTS');
         });
 
@@ -41,21 +41,21 @@ describe('TokenAmount', () => {
 
     describe('equals', () => {
         it('should return true for equal token amounts', () => {
-            const a = TokenAmount.create(123.45, TokenUnit.TOKEN);
-            const b = TokenAmount.create(123.45, TokenUnit.TOKEN);
+            const a = CMTSToken.create(123.45, TokenUnit.TOKEN);
+            const b = CMTSToken.create(123.45, TokenUnit.TOKEN);
             expect(a.equals(b)).toBe(true);
         });
 
         it('should return false for different token amounts', () => {
-            const a = TokenAmount.create(123.45, TokenUnit.TOKEN);
-            const b = TokenAmount.create(100, TokenUnit.TOKEN);
+            const a = CMTSToken.create(123.45, TokenUnit.TOKEN);
+            const b = CMTSToken.create(100, TokenUnit.TOKEN);
             expect(a.equals(b)).toBe(false);
         });
     });
 
     describe('isGreaterThan and isLessThan', () => {
-        const a = TokenAmount.create(123.45, TokenUnit.TOKEN);
-        const b = TokenAmount.create(100, TokenUnit.TOKEN);
+        const a = CMTSToken.create(123.45, TokenUnit.TOKEN);
+        const b = CMTSToken.create(100, TokenUnit.TOKEN);
 
         it('should return true if a is greater than b', () => {
             expect(a.isGreaterThan(b)).toBe(true);
@@ -68,7 +68,7 @@ describe('TokenAmount', () => {
 
     describe('toString', () => {
         it('should return the correct string representation', () => {
-            const result = TokenAmount.create(123.45, TokenUnit.TOKEN);
+            const result = CMTSToken.create(123.45, TokenUnit.TOKEN);
             expect(result.toString()).toBe('123.45 CMTS');
         });
     });

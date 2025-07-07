@@ -1,5 +1,6 @@
-import {CENTITOKEN, MILLITOKEN} from "../constants/economics";
-import {EconomicsError, InvalidTokenUnitError} from "../errors/carmentis-error";
+import {CENTITOKEN, MILLITOKEN} from "../../constants/economics";
+import {EconomicsError, InvalidTokenUnitError} from "../../errors/carmentis-error";
+import {Currency} from "./currency";
 
 /**
  * Enum representing the units of a tokenized system.
@@ -41,7 +42,7 @@ export enum TokenUnitLabel {
 /**
  * A class representing a specific amount of a token in a defined unit.
  */
-export class TokenAmount {
+export class CMTSToken implements Currency{
     private constructor(private amount: number, private unit: TokenUnit) {}
 
     /**
@@ -50,18 +51,18 @@ export class TokenAmount {
      *
      * @param {number} amount - The numeric amount to be used for the TokenAmount instance.
      * @param {TokenUnit} [unit=TokenUnit.TOKEN] - The unit type for the token, defaults to TokenUnit.TOKEN.
-     * @return {TokenAmount} A new instance of TokenAmount with the specified amount and unit.
+     * @return {CMTSToken} A new instance of TokenAmount with the specified amount and unit.
      */
     static create(amount: number, unit: TokenUnit = TokenUnit.TOKEN) {
         if (unit != TokenUnit.TOKEN) throw new InvalidTokenUnitError();
-        return new TokenAmount(amount, unit);
+        return new CMTSToken(amount, unit);
     }
 
     /**
      * Parses a string representing a token amount and returns a TokenAmount instance.
      *
      * @param {string} value - The input string containing a numeric amount followed by a unit (e.g., "10.50 TOKEN").
-     * @return {TokenAmount} A TokenAmount object containing the parsed numeric amount and the token unit.
+     * @return {CMTSToken} A TokenAmount object containing the parsed numeric amount and the token unit.
      * @throws {EconomicsError} If the input string format is invalid.
      * @throws {InvalidTokenUnitError} If the unit in the input string is not valid.
      */
@@ -73,27 +74,31 @@ export class TokenAmount {
         const [, amountStr, unit] = match;
         if (unit != TokenUnitLabel.TOKEN) throw new InvalidTokenUnitError();
         const amount = parseFloat(amountStr);
-        return new TokenAmount(amount, TokenUnit.TOKEN);
+        return new CMTSToken(amount, TokenUnit.TOKEN);
+    }
+
+    getAmount(): number {
+        return this.amount;
     }
 
 
     /**
      * Compares the current TokenAmount instance with another TokenAmount instance for equality.
      *
-     * @param {TokenAmount} other - The TokenAmount instance to compare with the current instance.
+     * @param {CMTSToken} other - The TokenAmount instance to compare with the current instance.
      * @return {boolean} Returns true if both TokenAmount instances have the same amount and unit, otherwise returns false.
      */
-    equals(other: TokenAmount): boolean {
+    equals(other: CMTSToken): boolean {
         return this.amount === other.amount && this.unit === other.unit;
     }
 
     /**
      * Compares the current TokenAmount with another TokenAmount to determine if it is greater.
      *
-     * @param {TokenAmount} other The TokenAmount to compare with.
+     * @param {CMTSToken} other The TokenAmount to compare with.
      * @return {boolean} Returns true if the current TokenAmount is greater than the given TokenAmount, otherwise false.
      */
-    isGreaterThan(other: TokenAmount): boolean {
+    isGreaterThan(other: CMTSToken): boolean {
         return this.amount > other.amount;
     }
 
@@ -101,10 +106,10 @@ export class TokenAmount {
      * Compares the current TokenAmount instance with another TokenAmount instance
      * to determine if it is less than the specified instance.
      *
-     * @param {TokenAmount} other - The TokenAmount instance to compare against.
+     * @param {CMTSToken} other - The TokenAmount instance to compare against.
      * @return {boolean} True if the current instance is less than the specified instance, otherwise false.
      */
-    isLessThan(other: TokenAmount): boolean {
+    isLessThan(other: CMTSToken): boolean {
         return this.amount < other.amount;
     }
 

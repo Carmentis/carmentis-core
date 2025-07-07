@@ -27,7 +27,7 @@ export interface CurrencyConverter<FromCurrency, ToCurrency> {
 /**
  * A factory class for creating currency converter instances.
  */
-export class ConverterFactory {
+export class CurrencyConverterFactory {
     static defaultEurosToCMTSTokenConverter(): CurrencyConverter<Euros, CMTSToken> {
         return new EurosToCMTSConverter();
     }

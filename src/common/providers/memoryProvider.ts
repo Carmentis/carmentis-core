@@ -1,6 +1,6 @@
 import {Utils} from "../utils/utils";
 import {MicroblockInformation} from "../blockchain/types";
-import {ProviderInterface} from "./provider";
+import {BlockchainReader} from "./provider";
 
 export class MemoryProvider  {
   microblockBodyStore: any;

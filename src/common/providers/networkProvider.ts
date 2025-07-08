@@ -5,13 +5,13 @@ import { MessageSerializer, MessageUnserializer } from "../data/messageSerialize
 import {
   AccountHash,
   AccountHistory,
-  AccountState,
+  AccountStateDTO,
   MicroBlockBodys,
   MicroblockInformation, MsgVirtualBlockchainState, VirtualBlockchainState,
   VirtualBlockchainUpdate,
   ObjectList
 } from "../blockchain/types";
-import {ProviderInterface} from "./provider";
+import {BlockchainReader} from "./provider";
 import axios from "axios";
 
 export class NetworkProvider {
@@ -42,7 +42,7 @@ export class NetworkProvider {
   }
 
   async getAccountState(accountHash: Uint8Array) {
-    const answer = await this.abciQuery<AccountState>(
+    const answer = await this.abciQuery<AccountStateDTO>(
       SCHEMAS.MSG_GET_ACCOUNT_STATE,
       {
         accountHash

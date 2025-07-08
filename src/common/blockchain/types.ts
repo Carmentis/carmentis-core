@@ -1,4 +1,5 @@
 import {BytesToHexEncoder, EncoderFactory, EncoderInterface} from "../utils/encoder";
+import {CMTSToken} from "../economics/currencies/token";
 
 
 
@@ -164,11 +165,15 @@ export interface VirtualBlockchainUpdate {
     headers: Uint8Array[]
 }
 
-export interface VirtualBlockchainState<CustomState = object> {
+export interface VirtualBlockchainStateDTO<CustomState = object> {
     type: number,
     height: number,
     lastMicroblockHash: Uint8Array,
     customState: CustomState
+}
+
+export class VirtualBlockchainState<CustomState = object> {
+    constructor(private state: VirtualBlockchainStateDTO<CustomState>) {}
 }
 
 
@@ -187,17 +192,41 @@ export interface MsgVirtualBlockchainState {
     stateData: Uint8Array
 }
 
-export interface AccountState {
+export interface AccountStateDTO {
     height: number;
     balance: number;
     lastHistoryHash: Uint8Array
+}
+
+export class AccountState {
+    private constructor(private height: number, private balance: CMTSToken, private lastHistoryHash: Hash) {}
+
+    static createFromDTO(dto: AccountStateDTO) {
+        return new AccountState(
+            dto.height,
+            CMTSToken.createCMTS(dto.balance),
+            Hash.from( dto.lastHistoryHash)
+        )
+    }
+
+    getHeight(): number {
+        return this.height;
+    }
+
+    getBalance(): CMTSToken {
+        return this.balance;
+    }
+
+    getLastHistoryHash(): Hash {
+        return this.lastHistoryHash;
+    }
 }
 
 export interface AccountHash {
     accountHash: Uint8Array
 }
 
-export interface AccountHistoryEntry {
+export interface AccountHistoryEntryDTO {
     height: number,
     previousHistoryHash: Uint8Array,
     type: number,
@@ -207,8 +236,24 @@ export interface AccountHistoryEntry {
     chainReference: Uint8Array
 }
 
+
+export class AccountHistoryEntry {
+
+    constructor(
+       private height: number,
+       private previousHistoryHash: Hash,
+       private type: number,
+       private timestamp: number,
+       private linkedAccount: Hash,
+       private amount: CMTSToken,
+       private chainReference: Hash
+    ) {}
+
+
+}
+
 export interface AccountHistory {
-    list: AccountHistoryEntry[]
+    list: AccountHistoryEntryDTO[]
 }
 
 export interface AccountTokenIssuance {

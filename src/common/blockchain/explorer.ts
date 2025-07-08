@@ -1,7 +1,7 @@
 import {CHAIN} from "../constants/constants";
 import {Utils} from "../utils/utils";
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
-import {Provider, ProviderInterface} from "../providers/provider";
+import {Provider} from "../providers/provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";

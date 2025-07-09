@@ -77,3 +77,4 @@ export * from "./trees/radixUtils";
 export * from "./utils/encoder";
 export * from "./utils/utils";
 export * from "./wallet/wallet";
+export {SectionType} from "./entities/Schema";

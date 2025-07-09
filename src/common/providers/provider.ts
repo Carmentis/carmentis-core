@@ -52,7 +52,7 @@ export interface BlockchainWriter {
      */
 }
 
-export class ABCINodeBlockchainReader implements BlockchainReader {
+export class ABCINodeBlockchainReader {
     protected constructor(private nodeUrl: string) {}
 
     async getBalance(accountHash: Hash): Promise<CMTSToken> {
@@ -81,7 +81,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
                 maxRecords
             }
         );
-        return ;
+        return history;
     }
 
     getMicroBlock(microBlockHash: Hash): Promise<Microblock> {

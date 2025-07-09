@@ -1,6 +1,9 @@
 import * as DATA from "./data";
 import * as CHAIN from "./chain";
 import {SchemaItem} from "./schemas";
+import {z} from 'zod';
+import {SectionType} from "../entities/Schema";
+
 
 // ============================================================================================================================ //
 //  Constraints                                                                                                                 //
@@ -22,12 +25,12 @@ export const CONSTRAINT_NAMES = [
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
-export const ACCOUNT_SIG_ALGORITHM  = 0;
-export const ACCOUNT_PUBLIC_KEY     = 1;
-export const ACCOUNT_TOKEN_ISSUANCE = 2;
-export const ACCOUNT_CREATION       = 3;
-export const ACCOUNT_TRANSFER       = 4;
-export const ACCOUNT_SIGNATURE      = 5;
+export const ACCOUNT_SIG_ALGORITHM  = SectionType.ACCOUNT_SIG_ALGORITHM;
+export const ACCOUNT_PUBLIC_KEY     = SectionType.ACCOUNT_PUBLIC_KEY;
+export const ACCOUNT_TOKEN_ISSUANCE = SectionType.ACCOUNT_TOKEN_ISSUANCE;
+export const ACCOUNT_CREATION       = SectionType.ACCOUNT_CREATION;
+export const ACCOUNT_TRANSFER       = SectionType.ACCOUNT_TRANSFER;
+export const ACCOUNT_SIGNATURE      = SectionType.ACCOUNT_SIGNATURE;
 
 const ACCOUNT = {
   [ ACCOUNT_SIG_ALGORITHM ]: {
@@ -71,6 +74,7 @@ const ACCOUNT = {
     ]
   }
 };
+
 
 // ============================================================================================================================ //
 //  Validator node                                                                                                              //
@@ -160,6 +164,8 @@ const APPLICATION = {
     ]
   }
 };
+
+
 
 // ============================================================================================================================ //
 //  Application ledger                                                                                                          //
@@ -276,6 +282,16 @@ const APP_LEDGER = {
     ]
   }
 };
+
+
+
+export const ALL_SECTIONS_SCHEMAS = {
+  ...ORGANIZATION,
+  ...APPLICATION,
+  ...ACCOUNT,
+  ...VALIDATOR_NODE,
+  ...APP_LEDGER,
+}
 
 // ============================================================================================================================ //
 //  All sections                                                                                                                //

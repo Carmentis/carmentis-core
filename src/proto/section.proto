@@ -1,0 +1,289 @@
+syntax = "proto3";
+
+package carmentis;
+
+enum SectionType {
+  // Account
+  ACCOUNT_SIG_ALGORITHM = 0;
+  ACCOUNT_PUBLIC_KEY = 1;
+  ACCOUNT_TOKEN_ISSUANCE = 2;
+  ACCOUNT_CREATION = 3;
+  ACCOUNT_TRANSFER = 4;
+  ACCOUNT_SIGNATURE = 5;
+
+  // Organization
+  ORG_SIG_ALGORITHM = 100;
+  ORG_PUBLIC_KEY = 101;
+  ORG_DESCRIPTION = 102;
+  ORG_SERVER = 103;
+  ORG_SIGNATURE = 104;
+
+  // Application
+  APP_SIG_ALGORITHM = 200;
+  APP_DECLARATION = 201;
+  APP_DESCRIPTION = 202;
+  APP_SIGNATURE = 203;
+
+  // Application Ledger
+  APP_LEDGER_SIG_ALGORITHM = 300;
+  APP_LEDGER_DECLARATION = 301;
+  APP_LEDGER_ACTOR_CREATION = 302;
+  APP_LEDGER_CHANNEL_CREATION = 303;
+  APP_LEDGER_SHARED_SECRET = 304;
+  APP_LEDGER_CHANNEL_INVITATION = 305;
+  APP_LEDGER_ACTOR_SUBSCRIPTION = 306;
+  APP_LEDGER_PUBLIC_CHANNEL_DATA = 307;
+  APP_LEDGER_PRIVATE_CHANNEL_DATA = 308;
+  APP_LEDGER_AUTHOR = 309;
+  APP_LEDGER_ENDORSER = 310;
+  APP_LEDGER_ENDORSER_SIGNATURE = 311;
+  APP_LEDGER_AUTHOR_SIGNATURE = 312;
+}
+
+// =========================================
+// SectionSchema Envelope
+// =========================================
+
+
+enum MicroBlockType {
+  ACCOUNT_MICROBLOCK = 0;
+  ORGANISATION_MICROBLOCK = 1;
+  APPLICATION_MICROBLOCK = 2;
+  APP_LEDGER_MICROBLOCK = 3;
+  NODE_MICROBLOCK = 4;
+}
+
+enum VirtualBlockchainType {
+  ACCOUNT_VIRTUAL_BLOCKCHAIN = 0;
+  NODE_VIRTUAL_BLOCKCHAIN = 1;
+  APPLICATION_VIRTUAL_BLOCKCHAIN = 2;
+  ORGANISATION_VIRTUAL_BLOCKCHAIN = 3;
+  APP_LEDGER_VIRTUAL_BLOCKCHAIN = 4;
+}
+
+message VirtualBlockchainViewSchema {
+  VirtualBlockchainType type = 1;
+  uint64 height = 2;
+  repeated MicroBlockSchema blocks = 3;
+}
+
+message MicroBlockHeaderSchema {
+  MicroBlockType type = 1;
+  uint64 height = 2;
+  float gasPrice = 4;
+  string magicString = 6;
+  bytes previousHash = 7;
+  uint64 timestamp = 8;
+  uint64 gas = 9;
+  bytes bodyHash = 10;
+}
+
+message MicroBlockSchema {
+  MicroBlockHeaderSchema header = 1;
+  bytes hash = 2;
+  repeated SectionSchema sections = 3;
+  optional bytes feesPayerAccount = 4;
+}
+
+
+
+
+
+message SectionSchema {
+  SectionType sectionType = 1;
+  SectionDataSchema data = 2;
+}
+
+message SectionDataSchema {
+  oneof data {
+    AccountSigAlgorithmSectionSchema accountSigAlgorithm = 2;
+    AccountPublicKeySectionSchema accountPublicKey = 3;
+    AccountTokenIssuanceSectionSchema accountTokenIssuance = 4;
+    AccountCreationSectionSchema accountCreation = 5;
+    AccountTransferSectionSchema accountTransfer = 6;
+    AccountSignatureSectionSchema accountSignature = 7;
+
+    OrgSigAlgorithmSectionSchema orgSigAlgorithm = 100;
+    OrgPublicKeySectionSchema orgPublicKey = 101;
+    OrgDescriptionSectionSchema orgDescription = 102;
+    OrgServerSectionSchema orgServer = 103;
+    OrgSignatureSectionSchema orgSignature = 104;
+
+    AppSigAlgorithmSectionSchema appSigAlgorithm = 200;
+    AppDeclarationSectionSchema appDeclaration = 201;
+    AppDescriptionSectionSchema appDescription = 202;
+    AppSignatureSectionSchema appSignature = 203;
+
+    AppLedgerSigAlgorithmSectionSchema appLedgerSigAlgorithm = 300;
+    AppLedgerDeclarationSectionSchema appLedgerDeclaration = 301;
+    AppLedgerActorCreationSectionSchema appLedgerActorCreation = 302;
+    AppLedgerChannelCreationSectionSchema appLedgerChannelCreation = 303;
+    AppLedgerSharedSecretSectionSchema appLedgerSharedSecret = 304;
+    AppLedgerChannelInvitationSectionSchema appLedgerChannelInvitation = 305;
+    AppLedgerActorSubscriptionSectionSchema appLedgerActorSubscription = 306;
+    AppLedgerPublicChannelDataSectionSchema appLedgerPublicChannelData = 307;
+    AppLedgerPrivateChannelDataSectionSchema appLedgerPrivateChannelData = 308;
+    AppLedgerAuthorSectionSchema appLedgerAuthor = 309;
+    AppLedgerEndorserSectionSchema appLedgerEndorser = 310;
+    AppLedgerEndorserSignatureSectionSchema appLedgerEndorserSignature = 311;
+    AppLedgerAuthorSignatureSectionSchema appLedgerAuthorSignature = 312;
+  }
+}
+
+
+
+// ==============================
+// Account
+// ==============================
+
+message AccountSigAlgorithmSectionSchema {
+  uint32 algorithmId = 1;
+}
+
+message AccountPublicKeySectionSchema {
+  bytes publicKey = 1;
+}
+
+message AccountTokenIssuanceSectionSchema {
+  uint64 amount = 1;
+}
+
+message AccountCreationSectionSchema {
+  bytes sellerAccount = 1;
+  uint64 amount = 2;
+}
+
+message AccountTransferSectionSchema {
+  bytes account = 1;
+  uint64 amount = 2;
+  string publicReference = 3;
+  string privateReference = 4;
+}
+
+message AccountSignatureSectionSchema {
+  bytes signature = 1;
+}
+
+// ==============================
+// Organization
+// ==============================
+
+message OrgSigAlgorithmSectionSchema {
+  uint32 algorithmId = 1;
+}
+
+message OrgPublicKeySectionSchema {
+  bytes publicKey = 1;
+}
+
+message OrgDescriptionSectionSchema {
+  string name = 1;
+  string city = 2;
+  string countryCode = 3; // length = 2 (en TS à vérifier)
+  string website = 4;
+}
+
+message OrgServerSectionSchema {
+  string endpoint = 1;
+}
+
+message OrgSignatureSectionSchema {
+  bytes signature = 1;
+}
+
+// ==============================
+// Application
+// ==============================
+
+message AppSigAlgorithmSectionSchema {
+  uint32 algorithmId = 1;
+}
+
+message AppDeclarationSectionSchema {
+  bytes organizationId = 1;
+}
+
+message AppDescriptionSectionSchema {
+  string name = 1;
+  string logoUrl = 2;
+  string homepageUrl = 3;
+  string description = 4;
+}
+
+message AppSignatureSectionSchema {
+  bytes signature = 1;
+}
+
+// ==============================
+// Application Ledger
+// ==============================
+
+message AppLedgerSigAlgorithmSectionSchema {
+  uint32 algorithmId = 1;
+}
+
+message AppLedgerDeclarationSectionSchema {
+  bytes applicationId = 1;
+}
+
+message AppLedgerActorCreationSectionSchema {
+  uint32 id = 1;
+  uint32 type = 2;
+  string name = 3;
+}
+
+message AppLedgerChannelCreationSectionSchema {
+  uint32 id = 1;
+  bool isPrivate = 2;
+  uint32 creatorId = 3;
+  string name = 4;
+}
+
+message AppLedgerSharedSecretSectionSchema {
+  uint32 hostId = 1;
+  uint32 guestId = 2;
+  bytes encapsulation = 3;
+}
+
+message AppLedgerChannelInvitationSectionSchema {
+  uint32 channelId = 1;
+  uint32 hostId = 2;
+  uint32 guestId = 3;
+  bytes channelKey = 4;
+}
+
+message AppLedgerActorSubscriptionSectionSchema {
+  uint32 actorId = 1;
+  uint32 actorType = 2;
+  bytes organizationId = 3;
+  bytes kemPublicKey = 4;
+  bytes signaturePublicKey = 5;
+}
+
+message AppLedgerPublicChannelDataSectionSchema {
+  uint32 channelId = 1;
+  bytes data = 2;
+}
+
+message AppLedgerPrivateChannelDataSectionSchema {
+  uint32 channelId = 1;
+  bytes merkleRootHash = 2;
+  bytes encryptedData = 3;
+}
+
+message AppLedgerAuthorSectionSchema {
+  uint32 authorId = 1;
+}
+
+message AppLedgerEndorserSectionSchema {
+  uint32 endorserId = 1;
+  uint32 messageId = 2;
+}
+
+message AppLedgerEndorserSignatureSectionSchema {
+  bytes signature = 1;
+}
+
+message AppLedgerAuthorSignatureSectionSchema {
+  bytes signature = 1;
+}

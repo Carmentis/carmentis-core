@@ -1,7 +1,7 @@
 import { DATA } from "../constants/constants";
 import { SchemaSerializer, SchemaUnserializer } from "./schemaSerializer";
 
-export class MessageSerializer {
+export class MessageSerializer<T = any> {
   collection: any;
   /**
     Constructor
@@ -16,7 +16,7 @@ export class MessageSerializer {
     @param {number} type - Message type
     @param {object} object - The message object to be serialized
   */
-  serialize(type: any, object: any) {
+  serialize(type: any, object: T) {
     const schema = [
       { name: "__msgType", type: DATA.TYPE_UINT8 },
       ...this.collection[type]
@@ -29,7 +29,7 @@ export class MessageSerializer {
   }
 }
 
-export class MessageUnserializer {
+export class MessageUnserializer<T = object> {
   collection: any;
   /**
     Constructor
@@ -43,7 +43,7 @@ export class MessageUnserializer {
     Unserializes the given message byte stream.
     @param {Uint8Array} stream - The serialized byte stream
   */
-  unserialize(stream: any) {
+  unserialize(stream: Uint8Array) {
     const type = stream[0];
 
     const schema = [
@@ -56,6 +56,6 @@ export class MessageUnserializer {
     // @ts-expect-error TS(2339): Property '__msgType' does not exist on type '{}'.
     delete object.__msgType;
 
-    return { type, object };
+    return { type, object: object as T };
   }
 }

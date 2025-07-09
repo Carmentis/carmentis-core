@@ -109,9 +109,13 @@ function decodeVirtualBlockchainState(data: Uint8Array) : VirtualBlockchainState
   const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
         stateObject = stateUnserializer.unserialize(data) as VirtualBlockchainState;
 
+
+  // @ts-ignore
   const customStateUnserializer = new SchemaUnserializer<VirtualBlockchainState>(SCHEMAS.VB_STATES[stateObject.type]),
+        // @ts-ignore
         customStateObject = customStateUnserializer.unserialize(stateObject.customState);
 
+  // @ts-ignore
   stateObject.customState = customStateObject;
 
   return stateObject;

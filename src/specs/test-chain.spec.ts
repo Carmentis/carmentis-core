@@ -133,7 +133,7 @@ describe('Chain test', () => {
           Testing application ledger
         */
         const object = {
-            applicationId: Utils.binaryToHexa(applicationId.toBytes()),
+            applicationId: applicationId.encode(),
             data: {
                 firstname: "John",
                 lastname: "Doe",

@@ -146,6 +146,7 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
 
   private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
   private static UNDEFINED_PUBLIC_KEY_HEIGHT = -1;
+
   getInitialState(): AccountVBState {
     return {
       signatureAlgorithmId: AccountVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,

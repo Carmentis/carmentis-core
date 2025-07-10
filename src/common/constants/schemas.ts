@@ -280,153 +280,171 @@ export const MICROBLOCK_INFORMATION: Schema = {
 // ============================================================================================================================ //
 //  Node messages                                                                                                               //
 // ============================================================================================================================ //
-export const NODE_MESSAGES: Schema[] = [
-  {
-    label: "MessageError",
-    definition: [
-      { name: "error", type: DATA.TYPE_STRING }
-    ]
-  },
-  {
-    label: "MessageGetVirtualBlockchainState",
-    definition: [
-      { name: "virtualBlockchainId", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "MessageVirtualBlockchainState",
-    definition: [
-      { name: "stateData", type: DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "MessageGetVirtualBlockchainUpdate",
-    definition: [
-      { name: "virtualBlockchainId", type: DATA.TYPE_BIN256 },
-      { name: "knownHeight",         type: DATA.TYPE_UINT48 }
-    ]
-  },
-  {
-    label: "MessageVirtualBlockchainUpdate",
-    definition: [
-      { name: "exists",    type: DATA.TYPE_BOOLEAN },
-      { name: "changed",   type: DATA.TYPE_BOOLEAN },
-      { name: "stateData", type: DATA.TYPE_BINARY },
-      { name: "headers",   type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "MessageGetMicroblockInformation",
-    definition: [
-      { name: "hash", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "MessageMicroblockInformation",
-    definition: MICROBLOCK_INFORMATION.definition
-  },
-  {
-    label: "MessageAwaitMicroblockAnchoring",
-    definition: [
-      { name: "hash", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "MessageMicroblockAnchoring",
-    definition: MICROBLOCK_INFORMATION.definition
-  },
-  {
-    label: "MessageGetMicroblockBodys",
-    definition: [
-      { name: "hashes", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "MessageMicroblockBodys",
-    definition: [
-      {
-        name: "list",
-        type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-        definition: [
-          { name: "hash", type: DATA.TYPE_BIN256 },
-          { name: "body", type: DATA.TYPE_BINARY }
-        ]
-      }
-    ]
-  },
-  {
-    label: "MessageGetAccountState",
-    definition: [
-      { name: "accountHash", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "MessageAccountState",
-    definition: ACCOUNT_STATE.definition
-  },
-  {
-    label: "MessageGetAccountHistory",
-    definition: [
-      { name: "accountHash",     type: DATA.TYPE_BIN256 },
-      { name: "lastHistoryHash", type: DATA.TYPE_BIN256 },
-      { name: "maxRecords",      type: DATA.TYPE_UINT16 }
-    ]
-  },
-  {
-    label: "MessageAccountHistory",
-    definition: [
-      {
-        name: "list",
-        type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-        schema: ACCOUNT_HISTORY
-      }
-    ]
-  },
-  {
-    label: "MessageGetAccountByPublicKeyHash",
-    definition: [
-      { name: "publicKeyHash", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "MessageAccountByPublicKeyHash",
-    definition: [
-      { name: "accountHash", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "MessageGetObjectList",
-    definition: [
-      { name: "type", type: DATA.TYPE_UINT8 }
-    ]
-  },
-  {
-    label: "MessageObjectList",
-    definition: [
-      { name: "list", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
-    ]
-  }
-];
+export const MSG_ERROR                          = 0x00;
+export const MSG_GET_VIRTUAL_BLOCKCHAIN_STATE   = 0x01;
+export const MSG_VIRTUAL_BLOCKCHAIN_STATE       = 0x02;
+export const MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE  = 0x03;
+export const MSG_VIRTUAL_BLOCKCHAIN_UPDATE      = 0x04;
+export const MSG_GET_MICROBLOCK_INFORMATION     = 0x05;
+export const MSG_MICROBLOCK_INFORMATION         = 0x06;
+export const MSG_AWAIT_MICROBLOCK_ANCHORING     = 0x07;
+export const MSG_MICROBLOCK_ANCHORING           = 0x08;
+export const MSG_GET_MICROBLOCK_BODYS           = 0x09;
+export const MSG_MICROBLOCK_BODYS               = 0x0A;
+export const MSG_GET_ACCOUNT_STATE              = 0x0B;
+export const MSG_ACCOUNT_STATE                  = 0x0C;
+export const MSG_GET_ACCOUNT_HISTORY            = 0x0D;
+export const MSG_ACCOUNT_HISTORY                = 0x0E;
+export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH = 0x0F;
+export const MSG_ACCOUNT_BY_PUBLIC_KEY_HASH     = 0x10;
+export const MSG_GET_OBJECT_LIST                = 0x11;
+export const MSG_OBJECT_LIST                    = 0x12;
 
-export const MSG_ERROR                          = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageError");
-export const MSG_GET_VIRTUAL_BLOCKCHAIN_STATE   = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageGetVirtualBlockchainState");
-export const MSG_VIRTUAL_BLOCKCHAIN_STATE       = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageVirtualBlockchainState");
-export const MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE  = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageGetVirtualBlockchainUpdate");
-export const MSG_VIRTUAL_BLOCKCHAIN_UPDATE      = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageVirtualBlockchainUpdate");
-export const MSG_GET_MICROBLOCK_INFORMATION     = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageGetMicroblockInformation");
-export const MSG_MICROBLOCK_INFORMATION         = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageMicroblockInformation");
-export const MSG_AWAIT_MICROBLOCK_ANCHORING     = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageAwaitMicroblockAnchoring");
-export const MSG_MICROBLOCK_ANCHORING           = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageMicroblockAnchoring");
-export const MSG_GET_MICROBLOCK_BODYS           = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageGetMicroblockBodys");
-export const MSG_MICROBLOCK_BODYS               = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageMicroblockBodys");
-export const MSG_GET_ACCOUNT_STATE              = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageGetAccountState");
-export const MSG_ACCOUNT_STATE                  = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageAccountState");
-export const MSG_GET_ACCOUNT_HISTORY            = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageGetAccountHistory");
-export const MSG_ACCOUNT_HISTORY                = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageAccountHistory");
-export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageGetAccountByPublicKeyHash");
-export const MSG_ACCOUNT_BY_PUBLIC_KEY_HASH     = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageAccountByPublicKeyHash");
-export const MSG_GET_OBJECT_LIST                = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageGetObjectList");
-export const MSG_OBJECT_LIST                    = NODE_MESSAGES.findIndex((s: Schema) => s.label == "MessageObjectList");
+export const NODE_MESSAGES: Schema[] = [] as const;
+
+NODE_MESSAGES[MSG_ERROR] = {
+  label: "MessageError",
+  definition: [
+    { name: "error", type: DATA.TYPE_STRING }
+  ]
+};
+
+NODE_MESSAGES[MSG_GET_VIRTUAL_BLOCKCHAIN_STATE] = {
+  label: "MessageGetVirtualBlockchainState",
+  definition: [
+    { name: "virtualBlockchainId", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+NODE_MESSAGES[MSG_VIRTUAL_BLOCKCHAIN_STATE] = {
+  label: "MessageVirtualBlockchainState",
+  definition: [
+    { name: "stateData", type: DATA.TYPE_BINARY }
+  ]
+};
+
+NODE_MESSAGES[MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE] = {
+  label: "MessageGetVirtualBlockchainUpdate",
+  definition: [
+    { name: "virtualBlockchainId", type: DATA.TYPE_BIN256 },
+    { name: "knownHeight",         type: DATA.TYPE_UINT48 }
+  ]
+};
+
+NODE_MESSAGES[MSG_VIRTUAL_BLOCKCHAIN_UPDATE] = {
+  label: "MessageVirtualBlockchainUpdate",
+  definition: [
+    { name: "exists",    type: DATA.TYPE_BOOLEAN },
+    { name: "changed",   type: DATA.TYPE_BOOLEAN },
+    { name: "stateData", type: DATA.TYPE_BINARY },
+    { name: "headers",   type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BINARY }
+  ]
+};
+
+NODE_MESSAGES[MSG_GET_MICROBLOCK_INFORMATION] = {
+  label: "MessageGetMicroblockInformation",
+  definition: [
+    { name: "hash", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+NODE_MESSAGES[MSG_MICROBLOCK_INFORMATION] = {
+  label: "MessageMicroblockInformation",
+  definition: MICROBLOCK_INFORMATION.definition
+};
+
+NODE_MESSAGES[MSG_AWAIT_MICROBLOCK_ANCHORING] = {
+  label: "MessageAwaitMicroblockAnchoring",
+  definition: [
+    { name: "hash", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+NODE_MESSAGES[MSG_MICROBLOCK_ANCHORING] = {
+  label: "MessageMicroblockAnchoring",
+  definition: MICROBLOCK_INFORMATION.definition
+};
+
+NODE_MESSAGES[MSG_GET_MICROBLOCK_BODYS] = {
+  label: "MessageGetMicroblockBodys",
+  definition: [
+    { name: "hashes", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
+  ]
+};
+
+NODE_MESSAGES[MSG_MICROBLOCK_BODYS] = {
+  label: "MessageMicroblockBodys",
+  definition: [
+    {
+      name: "list",
+      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+      definition: [
+        { name: "hash", type: DATA.TYPE_BIN256 },
+        { name: "body", type: DATA.TYPE_BINARY }
+      ]
+    }
+  ]
+};
+
+NODE_MESSAGES[MSG_GET_ACCOUNT_STATE] = {
+  label: "MessageGetAccountState",
+  definition: [
+    { name: "accountHash", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+NODE_MESSAGES[MSG_ACCOUNT_STATE] = {
+  label: "MessageAccountState",
+  definition: ACCOUNT_STATE.definition
+};
+
+NODE_MESSAGES[MSG_GET_ACCOUNT_HISTORY] = {
+  label: "MessageGetAccountHistory",
+  definition: [
+    { name: "accountHash",     type: DATA.TYPE_BIN256 },
+    { name: "lastHistoryHash", type: DATA.TYPE_BIN256 },
+    { name: "maxRecords",      type: DATA.TYPE_UINT16 }
+  ]
+};
+
+NODE_MESSAGES[MSG_ACCOUNT_HISTORY] = {
+  label: "MessageAccountHistory",
+  definition: [
+    {
+      name: "list",
+      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+      schema: ACCOUNT_HISTORY
+    }
+  ]
+};
+
+NODE_MESSAGES[MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH] = {
+  label: "MessageGetAccountByPublicKeyHash",
+  definition: [
+    { name: "publicKeyHash", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+NODE_MESSAGES[MSG_ACCOUNT_BY_PUBLIC_KEY_HASH] = {
+  label: "MessageAccountByPublicKeyHash",
+  definition: [
+    { name: "accountHash", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+NODE_MESSAGES[MSG_GET_OBJECT_LIST] = {
+  label: "MessageGetObjectList",
+  definition: [
+    { name: "type", type: DATA.TYPE_UINT8 }
+  ]
+};
+
+NODE_MESSAGES[MSG_OBJECT_LIST] = {
+  label: "MessageObjectList",
+  definition: [
+    { name: "list", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
+  ]
+};
 
 // ============================================================================================================================ //
 //  Wallet interface                                                                                                            //
@@ -442,206 +460,226 @@ export const WI_QR_CODE: Schema = {
   ]
 };
 
-export const WI_MESSAGES: Schema[] = [
-  {
-    label: "WiMsgRequest",
-    definition: [
-      { name: "requestType", type: DATA.TYPE_UINT8 },
-      { name: "request",     type: DATA.TYPE_BINARY },
-      { name: "deviceId",    type: DATA.TYPE_BIN256 },
-      { name: "withToken",   type: DATA.TYPE_UINT8 },
-      //{ name: "token",       type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "WiMsgUpdateQr",
-    definition: [
-      { name: "qrId",      type: DATA.TYPE_BIN256 },
-      { name: "timestamp", type: DATA.TYPE_UINT48 }
-    ]
-  },
-  {
-    label: "WiMsgConnectionToken",
-    definition: [
-      { name: "token", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "WiMsgForwardedAnswer",
-    definition: [
-      { name: "answerType", type: DATA.TYPE_UINT8 },
-      { name: "answer",     type: DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "WiMsgGetConnectionInfo",
-    definition: [
-      { name: "qrId", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "WiMsgAnswer",
-    definition: [
-      { name: "answerType", type: DATA.TYPE_UINT8 },
-      { name: "answer",     type: DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "WiMsgConnectionInfo",
-    definition: []
-  },
-  {
-    label: "WiMsgConnectionAccepted",
-    definition: [
-      { name: "qrId", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "WiMsgForwardedRequest",
-    definition: [
-      { name: "requestType", type: DATA.TYPE_UINT8 },
-      { name: "request",     type: DATA.TYPE_BINARY }
-    ]
-  }
-];
-
 // client -> server
-export const WIMSG_REQUEST             = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgRequest");
+export const WIMSG_REQUEST             = 0x00;
 
 // server -> client
-export const WIMSG_UPDATE_QR           = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgUpdateQr");
-export const WIMSG_CONNECTION_TOKEN    = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgConnectionToken");
-export const WIMSG_FORWARDED_ANSWER    = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgForwardedAnswer");
+export const WIMSG_UPDATE_QR           = 0x01;
+export const WIMSG_CONNECTION_TOKEN    = 0x02;
+export const WIMSG_FORWARDED_ANSWER    = 0x03;
 
 // wallet -> server
-export const WIMSG_GET_CONNECTION_INFO = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgGetConnectionInfo");
-export const WIMSG_ANSWER              = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgAnswer");
+export const WIMSG_GET_CONNECTION_INFO = 0x04;
+export const WIMSG_ANSWER              = 0x05;
 
 // server -> wallet
-export const WIMSG_CONNECTION_INFO     = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgConnectionInfo");
-export const WIMSG_CONNECTION_ACCEPTED = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgConnectionAccepted");
-export const WIMSG_FORWARDED_REQUEST   = WI_MESSAGES.findIndex((s: Schema) => s.label == "WiMsgForwardedRequest");
+export const WIMSG_CONNECTION_INFO     = 0x06;
+export const WIMSG_CONNECTION_ACCEPTED = 0x07;
+export const WIMSG_FORWARDED_REQUEST   = 0x08;
 
-export const WI_REQUESTS: Schema[] = [
-  {
-    label: "WiRqAuthByPublicKey",
-    definition: [
-      { name: "challenge", type: DATA.TYPE_BIN256 }
-    ]
-  },
-  {
-    label: "WiRqGetEmail",
-    definition: []
-  },
-  {
-    label: "WiRqGetUserData",
-    definition: [
-      { name: "requiredData", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_STRING }
-    ]
-  },
-  {
-    label: "WiRqDataApproval",
-    definition: [
-      { name: "dataId", type: DATA.TYPE_BINARY },
-      { name: "serverUrl", type: DATA.TYPE_STRING }
-    ]
-  }
-];
+export const WI_MESSAGES: Schema[] = [] as const;
 
-export const WI_ANSWERS: Schema[] = [
-  {
-    label: "WiRqAuthByPublicKey",
-    definition: [
-      { name: "publicKey", type: DATA.TYPE_STRING },
-      { name: "signature", type: DATA.TYPE_STRING }
-    ]
-  },
-  {
-    label: "WiRqGetEmail",
-    definition: [
-      { name: "email", type: DATA.TYPE_STRING }
-    ]
-  },
-  {
-    label: "WiRqDataApproval",
-    definition: [
-      { name: "vbHash", type: DATA.TYPE_BINARY },
-      { name: "mbHash", type: DATA.TYPE_BINARY },
-      { name: "height", type: DATA.TYPE_UINT48 }
-    ]
-  },
-  {
-    label: "WiRqGetUserData",
-    definition: [
-      { name: "userData", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_STRING }
-    ]
-  }
-];
+WI_MESSAGES[WIMSG_REQUEST] = {
+  label: "WiMsgRequest",
+  definition: [
+    { name: "requestType", type: DATA.TYPE_UINT8 },
+    { name: "request",     type: DATA.TYPE_BINARY },
+    { name: "deviceId",    type: DATA.TYPE_BIN256 },
+    { name: "withToken",   type: DATA.TYPE_UINT8 },
+    //{ name: "token",       type: DATA.TYPE_BIN256 }
+  ]
+};
 
-export const WIRQ_AUTH_BY_PUBLIC_KEY = WI_REQUESTS.findIndex((s: Schema) => s.label == "WiRqAuthByPublicKey");
-export const WIRQ_DATA_APPROVAL      = WI_REQUESTS.findIndex((s: Schema) => s.label == "WiRqDataApproval");
-export const WIRQ_GET_EMAIL          = WI_REQUESTS.findIndex((s: Schema) => s.label == "WiRqGetEmail");
-export const WIRQ_GET_USER_DATA      = WI_REQUESTS.findIndex((s: Schema) => s.label == "WiRqGetUserData");
+WI_MESSAGES[WIMSG_UPDATE_QR] = {
+  label: "WiMsgUpdateQr",
+  definition: [
+    { name: "qrId",      type: DATA.TYPE_BIN256 },
+    { name: "timestamp", type: DATA.TYPE_UINT48 }
+  ]
+};
+
+WI_MESSAGES[WIMSG_CONNECTION_TOKEN] = {
+  label: "WiMsgConnectionToken",
+  definition: [
+    { name: "token", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+WI_MESSAGES[WIMSG_FORWARDED_ANSWER] = {
+  label: "WiMsgForwardedAnswer",
+  definition: [
+    { name: "answerType", type: DATA.TYPE_UINT8 },
+    { name: "answer",     type: DATA.TYPE_BINARY }
+  ]
+};
+
+WI_MESSAGES[WIMSG_GET_CONNECTION_INFO] = {
+  label: "WiMsgGetConnectionInfo",
+  definition: [
+    { name: "qrId", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+WI_MESSAGES[WIMSG_ANSWER] = {
+  label: "WiMsgAnswer",
+  definition: [
+    { name: "answerType", type: DATA.TYPE_UINT8 },
+    { name: "answer",     type: DATA.TYPE_BINARY }
+  ]
+};
+
+WI_MESSAGES[WIMSG_CONNECTION_INFO] = {
+  label: "WiMsgConnectionInfo",
+  definition: []
+};
+
+WI_MESSAGES[WIMSG_CONNECTION_ACCEPTED] = {
+  label: "WiMsgConnectionAccepted",
+  definition: [
+    { name: "qrId", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+WI_MESSAGES[WIMSG_FORWARDED_REQUEST] = {
+  label: "WiMsgForwardedRequest",
+  definition: [
+    { name: "requestType", type: DATA.TYPE_UINT8 },
+    { name: "request",     type: DATA.TYPE_BINARY }
+  ]
+};
+
+export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x00;
+export const WIRQ_DATA_APPROVAL      = 0x01;
+export const WIRQ_GET_EMAIL          = 0x02;
+export const WIRQ_GET_USER_DATA      = 0x03;
+
+export const WI_REQUESTS: Schema[] = [] as const;
+
+WI_REQUESTS[WIRQ_AUTH_BY_PUBLIC_KEY] = {
+  label: "WiRqAuthByPublicKey",
+  definition: [
+    { name: "challenge", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+WI_REQUESTS[WIRQ_GET_EMAIL] = {
+  label: "WiRqGetEmail",
+  definition: []
+};
+
+WI_REQUESTS[WIRQ_GET_USER_DATA] = {
+  label: "WiRqGetUserData",
+  definition: [
+    { name: "requiredData", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_STRING }
+  ]
+};
+
+WI_REQUESTS[WIRQ_DATA_APPROVAL] = {
+  label: "WiRqDataApproval",
+  definition: [
+    { name: "dataId", type: DATA.TYPE_BINARY },
+    { name: "serverUrl", type: DATA.TYPE_STRING }
+  ]
+};
+
+export const WI_ANSWERS: Schema[] = [] as const;
+
+WI_ANSWERS[WIRQ_AUTH_BY_PUBLIC_KEY] = {
+  label: "WiRqAuthByPublicKey",
+  definition: [
+    { name: "publicKey", type: DATA.TYPE_STRING },
+    { name: "signature", type: DATA.TYPE_STRING }
+  ]
+};
+
+WI_ANSWERS[WIRQ_GET_EMAIL] = {
+  label: "WiRqGetEmail",
+  definition: [
+    { name: "email", type: DATA.TYPE_STRING }
+  ]
+};
+
+WI_ANSWERS[WIRQ_DATA_APPROVAL] = {
+  label: "WiRqDataApproval",
+  definition: [
+    { name: "vbHash", type: DATA.TYPE_BINARY },
+    { name: "mbHash", type: DATA.TYPE_BINARY },
+    { name: "height", type: DATA.TYPE_UINT48 }
+  ]
+};
+
+WI_ANSWERS[WIRQ_GET_USER_DATA] = {
+  label: "WiRqGetUserData",
+  definition: [
+    { name: "userData", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_STRING }
+  ]
+};
 
 // ============================================================================================================================ //
 //  Wallet <-> operator network messages                                                                                        //
 // ============================================================================================================================ //
-export const WALLET_OP_MESSAGES: Schema[] = [
-  {
-    label: "MessageApprovalHandshake",
-    definition: [
-      { name: "dataId", type: DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "MessageActorKey",
-    definition: [
-      { name: "dataId",   type: DATA.TYPE_BINARY },
-      { name: "actorKey", type: DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "MessageApprovalSignature",
-    definition: [
-      { name: "dataId",    type: DATA.TYPE_BINARY },
-      { name: "signature", type: DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "MessageAnswerActorKeyRequired",
-    definition: [
-      { name: "genesisSeed", type: DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "MessageAnswerApprovalData",
-    definition: [
-      { name: "data", type: DATA.TYPE_BINARY }
-    ]
-  },
-  {
-    label: "MessageAnswerApprovalSignature",
-    definition: [
-      { name: "vbHash", type: DATA.TYPE_BINARY },
-      { name: "mbHash", type: DATA.TYPE_BINARY },
-      { name: "height", type: DATA.TYPE_NUMBER }
-    ]
-  },
-  {
-    label: "MessageAnswerError",
-    definition: [
-      { name: "error", type: DATA.TYPE_OBJECT, schema: ERROR }
-    ]
-  }
-];
+export const MSG_ANS_ERROR              = 0x00;
+export const MSG_APPROVAL_HANDSHAKE     = 0x01;
+export const MSG_ACTOR_KEY              = 0x02;
+export const MSG_APPROVAL_SIGNATURE     = 0x03;
+export const MSG_ANS_ACTOR_KEY_REQUIRED = 0x04;
+export const MSG_ANS_APPROVAL_DATA      = 0x05;
+export const MSG_ANS_APPROVAL_SIGNATURE = 0x06;
 
-export const MSG_APPROVAL_HANDSHAKE     = WALLET_OP_MESSAGES.findIndex((o: Schema) => o.label == "MessageApprovalHandshake");
-export const MSG_ACTOR_KEY              = WALLET_OP_MESSAGES.findIndex((o: Schema) => o.label == "MessageActorKey");
-export const MSG_APPROVAL_SIGNATURE     = WALLET_OP_MESSAGES.findIndex((o: Schema) => o.label == "MessageApprovalSignature");
-export const MSG_ANS_ACTOR_KEY_REQUIRED = WALLET_OP_MESSAGES.findIndex((o: Schema) => o.label == "MessageAnswerActorKeyRequired");
-export const MSG_ANS_APPROVAL_DATA      = WALLET_OP_MESSAGES.findIndex((o: Schema) => o.label == "MessageAnswerApprovalData");
-export const MSG_ANS_APPROVAL_SIGNATURE = WALLET_OP_MESSAGES.findIndex((o: Schema) => o.label == "MessageAnswerApprovalSignature");
-export const MSG_ANS_ERROR              = WALLET_OP_MESSAGES.findIndex((o: Schema) => o.label == "MessageAnswerError");
+export const WALLET_OP_MESSAGES: Schema[] = [] as const;
+
+WALLET_OP_MESSAGES[MSG_ANS_ERROR] = {
+  label: "MessageAnswerError",
+  definition: [
+    { name: "error", type: DATA.TYPE_OBJECT, schema: ERROR }
+  ]
+};
+
+WALLET_OP_MESSAGES[MSG_APPROVAL_HANDSHAKE] = {
+  label: "MessageApprovalHandshake",
+  definition: [
+    { name: "dataId", type: DATA.TYPE_BINARY }
+  ]
+};
+
+WALLET_OP_MESSAGES[MSG_ACTOR_KEY] = {
+  label: "MessageActorKey",
+  definition: [
+    { name: "dataId",   type: DATA.TYPE_BINARY },
+    { name: "actorKey", type: DATA.TYPE_BINARY }
+  ]
+};
+
+WALLET_OP_MESSAGES[MSG_APPROVAL_SIGNATURE] = {
+  label: "MessageApprovalSignature",
+  definition: [
+    { name: "dataId",    type: DATA.TYPE_BINARY },
+    { name: "signature", type: DATA.TYPE_BINARY }
+  ]
+};
+
+WALLET_OP_MESSAGES[MSG_ANS_ACTOR_KEY_REQUIRED] = {
+  label: "MessageAnswerActorKeyRequired",
+  definition: [
+    { name: "genesisSeed", type: DATA.TYPE_BINARY }
+  ]
+};
+
+WALLET_OP_MESSAGES[MSG_ANS_APPROVAL_DATA] = {
+  label: "MessageAnswerApprovalData",
+  definition: [
+    { name: "data", type: DATA.TYPE_BINARY }
+  ]
+};
+
+WALLET_OP_MESSAGES[MSG_ANS_APPROVAL_SIGNATURE] = {
+  label: "MessageAnswerApprovalSignature",
+  definition: [
+    { name: "vbHash", type: DATA.TYPE_BINARY },
+    { name: "mbHash", type: DATA.TYPE_BINARY },
+    { name: "height", type: DATA.TYPE_NUMBER }
+  ]
+};
 
 // ============================================================================================================================ //
 //  All schemas are summarized here for automated translation to interfaces                                                     //

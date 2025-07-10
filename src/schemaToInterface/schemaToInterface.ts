@@ -1,4 +1,4 @@
-import {DATA, SCHEMAS} from "../common/constants/constants";
+import {CHAIN, DATA, SCHEMAS, SECTIONS} from "../common/constants/constants";
 
 const schemaTypeToJsType = new Map([
   [ DATA.TYPE_STRING,   "string"     ],
@@ -22,20 +22,41 @@ generateInterfaces();
 function generateInterfaces() {
   let output = [];
 
+  output.push(`/**\n  GENERATED CODE - DO NOT EDIT\n*/`);
+
+  // single schemas
   for(const schema of SCHEMAS.ALL_SCHEMAS.singles) {
     output.push(translateSchema(schema));
   }
+
+  // schema collections
   for(const collection of SCHEMAS.ALL_SCHEMAS.collections) {
-    output.push(`/**\n  Schema collection: ${collection.label}\n*/`);
-
-    for(const schema of collection.list) {
-      output.push(translateSchema(schema));
-    }
-
-    output.push(`type ${collection.label} =`);
-    output.push(collection.list.map((o) => BLOCK_INDENT + o.label).join(" |\n") + ";\n");
+    output.push(generateCollection(collection.label, collection.list));
   }
+
+  // sections
+  output.push(generateCollection("AccountSection", SECTIONS.DEF[CHAIN.VB_ACCOUNT]));
+  output.push(generateCollection("ValidatorNodeSection", SECTIONS.DEF[CHAIN.VB_VALIDATOR_NODE]));
+  output.push(generateCollection("OrganizationSection", SECTIONS.DEF[CHAIN.VB_ORGANIZATION]));
+  output.push(generateCollection("ApplicationSection", SECTIONS.DEF[CHAIN.VB_APPLICATION]));
+  output.push(generateCollection("AppLedgerSection", SECTIONS.DEF[CHAIN.VB_APP_LEDGER]));
+
   console.log(output.join("\n"));
+}
+
+function generateCollection(label: string, list: SCHEMAS.Schema[]) {
+  let output = [];
+
+  output.push(`/**\n  Schema collection: ${label}\n*/`);
+
+  for(const schema of list) {
+    output.push(translateSchema(schema));
+  }
+
+  output.push(`type ${label} =`);
+  output.push(list.map((o) => BLOCK_INDENT + o.label).join(" |\n") + ";\n");
+
+  return output.join("\n");
 }
 
 function translateSchema(schema: SCHEMAS.Schema): string {

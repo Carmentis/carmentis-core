@@ -1,31 +1,52 @@
 import {DATA, SCHEMAS} from "../common/constants/constants";
 
-const schemaTypeToJsType = {
-  [ DATA.TYPE_STRING   ]: "string",
-  [ DATA.TYPE_NUMBER   ]: "number",
-  [ DATA.TYPE_BOOLEAN  ]: "boolean",
-  [ DATA.TYPE_NULL     ]: "null",
-  [ DATA.TYPE_UINT8    ]: "number",
-  [ DATA.TYPE_UINT16   ]: "number",
-  [ DATA.TYPE_UINT24   ]: "number",
-  [ DATA.TYPE_UINT32   ]: "number",
-  [ DATA.TYPE_UINT48   ]: "number",
-  [ DATA.TYPE_BINARY   ]: "Uint8Array",
-  [ DATA.TYPE_BIN256   ]: "Uint8Array",
-  [ DATA.TYPE_HASH_STR ]: "string"
-};
+const schemaTypeToJsType = new Map([
+  [ DATA.TYPE_STRING,   "string"     ],
+  [ DATA.TYPE_NUMBER,   "number"     ],
+  [ DATA.TYPE_BOOLEAN,  "boolean"    ],
+  [ DATA.TYPE_NULL,     "null"       ],
+  [ DATA.TYPE_UINT8,    "number"     ],
+  [ DATA.TYPE_UINT16,   "number"     ],
+  [ DATA.TYPE_UINT24,   "number"     ],
+  [ DATA.TYPE_UINT32,   "number"     ],
+  [ DATA.TYPE_UINT48,   "number"     ],
+  [ DATA.TYPE_BINARY,   "Uint8Array" ],
+  [ DATA.TYPE_BIN256,   "Uint8Array" ],
+  [ DATA.TYPE_HASH_STR, "string"     ]
+]);
 
 const BLOCK_INDENT = "  ";
 
-function translateSchema(schema: SCHEMAS.SchemaItem[], name: string) {
-  const code = walk(schema);
+generateInterfaces();
 
-  return `export interface ${name} {\n${code.join("\n")}\n}\n`;
+function generateInterfaces() {
+  let output = [];
 
-  function walk(list: SCHEMAS.SchemaItem[], indent = BLOCK_INDENT) {
+  for(const schema of SCHEMAS.ALL_SCHEMAS.singles) {
+    output.push(translateSchema(schema));
+  }
+  for(const collection of SCHEMAS.ALL_SCHEMAS.collections) {
+    output.push(`/**\n  Schema collection: ${collection.label}\n*/`);
+
+    for(const schema of collection.list) {
+      output.push(translateSchema(schema));
+    }
+
+    output.push(`type ${collection.label} =`);
+    output.push(collection.list.map((o) => BLOCK_INDENT + o.label).join(" |\n") + ";\n");
+  }
+  console.log(output.join("\n"));
+}
+
+function translateSchema(schema: SCHEMAS.Schema): string {
+  const code = traverse(schema.definition);
+
+  return `export interface ${schema.label} {\n${code.join("\n")}\n}\n`;
+
+  function traverse(list: SCHEMAS.SchemaItem[], indent = BLOCK_INDENT): string[] {
     const code = [];
 
-    for(const item: SCHEMAS.SchemaItem of list) {
+    for(const item of list) {
       const mainType = item.type & DATA.TYPE_MAIN;
       const arraySuffix = item.type & DATA.TYPE_ARRAY_OF ? "[]" : "";
       const name = item.optional ? item.name + "?" : item.name;
@@ -35,23 +56,23 @@ function translateSchema(schema: SCHEMAS.SchemaItem[], name: string) {
           code.push(indent + `${name}: object${arraySuffix};`);
         }
         else {
-          code.push(indent + `${name}: {`);
-          code.push(...walk(item.schema, indent + BLOCK_INDENT));
-          code.push(indent + `}${arraySuffix};`);
+          if(item.schema) {
+            code.push(indent + `${name}: ${item.schema.label}${arraySuffix};`);
+          }
+          else {
+            if(!item.definition) {
+              throw `missing definition in schema`;
+            }
+            code.push(indent + `${name}: {`);
+            code.push(...traverse(item.definition, indent + BLOCK_INDENT));
+            code.push(indent + `}${arraySuffix};`);
+          }
         }
       }
       else {
-        code.push(indent + `${name}: ${schemaTypeToJsType[mainType]}${arraySuffix};`);
+        code.push(indent + `${name}: ${schemaTypeToJsType.get(mainType)}${arraySuffix};`);
       }
     }
     return code;
   }
 }
-
-console.log(translateSchema(SCHEMAS.VB_STATES[0], "AccountVbState"));
-console.log(translateSchema(SCHEMAS.VB_STATES[1], "ValidatorNodeVbState"));
-console.log(translateSchema(SCHEMAS.VB_STATES[2], "OrganizationVbState"));
-console.log(translateSchema(SCHEMAS.VB_STATES[3], "ApplicationVbState"));
-console.log(translateSchema(SCHEMAS.VB_STATES[4], "AppLedgerVbState"));
-
-console.log(translateSchema(SCHEMAS.RECORD_DESCRIPTION, "RecordDescription"));

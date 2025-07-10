@@ -1,6 +1,6 @@
 import * as DATA from "./data";
 import * as CHAIN from "./chain";
-import {SchemaItem} from "./schemas";
+import {Schema} from "./schemas";
 
 // ============================================================================================================================ //
 //  Constraints                                                                                                                 //
@@ -32,32 +32,32 @@ export const ACCOUNT_SIGNATURE      = 5;
 const ACCOUNT = {
   [ ACCOUNT_SIG_ALGORITHM ]: {
     label: "ACCOUNT_SIG_ALGORITHM",
-    schema: [
+    definition: [
       { name: "algorithmId", type: DATA.TYPE_UINT8 }
     ]
   },
   [ ACCOUNT_PUBLIC_KEY ]: {
     label: "ACCOUNT_PUBLIC_KEY",
-    schema: [
+    definition: [
       { name: "publicKey", type: DATA.TYPE_BINARY }
     ]
   },
   [ ACCOUNT_TOKEN_ISSUANCE ]: {
     label: "ACCOUNT_TOKEN_ISSUANCE",
-    schema: [
+    definition: [
       { name: "amount", type: DATA.TYPE_UINT48 }
     ]
   },
   [ ACCOUNT_CREATION ]: {
     label: "ACCOUNT_CREATION",
-    schema: [
+    definition: [
       { name: "sellerAccount", type: DATA.TYPE_BIN256 },
       { name: "amount",        type: DATA.TYPE_UINT48 }
     ]
   },
   [ ACCOUNT_TRANSFER ]: {
     label: "ACCOUNT_TRANSFER",
-    schema: [
+    definition: [
       { name: "account",          type: DATA.TYPE_BIN256 },
       { name: "amount",           type: DATA.TYPE_UINT48 },
       { name: "publicReference",  type: DATA.TYPE_STRING },
@@ -66,7 +66,7 @@ const ACCOUNT = {
   },
   [ ACCOUNT_SIGNATURE ]: {
     label: "ACCOUNT_SIGNATURE",
-    schema: [
+    definition: [
       { name: "signature", type: DATA.TYPE_BINARY }
     ]
   }
@@ -90,19 +90,19 @@ export const ORG_SIGNATURE     = 4;
 const ORGANIZATION = {
   [ ORG_SIG_ALGORITHM ]: {
     label: "ORG_SIG_ALGORITHM",
-    schema: [
+    definition: [
       { name: "algorithmId", type: DATA.TYPE_UINT8 }
     ]
   },
   [ ORG_PUBLIC_KEY ]: {
     label: "ORG_PUBLIC_KEY",
-    schema: [
+    definition: [
       { name: "publicKey", type: DATA.TYPE_BINARY }
     ]
   },
   [ ORG_DESCRIPTION ]: {
     label: "ORG_DESCRIPTION",
-    schema: [
+    definition: [
       { name: "name",        type: DATA.TYPE_STRING },
       { name: "city",        type: DATA.TYPE_STRING },
       { name: "countryCode", type: DATA.TYPE_STRING, size: 2 },
@@ -111,13 +111,13 @@ const ORGANIZATION = {
   },
   [ ORG_SERVER ] : {
     label: "ORG_SERVER",
-    schema: [
+    definition: [
       { name: "endpoint", type: DATA.TYPE_STRING }
     ]
   },
   [ ORG_SIGNATURE ]: {
     label: "ORG_SIGNATURE",
-    schema: [
+    definition: [
       { name: "signature", type: DATA.TYPE_BINARY }
     ]
   }
@@ -134,19 +134,19 @@ export const APP_SIGNATURE     = 3;
 const APPLICATION = {
   [ APP_SIG_ALGORITHM ]: {
     label: "APP_SIG_ALGORITHM",
-    schema: [
+    definition: [
       { name: "algorithmId", type: DATA.TYPE_UINT8 }
     ]
   },
   [ APP_DECLARATION ]: {
     label: "APP_DECLARATION",
-    schema: [
+    definition: [
       { name: "organizationId", type: DATA.TYPE_BIN256 }
     ]
   },
   [ APP_DESCRIPTION ]: {
     label: "APP_DESCRIPTION",
-    schema: [
+    definition: [
       { name: "name",        type: DATA.TYPE_STRING },
       { name: "logoUrl",     type: DATA.TYPE_STRING },
       { name: "homepageUrl", type: DATA.TYPE_STRING },
@@ -155,7 +155,7 @@ const APPLICATION = {
   },
   [ APP_SIGNATURE ]: {
     label: "APP_SIGNATURE",
-    schema: [
+    definition: [
       { name: "signature", type: DATA.TYPE_BINARY }
     ]
   }
@@ -181,19 +181,19 @@ export const APP_LEDGER_AUTHOR_SIGNATURE     = 12;
 const APP_LEDGER = {
   [ APP_LEDGER_SIG_ALGORITHM ]: {
     label: "APP_LEDGER_SIG_ALGORITHM",
-    schema: [
+    definition: [
       { name: "algorithmId", type: DATA.TYPE_UINT8 }
     ]
   },
   [ APP_LEDGER_DECLARATION ]: {
     label: "APP_LEDGER_DECLARATION",
-    schema: [
+    definition: [
       { name: "applicationId", type: DATA.TYPE_BIN256 }
     ]
   },
   [ APP_LEDGER_ACTOR_CREATION ]: {
     label: "APP_LEDGER_ACTOR_CREATION",
-    schema: [
+    definition: [
       { name: "id",   type: DATA.TYPE_UINT8 },
       { name: "type", type: DATA.TYPE_UINT8 },
       { name: "name", type: DATA.TYPE_STRING }
@@ -201,7 +201,7 @@ const APP_LEDGER = {
   },
   [ APP_LEDGER_CHANNEL_CREATION ]: {
     label: "APP_LEDGER_CHANNEL_CREATION",
-    schema: [
+    definition: [
       { name: "id",        type: DATA.TYPE_UINT8 },
       { name: "isPrivate", type: DATA.TYPE_BOOLEAN },
       { name: "creatorId", type: DATA.TYPE_UINT8 },
@@ -210,7 +210,7 @@ const APP_LEDGER = {
   },
   [ APP_LEDGER_SHARED_SECRET ]: {
     label: "APP_LEDGER_SHARED_SECRET",
-    schema: [
+    definition: [
       { name: "hostId",        type: DATA.TYPE_UINT8 },
       { name: "guestId",       type: DATA.TYPE_UINT8 },
       { name: "encapsulation", type: DATA.TYPE_BINARY }
@@ -218,7 +218,7 @@ const APP_LEDGER = {
   },
   [ APP_LEDGER_CHANNEL_INVITATION ]: {
     label: "APP_LEDGER_CHANNEL_INVITATION",
-    schema: [
+    definition: [
       { name: "channelId",  type: DATA.TYPE_UINT8 },
       { name: "hostId",     type: DATA.TYPE_UINT8 },
       { name: "guestId",    type: DATA.TYPE_UINT8 },
@@ -227,7 +227,7 @@ const APP_LEDGER = {
   },
   [ APP_LEDGER_ACTOR_SUBSCRIPTION ]: {
     label: "APP_LEDGER_ACTOR_SUBSCRIPTION",
-    schema: [
+    definition: [
       { name: "actorId",            type: DATA.TYPE_UINT8 },
       { name: "actorType",          type: DATA.TYPE_UINT8 },
       { name: "organizationId",     type: DATA.TYPE_BIN256 },
@@ -237,14 +237,14 @@ const APP_LEDGER = {
   },
   [ APP_LEDGER_PUBLIC_CHANNEL_DATA ]: {
     label: "APP_LEDGER_PUBLIC_CHANNEL_DATA",
-    schema: [
+    definition: [
       { name: "channelId", type: DATA.TYPE_UINT8 },
       { name: "data",      type: DATA.TYPE_BINARY }
     ]
   },
   [ APP_LEDGER_PRIVATE_CHANNEL_DATA ]: {
     label: "APP_LEDGER_PRIVATE_CHANNEL_DATA",
-    schema: [
+    definition: [
       { name: "channelId",      type: DATA.TYPE_UINT8 },
       { name: "merkleRootHash", type: DATA.TYPE_BIN256 },
       { name: "encryptedData",  type: DATA.TYPE_BINARY }
@@ -252,26 +252,26 @@ const APP_LEDGER = {
   },
   [ APP_LEDGER_AUTHOR ]: {
     label: "APP_LEDGER_AUTHOR",
-    schema: [
+    definition: [
       { name: "authorId", type: DATA.TYPE_UINT8 }
     ]
   },
   [ APP_LEDGER_ENDORSER ]: {
     label: "APP_LEDGER_ENDORSER",
-    schema: [
+    definition: [
       { name: "endorserId", type: DATA.TYPE_UINT8 },
       { name: "messageId",  type: DATA.TYPE_UINT16 }
     ]
   },
   [ APP_LEDGER_ENDORSER_SIGNATURE ]: {
     label: "APP_LEDGER_ENDORSER_SIGNATURE",
-    schema: [
+    definition: [
       { name: "signature", type: DATA.TYPE_BINARY }
     ]
   },
   [ APP_LEDGER_AUTHOR_SIGNATURE ]: {
     label: "APP_LEDGER_AUTHOR_SIGNATURE",
-    schema: [
+    definition: [
       { name: "signature", type: DATA.TYPE_BINARY }
     ]
   }
@@ -280,12 +280,7 @@ const APP_LEDGER = {
 // ============================================================================================================================ //
 //  All sections                                                                                                                //
 // ============================================================================================================================ //
-interface SectionDefinition {
-  label: string;
-  schema: SchemaItem[];
-}
-
-export const DEF: { [key: number]: { [key: number]: SectionDefinition } } = {
+export const DEF: { [key: number]: { [key: number]: Schema } } = {
   [ CHAIN.VB_ACCOUNT        ]: ACCOUNT,
   [ CHAIN.VB_VALIDATOR_NODE ]: VALIDATOR_NODE,
   [ CHAIN.VB_ORGANIZATION   ]: ORGANIZATION,

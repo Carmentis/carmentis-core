@@ -55,22 +55,22 @@ function previousHashFromHeader(header: any) {
 
 
 function decodeMicroblockHeader(data: Uint8Array) {
-  const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER),
-        object = unserializer.unserialize(data);
+  const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER);
+  const object = unserializer.unserialize(data);
 
   return object;
 }
 
 function encodeMicroblockInformation(virtualBlockchainType: any, virtualBlockchainId: any, header: any) {
-  const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_INFORMATION),
-        data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId, header });
+  const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_INFORMATION);
+  const data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId, header });
 
   return data;
 }
 
 function decodeMicroblockInformation(data: Uint8Array) {
-  const unserializer = new SchemaUnserializer<MicroblockInformation>(SCHEMAS.MICROBLOCK_INFORMATION),
-        object = unserializer.unserialize(data);
+  const unserializer = new SchemaUnserializer<MicroblockInformation>(SCHEMAS.MICROBLOCK_INFORMATION);
+  const object = unserializer.unserialize(data);
 
   return object;
 }
@@ -83,8 +83,8 @@ function decodeMicroblockInformation(data: Uint8Array) {
  * @param customStateObject
  */
 function encodeVirtualBlockchainState(type: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: object) {
-  const customStateSerializer = new SchemaSerializer(SCHEMAS.VB_STATES[type]),
-        customState = customStateSerializer.serialize(customStateObject);
+  const customStateSerializer = new SchemaSerializer(SCHEMAS.VB_STATES[type]);
+  const customState = customStateSerializer.serialize(customStateObject);
 
   const stateObject = {
     type,
@@ -93,8 +93,8 @@ function encodeVirtualBlockchainState(type: number, height: number, lastMicroblo
     customState
   };
 
-  const stateSerializer = new SchemaSerializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
-        data = stateSerializer.serialize(stateObject);
+  const stateSerializer = new SchemaSerializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE);
+  const data = stateSerializer.serialize(stateObject);
 
   return data;
 }
@@ -106,11 +106,11 @@ function encodeVirtualBlockchainState(type: number, height: number, lastMicroblo
  * @return {VirtualBlockchainState} The decoded virtual blockchain state object.
  */
 function decodeVirtualBlockchainState(data: Uint8Array) : VirtualBlockchainState {
-  const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
-        stateObject = stateUnserializer.unserialize(data) as VirtualBlockchainState;
+  const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE);
+  const stateObject = stateUnserializer.unserialize(data) as VirtualBlockchainState;
 
-  const customStateUnserializer = new SchemaUnserializer<VirtualBlockchainState>(SCHEMAS.VB_STATES[stateObject.type]),
-        customStateObject = customStateUnserializer.unserialize(stateObject.customState);
+  const customStateUnserializer = new SchemaUnserializer<VirtualBlockchainState>(SCHEMAS.VB_STATES[stateObject.type]);
+  const customStateObject = customStateUnserializer.unserialize(stateObject.customState);
 
   stateObject.customState = customStateObject;
 

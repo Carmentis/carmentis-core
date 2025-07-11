@@ -146,6 +146,8 @@ export class NetworkProvider {
   async broadcastTx(data: any) {
     const urlObject = new URL(this.nodeUrl);
 
+    console.log(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
+
     urlObject.pathname = "broadcast_tx_sync";
     urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));
 
@@ -163,7 +165,7 @@ export class NetworkProvider {
     urlObject.searchParams.append("data", "0x" + Utils.binaryToHexa(data));
 
     const responseData = await this.query(urlObject);
-     const binary = Base64.decodeBinary(responseData.data);
+    const binary = Base64.decodeBinary(responseData.data);
     const { type, object } = unserializer.unserialize(binary);
 
     if(type == SCHEMAS.MSG_ERROR) {

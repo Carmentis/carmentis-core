@@ -1,4 +1,5 @@
 import {CHAIN, DATA, SCHEMAS, SECTIONS} from "../common/constants/constants";
+import {Utils} from "../common/utils/utils";
 
 const schemaTypeToJsType = new Map([
   [ DATA.TYPE_STRING,   "string"     ],
@@ -35,13 +36,30 @@ function generateInterfaces() {
   }
 
   // sections
-  output.push(generateCollection("AccountSection", SECTIONS.DEF[CHAIN.VB_ACCOUNT]));
-  output.push(generateCollection("ValidatorNodeSection", SECTIONS.DEF[CHAIN.VB_VALIDATOR_NODE]));
-  output.push(generateCollection("OrganizationSection", SECTIONS.DEF[CHAIN.VB_ORGANIZATION]));
-  output.push(generateCollection("ApplicationSection", SECTIONS.DEF[CHAIN.VB_APPLICATION]));
-  output.push(generateCollection("AppLedgerSection", SECTIONS.DEF[CHAIN.VB_APP_LEDGER]));
+  output.push(...generateSections());
 
   console.log(output.join("\n"));
+}
+
+function generateSections() {
+  let output = [];
+
+  output.push(`export enum SectionType {`);
+
+  [ CHAIN.VB_ACCOUNT, CHAIN.VB_VALIDATOR_NODE, CHAIN.VB_ORGANIZATION, CHAIN.VB_APPLICATION, CHAIN.VB_APP_LEDGER ]
+  .forEach((vbId) => {
+    if(vbId) {
+      output.push("");
+    }
+    output.push(BLOCK_INDENT + "// " + CHAIN.VB_NAME[vbId]);
+
+    SECTIONS.DEF[vbId].forEach((section, sectionId) => {
+      output.push(BLOCK_INDENT + section.label + " = 0x" + Utils.numberToHexa(vbId << 8 | sectionId, 3) + ";");
+    });
+  });
+  output.push(`}`);
+
+  return output;
 }
 
 function generateCollection(label: string, list: SCHEMAS.Schema[]) {

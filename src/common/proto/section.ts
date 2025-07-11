@@ -5,7 +5,8 @@
 // source: section.proto
 
 /* eslint-disable */
-import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
+import {BinaryReader, BinaryWriter} from "@bufbuild/protobuf/wire";
+import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 
 export const protobufPackage = "carmentis";
 
@@ -253,15 +254,6 @@ export function microBlockTypeToJSON(object: MicroBlockType): string {
   }
 }
 
-export enum VirtualBlockchainType {
-  ACCOUNT_VIRTUAL_BLOCKCHAIN = 0,
-  NODE_VIRTUAL_BLOCKCHAIN = 1,
-  APPLICATION_VIRTUAL_BLOCKCHAIN = 2,
-  ORGANISATION_VIRTUAL_BLOCKCHAIN = 3,
-  APP_LEDGER_VIRTUAL_BLOCKCHAIN = 4,
-  UNRECOGNIZED = -1,
-}
-
 export function virtualBlockchainTypeFromJSON(object: any): VirtualBlockchainType {
   switch (object) {
     case 0:
@@ -416,19 +408,20 @@ export interface OrgSignatureSectionSchema {
   signature: Uint8Array;
 }
 
-export interface AppSigAlgorithmSectionSchema {
-  algorithmId: number;
-}
-
-export interface AppDeclarationSectionSchema {
-  organizationId: Uint8Array;
-}
 
 export interface AppDescriptionSectionSchema {
   name: string;
   logoUrl: string;
   homepageUrl: string;
   description: string;
+}
+
+export interface AppSigAlgorithmSectionSchema {
+  algorithmId: number;
+}
+
+export interface AppDeclarationSectionSchema {
+  organizationId: Uint8Array;
 }
 
 export interface AppSignatureSectionSchema {

@@ -1,5 +1,5 @@
 import {Utils} from "../utils/utils";
-import {MicroblockInformation} from "../blockchain/types";
+import {MicroblockInformationSchema} from "../blockchain/types";
 import {BlockchainReader} from "./provider";
 
 export class MemoryProvider  {

@@ -3,20 +3,20 @@ import {Microblock, Section} from "./microblock";
 import { Utils } from "../utils/utils";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
-import {Hash, VirtualBlockchainState} from "./types";
-import {Provider} from "../providers/provider";
+import {Hash, VirtualBlockchainStateInterface} from "./types";
+import {BlockchainReader, Provider} from "../providers/provider";
 
 export abstract class VirtualBlockchain<CustomState> {
     currentMicroblock: Microblock | null;
     height: number;
     identifier: any;
     microblockHashes: any;
-    provider: any;
+    provider: BlockchainReader;
     sectionCallbacks: any;
     state?: CustomState;
     type: number;
 
-    constructor({provider, type}: { provider: Provider, type: number }) {
+    constructor({provider, type}: { provider: BlockchainReader, type: number }) {
         if(!CHAIN.VB_NAME[type]) {
             throw `Invalid virtual blockchain type '${type}'`;
         }
@@ -133,7 +133,7 @@ export abstract class VirtualBlockchain<CustomState> {
         }
 
         const info = await this.provider.getMicroblockInformation(hash);
-        const bodyList = await this.provider.getMicroblockBodys([ hash ]);
+        const bodyList = await this.provider.getManyMicroBlockBody([ hash ]);
 
         const microblock = new Microblock(this.type);
         microblock.load(info.header, bodyList[0].body);
@@ -221,8 +221,9 @@ export abstract class VirtualBlockchain<CustomState> {
             this.identifier = microblockHash;
         }
 
-        await this.provider.sendMicroblock(headerData, bodyData);
-        await this.provider.awaitMicroblockAnchoring(microblockHash);
+        // TODO use the writer provider
+        //await this.provider.sendMicroblock(headerData, bodyData);
+        //await this.provider.awaitMicroblockAnchoring(microblockHash);
 
         return Hash.from(microblockHash);
     }

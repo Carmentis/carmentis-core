@@ -77,4 +77,6 @@ export * from "./trees/radixUtils";
 export * from "./utils/encoder";
 export * from "./utils/utils";
 export * from "./wallet/wallet";
-export {SectionType} from "./entities/Schema";
+export {SectionType} from "./entities/SectionType";
+export {BlockchainFacade} from "./providers/BlockchainFacade";
+export {BlockchainFacadeInterface} from "./providers/BlockchainFacadeInterface";

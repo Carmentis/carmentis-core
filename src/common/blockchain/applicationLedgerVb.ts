@@ -5,11 +5,12 @@ import {StructureChecker} from "./structureChecker";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {ApplicationLedgerVBState} from "./types";
 import {IntermediateRepresentation} from "../records/intermediateRepresentation";
+import {BlockchainReader} from "../providers/provider";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
   constructor({
     provider
-  }: any) {
+  }: { provider: BlockchainReader }) {
     super({ provider, type: CHAIN.VB_APP_LEDGER });
     this.state = {
       signatureAlgorithmId: -1,

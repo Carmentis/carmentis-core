@@ -3,7 +3,9 @@ import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
 import { Crypto } from "../crypto/crypto";
 import { Utils } from "../utils/utils";
 
-import {MicroblockInformation, VirtualBlockchainState} from "./types";
+import {MicroblockInformationSchema, VirtualBlockchainStateInterface} from "./types";
+import {MicroBlockHeaderSchema} from "../proto/section";
+import {MicroBlockHeaderInterface} from "../entities/MicroBlockHeaderInterface";
 
 export const BlockchainUtils = {
   checkHeaderList,
@@ -55,7 +57,7 @@ function previousHashFromHeader(header: any) {
 
 
 function decodeMicroblockHeader(data: Uint8Array) {
-  const unserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_HEADER),
+  const unserializer = new SchemaUnserializer<MicroBlockHeaderInterface>(SCHEMAS.MICROBLOCK_HEADER),
         object = unserializer.unserialize(data);
 
   return object;
@@ -69,7 +71,7 @@ function encodeMicroblockInformation(virtualBlockchainType: any, virtualBlockcha
 }
 
 function decodeMicroblockInformation(data: Uint8Array) {
-  const unserializer = new SchemaUnserializer<MicroblockInformation>(SCHEMAS.MICROBLOCK_INFORMATION),
+  const unserializer = new SchemaUnserializer<MicroblockInformationSchema>(SCHEMAS.MICROBLOCK_INFORMATION),
         object = unserializer.unserialize(data);
 
   return object;
@@ -103,15 +105,15 @@ function encodeVirtualBlockchainState(type: number, height: number, lastMicroblo
  * Decodes a virtual blockchain state object from the given binary data.
  *
  * @param {Uint8Array} data The binary encoded virtual blockchain state data.
- * @return {VirtualBlockchainState} The decoded virtual blockchain state object.
+ * @return {VirtualBlockchainStateInterface} The decoded virtual blockchain state object.
  */
-function decodeVirtualBlockchainState(data: Uint8Array) : VirtualBlockchainState {
+function decodeVirtualBlockchainState(data: Uint8Array) : VirtualBlockchainStateInterface {
   const stateUnserializer = new SchemaUnserializer(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE),
-        stateObject = stateUnserializer.unserialize(data) as VirtualBlockchainState;
+        stateObject = stateUnserializer.unserialize(data) as VirtualBlockchainStateInterface;
 
 
   // @ts-ignore
-  const customStateUnserializer = new SchemaUnserializer<VirtualBlockchainState>(SCHEMAS.VB_STATES[stateObject.type]),
+  const customStateUnserializer = new SchemaUnserializer<VirtualBlockchainStateInterface>(SCHEMAS.VB_STATES[stateObject.type]),
         // @ts-ignore
         customStateObject = customStateUnserializer.unserialize(stateObject.customState);
 

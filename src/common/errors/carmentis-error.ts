@@ -1,6 +1,7 @@
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Hash} from "../blockchain/types";
+import {SectionType} from "../proto/section";
 
 export enum CarmentisErrorCode {
     // unspecified error
@@ -25,6 +26,10 @@ export enum CarmentisErrorCode {
 
 
 
+export class IllegalUsageError extends Error {}
+export class IllegalParameterError extends IllegalUsageError {}
+
+
 export class CarmentisError extends Error {
     constructor(message: string, private code: CarmentisErrorCode = CarmentisErrorCode.CARMENTIS_ERROR) {
         super(`${message} (code ${code})`);
@@ -37,6 +42,10 @@ export class CarmentisError extends Error {
     static isCarmentisError(error: any): error is CarmentisError {
         return error instanceof CarmentisError;
     }
+}
+
+export class NodeError extends CarmentisError {
+
 }
 
 export class EconomicsError extends CarmentisError {
@@ -54,6 +63,27 @@ export class InvalidTokenUnitError extends EconomicsError {
 export class BlockchainError extends CarmentisError {
     constructor(message: string, code: CarmentisErrorCode = CarmentisErrorCode.BLOCKCHAIN_ERROR) {
         super(message, code);
+    }
+}
+
+
+export class NotImplementedError extends Error {
+    constructor() {
+        super("No implemented");
+
+    }
+
+}
+
+export class MicroBlockNotFoundInVirtualBlockchainAtHeightError extends BlockchainError {
+    constructor(vbId: Hash, height: number) {
+        super(`MicroBlock in virtual blockchain ${vbId.encode()} not found at height ${height}`);
+    }
+}
+export class SectionError extends BlockchainError {}
+export class SectionNotFoundError extends SectionError {
+    constructor(sectionType: SectionType) {
+        super(`Section type ${sectionType} not found`);
     }
 }
 

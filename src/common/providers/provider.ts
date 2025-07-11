@@ -1,50 +1,49 @@
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
 import {Utils} from "../utils/utils";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
+import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {
-    AccountHash,
-    AccountHistory,
-    AccountStateDTO, Hash,
-    MicroblockInformation,
-    VirtualBlockchainState,
-    ObjectList, AccountState
+    AccountHistoryInterface,
+    AccountState,
+    AccountStateDTO,
+    Hash,
+    MicroblockInformationSchema,
+    ObjectList
 } from "../blockchain/types";
 import {MemoryProvider} from "./memoryProvider";
 import {NetworkProvider} from "./networkProvider";
-import {EncoderFactory} from "../utils/encoder";
-import {Microblock} from "../blockchain/microblock";
-import {
-    AccountNotFoundForAccountHashError,
-    AccountNotFoundForPublicKeyError, AccountNotFoundForPublicKeyHashError,
-    BlockchainError,
-    CarmentisError
-} from "../errors/carmentis-error";
 import {CMTSToken} from "../economics/currencies/token";
-import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer";
-import {Base64} from "../data/base64";
-import {MSG_ERROR, MSG_GET_ACCOUNT_HISTORY, NODE_MESSAGES} from "../constants/schemas";
-import axios from "axios";
+import {AbstractVirtualBlockchainView} from "../entities/VirtualBlockchainView";
+import {AbstractMicroBlock} from "../entities/MicroBlock";
+import {MicroBlockHeader} from "../entities/MicroBlockHeader";
+import {AccountHistoryView} from "../entities/AccountHistoryView";
+import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
+import {MicroBlockInformation} from "../entities/MicroBlockInformation";
 
 export interface BlockchainReader {
+    getFullVirtualBlockchainView<VB extends AbstractVirtualBlockchainView<MB>, MB extends AbstractMicroBlock = AbstractMicroBlock>(vbId: Hash): Promise<VB>;
+    getVirtualBlockchainView<VB extends AbstractVirtualBlockchainView<MB>, MB extends AbstractMicroBlock = AbstractMicroBlock>(vbId: Hash, heights: number[]): Promise<VB>;
+    getFirstMicroBlockInVirtualBlockchain<VB extends AbstractVirtualBlockchainView<MB>, MB extends AbstractMicroBlock = AbstractMicroBlock>(vbId: Hash): Promise<VB>;
+    getMicroBlockHeader(vbId: Hash, height: number): Promise<MicroBlockHeader>;
+    getMicroBlock(microblockHash: Hash): Promise<AbstractMicroBlock>;
+    getVirtualBlockchainState(vbId: Hash): Promise<VirtualBlockchainState>;
+    getBalanceOfAccount(accountHash: Hash): Promise<CMTSToken>;
     getAccountState(accountHash: Hash): Promise<AccountState>;
-    getAccountByPublicKeyHash(publicKeyHash: Hash): Promise<AccountHash>;
-    getAccountByPublicKey(
-        publicKey: PublicSignatureKey,
-        hashScheme: CryptographicHash
-    ): Promise<AccountHash>;
-    getAccountHistory(accountHash: Hash): Promise<AccountHistory>;
-    getMicroBlock(microBlockHash: Hash): Promise<Microblock>;
-    getManyMicroblocks(microBlockHashes: Hash[]): Promise<Microblock>;
-    getMicroblockInformation(): Promise<MicroblockInformation>;
-    getBalance(accountHash: Hash): Promise<CMTSToken>;
+    getAccountHistory(accountHash: Hash,  lastHistoryHash?: Hash, maxRecords?: number): Promise<AccountHistoryView>;
+    getAccountByPublicKey(publicKey: PublicSignatureKey, hashScheme?: CryptographicHash): Promise<Hash>;
+    lockUntilMicroBlockPublished(microblockHash: Hash): Promise<Hash>;
+    getMicroBlockBody(microblockHash: Hash): Promise<void>;
+    getVirtualBlockchainContent(vbId: Hash): Promise<void>; // TODO
+    getMicroblockInformation(hash: Hash): Promise<MicroBlockInformation>;
+    getManyMicroBlockBody(param: Hash[]): Promise<void>; // TODO
 }
 
 export interface BlockchainWriter {
+    publishMicroBlock(microBlock: AbstractMicroBlock): Promise<void>;
+
     /*
     sendMicroblock(...args: any[]): Promise<any>;
-    awaitMicroblockAnchoring(...args: any[]): Promise<any>;
     setMicroblockInformation(...args: any[]): Promise<any>;
     setMicroblockBody(...args: any[]): Promise<any>;
     setVirtualBlockchainState(...args: any[]): Promise<any>;
@@ -52,95 +51,6 @@ export interface BlockchainWriter {
      */
 }
 
-export class ABCINodeBlockchainReader {
-    protected constructor(private nodeUrl: string) {}
-
-    async getBalance(accountHash: Hash): Promise<CMTSToken> {
-        const accountState = await this.getAccountState(accountHash);
-        return accountState.getBalance();
-    }
-
-    getAccountState(accountHash: Hash): Promise<AccountState> {
-        throw new AccountNotFoundForAccountHashError(accountHash);
-    }
-    getAccountByPublicKeyHash(publicKeyHash: Hash): Promise<AccountHash> {
-        throw new AccountNotFoundForPublicKeyHashError(publicKeyHash)
-    }
-    async getAccountByPublicKey(publicKey: PublicSignatureKey, hashScheme: CryptographicHash): Promise<AccountHash> {
-        const rawPublicKey = publicKey.getPublicKeyAsBytes();
-        const publicKeyHash = hashScheme.hash(rawPublicKey);
-        return  await this.getAccountByPublicKeyHash(Hash.from(publicKeyHash));
-    }
-
-    async getAccountHistory(accountHash: Hash, lastHistoryHash: Hash, maxRecords: number): Promise<AccountHistory> {
-        const history  = await this.abciQuery<AccountHistory>(
-            MSG_GET_ACCOUNT_HISTORY,
-            {
-                accountHash,
-                lastHistoryHash,
-                maxRecords
-            }
-        );
-        return history;
-    }
-
-    getMicroBlock(microBlockHash: Hash): Promise<Microblock> {
-        throw new CarmentisError("Method not implemented.");
-    }
-    getManyMicroblocks(microBlockHashes: Hash[]): Promise<Microblock> {
-        throw new CarmentisError("Method not implemented.");
-    }
-    getMicroblockInformation(): Promise<MicroblockInformation> {
-        throw new CarmentisError("Method not implemented.");
-    }
-
-    private async query(urlObject: any): Promise<{data: string}> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const response = await axios.post(urlObject, {}, {
-                    headers: {
-                        'Content-Type': 'application/json; charset=UTF-8',
-                        'Accept': 'application/json',
-                    }
-                });
-                const data = response.data
-                //console.log("Received data", data)
-                return resolve(data);
-            } catch (e) {
-                reject(e);
-            }
-        })
-    }
-
-    private async abciQuery<T = object>(msgId: any, msgData: any): Promise<T> {
-        const serializer = new MessageSerializer(NODE_MESSAGES);
-        const unserializer = new MessageUnserializer(NODE_MESSAGES);
-        const data = serializer.serialize(msgId, msgData);
-        const urlObject = new URL(this.nodeUrl);
-
-        urlObject.pathname = "abci_query";
-        urlObject.searchParams.append("path", '"/carmentis"');
-        urlObject.searchParams.append("data", "0x" + Utils.binaryToHexa(data));
-
-        const responseData = await this.query(urlObject);
-        const binary = Base64.decodeBinary(responseData.data);
-        const { type, object } = unserializer.unserialize(binary);
-
-        if(type == MSG_ERROR) {
-            // @ts-expect-error TS(2339): Property 'error' does not exist on type '{}'.... Remove this comment to see the full error message
-            throw new BlockchainError(`Remote error: ${object.error}`);
-        }
-
-        return object as T;
-    }
-}
-
-
-export class ABCINodeBlockchainWriter extends ABCINodeBlockchainReader implements BlockchainWriter {
-    constructor(nodeUrl: string, private privateKey: PrivateSignatureKey) {
-        super(nodeUrl);
-    }
-}
 
 
 
@@ -171,7 +81,7 @@ export class Provider {
         return await this.externalProvider.getAccountState(accountHash);
     }
 
-    async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number): Promise<AccountHistory> {
+    async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number): Promise<AccountHistoryInterface> {
         return await this.externalProvider.getAccountHistory(accountHash, lastHistoryHash, maxRecords);
     }
 
@@ -214,7 +124,7 @@ export class Provider {
         await this.internalProvider.setVirtualBlockchainState(virtualBlockchainId, stateData);
     }
 
-    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation> {
+    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema> {
         // FIXME: we should avoid the encoding/decoding passes when getting data from the external provider
         let data = await this.internalProvider.getMicroblockInformation(hash);
 

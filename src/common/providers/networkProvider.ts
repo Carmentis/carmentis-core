@@ -4,11 +4,11 @@ import { Utils } from "../utils/utils";
 import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer";
 import {
   AccountHash,
-  AccountHistory,
+  AccountHistoryInterface,
   AccountStateDTO,
   MicroBlockBodys,
-  MicroblockInformation, MsgVirtualBlockchainState, VirtualBlockchainState,
-  VirtualBlockchainUpdate,
+  MicroblockInformationSchema, MsgVirtualBlockchainState, VirtualBlockchainStateInterface,
+  VirtualBlockchainUpdateInterface,
   ObjectList
 } from "../blockchain/types";
 import {BlockchainReader} from "./provider";
@@ -52,7 +52,7 @@ export class NetworkProvider {
   }
 
   async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number) {
-    const answer = await this.abciQuery<AccountHistory>(
+    const answer = await this.abciQuery<AccountHistoryInterface>(
       SCHEMAS.MSG_GET_ACCOUNT_HISTORY,
       {
         accountHash,
@@ -84,7 +84,7 @@ export class NetworkProvider {
   }
 
   async getMicroblockInformation(hash: Uint8Array) {
-    const answer = await this.abciQuery<MicroblockInformation>(
+    const answer = await this.abciQuery<MicroblockInformationSchema>(
       SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
       {
         hash
@@ -104,7 +104,7 @@ export class NetworkProvider {
   }
 
   async getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number) {
-    const answer = await this.abciQuery<VirtualBlockchainUpdate>(
+    const answer = await this.abciQuery<VirtualBlockchainUpdateInterface>(
       SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE,
       {
         virtualBlockchainId,

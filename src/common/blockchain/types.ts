@@ -143,7 +143,7 @@ export interface MicroblockBody {
     body: MicroblockSection[];
 }
 
-export interface MicroblockInformation {
+export interface MicroblockInformationSchema {
     virtualBlockchainId: Uint8Array;
     virtualBlockchainType: number;
     header: Uint8Array;
@@ -158,7 +158,7 @@ export interface MicroBlockBodys {
     list: MicroBlockBody[];
 }
 
-export interface VirtualBlockchainUpdate {
+export interface VirtualBlockchainUpdateInterface {
     exists: boolean,
     changed: boolean,
     stateData: Uint8Array,
@@ -172,7 +172,7 @@ export interface VirtualBlockchainStateDTO<CustomState = object> {
     customState: CustomState
 }
 
-export interface VirtualBlockchainState<CustomState = object> {
+export interface VirtualBlockchainStateInterface<CustomState = object> {
     type: number,
     height: number,
     lastMicroblockHash: Uint8Array,
@@ -209,13 +209,14 @@ export interface AccountStateDTO {
 }
 
 export class AccountState {
-    private constructor(private height: number, private balance: CMTSToken, private lastHistoryHash: Hash) {}
+    private constructor(private height: number, private balance: CMTSToken, private lastHistoryHash: Hash, private lastPublicKeyDeclarationHeight: number ) {}
 
     static createFromDTO(dto: AccountStateDTO) {
         return new AccountState(
             dto.height,
             CMTSToken.createCMTS(dto.balance),
-            Hash.from( dto.lastHistoryHash)
+            Hash.from( dto.lastHistoryHash),
+            0
         )
     }
 
@@ -230,13 +231,17 @@ export class AccountState {
     getLastHistoryHash(): Hash {
         return this.lastHistoryHash;
     }
+
+    getLastPublicKeyDeclarationHeight(): number {
+        return this.lastPublicKeyDeclarationHeight;
+    }
 }
 
 export interface AccountHash {
     accountHash: Uint8Array
 }
 
-export interface AccountHistoryEntryDTO {
+export interface AccountTransactionInterface {
     height: number,
     previousHistoryHash: Uint8Array,
     type: number,
@@ -262,8 +267,8 @@ export class AccountHistoryEntry {
 
 }
 
-export interface AccountHistory {
-    list: AccountHistoryEntryDTO[]
+export interface AccountHistoryInterface {
+    list: AccountTransactionInterface[]
 }
 
 export interface AccountTokenIssuance {

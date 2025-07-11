@@ -2,7 +2,7 @@ import * as DATA from "./data";
 import * as CHAIN from "./chain";
 import {SchemaItem} from "./schemas";
 import {z} from 'zod';
-import {SectionType} from "../entities/Schema";
+import {SectionType} from "../entities/SectionType";
 
 
 // ============================================================================================================================ //

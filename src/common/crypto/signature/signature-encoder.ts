@@ -161,6 +161,10 @@ export class StringSignatureEncoder implements SignatureEncoderInterface<string>
         return new StringSignatureEncoder(EncoderFactory.defaultBytesToStringEncoder());
     }
 
+    static defaultBytesSignatureEncoder(): BytesSignatureEncoder {
+        return new BytesSignatureEncoder();
+    }
+
     /**
      * Encodes a given public signature key into its string representation.
      *

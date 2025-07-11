@@ -165,7 +165,7 @@ export interface VirtualBlockchainUpdateInterface {
     headers: Uint8Array[]
 }
 
-export interface VirtualBlockchainStateDTO<CustomState = object> {
+export interface VirtualBlockchainStateDTO<CustomState = any> {
     type: number,
     height: number,
     lastMicroblockHash: Uint8Array,

@@ -235,7 +235,6 @@ export class IntermediateRepresentation {
           dictionary: any = [];
 
     for(let n = 0; n < dictionarySize; n++) {
-      // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
       dictionary.push(stream.readString());
     }
 
@@ -290,14 +289,12 @@ export class IntermediateRepresentation {
           ptr = stream.getPointer();
 
           for(let n = stream.readVarUint(); n--;) {
-            // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
             item.visibleParts.push(stream.readString());
           }
           item.visiblePartsBinary = stream.extractFrom(ptr);
           ptr = stream.getPointer();
 
           for(let n = stream.readVarUint(); n--;) {
-            // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
             item.hiddenParts.push(stream.readString());
           }
           item.hiddenPartsBinary = stream.extractFrom(ptr);
@@ -796,7 +793,6 @@ export class IntermediateRepresentation {
           stream.writeVarUint(item.visibleParts.length);
 
           for(const str of item.visibleParts) {
-            // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
             stream.writeString(str);
           }
           item.visiblePartsBinary = stream.getByteStream();
@@ -806,7 +802,6 @@ export class IntermediateRepresentation {
             stream.writeVarUint(item.hiddenParts.length);
 
             for(const str of item.hiddenParts) {
-              // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
               stream.writeString(str);
             }
             item.hiddenPartsBinary = stream.getByteStream();

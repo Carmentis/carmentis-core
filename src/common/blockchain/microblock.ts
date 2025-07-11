@@ -86,8 +86,8 @@ export class Microblock {
     const body = bodyUnserializer.unserialize(bodyData).body;
 
     for(const { type, data } of body) {
-      const sectionDef = SECTIONS.DEF[this.type][type];
-      const unserializer = new SchemaUnserializer(sectionDef.schema);
+      const sectionSchema = SECTIONS.DEF[this.type][type];
+      const unserializer = new SchemaUnserializer(sectionSchema);
       const object = unserializer.unserialize(data);
 
       this.storeSection(type, object, data);
@@ -137,8 +137,8 @@ export class Microblock {
     Adds a section of a given type and defined by a given object.
   */
   addSection(type: number, object: any): Section {
-    const sectionDef = SECTIONS.DEF[this.type][type];
-    const serializer = new SchemaSerializer(sectionDef.schema);
+    const sectionSchema = SECTIONS.DEF[this.type][type];
+    const serializer = new SchemaSerializer(sectionSchema);
     const data = serializer.serialize(object);
 
     return this.storeSection(type, object, data);

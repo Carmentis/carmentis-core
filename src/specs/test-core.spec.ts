@@ -12,8 +12,6 @@ import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 
 describe('testNumbers', () => {
     test('should serialize and deserialize numbers correctly', () => {
-        console.log("Testing numbers");
-
         [
             0, 1, -1, 63, -64, 64, -65, 255, 256, -255, -256, 65535, -65536, 12345,
             0x123456789ABC, 0xFFFFFFFFFFFF, -0x1000000000000,
@@ -21,58 +19,53 @@ describe('testNumbers', () => {
             2**48-1, 2**48, -(2**48),
             Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER
         ]
-            .forEach((n) => {
-                let stream = new WriteStream();
+        .forEach((n) => {
+            const writeStream = new WriteStream();
 
-                stream.writeNumber(+n);
+            writeStream.writeNumber(+n);
 
-                const data = stream.getByteStream();
+            const data = writeStream.getByteStream();
 
-                //stream = new ReadStream(data);
+            const readStream = new ReadStream(data);
+            const res = readStream.readNumber();
 
-                /*
-                const res = stream.readNumber();
-
-                console.log(
-                    n.toString().padEnd(22),
-                    [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
-                    res === n ? "OK" : `FAILED (${res})`
-                );
-
-                 */
-            });
-        console.log();
+            console.log(
+                n.toString().padEnd(22),
+                [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18)
+            );
+            if(res !== n) {
+                throw `FAILED`;
+            }
+        });
     });
 });
 
 describe('testUnsignedIntegers', () => {
     test('should serialize and deserialize unsigned integers correctly', () => {
-        console.log("Testing unsigned integers");
-
         [ 0, 1, 127, 128, 255, 256, 16383, 16384, 123456, Number.MAX_SAFE_INTEGER ]
-            .forEach((n) => {
-                let stream = new WriteStream();
+        .forEach((n) => {
+            const writeStream = new WriteStream();
 
-                stream.writeVarUint(n);
+            writeStream.writeVarUint(n);
 
-                const data = stream.getByteStream();
+            const data = writeStream.getByteStream();
 
-                //stream = new ReadStream(data);
+            const readStream = new ReadStream(data);
+            const res = readStream.readVarUint();
 
-                console.log(
-                    n.toString().padEnd(22),
-                    [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18),
-                    //stream.readVarUint() === n ? "OK" : "FAILED"
-                );
-            });
-        console.log();
+            console.log(
+                n.toString().padEnd(22),
+                [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("").padEnd(18)
+            );
+            if(res !== n) {
+                throw `FAILED`;
+            }
+        });
     });
 });
 
 describe('testStrings', () => {
     test('should serialize and deserialize strings correctly', () => {
-        console.log("Testing strings");
-
         [
             "",
             "\0",
@@ -80,48 +73,62 @@ describe('testStrings', () => {
             "100€",
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
         ]
-            .forEach(str => {
-                let stream = new WriteStream();
+        .forEach(str => {
+            const writeStream = new WriteStream();
 
-                // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
-                stream.writeString(str);
+            writeStream.writeString(str);
 
-                const data = stream.getByteStream();
+            const data = writeStream.getByteStream();
 
-                //stream = new ReadStream(data);
+            const readStream = new ReadStream(data);
+            const res = readStream.readString();
 
-                console.log(
-                    JSON.stringify(str),
-                    `(${str.length})`,
-                    [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join(""),
-                    //stream.readString() === str ? "OK" : "FAILED"
-                );
-            });
-        console.log();
+            console.log(
+                JSON.stringify(str),
+                `(${str.length})`,
+                [...data].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("")
+            );
+            if(res !== str) {
+                throw `FAILED`;
+            }
+        });
     });
 });
 
 describe('testSchemaSerializer', () => {
     test('should serialize and unserialize schema objects', () => {
-        const SCHEMA = [
-            { name: "foo", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8, size: 2 },
-            { name: "bar", type: DATA.TYPE_OBJECT, schema: [ { name: "p0", type: DATA.TYPE_STRING }, { name: "p1", type: DATA.TYPE_BOOLEAN } ] }
-        ];
+        const CHILD_SCHEMA = {
+            label: "Child",
+            definition: [
+                { name: "int", type: DATA.TYPE_UINT48 },
+                { name: "str", type: DATA.TYPE_STRING }
+            ]
+        };
 
-        const object = { foo: [ 123, 255 ], bar: { p0: "hello", p1: true } };
+        const SCHEMA = {
+            label: "Main",
+            definition: [
+                { name: "array", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8, size: 2 },
+                { name: "struct", type: DATA.TYPE_OBJECT, definition: [ { name: "p0", type: DATA.TYPE_STRING }, { name: "p1", type: DATA.TYPE_BOOLEAN } ] },
+                { name: "child", type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: CHILD_SCHEMA }
+            ]
+        };
 
-        const serializer = new SchemaSerializer(SCHEMA),
-            unserializer = new SchemaUnserializer(SCHEMA);
+        const object = {
+            array: [ 123, 255 ],
+            struct: { p0: "hello", p1: true },
+            child: [ { int: 123456, str: "world" } ]
+        };
+
+        const serializer = new SchemaSerializer(SCHEMA);
+        const unserializer = new SchemaUnserializer(SCHEMA);
 
         const data = serializer.serialize(object);
+        const res = unserializer.unserialize(data);
+        console.log(res);
 
-        console.log("data", data);
-        console.log(unserializer.unserialize(data));
-    });
-});
-
-describe('testRadixTree', () => {
-    test('should work with RadixTree (WIP)', async () => {
-        //const tree = new RadixTree();
+        if(JSON.stringify(object) !== JSON.stringify(res)) {
+            throw `FAILED`;
+        }
     });
 });

@@ -1,4 +1,4 @@
-import { DATA } from "../constants/constants";
+import { DATA, SCHEMAS } from "../constants/constants";
 import { SchemaSerializer, SchemaUnserializer } from "./schemaSerializer";
 
 export class MessageSerializer<T = any> {
@@ -7,7 +7,7 @@ export class MessageSerializer<T = any> {
     Constructor
     @param {Array} collection - Message collection
   */
-  constructor(collection: any) {
+  constructor(collection: SCHEMAS.Schema[]) {
     this.collection = collection;
   }
 
@@ -16,16 +16,12 @@ export class MessageSerializer<T = any> {
     @param {number} type - Message type
     @param {object} object - The message object to be serialized
   */
-  serialize(type: any, object: T) {
-    const schema = [
-      { name: "__msgType", type: DATA.TYPE_UINT8 },
-      ...this.collection[type]
-    ];
-
+  serialize(type: number, object: T) {
+    const schema = this.collection[type];
     const serializer = new SchemaSerializer(schema);
-    const data = serializer.serialize({ __msgType: type, ...object });
+    const data = serializer.serialize(object);
 
-    return data;
+    return new Uint8Array([ type, ...data ]);
   }
 }
 
@@ -35,7 +31,7 @@ export class MessageUnserializer<T = object> {
     Constructor
     @param {Array} collection - Message collection
   */
-  constructor(collection: any) {
+  constructor(collection: SCHEMAS.Schema[]) {
     this.collection = collection;
   }
 
@@ -45,16 +41,9 @@ export class MessageUnserializer<T = object> {
   */
   unserialize(stream: Uint8Array) {
     const type = stream[0];
-
-    const schema = [
-      { name: "__msgType", type: DATA.TYPE_UINT8 },
-      ...this.collection[type]
-    ];
-
+    const schema = this.collection[type];
     const unserializer = new SchemaUnserializer(schema);
-    const object = unserializer.unserialize(stream);
-    // @ts-expect-error TS(2339): Property '__msgType' does not exist on type '{}'.
-    delete object.__msgType;
+    const object = unserializer.unserialize(stream.slice(1));
 
     return { type, object: object as T };
   }

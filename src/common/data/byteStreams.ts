@@ -26,7 +26,6 @@ export class WriteStream {
 
   writeJsonValue(type: any, value: any) {
     switch(type) {
-      // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
       case DATA.TYPE_STRING : { this.writeString(value); break; }
       case DATA.TYPE_NUMBER : { this.writeNumber(value); break; }
       case DATA.TYPE_BOOLEAN: { this.writeBoolean(value); break; }
@@ -38,7 +37,7 @@ export class WriteStream {
     }
   }
 
-  writeSchemaValue(type: any, value: any, size: any) {
+  writeSchemaValue(type: number, value: any, size: number | undefined) {
     switch(type) {
       case DATA.TYPE_STRING  : { this.writeString(value, size); break; }
       case DATA.TYPE_NUMBER  : { this.writeNumber(value); break; }
@@ -51,8 +50,7 @@ export class WriteStream {
       case DATA.TYPE_UINT48  : { this.writeUint48(value); break; }
       case DATA.TYPE_BINARY  : { this.writeBinary(value, size); break; }
       case DATA.TYPE_BIN256  : { this.writeByteArray(value); break; }
-      // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-      case DATA.TYPE_HASH_STR: { this.writeHashString(); break; }
+      case DATA.TYPE_HASH_STR: { this.writeHashString(value); break; }
 
       default: {
         throw `Unexpected type ${type}`;
@@ -60,44 +58,44 @@ export class WriteStream {
     }
   }
 
-  writeByte(n: any) {
+  writeByte(n: number) {
     this.byteStream.push(n & 0xFF);
   }
 
-  writeUnsigned(n: any, nByte: any) {
+  writeUnsigned(n: number, nByte: number) {
     while(nByte--) {
       this.writeByte(n / 2 ** (nByte * 8));
     }
   }
 
-  writeUint8(n: any) {
+  writeUint8(n: number) {
     this.writeUnsigned(n, 1);
   }
 
-  writeUint16(n: any) {
+  writeUint16(n: number) {
     this.writeUnsigned(n, 2);
   }
 
-  writeUint24(n: any) {
+  writeUint24(n: number) {
     this.writeUnsigned(n, 3);
   }
 
-  writeUint32(n: any) {
+  writeUint32(n: number) {
     this.writeUnsigned(n, 4);
   }
 
-  writeUint48(n: any) {
+  writeUint48(n: number) {
     this.writeUnsigned(n, 6);
   }
 
-  writeBinary(arr: any, size: any) {
-    if(size === undefined) {
+  writeBinary(arr: any, size = -1) {
+    if(size == -1) {
       this.writeVarUint(arr.length);
     }
     this.writeByteArray(arr);
   }
 
-  writeHashString(str: any) {
+  writeHashString(str: string) {
     this.writeByteArray(Utils.binaryFromHexa(str));
   }
 
@@ -107,16 +105,16 @@ export class WriteStream {
     }
   }
 
-  writeString(str: any, size: any) {
+  writeString(str: string, size = -1) {
     const bin = Utf8Encoder.encode(str);
 
-    if(size === undefined) {
+    if(size == -1) {
       this.writeVarUint(bin.length);
     }
     this.writeByteArray(bin);
   }
 
-  writeVarUint(n: any) {
+  writeVarUint(n: number) {
     if(n == 0) {
       this.writeByte(0);
     }
@@ -132,11 +130,11 @@ export class WriteStream {
     }
   }
 
-  writeBoolean(n: any) {
+  writeBoolean(n: boolean) {
     this.writeByte(n ? 0xFF : 0x00);
   }
 
-  writeNumber(n: any) {
+  writeNumber(n: number) {
     const isInteger = !(n % 1);
 
     // if this is a small integer in [-64, 63], encode as a single byte
@@ -189,7 +187,6 @@ export class ReadStream {
     this.lastPointer = this.pointer;
 
     switch(type) {
-      // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
       case DATA.TYPE_STRING : { return this.readString(); }
       case DATA.TYPE_NUMBER : { return this.readNumber(); }
       case DATA.TYPE_BOOLEAN: { return this.readBoolean(); }
@@ -265,28 +262,20 @@ export class ReadStream {
     return this.readUnsigned(6);
   }
 
-  readBinary(size: any) {
-    if(size === undefined) {
-      size = this.readVarUint();
-    }
-    return this.readByteArray(size);
+  readBinary(size = -1) {
+    return this.readByteArray(size == -1 ? this.readVarUint() : size);
   }
 
   readHashString() {
     return Utils.binaryToHexa(this.readByteArray(32));
   }
 
-  readByteArray(size: any) {
+  readByteArray(size: number) {
     return this.byteStream.slice(this.pointer, this.pointer += size);
   }
 
-  readString(size: any) {
-    if(size === undefined) {
-      size = this.readVarUint();
-    }
-
-    const array = this.readByteArray(size);
-
+  readString(size = -1) {
+    const array = this.readByteArray(size == -1 ? this.readVarUint() : size);
     return Utf8Encoder.decode(array);
   }
 

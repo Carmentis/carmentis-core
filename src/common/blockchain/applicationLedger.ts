@@ -5,8 +5,9 @@ import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
 import {RecordDescription} from "./blockchain";
 import {Provider} from "../providers/provider";
-import {Hash, ImportedProof, Proof} from "./types";
+import {ImportedProof, Proof} from "./types";
 import {Section} from "./microblock";
+import {Hash} from "../entities/Hash";
 
 export class ApplicationLedger {
   provider: any;

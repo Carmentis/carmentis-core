@@ -1,6 +1,6 @@
 import {AbstractMicroBlock} from "./MicroBlock";
-import {Hash} from "../blockchain/types";
 import {AbstractVirtualBlockchainView} from "./VirtualBlockchainView";
+import {Hash} from "./Hash";
 
 export class MultiVirtualBlockchainView {
     private states = new Map<Uint8Array, AbstractVirtualBlockchainView<AbstractMicroBlock>>();

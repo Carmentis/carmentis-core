@@ -1,8 +1,8 @@
-import {Hash} from "../blockchain/types";
 import {AccountCreation, AppDescription, OrgDescription} from "../entities/MicroBlock";
 import {CMTSToken} from "../economics/currencies/token";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
+import {Hash} from "../entities/Hash";
 
 /**
  * Interface for interacting with the blockchain facade, providing methods for accessing

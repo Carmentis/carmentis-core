@@ -3,8 +3,9 @@ import {Microblock, Section} from "./microblock";
 import { Utils } from "../utils/utils";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
-import {Hash, VirtualBlockchainStateInterface} from "./types";
+import {VirtualBlockchainStateInterface} from "./types";
 import {BlockchainReader, Provider} from "../providers/provider";
+import {Hash} from "../entities/Hash";
 
 export abstract class VirtualBlockchain<CustomState> {
     currentMicroblock: Microblock | null;

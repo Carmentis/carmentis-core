@@ -1,10 +1,3 @@
-import {BytesToHexEncoder, EncoderFactory, EncoderInterface} from "../utils/encoder";
-import {CMTSToken} from "../economics/currencies/token";
-
-
-
-
-
 export interface ImportedProof {
     height: number;
     data: {
@@ -208,35 +201,6 @@ export interface AccountStateDTO {
     lastHistoryHash: Uint8Array
 }
 
-export class AccountState {
-    private constructor(private height: number, private balance: CMTSToken, private lastHistoryHash: Hash, private lastPublicKeyDeclarationHeight: number ) {}
-
-    static createFromDTO(dto: AccountStateDTO) {
-        return new AccountState(
-            dto.height,
-            CMTSToken.createCMTS(dto.balance),
-            Hash.from( dto.lastHistoryHash),
-            0
-        )
-    }
-
-    getHeight(): number {
-        return this.height;
-    }
-
-    getBalance(): CMTSToken {
-        return this.balance;
-    }
-
-    getLastHistoryHash(): Hash {
-        return this.lastHistoryHash;
-    }
-
-    getLastPublicKeyDeclarationHeight(): number {
-        return this.lastPublicKeyDeclarationHeight;
-    }
-}
-
 export interface AccountHash {
     accountHash: Uint8Array
 }
@@ -249,22 +213,6 @@ export interface AccountTransactionInterface {
     linkedAccount: Uint8Array,
     amount: number,
     chainReference: Uint8Array
-}
-
-
-export class AccountHistoryEntry {
-
-    constructor(
-       private height: number,
-       private previousHistoryHash: Hash,
-       private type: number,
-       private timestamp: number,
-       private linkedAccount: Hash,
-       private amount: CMTSToken,
-       private chainReference: Hash
-    ) {}
-
-
 }
 
 export interface AccountHistoryInterface {
@@ -303,64 +251,3 @@ export interface Proof {
     }[]
 }
 
-/**
- * Represents a hash object that allows encoding and creation from a string or Uint8Array.
- */
-export class Hash {
-    /**
-     * Constructs a new instance of the class with the provided hash value.
-     *
-     * @param {Uint8Array} hash - The hash value to be used for this instance.
-     */
-    constructor(private hash: Uint8Array) {
-    }
-
-    /**
-     * Creates a new instance of Hash from a string or Uint8Array.
-     *
-     * ```
-     * const hash = Hash.from('0x1234567890abcdef');
-     * const hash = Hash.from(new Uint8Array([0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef]));
-     * ```
-     *
-     * @param {string | Uint8Array} hash - The hash input, which can either be a string or a Uint8Array.
-     * @return {Hash} A new Hash instance created from the given input.
-     *
-     *
-     */
-    static from(hash: string | Uint8Array) {
-        const hexEncoder = EncoderFactory.bytesToHexEncoder();
-        return new Hash(
-            typeof hash == 'string' ? hexEncoder.decode(hash) : hash
-        )
-    }
-
-    /**
-     * Encodes the current hash using the provided encoder.
-     *
-     * ```
-     * const hash = Hash.from('0x1234567890abcdef');
-     * const hexEncoder = EncoderFactory.bytesToHexEncoder();
-     * const hexString = hash.encode(hexEncoder); // '0x1234567890abcdef'
-     * const hexString = hash.encode(); // '0x1234567890abcdef'
-     * ```
-     *
-     * @param {EncoderInterface<Uint8Array, string>} [encoder=new BytesToHexEncoder()] - The encoder used to encode the hash. Defaults to a BytesToHexEncoder.
-     * @return {string} The encoded string representation of the hash.
-     */
-    encode(encoder: EncoderInterface<Uint8Array, string> = new BytesToHexEncoder()): string  {
-        return encoder.encode(this.hash);
-    }
-
-    /**
-     * Converts and retrieves the hash value as a Uint8Array.
-     *
-     * ```
-     * const hash = Hash.from('0x1234567890abcdef');
-     * const bytes = hash.toBytes(); // Uint8Array([0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef])
-     * ```
-     *
-     * @return {Uint8Array} The hash value as a Uint8Array.
-     */
-    toBytes(): Uint8Array { return this.hash }
-}

@@ -5,10 +5,11 @@ import {Provider} from "../providers/provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
-import {AccountHash, Hash, MicroBlockHeader} from "./types";
+import {AccountHash, MicroBlockHeader} from "./types";
 import {SchemaUnserializer} from "../data/schemaSerializer";
 import {MICROBLOCK_HEADER} from "../constants/schemas";
 import {Microblock} from "./microblock";
+import {Hash} from "../entities/Hash";
 
 
 export class Explorer {

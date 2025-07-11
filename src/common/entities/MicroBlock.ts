@@ -32,13 +32,13 @@ import {
 } from "../proto/section";
 import {Section} from "./Section";
 import {CMTSToken} from "../economics/currencies/token";
-import {Hash} from "../blockchain/types";
 import {CarmentisError, SectionNotFoundError} from "../errors/carmentis-error";
 import {PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {MicroBlockSectionConstraint} from "./MicroBlockSectionConstraint";
 import {MicroBlockHeaderInterface} from "./MicroBlockHeaderInterface";
 import {MicroBlockHeader} from "./MicroBlockHeader";
+import {Hash} from "./Hash";
 
 export abstract class AbstractMicroBlock {
     private feesPayerAccount?: Uint8Array;

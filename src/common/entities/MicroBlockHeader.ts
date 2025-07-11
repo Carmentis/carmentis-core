@@ -1,5 +1,5 @@
-import {Hash} from "../blockchain/types";
 import {CMTSToken} from "../economics/currencies/token";
+import {Hash} from "./Hash";
 
 export abstract class MicroBlockHeader {
     abstract getMagicString(): string ;

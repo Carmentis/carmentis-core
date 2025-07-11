@@ -1,6 +1,7 @@
-import {AccountTransactionInterface, Hash} from "../blockchain/types";
+import {AccountTransactionInterface} from "../blockchain/types";
 import {CMTSToken} from "../economics/currencies/token";
 import {IllegalParameterError} from "../errors/carmentis-error";
+import {Hash} from "./Hash";
 
 export class AccountHistoryView {
     private transactionByHeight: Map<number, AccountTransactionInterface>;

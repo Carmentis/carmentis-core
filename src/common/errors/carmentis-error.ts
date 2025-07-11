@@ -1,7 +1,7 @@
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
-import {Hash} from "../blockchain/types";
 import {SectionType} from "../proto/section";
+import {Hash} from "../entities/Hash";
 
 export enum CarmentisErrorCode {
     // unspecified error

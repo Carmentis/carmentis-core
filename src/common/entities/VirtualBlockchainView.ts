@@ -1,6 +1,5 @@
 import {MicroBlockType} from "../proto/section";
 import {AbstractMicroBlock, AccountMicroBlock, ApplicationMicroBlock, OrganisationMicroBlock} from "./MicroBlock";
-import {Hash} from "../blockchain/types";
 import {
     CarmentisError,
     MicroBlockNotFoundInVirtualBlockchainAtHeightError,
@@ -10,6 +9,7 @@ import {ConflictViewResolutionStrategy} from "./ConflictViewResolutionStrategy";
 import {AlwaysReplaceConflictViewResolutionStrategy} from "./AlwaysReplaceConflictViewResolutionStrategy";
 import {VirtualBlockchainType} from "./VirtualBlockchainType";
 import {VirtualBlockchainState} from "./VirtualBlockchainState";
+import {Hash} from "./Hash";
 
 /**
  * Abstract class representing a virtual blockchain view.

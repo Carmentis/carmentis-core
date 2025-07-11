@@ -80,3 +80,5 @@ export * from "./wallet/wallet";
 export {SectionType} from "./entities/SectionType";
 export {BlockchainFacade} from "./providers/BlockchainFacade";
 export {BlockchainFacadeInterface} from "./providers/BlockchainFacadeInterface";
+export {Hash} from "./entities/Hash";
+export {AccountState} from "./entities/AccountState";

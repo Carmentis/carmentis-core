@@ -5,9 +5,7 @@ import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {
     AccountHistoryInterface,
-    AccountState,
     AccountStateDTO,
-    Hash,
     MicroblockInformationSchema,
     ObjectList
 } from "../blockchain/types";
@@ -20,6 +18,8 @@ import {MicroBlockHeader} from "../entities/MicroBlockHeader";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
 import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
 import {MicroBlockInformation} from "../entities/MicroBlockInformation";
+import {Hash} from "../entities/Hash";
+import {AccountState} from "../entities/AccountState";
 
 export interface BlockchainReader {
     getFullVirtualBlockchainView<VB extends AbstractVirtualBlockchainView<MB>, MB extends AbstractMicroBlock = AbstractMicroBlock>(vbId: Hash): Promise<VB>;

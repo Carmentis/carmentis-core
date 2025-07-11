@@ -1,5 +1,5 @@
-import {Hash} from "../blockchain/types";
 import {VirtualBlockchainType} from "./VirtualBlockchainType";
+import {Hash} from "./Hash";
 
 export abstract class VirtualBlockchainState {
     abstract getHeight(): number;

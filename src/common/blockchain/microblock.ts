@@ -3,7 +3,8 @@ import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
 import { Utils } from "../utils/utils";
 import { Crypto } from "../crypto/crypto";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
-import {Hash, MicroblockHeader, MicroblockSection} from "./types";
+import {MicroblockHeader, MicroblockSection} from "./types";
+import {Hash} from "../entities/Hash";
 
 export interface Section<T = any> {
   type: number,

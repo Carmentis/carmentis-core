@@ -2,7 +2,6 @@ import {BlockchainReader} from "./provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
-import {AccountState, Hash} from "../blockchain/types";
 import {CMTSToken} from "../economics/currencies/token";
 import {
     AbstractVirtualBlockchainView
@@ -11,6 +10,8 @@ import {AbstractMicroBlock} from "../entities/MicroBlock";
 import {MicroBlockHeader} from "../entities/MicroBlockHeader";
 import {MultiVirtualBlockchainView} from "../entities/MultiVirtualBlockchainView";
 import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
+import {Hash} from "../entities/Hash";
+import {AccountState} from "../entities/AccountState";
 
 /**
  * A wrapper class implementing the BlockchainReader interface that caches certain blockchain data

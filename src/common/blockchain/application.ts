@@ -2,8 +2,9 @@ import {SECTIONS} from "../constants/constants";
 import {ApplicationVb} from "./applicationVb";
 import {Crypto} from "../crypto/crypto";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
-import {ApplicationDeclaration, ApplicationDescription, Hash} from "./types";
+import {ApplicationDeclaration, ApplicationDescription} from "./types";
 import {Provider} from "../providers/provider";
+import {Hash} from "../entities/Hash";
 
 export class Application {
   provider: any;

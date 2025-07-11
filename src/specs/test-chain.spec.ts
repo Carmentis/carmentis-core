@@ -11,8 +11,8 @@ import {ReadStream, WriteStream} from "../common/data/byteStreams";
 import {DATA, ECO} from '../common/constants/constants';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 import {EncoderFactory} from "../common/utils/encoder";
-import {Hash} from "../common/blockchain/types";
 import {Crypto} from "../common/crypto/crypto";
+import {Hash} from "../common/entities/Hash";
 
 describe('Chain test', () => {
     const TEST_TIMEOUT = 5000;

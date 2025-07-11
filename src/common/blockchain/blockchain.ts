@@ -8,7 +8,8 @@ import {ApplicationLedger} from "./applicationLedger";
 import {Utils} from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
-import {Hash, ImportedProof, Proof} from "./types";
+import {ImportedProof, Proof} from "./types";
+import {Hash} from "../entities/Hash";
 
 
 export interface RecordActor {

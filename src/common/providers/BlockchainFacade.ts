@@ -3,7 +3,6 @@ import {ABCINodeBlockchainReader} from "./ABCINodeBlockchainReader";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ABCINodeBlockchainWriter} from "./ABCINodeBlockchainWriter";
 import {IllegalParameterError, NotImplementedError, IllegalUsageError} from "../errors/carmentis-error";
-import {Hash} from "../blockchain/types";
 import {AccountCreation, AppDescription, OrgDescription} from "../entities/MicroBlock";
 import {
     AccountVirtualBlockchainView,
@@ -18,6 +17,7 @@ import {IntermediateRepresentation} from "../records/intermediateRepresentation"
 import {BlockchainReader, BlockchainWriter} from "./provider";
 import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
+import {Hash} from "../entities/Hash";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.

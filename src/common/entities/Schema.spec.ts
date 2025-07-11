@@ -1,5 +1,6 @@
 import {AppDescriptionSectionSchema, SectionSchema, SectionType} from "../proto/section";
-import {Hash} from "../blockchain/types";
+
+import {Hash} from "./Hash";
 
 
 describe('Schema', () => {

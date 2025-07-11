@@ -2,9 +2,8 @@ import {BlockchainReader} from "./provider";
 import {
     AccountHash,
     AccountHistoryInterface,
-    AccountState,
     AccountStateDTO,
-    Hash, MicroBlockBodys, MicroblockInformationSchema,
+    MicroBlockBodys, MicroblockInformationSchema,
     MsgVirtualBlockchainState, VirtualBlockchainUpdateInterface
 } from "../blockchain/types";
 import {
@@ -35,6 +34,8 @@ import {MicroBlockInformation} from "../entities/MicroBlockInformation";
 import {MicroBlockHeaderInterface} from "../entities/MicroBlockHeaderInterface";
 import {NodeTranslator} from "../entities/NodeTranslator";
 import {VirtualBlockchainUpdate} from "../entities/VirtualBlockchainUpdate";
+import {Hash} from "../entities/Hash";
+import {AccountState} from "../entities/AccountState";
 
 export class ABCINodeBlockchainReader implements BlockchainReader {
     /**

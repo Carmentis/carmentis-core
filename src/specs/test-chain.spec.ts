@@ -14,12 +14,14 @@ import {EncoderFactory} from "../common/utils/encoder";
 import {Crypto} from "../common/crypto/crypto";
 import {Hash} from "../common/entities/Hash";
 
+const NODE_URL = "http://localhost:26657";
+
 describe('Chain test', () => {
     const TEST_TIMEOUT = 5000;
     test("testChain()", async () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
         const memoryProvider = new MemoryProvider();
-        const networkProvider = new ServerNetworkProvider("http://localhost:3000");
+        const networkProvider = new ServerNetworkProvider(NODE_URL);
         const keyedProvider = new KeyedProvider(privateKey, memoryProvider, networkProvider);
 
         let blockchain = new Blockchain(keyedProvider);

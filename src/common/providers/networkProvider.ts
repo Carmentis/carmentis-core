@@ -146,6 +146,8 @@ export class NetworkProvider {
   async broadcastTx(data: any) {
     const urlObject = new URL(this.nodeUrl);
 
+    console.log(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
+
     urlObject.pathname = "broadcast_tx_sync";
     urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));
 

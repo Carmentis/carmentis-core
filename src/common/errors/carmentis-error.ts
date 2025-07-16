@@ -6,6 +6,7 @@ import {SectionType} from "../entities/SectionType";
 export enum CarmentisErrorCode {
     // unspecified error
     CARMENTIS_ERROR = 0,
+    NODE_ERROR = 1,
 
     // internal error
     INTERNAL_ERROR = 500,
@@ -70,7 +71,11 @@ export class TypeCheckingFailureError extends InternalError {
     }
 }
 
-export class NodeError extends InternalError {
+export class NodeError extends InternalError {}
+export class NodeConnectionRefusedError extends NodeError {
+    constructor(nodeUrl: string) {
+        super(`Connection with node at ${nodeUrl} refused`, CarmentisErrorCode.NODE_ERROR)
+    }
 
 }
 

@@ -2,29 +2,21 @@ import {ABCINodeBlockchainReader} from "./ABCINodeBlockchainReader";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ABCINodeBlockchainWriter} from "./ABCINodeBlockchainWriter";
 import {IllegalUsageError, NotImplementedError} from "../errors/carmentis-error";
-import {AccountCreationInformation, AppDescription, OrgDescription} from "../entities/MicroBlock";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
 import {Hash} from "../entities/Hash";
-import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {BlockchainReader} from "./BlockchainReader";
-import {Application} from "../blockchain/Application";
-import {Organization} from "../blockchain/Organization";
 import {BlockchainWriter} from "./BlockchainWriter";
 import {PublicationExecutionContext} from "./publicationContexts/PublicationExecutionContext";
 import {OrganisationPublicationExecutionContext} from "./publicationContexts/OrganisationPublicationExecutionContext";
 import {AccountPublicationExecutionContext} from "./publicationContexts/AccountPublicationExecutionContext";
 import {ApplicationPublicationExecutionContext} from "./publicationContexts/ApplicationPublicationExecutionContext";
-
-import {RecordDescription} from "../blockchain/RecordDescription";
 import {RecordPublicationExecutionContext} from "./publicationContexts/RecordPublicationExecutionContext";
 import {ProofBuilder} from "../entities/ProofBuilder";
-import {Utils} from "../utils/utils";
 import {Proof} from "../blockchain/types";
 import {
     AccountTransferPublicationExecutionContext
 } from "./publicationContexts/AccountTransferPublicationExecutionContext";
-import {Height} from "../entities/Height";
 import {AccountState} from "../entities/AccountState";
 import {OrganisationWrapper} from "../wrappers/OrganisationWrapper";
 import {ApplicationWrapper} from "../wrappers/ApplicationWrapper";
@@ -109,6 +101,16 @@ export class BlockchainFacade{
     async getPublicKeyOfOrganisation(organisationId: Hash): Promise<PublicSignatureKey> {
         const org = await this.reader.loadOrganization(organisationId);
         return org.getPublicKey();
+    }
+
+    /**
+     * Retrieves the account hash associated with the provided public key.
+     *
+     * @param {PublicSignatureKey} publicKey - The public signature key used to identify the account.
+     * @return {Promise<Hash>} A promise that resolves to the hash of the account associated with the given public key.
+     */
+    async getAccountHashFromPublicKey(publicKey: PublicSignatureKey): Promise<Hash> {
+        return this.reader.getAccountByPublicKey(publicKey)
     }
 
     /**
@@ -238,9 +240,11 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     async publishTokenTransfer(context: AccountTransferPublicationExecutionContext) {
         const writer = this.getWriter();
         const data = context.build();
+        const buyerAccount = data.buyerAccount;
+        const buyerAccountHash = buyerAccount instanceof Hash ? buyerAccount : await this.reader.getAccountByPublicKey(buyerAccount)
         return writer.createTokenTransfer(
             data.sellerPrivateKey,
-            data.buyerAccount,
+            buyerAccountHash,
             data.amount,
             data.publicReference,
             data.privateReference,

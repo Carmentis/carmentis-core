@@ -2,27 +2,26 @@ import {Provider} from "./Provider";
 import {
     AccountHash,
     AccountHistoryInterface,
-    AccountStateDTO, ApplicationDescription,
+    AccountStateDTO,
     MicroblockInformationSchema,
     MsgVirtualBlockchainState,
-    OrganizationDescription,
     Proof
 } from "../blockchain/types";
-import axios from "axios";
+import axios, {AxiosError} from "axios";
 import {Utils} from "../utils/utils";
 import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer";
 import {Base64} from "../data/base64";
 import {SCHEMAS} from "../constants/constants";
 import {CMTSToken} from "../economics/currencies/token";
 import {
-    AccountNotFoundForAccountHashError, ApplicationLedgerNotFoundError, ApplicationNotFoundError,
+    AccountNotFoundForAccountHashError,
+    ApplicationLedgerNotFoundError,
+    ApplicationNotFoundError, NodeConnectionRefusedError,
     NodeError,
-    NotImplementedError, OrganisationNotFoundError,
+    OrganisationNotFoundError,
     VirtualBlockchainNotFoundError
 } from "../errors/carmentis-error";
-import {AbstractMicroBlockHeader} from "../entities/AbstractMicroBlockHeader";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
-import {URL} from "url";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
@@ -42,7 +41,6 @@ import {Account} from "../blockchain/Account";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
 import {KeyedProvider} from "./KeyedProvider";
-import {MicroblockImporter} from "../blockchain/MicroblockImporter";
 import {ProofVerificationResult} from "../entities/ProofVerificationResult";
 import {Microblock} from "../blockchain/Microblock";
 import {VB_ACCOUNT, VB_APPLICATION, VB_ORGANIZATION, VB_VALIDATOR_NODE} from "../constants/chain";
@@ -344,7 +342,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
 
 
 
-    private async query(urlObject: any): Promise<{data: string}> {
+    private async query(urlObject: string): Promise<{data: string}> {
         return new Promise(async (resolve, reject) => {
             try {
                 const response = await axios.post(urlObject, {}, {
@@ -356,6 +354,11 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
                 const data = response.data
                 return resolve(data);
             } catch (e) {
+                if (e instanceof AxiosError) {
+                    if (e.code === 'ECONNREFUSED') {
+                        throw new NodeConnectionRefusedError(urlObject)
+                    }
+                }
                 reject(e);
             }
         })
@@ -366,13 +369,19 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
         const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
         const data = serializer.serialize(msgId, msgData);
+        /*
         const urlObject = new URL(this.nodeUrl);
-
         urlObject.pathname = "abci_query";
         urlObject.searchParams.append("path", '"/carmentis"');
         urlObject.searchParams.append("data", "0x" + Utils.binaryToHexa(data));
+         */
+        const params = new URLSearchParams();
+        params.append("path", '"/carmentis"');
+        params.append("data", "0x" + Utils.binaryToHexa(data));
+        const abciUrl = this.nodeUrl.replace(/\/+$/, "") + "/abci_query?" + params.toString();
 
-        const responseData = await this.query(urlObject);
+
+        const responseData = await this.query(abciUrl);
         const binary = Base64.decodeBinary(responseData.data);
         const { type, object } = unserializer.unserialize(binary);
 

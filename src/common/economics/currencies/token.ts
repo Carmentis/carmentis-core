@@ -127,12 +127,31 @@ export class CMTSToken implements Currency{
         }
     }
 
+    /**
+     * Retrieves the amount as an atomic unit.
+     * Converts and returns the amount in the smallest unit of the token.
+     *
+     * @return {number} The amount represented as an atomic unit.
+     */
     getAmountAsAtomic() {
         return this.getAmount(TokenUnit.ATOMIC)
     }
 
+    /**
+     * Retrieves the amount formatted as CMTS (specific token unit).
+     * Utilizes the value formatted in the designated token
+     */
     getAmountAsCMTS() {
         return this.getAmount(TokenUnit.TOKEN)
+    }
+
+    /**
+     * Determines if the amount is positive or zero.
+     *
+     * @return {boolean} Returns true if the amount is greater than or equal to zero; otherwise, false.
+     */
+    isPositive(): boolean {
+        return this.amount >= 0;
     }
 
 
@@ -174,8 +193,11 @@ export class CMTSToken implements Currency{
      * @return {string} A string representation of the object in the format "{amount} {unitLabel}".
      */
     toString( unit : TokenUnit = TokenUnit.TOKEN ) {
-        if (unit != TokenUnit.TOKEN) throw new InvalidTokenUnitError();
-        return `${this.amount / TokenUnit.TOKEN} ${CMTSToken.getUnitLabel(unit)}`;
+        switch (unit) {
+            case TokenUnit.TOKEN: return `${this.getAmountAsCMTS()} ${CMTSToken.getUnitLabel(unit)}`;
+            case TokenUnit.ATOMIC:  return `${this.getAmountAsAtomic()} ${CMTSToken.getUnitLabel(unit)}`;
+            default: throw new InvalidTokenUnitError();
+        }
     }
 
     /**

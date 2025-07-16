@@ -232,8 +232,8 @@ describe('Chain test', () => {
 
     // init the content
     const nodeUrl = "http://localhost:26657";
-    const privateKey = MLDSA65PrivateSignatureKey.gen();
-    const blockchain = BlockchainFacade.createFromNodeUrlAndPrivateKey(nodeUrl, privateKey);
+    const issuerPrivateKey = MLDSA65PrivateSignatureKey.gen();
+    const blockchain = BlockchainFacade.createFromNodeUrlAndPrivateKey(nodeUrl, issuerPrivateKey);
 
     test("Correct usage of BlockchainFacade", async () => {
 
@@ -270,7 +270,7 @@ describe('Chain test', () => {
 
             // proceed to a transfer between the first and the second account
             const transferContext = new AccountTransferPublicationExecutionContext()
-                .withTransfer(firstAccountPrivateKey, secondAccountId)
+                .withTransferToAccountHash(firstAccountPrivateKey, secondAccountId)
                 .withAmount(CMTSToken.oneCMTS());
             await blockchain.publishTokenTransfer(transferContext);
 
@@ -424,6 +424,47 @@ describe('Chain test', () => {
         await expect(async () => await blockchain.loadApplicationLedger(unknownAccountHash))
             .rejects
             .toThrow(ApplicationLedgerNotFoundError)
+
+    });
+
+    /*
+    it('Should fails when creating an (issuer) account with the same key', async () => {
+        await expect(async () => {
+            const genesisCreationContext = new PublicationExecutionContext();
+            const genesisAccountId = await blockchain.createAndPublishGenesisAccount(genesisCreationContext);
+        }).rejects.toThrow(CarmentisError);
+    });
+
+     */
+
+    it('Should fails for transfer when no enough balance', async () =>  {
+
+
+        // create a first account
+        const genesisAccountId = await blockchain.getAccountHashFromPublicKey(issuerPrivateKey.getPublicKey());
+        const firstAccountPrivateKey = MLDSA65PrivateSignatureKey.gen();
+        const firstAccountCreationContext = new AccountPublicationExecutionContext()
+            .withBuyerPublicKey(firstAccountPrivateKey.getPublicKey())
+            .withSellerAccount(genesisAccountId)
+            .withInitialBuyerAccountAmount(CMTSToken.createCMTS(2));
+        const firstAccountId = await blockchain.createAndPublishAccount(firstAccountCreationContext);
+        const firstAccount = await blockchain.loadAccount(firstAccountId);
+
+        // create a second account
+        const secondAccountPrivateKey = MLDSA65PrivateSignatureKey.gen();
+        const secondAccountCreationContext = new AccountPublicationExecutionContext()
+            .withBuyerPublicKey(secondAccountPrivateKey.getPublicKey())
+            .withSellerAccount(genesisAccountId)
+            .withInitialBuyerAccountAmount(CMTSToken.zero())
+        const secondAccountId = await blockchain.createAndPublishAccount(secondAccountCreationContext);
+        const secondAccount = await blockchain.loadAccount(secondAccountId);
+
+        // proceed to a transfer between the first and the second account
+        const transferContext = new AccountTransferPublicationExecutionContext()
+            .withTransferToAccountHash(firstAccountPrivateKey, secondAccountId)
+            .withAmount(CMTSToken.createCMTS(10000)); // too many tokens transferred here
+        await expect(blockchain.publishTokenTransfer(transferContext)).rejects.toThrow(CarmentisError);
+
 
     });
 });

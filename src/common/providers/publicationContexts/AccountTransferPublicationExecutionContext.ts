@@ -2,11 +2,12 @@ import {PublicationExecutionContext} from "./PublicationExecutionContext";
 import {Hash} from "../../entities/Hash";
 import {CMTSToken} from "../../economics/currencies/token";
 import {IllegalUsageError} from "../../errors/carmentis-error";
-import {PrivateSignatureKey} from "../../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey} from "../../crypto/signature/signature-interface";
 
 export class AccountTransferPublicationExecutionContext extends PublicationExecutionContext {
     private sellerAccountPrivateKey?: PrivateSignatureKey;
-    private buyerAccount?: Hash;
+    private buyerAccountHash?: Hash;
+    private buyerPublicKey?: PublicSignatureKey;
     private amount: CMTSToken;
     private publicReference: string;
     private privateReference: string;
@@ -20,7 +21,7 @@ export class AccountTransferPublicationExecutionContext extends PublicationExecu
 
 
     getBuyerAccount(): Hash {
-        return this.buyerAccount!;
+        return this.buyerAccountHash!;
     }
 
     getAmount(): CMTSToken {
@@ -35,9 +36,15 @@ export class AccountTransferPublicationExecutionContext extends PublicationExecu
         return this.privateReference!;
     }
 
-    withTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash): AccountTransferPublicationExecutionContext {
+    withTransferToAccountHash(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash): AccountTransferPublicationExecutionContext {
         this.sellerAccountPrivateKey = sellerPrivateKey;
-        this.buyerAccount = buyerAccount;
+        this.buyerAccountHash = buyerAccount;
+        return this;
+    }
+
+    withTransferToPublicKey(sellerPrivateKey: PrivateSignatureKey, buyerPublicKey: PublicSignatureKey): AccountTransferPublicationExecutionContext {
+        this.sellerAccountPrivateKey = sellerPrivateKey;
+        this.buyerPublicKey = buyerPublicKey;
         return this;
     }
 
@@ -57,9 +64,12 @@ export class AccountTransferPublicationExecutionContext extends PublicationExecu
     }
 
     build() {
-        if (!this.sellerAccountPrivateKey || !this.buyerAccount) throw new IllegalUsageError("Accounts are required for account transfer publication.");
+        if (!this.sellerAccountPrivateKey) throw new IllegalUsageError("Seller account is required");
+        const buyerAccount = this.buyerAccountHash || this.buyerPublicKey;
+        if (buyerAccount === undefined) throw new IllegalUsageError("Buyer account is required");
+
         return {
-            buyerAccount: this.buyerAccount,
+            buyerAccount,
             sellerPrivateKey: this.sellerAccountPrivateKey,
             amount: this.amount,
             publicReference: this.publicReference,

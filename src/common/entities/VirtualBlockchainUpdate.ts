@@ -1,7 +1,8 @@
 import {VirtualBlockchainState} from "./VirtualBlockchainState";
-import {MicroBlockHeader} from "./MicroBlockHeader";
+import {AbstractMicroBlockHeader} from "./AbstractMicroBlockHeader";
+import {Hash} from "./Hash";
 
 export abstract class VirtualBlockchainUpdate {
     abstract getVirtualBlockchainState(): VirtualBlockchainState;
-    abstract getMicroBlockHeaders(): MicroBlockHeader[];
+    abstract getMicroBlockHashes(): Hash[];
 }

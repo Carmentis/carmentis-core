@@ -1,41 +1,51 @@
-import {BlockchainReader} from "./provider";
+import {Provider} from "./Provider";
 import {
     AccountHash,
     AccountHistoryInterface,
-    AccountStateDTO,
-    MicroBlockBodys, MicroblockInformationSchema,
-    MsgVirtualBlockchainState, VirtualBlockchainUpdateInterface
+    AccountStateDTO, ApplicationDescription,
+    MicroblockInformationSchema,
+    MsgVirtualBlockchainState,
+    OrganizationDescription,
+    Proof
 } from "../blockchain/types";
-import {
-    AbstractVirtualBlockchainView,
-    AccountVirtualBlockchainView,
-    ApplicationVirtualBlockchainView,
-    OrganisationVirtualBlockchainView
-} from "../entities/VirtualBlockchainView";
 import axios from "axios";
 import {Utils} from "../utils/utils";
 import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer";
 import {Base64} from "../data/base64";
 import {SCHEMAS} from "../constants/constants";
-import {AbstractMicroBlock} from "../entities/MicroBlock";
 import {CMTSToken} from "../economics/currencies/token";
-import {NodeError, NotImplementedError, VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
-import {MicroBlockHeader} from "../entities/MicroBlockHeader";
+import {
+    AccountNotFoundForAccountHashError, ApplicationLedgerNotFoundError, ApplicationNotFoundError,
+    NodeError,
+    NotImplementedError, OrganisationNotFoundError,
+    VirtualBlockchainNotFoundError
+} from "../errors/carmentis-error";
+import {AbstractMicroBlockHeader} from "../entities/AbstractMicroBlockHeader";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
 import {URL} from "url";
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
-import {AppLedgerVirtualBlockchainView} from "../entities/AppLedgerVirtualBlockchainView";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
 import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
 import {MicroBlockInformation} from "../entities/MicroBlockInformation";
 import {MicroBlockHeaderInterface} from "../entities/MicroBlockHeaderInterface";
 import {NodeTranslator} from "../entities/NodeTranslator";
-import {VirtualBlockchainUpdate} from "../entities/VirtualBlockchainUpdate";
 import {Hash} from "../entities/Hash";
 import {AccountState} from "../entities/AccountState";
+import {ApplicationLedger} from "../blockchain/ApplicationLedger";
+import {Application} from "../blockchain/Application";
+import {Organization} from "../blockchain/Organization";
+import {BlockchainReader} from "./BlockchainReader";
+import {Account} from "../blockchain/Account";
+import {MemoryProvider} from "./MemoryProvider";
+import {NetworkProvider} from "./NetworkProvider";
+import {KeyedProvider} from "./KeyedProvider";
+import {MicroblockImporter} from "../blockchain/MicroblockImporter";
+import {ProofVerificationResult} from "../entities/ProofVerificationResult";
+import {Microblock} from "../blockchain/Microblock";
+import {VB_ACCOUNT, VB_APPLICATION, VB_ORGANIZATION, VB_VALIDATOR_NODE} from "../constants/chain";
 
 export class ABCINodeBlockchainReader implements BlockchainReader {
     /**
@@ -45,166 +55,67 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
      * @return {ABCINodeBlockchainReader} A new instance of ABCINodeBlockchainReader initialized with the specified node URL.
      */
     static createFromNodeURL(nodeUrl: string): ABCINodeBlockchainReader {
-        return new ABCINodeBlockchainReader(nodeUrl);
+        const cacheProvider = MemoryProvider.getInstance();
+        return new ABCINodeBlockchainReader(nodeUrl, cacheProvider);
     }
 
-    protected constructor(private nodeUrl: string) {}
+    private networkProvider: NetworkProvider;
+    private publicProvider: Provider;
+
+    protected constructor(
+        private nodeUrl: string,
+        private cacheProvider: MemoryProvider
+    ) {
+        this.networkProvider = new NetworkProvider(nodeUrl);
+        this.publicProvider = new Provider(cacheProvider, this.networkProvider);
+    }
+
+    async getOrganisationDescription(organisationId: Hash): Promise<OrganizationDescription> {
+        const organisation = await this.loadOrganization(organisationId);
+        return organisation.getDescription();
+    }
 
 
     getMicroBlockBody(microblockHash: Hash): Promise<void> {
         throw new Error("Method not implemented.");
     }
 
-    async getManyMicroBlockBody(hashes: Hash[]): Promise<void> {
-        // search the block
-        const answer = await this.abciQuery<MicroBlockBodys>(
-            SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
-            {
-                hashes: hashes.map(h => h.toBytes())
-            }
-        );
-
-        // parse all microblocks
-        for (const data of answer.list) {
-            const body =
-
-        }
-
-
-        return answer;
+    async getPublicKeyOfOrganisation(organisationId: Hash): Promise<PublicSignatureKey> {
+        const organisation = await this.loadOrganization(organisationId);
+        return organisation.getPublicKey();
     }
 
-    async getMicroBlock(microblockHash: Hash): Promise<AbstractMicroBlock> {
-        throw new NotImplementedError() // TODO
+    async getApplicationDescription(applicationId: Hash): Promise<ApplicationDescription> {
+        const application = await this.loadApplication(applicationId);
+        return application.getDescription();
     }
 
-    async getVirtualBlockchainContent(vbId: Hash): Promise<void> {
-        // we first search the virtual blockchain state in our internal provider
-        const state = await this.getVirtualBlockchainState(vbId);
-        const lastMicroBlockHash = state.getLastMicroblockHash();
+    async getMicroBlock(type: VirtualBlockchainType, hash: Hash) {
+        const info = await this.publicProvider.getMicroblockInformation(hash.toBytes());
+        const bodyList = await this.publicProvider.getMicroblockBodys([ hash.toBytes() ]);
 
+        const microblock = new Microblock(type);
+        microblock.load(info.header, bodyList[0].body);
+
+        return microblock;
     }
 
-    private async getVirtualBlockchainUpdate(vbId: Hash, knownHeight: number): Promise<VirtualBlockchainUpdate> {
-        const answer = await this.abciQuery<VirtualBlockchainUpdateInterface>(
-            SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE,
-            {
-                virtualBlockchainId: vbId.toBytes(),
-                knownHeight
-            }
-        );
-        if (!answer.exists) throw new VirtualBlockchainNotFoundError(vbId);
-        const state = NodeTranslator.translateVirtualBlockchainState(vbId, BlockchainUtils.decodeVirtualBlockchainState(answer.stateData));
-        const headers = answer.headers.map(h => NodeTranslator.translateMicroBlockHeader(BlockchainUtils.decodeMicroblockHeader(h)));
-        return NodeTranslator.translateVirtualBlockchainUpdate(state, headers);
+    async getManyMicroBlock(type: VirtualBlockchainType, hashes: Hash[]): Promise<Microblock[]> {
+        return Promise.all(hashes.map(async hash => {
+            return this.getMicroBlock(type, hash)
+        }))
     }
 
-
-    /*
-    async getVirtualBlockchainContent(vbId: Hash): Promise<void> {
-        let microblockHashes: string | any[] = [];
-
-        // we first search the virtual blockchain state in our internal provider
-        const state = await this.getVirtualBlockchainState(vbId);
-        const lastMicroBlockHash = state.getLastMicroblockHash();
-
-
-        // get the state of this VB from our internal provider
-        const stateData = await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
-
-        // if found, make sure that we still have all the microblock headers up to the height associated to this state
-        // and that they are consistent
-        if(stateData) {
-            state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
-            let height = state.height;
-            let microblockHash = state.lastMicroblockHash;
-            const headers = [];
-
-            while(height) {
-                const infoData = await this.getMicroblockInformation(microblockHash);
-
-                if(!infoData) {
-                    break;
-                }
-                const info = BlockchainUtils.decodeMicroblockInformation(infoData);
-                headers.push(info.header);
-                microblockHash = BlockchainUtils.previousHashFromHeader(info.header);
-                height--;
-            }
-
-            if(height == 0) {
-                const check = BlockchainUtils.checkHeaderList(headers);
-
-                if(check.valid) {
-                    check.hashes.reverse();
-
-                    if(Utils.binaryIsEqual(check.hashes[0], virtualBlockchainId)) {
-                        microblockHashes = check.hashes;
-                    }
-                    else {
-                        console.error("WARNING - genesis microblock hash from internal storage does not match VB identifier");
-                    }
-                }
-                else {
-                    console.error("WARNING - inconsistent hash chain in internal storage");
-                }
-            }
-        }
-
-        // query our external provider for state update and new headers, starting at the known height
-        const knownHeight = microblockHashes.length;
-        const vbUpdate = await this.externalProvider.getVirtualBlockchainUpdate(virtualBlockchainId, knownHeight);
-
-        if(!vbUpdate.exists) {
-            return null;
-        }
-
-        if(vbUpdate.changed) {
-            // check the consistency of the new headers
-            const check = BlockchainUtils.checkHeaderList(vbUpdate.headers);
-
-            if(!check.valid) {
-                throw `received headers are inconsistent`;
-            }
-
-            // make sure that the 'previous hash' field of the first new microblock matches the last known hash
-            if(knownHeight) {
-                const firstNewHeader = vbUpdate.headers[vbUpdate.headers.length - 1];
-                const linkedHash = BlockchainUtils.previousHashFromHeader(firstNewHeader);
-
-                if(!Utils.binaryIsEqual(linkedHash, microblockHashes[knownHeight - 1])) {
-                    throw `received headers do not link properly to the last known header`;
-                }
-            }
-
-            // update the VB state in our internal provider
-            await this.internalProvider.setVirtualBlockchainState(virtualBlockchainId, vbUpdate.stateData);
-
-            state = BlockchainUtils.decodeVirtualBlockchainState(vbUpdate.stateData);
-
-            // update the microblock information in our internal provider
-            for(let n = 0; n < vbUpdate.headers.length; n++) {
-                await this.internalProvider.setMicroblockInformation(
-                    check.hashes[n],
-                    BlockchainUtils.encodeMicroblockInformation(state.type, virtualBlockchainId, vbUpdate.headers[n])
-                );
-            }
-
-            // add the new hashes to the hash list
-            microblockHashes = [ ...microblockHashes, ...check.hashes.reverse() ];
-        }
-
-        return { state, microblockHashes };
+    async getVirtualBlockchainContent(vbId: Hash){
+        const content = await this.publicProvider.getVirtualBlockchainContent(vbId);
+        if (content === null || content.state === undefined) throw new NodeError("Invalid response from node")
+        const state = NodeTranslator.translateVirtualBlockchainState(vbId, content.state);
+        const hashes = content.microblockHashes.map(Hash.from);
+        return NodeTranslator.translateVirtualBlockchainUpdate(state, hashes);
     }
 
-     */
     async getMicroblockInformation(hash: Hash): Promise<MicroBlockInformation> {
-        const answer = await this.abciQuery<MicroblockInformationSchema>(
-            SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
-            {
-                hash
-            }
-        );
+        const answer = await this.publicProvider.getMicroblockInformation(hash.toBytes());
         // parse the header
         const headerObject: MicroBlockHeaderInterface = BlockchainUtils.decodeMicroblockHeader(answer.header);
         const header = NodeTranslator.translateMicroBlockHeader(headerObject);
@@ -236,12 +147,26 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return Hash.from(answer.virtualBlockchainId);
     }
 
-    async getAccountHistory(accountHash: Hash, lastHistoryHash?: Hash, maxRecords?: number): Promise<AccountHistoryView> {
+    private static DEFAULT_MAX_RECORDS_HISTORY = 100;
+    async getAccountHistory(accountHash: Hash, lastHistoryHash?: Hash, maxRecords: number= ABCINodeBlockchainReader.DEFAULT_MAX_RECORDS_HISTORY): Promise<AccountHistoryView> {
+        // we first search for the account state
+        const accountState = await this.getAccountState(accountHash);
+        if (accountState.isEmpty()) throw new AccountNotFoundForAccountHashError(accountHash);
+
+        // use the last history hash from the account state if not provided
+        let usedLastHistoryHash;
+        if (lastHistoryHash === undefined) {
+            usedLastHistoryHash = accountState.getLastHistoryHash();
+        } else {
+            usedLastHistoryHash = lastHistoryHash;
+        }
+
+        // search the account
         const answer = await this.abciQuery<AccountHistoryInterface>(
             SCHEMAS.MSG_GET_ACCOUNT_HISTORY,
             {
-                accountHash,
-                lastHistoryHash,
+                accountHash: accountHash.toBytes(),
+                lastHistoryHash: usedLastHistoryHash.toBytes(),
                 maxRecords
             }
         );
@@ -262,27 +187,14 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
                 accountHash: accountHash.toBytes()
             }
         );
-        return AccountState.createFromDTO(answer)
-    }
-
-    async getFullVirtualBlockchainView<VB extends AbstractVirtualBlockchainView<MB>, MB extends AbstractMicroBlock = AbstractMicroBlock>(vbId: Hash): Promise<VB> {
-        const state = await this.getVirtualBlockchainState(vbId);
-        const endHeight = state.getHeight();
-        const heights = Array.from({ length: endHeight }, (_, i) => i + 1);
-        return this.getVirtualBlockchainView(vbId, heights);
+        const state = AccountState.createFromDTO(answer);
+        if (state.isEmpty()) throw new AccountNotFoundForAccountHashError(accountHash);
+        return state;
     }
 
     async getBalanceOfAccount(accountHash: Hash): Promise<CMTSToken> {
         const accountState = await this.getAccountState(accountHash);
         return accountState.getBalance();
-    }
-
-    getFirstMicroBlockInVirtualBlockchain<VB extends AbstractVirtualBlockchainView<MB>, MB extends AbstractMicroBlock = AbstractMicroBlock>(vbId: Hash): Promise<VB> {
-        return this.getVirtualBlockchainView(vbId, [1]);
-    }
-
-    getMicroBlockHeader(vbId: Hash, height: number): Promise<MicroBlockHeader> {
-        throw new NotImplementedError(); // TODO
     }
 
     async getAccountByPublicKey(publicKey: PublicSignatureKey, hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()): Promise<Hash> {
@@ -307,33 +219,137 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return NodeTranslator.translateVirtualBlockchainState(vbId, state);
     }
 
-    async getVirtualBlockchainView<VB extends AbstractVirtualBlockchainView<AbstractMicroBlock>>(vbId: Hash, heights: number[]): Promise<VB> {
-        // we first recreate an empty view of the virtual blockchain
-        const state = await this.getVirtualBlockchainState(vbId);
-        const virtualBlockchainType: VirtualBlockchainType = state.getType();
-        let vb: AbstractVirtualBlockchainView<AbstractMicroBlock>;
-        switch (virtualBlockchainType) {
-            case VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN: vb = new AccountVirtualBlockchainView(state); break;
-            case VirtualBlockchainType.ORGANISATION_VIRTUAL_BLOCKCHAIN: vb = new OrganisationVirtualBlockchainView(state); break;
-            case VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN: vb = new ApplicationVirtualBlockchainView(state); break;
-            case VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN: vb = new AppLedgerVirtualBlockchainView(state); break;
-            case VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN: throw new NotImplementedError(); // TODO
-            default: throw new NodeError(`Invalid virtual blockchain type: ${virtualBlockchainType}`);
+
+    /**
+     * Loads the application ledger associated with the given VB ID.
+     *
+     * @param {Hash} vbId - The hash identifier for the application ledger to load.
+     * @param provider
+     * @return {Promise<ApplicationLedger>} A promise that resolves to an instance of ApplicationLedger after loading.
+     */
+    async loadApplicationLedger(vbId: Hash, provider: Provider = this.publicProvider): Promise<ApplicationLedger> {
+       try {
+           const applicationLedger = new ApplicationLedger({ provider });
+           await applicationLedger._load(vbId.toBytes());
+           return applicationLedger;
+       } catch (e) {
+           if (e instanceof VirtualBlockchainNotFoundError) {
+               throw new ApplicationLedgerNotFoundError(vbId);
+           } else {
+               throw e
+           }
+       }
+    }
+
+    async loadApplication(identifier: Hash): Promise<Application> {
+       try {
+           const application = new Application({ provider: this.publicProvider });
+           await application._load(identifier.toBytes());
+           return application;
+       } catch (e) {
+           if (e instanceof VirtualBlockchainNotFoundError) {
+               throw new ApplicationNotFoundError(identifier)
+           } else {
+               throw e
+           }
+       }
+    }
+
+    async loadOrganization(vbId: Hash): Promise<Organization> {
+        try {
+            const organization = new Organization({ provider: this.publicProvider });
+            await organization._load(vbId.toBytes());
+            return organization;
+        } catch (e) {
+            if (e instanceof VirtualBlockchainNotFoundError) {
+                throw new OrganisationNotFoundError(vbId);
+            } else {
+                throw e
+            }
         }
 
-        // then, we populate the view with required microblocks
-        for (const height of heights) {
-            const mb = await this.getMicroBlockAtHeightInVirtualBlockchain(vbId, height);
-            vb.addMicroBlock(mb);
-        }
+    }
 
-        return vb as VB;
+    async loadAccount(identifier: Hash) {
+        try {
+            const account = new Account({ provider: this.publicProvider });
+            await account._load(identifier.toBytes());
+            return account;
+        } catch (e) {
+            if (e instanceof VirtualBlockchainNotFoundError) {
+                throw new AccountNotFoundForAccountHashError(identifier);
+            } else {
+                throw e
+            }
+        }
+    }
+
+    async getRecord<T = any>(vbId: Hash, height: number, privateKey?: PrivateSignatureKey): Promise<T> {
+        // decide if we use keyed provider or public provider
+        const provider = privateKey !== undefined ? new KeyedProvider(privateKey, this.cacheProvider, this.networkProvider) : this.publicProvider;
+        const appLedger = await this.loadApplicationLedger(vbId, provider);
+        return appLedger.getRecord(height);
+    }
+
+    async verifyProofFromJson(proof: Proof) {
+
+        // import the app ledger
+        const appLedger = new ApplicationLedger({ provider: this.publicProvider });
+        await appLedger._load(Utils.binaryFromHexa(proof.info.virtualBlockchainIdentifier));
+        try {
+            const importedProof = await appLedger.importProof(proof);
+            return ProofVerificationResult.createSuccessfulProofVerificationResult(appLedger, importedProof);
+        } catch (e) {
+            if (e instanceof ProofVerificationResult) {
+                return ProofVerificationResult.createFailedProofVerificationResult(appLedger)
+            } else {
+                throw e
+            }
+        }
+    }
+
+    /**
+     * Retrieves a list of accounts from the specified chain.
+     *
+     * @return {Promise<Hash[]>} A promise that resolves to an array of account objects.
+     */
+    async getAllAccounts() {
+        return await this.getObjectList(VB_ACCOUNT);
+    }
+
+    /**
+     * Retrieves the list of validator nodes from the specified chain.
+     *
+     * @return {Promise<Hash[]>} A promise that resolves to an array of validator node objects.
+     */
+    async getAllValidatorNodes() {
+        return await this.getObjectList(VB_VALIDATOR_NODE);
+    }
+
+    /**
+     * Retrieves a list of organizations.
+     *
+     * @return {Promise<Hash[]>} A promise that resolves to an array of organizations.
+     */
+    async getAllOrganisations() {
+        return await this.getObjectList(VB_ORGANIZATION);
+    }
+
+    /**
+     * Retrieves a list of applications from the specified chain.
+     *
+     * @return {Promise<Hash[]>} A promise that resolves to an array of application objects.
+     */
+    async getAllApplications() {
+        return await this.getObjectList(VB_APPLICATION);
+    }
+
+    private async getObjectList( objectType: number ): Promise<Hash[]> {
+        const response = await this.publicProvider.getObjectList(objectType);
+        return response.list.map(Hash.from)
     }
 
 
-    private getMicroBlockAtHeightInVirtualBlockchain(vbId: Hash, height: number): Promise<AbstractMicroBlock> {
-        throw new NotImplementedError();
-    }
 
     private async query(urlObject: any): Promise<{data: string}> {
         return new Promise(async (resolve, reject) => {

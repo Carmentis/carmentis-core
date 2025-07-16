@@ -1,6 +1,7 @@
 import { DATA, SCHEMAS } from "../constants/constants";
 import { WriteStream, ReadStream } from "./byteStreams";
 import { TypeManager, TypeChecker } from "./types";
+import {TypeCheckingFailureError} from "../errors/carmentis-error";
 
 export class SchemaSerializer<T = any> {
   schema: SCHEMAS.Schema;
@@ -25,7 +26,7 @@ export class SchemaSerializer<T = any> {
   /**
     Serializes any sub-object of the full structure.
   */
-  serializeObject(schemaDefinition: SCHEMAS.SchemaItem[], object: any, path = "") {
+  private serializeObject(schemaDefinition: SCHEMAS.SchemaItem[], object: any, path = "") {
     for(const schemaItem of schemaDefinition) {
       const fieldPath = path + (path && ".") + schemaItem.name;
       const value = object[schemaItem.name];
@@ -86,7 +87,7 @@ export class SchemaSerializer<T = any> {
         typeChecker.check();
       }
       catch(error) {
-        throw `Error on field '${fieldPath}': ${error}`;
+        throw new TypeCheckingFailureError(`Error on field '${fieldPath}': ${error}`);
       }
 
       this.stream.writeSchemaValue(mainType, value, schemaItem.size);

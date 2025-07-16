@@ -1,4 +1,4 @@
-import {AccountCreation, AppDescription, OrgDescription} from "../entities/MicroBlock";
+import {AccountCreationInformation, AppDescription, OrgDescription} from "../entities/MicroBlock";
 import {CMTSToken} from "../economics/currencies/token";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
@@ -64,13 +64,6 @@ export interface BlockchainFacadeInterface {
      */
     getPublicKeyOfIssuer(): Promise<PublicSignatureKey>;
 
-    /**
-     * Retrieves information about the creation of an account using the provided account hash.
-     *
-     * @param {Hash} accountHash - The hash representing the account whose creation information is being requested.
-     * @return {Promise<AccountCreation>} A promise that resolves to the account creation information.
-     */
-    getAccountCreationInformation(accountHash: Hash): Promise<AccountCreation>;
 
     /**
      * Retrieves the account history for the given account hash.

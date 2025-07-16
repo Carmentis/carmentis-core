@@ -1,5 +1,6 @@
 import { DATA } from "../constants/constants";
 import { Utf8Encoder } from "./utf8Encoder";
+import {TypeCheckingFailureError} from "../errors/carmentis-error";
 
 const JSON_TYPES =
   1 << DATA.TYPE_ARRAY |
@@ -119,10 +120,10 @@ export class TypeChecker {
     this.isInteger();
 
     if(this.value < 0) {
-      throw `non-negative value expected`;
+      throw new TypeCheckingFailureError(`non-negative value expected`);
     }
     if(this.value >= 2 ** nBits) {
-      throw `value is too big (${nBits}-bit value expected)`;
+      throw new Error(`value is too big (${nBits}-bit value expected)`);
     }
   }
 

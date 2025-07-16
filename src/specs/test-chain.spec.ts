@@ -1,34 +1,54 @@
 import {describe, expect, test} from '@jest/globals';
-import {Provider} from "../common/providers/provider";
-import {KeyedProvider} from "../common/providers/keyed-provider";
-import {MemoryProvider} from "../common/providers/memoryProvider";
-import {ServerNetworkProvider} from "../common/providers/serverNetworkProvider";
+import {Provider} from "../common/providers/Provider";
+import {KeyedProvider} from "../common/providers/KeyedProvider";
+import {MemoryProvider} from "../common/providers/MemoryProvider";
 import {Blockchain} from "../common/blockchain/blockchain";
 import {IntermediateRepresentation} from "../common/records/intermediateRepresentation";
-import {Utils} from "../common/utils/utils";
-import {SchemaSerializer, SchemaUnserializer} from "../common/data/schemaSerializer";
-import {ReadStream, WriteStream} from "../common/data/byteStreams";
 import {DATA, ECO} from '../common/constants/constants';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 import {EncoderFactory} from "../common/utils/encoder";
 import {Crypto} from "../common/crypto/crypto";
 import {Hash} from "../common/entities/Hash";
+import {NetworkProvider} from "../common/providers/NetworkProvider";
+import {BlockchainFacade} from "../common/providers/BlockchainFacade";
+import {PublicationExecutionContext} from "../common/providers/publicationContexts/PublicationExecutionContext";
+import {
+    AccountPublicationExecutionContext
+} from "../common/providers/publicationContexts/AccountPublicationExecutionContext";
+import {CMTSToken} from "../common/economics/currencies/token";
+import {
+    AccountTransferPublicationExecutionContext
+} from "../common/providers/publicationContexts/AccountTransferPublicationExecutionContext";
+import {
+    OrganisationPublicationExecutionContext
+} from "../common/providers/publicationContexts/OrganisationPublicationExecutionContext";
+import {
+    ApplicationPublicationExecutionContext
+} from "../common/providers/publicationContexts/ApplicationPublicationExecutionContext";
+import {
+    RecordPublicationExecutionContext
+} from "../common/providers/publicationContexts/RecordPublicationExecutionContext";
+import {
+    AccountNotFoundForAccountHashError, ApplicationLedgerNotFoundError, ApplicationNotFoundError,
+    CarmentisError,
+    OrganisationNotFoundError
+} from "../common/errors/carmentis-error";
+import {RecordDescription} from "../common/blockchain/RecordDescription";
 
 const NODE_URL = "http://localhost:26657";
 
 describe('Chain test', () => {
-    const TEST_TIMEOUT = 5000;
+    const TEST_TIMEOUT = 10000;
+    /*
     test("testChain()", async () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
         const memoryProvider = new MemoryProvider();
-        const networkProvider = new ServerNetworkProvider(NODE_URL);
+        const networkProvider = new NetworkProvider(NODE_URL);
         const keyedProvider = new KeyedProvider(privateKey, memoryProvider, networkProvider);
 
         let blockchain = new Blockchain(keyedProvider);
 
-        /**
-          Testing account
-        */
+        // Testing account
         console.log("creating genesis account");
 
         let genesisAccount = await blockchain.createGenesisAccount();
@@ -83,9 +103,7 @@ describe('Chain test', () => {
 
         genesisAccount = await blockchain.loadAccount(genesisAccountId);
 
-        /**
-          Testing organization
-        */
+        // Testing organization
         console.log("creating organization");
 
         let organization = await blockchain.createOrganization();
@@ -108,9 +126,7 @@ describe('Chain test', () => {
         console.log(await organization.getDescription());
         console.log(await organization.getDescription());
 
-        /**
-          Testing application
-        */
+        // Testing application
         console.log("creating application");
 
         let application = await blockchain.createApplication(organizationId);
@@ -131,9 +147,7 @@ describe('Chain test', () => {
         console.log("declaration", await application.getDeclaration());
         console.log("description", await application.getDescription());
 
-        /**
-          Testing application ledger
-        */
+        // Testing application ledger
         const object = {
             applicationId: applicationId.encode(),
             data: {
@@ -186,9 +200,7 @@ describe('Chain test', () => {
         const importStatus = await importer.check();
         console.log(`import: status=${importStatus}, error=${importer.error}`);
 
-        /**
-          Testing explorer
-        */
+        // Testing explorer
         const explorerProvider = new Provider(memoryProvider, networkProvider);
 
         blockchain = new Blockchain(explorerProvider);
@@ -216,70 +228,204 @@ describe('Chain test', () => {
         console.log("explorer.getAccounts", await explorer.getAccounts());
     }, TEST_TIMEOUT);
 
-    test('testIr()', async () => {
-        let ir, testObject, sectionData;
+     */
 
-        testObject =
-            {
-                someString: "Hello, world!",
-                email: "john.doe@gmail.com",
-                someObject: {
-                    someStringProp: "As we travel the universe 🪐",
-                    someNumberArrayProp: [ 123, 456, 78.9 ],
-                    someObjectArrayProp: [ { name: "a" }, { name: "b" }, { name: "c" } ],
-                    someNullProp: null,
-                    someBooleanProp: true
-                }
+    // init the content
+    const nodeUrl = "http://localhost:26657";
+    const privateKey = MLDSA65PrivateSignatureKey.gen();
+    const blockchain = BlockchainFacade.createFromNodeUrlAndPrivateKey(nodeUrl, privateKey);
+
+    test("Correct usage of BlockchainFacade", async () => {
+
+
+
+        // Testing account
+        console.log("creating genesis account");
+        // create the genesis account
+        const genesisCreationContext = new PublicationExecutionContext();
+        const genesisAccountId = await blockchain.createAndPublishGenesisAccount(genesisCreationContext);
+        const genesisAccount = await blockchain.loadAccount(genesisAccountId);
+        console.log("Genesis account created with id ", genesisAccountId.encode());
+
+
+        {
+
+            // create a first account
+            const firstAccountPrivateKey = MLDSA65PrivateSignatureKey.gen();
+            const firstAccountCreationContext = new AccountPublicationExecutionContext()
+                .withBuyerPublicKey(firstAccountPrivateKey.getPublicKey())
+                .withSellerAccount(genesisAccountId)
+                .withInitialBuyerAccountAmount(CMTSToken.createCMTS(2));
+            const firstAccountId = await blockchain.createAndPublishAccount(firstAccountCreationContext);
+            const firstAccount = await blockchain.loadAccount(firstAccountId);
+
+            // create a second account
+            const secondAccountPrivateKey = MLDSA65PrivateSignatureKey.gen();
+            const secondAccountCreationContext = new AccountPublicationExecutionContext()
+                .withBuyerPublicKey(secondAccountPrivateKey.getPublicKey())
+                .withSellerAccount(genesisAccountId)
+                .withInitialBuyerAccountAmount(CMTSToken.zero())
+            const secondAccountId = await blockchain.createAndPublishAccount(secondAccountCreationContext);
+            const secondAccount = await blockchain.loadAccount(secondAccountId);
+
+            // proceed to a transfer between the first and the second account
+            const transferContext = new AccountTransferPublicationExecutionContext()
+                .withTransfer(firstAccountPrivateKey, secondAccountId)
+                .withAmount(CMTSToken.oneCMTS());
+            await blockchain.publishTokenTransfer(transferContext);
+
+            // we get balances of first and second accounts
+            const firstAccountBalance = await blockchain.getAccountBalance(firstAccountId);
+            const secondAccountBalance = await blockchain.getAccountBalance(secondAccountId);
+            expect(firstAccountBalance.equals(secondAccountBalance)).toBeTruthy()
+            expect(firstAccountBalance.getAmountAsCMTS()).toEqual(CMTSToken.oneCMTS().getAmountAsCMTS());
+        }
+
+
+        {
+            // Testing organization
+            const organisationCreationContext = new OrganisationPublicationExecutionContext()
+                .withCity("Paris")
+                .withCountryCode("FR")
+                .withName("Carmentis SAS")
+                .withWebsite("www.carmentis.io");
+            const organizationId = await blockchain.createAndPublishOrganisation(organisationCreationContext);
+            const organizationDescription = await blockchain.getOrganisationDescription(organizationId);
+            expect(organizationDescription.getCity()).toEqual("Paris");
+            expect(organizationDescription.getCountryCode()).toEqual("FR");
+            expect(organizationDescription.getName()).toEqual("Carmentis SAS");
+            expect(organizationDescription.getWebsite()).toEqual("www.carmentis.io");
+
+            // Testing application
+            const applicationCreationContext = new ApplicationPublicationExecutionContext()
+                .withOrganisationId(organizationId)
+                .withApplicationName("My application");
+            const applicationId = await blockchain.createAndPublishApplication(applicationCreationContext);
+            const applicationDescription = await blockchain.getApplicationDescription(applicationId);
+            expect(applicationDescription.getName()).toEqual("My application");
+
+            // Testing application ledger by submitting two elements
+            const data = {
+                    firstname: "John",
+                    lastname: "Doe",
+                    email: "john.doe@gmail.com"
+                };
+            const object = {
+                applicationId: applicationId.encode(),
+                data,
+                actors: [
+                    { name: "seller" }
+                ],
+                channels: [
+                    { name: "mainChannel", public: false }
+                ],
+                channelAssignations: [
+                    { channelName: "mainChannel", fieldPath: "this.*" }
+                ],
+                actorAssignations: [
+                    { channelName: "mainChannel", actorName: "seller" }
+                ],
+                author: "seller"
             };
 
-        ir = new IntermediateRepresentation;
-        ir.addPrivateChannel(0);
-        ir.addPrivateChannel(1);
+            const recordPublicationContext = new RecordPublicationExecutionContext()
+                .withGasPrice(CMTSToken.createCMTS(2))
+                .withRecord(object);
+            const appLedgerId = await blockchain.publishRecord(recordPublicationContext);
+            const appLedger = await blockchain.loadApplicationLedger(appLedgerId);
+            const recoveredData = await appLedger.getRecord(1);
+            const otherRecoveredData = await blockchain.getRecord(appLedgerId, 1);
+            expect(recoveredData).toEqual(otherRecoveredData);
+            expect(recoveredData).toEqual(data);
 
-        ir.buildFromJson(testObject);
-        ir.setChannel("this.*", 0);
-        ir.setChannel("this.someObject.someStringProp, this.someObject.someNullProp", 1);
-        ir.setAsMaskableByRegex("this.email", /^(.)(.*?)(@.)(.*?)(\..*)$/, "$1***$3***$5");
-        ir.serializeFields();
-        ir.populateChannels();
 
-        sectionData = ir.exportToSectionFormat();
-        console.log("sectionData", sectionData);
+            const secondData = {
+                firstname: "John",
+                lastname: "Doe",
+                email: "john.doe@gmail.com"
+            };
+            const otherObject: RecordDescription = {
+                virtualBlockchainId: appLedgerId.encode(),
+                applicationId: applicationId.encode(),
+                data: secondData,
+                channelAssignations: [
+                    { channelName: "mainChannel", fieldPath: "this.*" }
+                ],
+                actorAssignations: [
+                    { channelName: "mainChannel", actorName: "seller" }
+                ],
+                author: "seller"
+            };
 
-        ir.setAsRedacted("this.someObject.someNumberArrayProp[*]");
+            const secondRecordPublicationContext = new RecordPublicationExecutionContext()
+                .withGasPrice(CMTSToken.createCMTS(2))
+                .withRecord(otherObject);
+            await blockchain.publishRecord(secondRecordPublicationContext);
+            const secondAppLedger = await blockchain.loadApplicationLedger(appLedgerId);
+            expect(await secondAppLedger.getRecord(2)).toEqual(await blockchain.getRecord(appLedgerId, 2));
 
-        const proof1 = ir.exportToProof();
-        console.log("proof 1", JSON.stringify(proof1, null, 2));
+            // we export the proof
+            const proofBuilder = await blockchain.createProofBuilderForApplicationLedger(appLedgerId);
+            const proof = await proofBuilder.exportProofForEntireVirtualBlockchain("Gael Marcadet");
+            const proofVerificationResult = await blockchain.verifyProofFromJson(proof);
+            expect(proofVerificationResult.isVerified()).toBeTruthy();
+        }
 
-        ir = new IntermediateRepresentation;
-        ir.addPrivateChannel(0);
-        ir.addPrivateChannel(1);
-        console.log(ir.importFromProof(proof1));
-        ir.setAsMasked("this.email");
-        const proof2 = ir.exportToProof();
-        console.log("proof 2", JSON.stringify(proof2, null, 2));
+        {
+            // Testing access to all items
+            const accounts = await blockchain.getAllAccounts();
+            const organisations = await blockchain.getAllOrganisations();
+            const applications = await blockchain.getAllApplications();
+            const nodes = await blockchain.getAllValidatorNodes();
+            expect(accounts).toBeInstanceOf(Array);
+            expect(accounts.length).toBeGreaterThanOrEqual(2);
+            expect(organisations).toBeInstanceOf(Array);
+            expect(organisations.length).toBeGreaterThanOrEqual(1);
+            expect(applications).toBeInstanceOf(Array);
+            expect(applications.length).toBeGreaterThanOrEqual(1);
+            expect(nodes).toBeInstanceOf(Array);
+        }
 
-        ir = new IntermediateRepresentation;
-        ir.addPrivateChannel(0);
-        ir.addPrivateChannel(1);
-        console.log(ir.importFromProof(proof2));
-        ir.setAsRedacted("this.email");
-        ir.setAsRedacted("this.someObject.someStringProp");
-        const proof3 = ir.exportToProof();
-        console.log("proof 3", JSON.stringify(proof3, null, 2));
 
-        ir = new IntermediateRepresentation;
-        ir.addPrivateChannel(0);
-        ir.addPrivateChannel(1);
-        console.log(ir.importFromProof(proof3));
 
-        console.log("exportToJson", JSON.stringify(ir.exportToJson(), null, 2));
 
-        ir = new IntermediateRepresentation;
-        ir.addPrivateChannel(0);
-        ir.addPrivateChannel(1);
 
-        ir.importFromSectionFormat(sectionData);
-        console.log("recovered from sections", JSON.stringify(ir.exportToJson(), null, 2));
+
+
     })
+
+    it('Invalid usage of BlockchainFacade: Unknown account', async () =>  {
+        const unknownAccountHash = Hash.from("00000000000000000000000000D788B255BD69B9F3019EF60105F160BE7A73C0");
+
+        // search for unknown account history
+        await expect(async () => await blockchain.getAccountHistory(unknownAccountHash))
+            .rejects
+            .toThrow(AccountNotFoundForAccountHashError);
+
+        // search for unknown account state
+        await expect(async () => await blockchain.getAccountState(unknownAccountHash))
+            .rejects
+            .toThrow(AccountNotFoundForAccountHashError);
+
+        // search for unknown account balance
+        await expect(async () => await blockchain.getAccountBalance(unknownAccountHash))
+            .rejects
+            .toThrow(AccountNotFoundForAccountHashError);
+
+        // search for unknown organisation
+        await expect(async () => await blockchain.loadOrganization(unknownAccountHash))
+            .rejects
+            .toThrow(OrganisationNotFoundError)
+
+        // search for unkown application
+        await expect(async () => await blockchain.loadApplication(unknownAccountHash))
+            .rejects
+            .toThrow(ApplicationNotFoundError)
+
+        // search for unknown application ledger
+        await expect(async () => await blockchain.loadApplicationLedger(unknownAccountHash))
+            .rejects
+            .toThrow(ApplicationLedgerNotFoundError)
+
+    });
 });

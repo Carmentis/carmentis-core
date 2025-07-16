@@ -1,71 +1,16 @@
-import {Provider} from "../providers/provider";
+import {Provider} from "../providers/Provider";
 import {Explorer} from "./explorer";
-import {MicroblockImporter} from "./microblockImporter";
-import {Account} from "./account";
-import {Organization} from "./organization";
-import {Application} from "./application";
-import {ApplicationLedger} from "./applicationLedger";
+import {MicroblockImporter} from "./MicroblockImporter";
+import {Account} from "./Account";
+import {Organization} from "./Organization";
+import {Application} from "./Application";
+import {ApplicationLedger} from "./ApplicationLedger";
 import {Utils} from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ImportedProof, Proof} from "./types";
 import {Hash} from "../entities/Hash";
-
-
-export interface RecordActor {
-  name: string;
-}
-
-export interface RecordChannel {
-  name: string;
-  public: boolean;
-}
-
-export interface RecordChannelAssignation {
-  fieldPath: string;
-  channelName: string;
-}
-
-export interface RecordActorAssignation {
-  actorName: string;
-  channelName: string;
-}
-
-export interface RecordMaskedPart {
-  position: number;
-  length: number;
-  replacementString: string;
-}
-
-export interface RecordMaskableField {
-  fieldPath: string;
-  maskedParts: RecordMaskedPart[];
-}
-
-export interface RecordHashableField {
-  fieldPath: string;
-}
-
-export interface RecordDescription<DataType = any> {
-  /**
-   * Links the record to an application.
-   */
-  applicationId: string;
-
-  /**
-   * Links the record to an existing transactional flow. When omitted, the record is put in a new virtual blockchain.
-   */
-  virtualBlockchainId?: string;
-  data: DataType;
-  actors?: RecordActor[];
-  channels?: RecordChannel[];
-  channelAssignations?: RecordChannelAssignation[];
-  actorAssignations?: RecordActorAssignation[];
-  hashableFields?: RecordHashableField[];
-  maskableFields?: RecordMaskableField[];
-  author: string;
-  endorser?: string;
-}
+import {RecordDescription} from "./RecordDescription";
 
 
 export type OperatorAnchorRequest = Omit<RecordDescription, 'applicationId'> & { approvalMessage: string }
@@ -129,7 +74,6 @@ export class Blockchain {
    * @return {Promise<Account>} A promise that resolves to an instance of the loaded account.
    */
   async loadAccount(identifier: Hash) {
-    const hexEncoder = EncoderFactory.bytesToHexEncoder();
     const account = new Account({ provider: this.provider });
     await account._load(identifier.toBytes());
     return account;

@@ -1,13 +1,15 @@
 import {MicroBlockHeaderInterface} from "./MicroBlockHeaderInterface";
-import {MicroBlockHeader} from "./MicroBlockHeader";
-import {Hash, CMTSToken, VirtualBlockchainStateInterface} from "../common";
+import {AbstractMicroBlockHeader} from "./AbstractMicroBlockHeader";
 import {VirtualBlockchainState} from "./VirtualBlockchainState";
 import {MicroBlockInformation} from "./MicroBlockInformation";
 import {VirtualBlockchainUpdate} from "./VirtualBlockchainUpdate";
+import {Hash} from "./Hash";
+import {CMTSToken} from "../economics/currencies/token";
+import {VirtualBlockchainStateInterface} from "../blockchain/types";
 
 export class NodeTranslator {
-    static translateMicroBlockHeader(header: MicroBlockHeaderInterface): MicroBlockHeader {
-        return new class extends MicroBlockHeader {
+    static translateMicroBlockHeader(header: MicroBlockHeaderInterface): AbstractMicroBlockHeader {
+        return new class extends AbstractMicroBlockHeader {
             getBodyHash = () => Hash.from(header.bodyHash);
             getGas = () => CMTSToken.createAtomic(header.gas)
             getGasPrice = () => CMTSToken.createAtomic(header.gasPrice);
@@ -18,9 +20,9 @@ export class NodeTranslator {
         };
     }
 
-    static translateMicroBlockInformation(header: MicroBlockHeader, state: VirtualBlockchainState) {
+    static translateMicroBlockInformation(header: AbstractMicroBlockHeader, state: VirtualBlockchainState) {
         return new class extends MicroBlockInformation {
-            getMicroBlockHeader(): MicroBlockHeader {
+            getMicroBlockHeader(): AbstractMicroBlockHeader {
                 return header;
             }
             getVirtualBlockchainState(): VirtualBlockchainState {
@@ -38,10 +40,12 @@ export class NodeTranslator {
         }
     }
 
-    static translateVirtualBlockchainUpdate(state: VirtualBlockchainState, headers: MicroBlockHeader[]): VirtualBlockchainUpdate {
+    static translateVirtualBlockchainUpdate(state: VirtualBlockchainState, hashes: Hash[]): VirtualBlockchainUpdate {
         return new class extends VirtualBlockchainUpdate {
             getVirtualBlockchainState = () => state
-            getMicroBlockHeaders = () => headers
+            getMicroBlockHashes(): Hash[] {
+                return hashes;
+            }
         }
     }
  }

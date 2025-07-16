@@ -1,23 +1,32 @@
-import {CacheBlockchainReader} from "./CacheBlockchainReader";
 import {ABCINodeBlockchainReader} from "./ABCINodeBlockchainReader";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ABCINodeBlockchainWriter} from "./ABCINodeBlockchainWriter";
-import {IllegalParameterError, NotImplementedError, IllegalUsageError} from "../errors/carmentis-error";
-import {AccountCreation, AppDescription, OrgDescription} from "../entities/MicroBlock";
-import {
-    AccountVirtualBlockchainView,
-    ApplicationVirtualBlockchainView,
-    OrganisationVirtualBlockchainView
-} from "../entities/VirtualBlockchainView";
+import {IllegalUsageError, NotImplementedError} from "../errors/carmentis-error";
+import {AccountCreationInformation, AppDescription, OrgDescription} from "../entities/MicroBlock";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
-import {BytesSignatureEncoder} from "../crypto/signature/signature-encoder";
-import {AppLedgerVirtualBlockchainView} from "../entities/AppLedgerVirtualBlockchainView";
-import {IntermediateRepresentation} from "../records/intermediateRepresentation";
-import {BlockchainReader, BlockchainWriter} from "./provider";
 import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
-import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 import {Hash} from "../entities/Hash";
+import {ApplicationLedger} from "../blockchain/ApplicationLedger";
+import {BlockchainReader} from "./BlockchainReader";
+import {Application} from "../blockchain/Application";
+import {Organization} from "../blockchain/Organization";
+import {BlockchainWriter} from "./BlockchainWriter";
+import {PublicationExecutionContext} from "./publicationContexts/PublicationExecutionContext";
+import {OrganisationPublicationExecutionContext} from "./publicationContexts/OrganisationPublicationExecutionContext";
+import {AccountPublicationExecutionContext} from "./publicationContexts/AccountPublicationExecutionContext";
+import {ApplicationPublicationExecutionContext} from "./publicationContexts/ApplicationPublicationExecutionContext";
+
+import {RecordDescription} from "../blockchain/RecordDescription";
+import {RecordPublicationExecutionContext} from "./publicationContexts/RecordPublicationExecutionContext";
+import {ProofBuilder} from "../entities/ProofBuilder";
+import {Utils} from "../utils/utils";
+import {Proof} from "../blockchain/types";
+import {
+    AccountTransferPublicationExecutionContext
+} from "./publicationContexts/AccountTransferPublicationExecutionContext";
+import {Height} from "../entities/Height";
+import {AccountState} from "../entities/AccountState";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.
@@ -28,10 +37,7 @@ import {Hash} from "../entities/Hash";
  */
 export class BlockchainFacade implements BlockchainFacadeInterface {
 
-    private writer?: BlockchainWriter;
-
-    constructor(private reader: BlockchainReader) {
-    }
+    constructor(private nodeUrl: string, private reader: BlockchainReader, private writer?: BlockchainWriter) {}
 
     /**
      * Creates an instance of BlockchainFacade using the provided node URL.
@@ -40,21 +46,24 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
      * @return {BlockchainFacade} An instance of BlockchainFacade configured with the specified node URL.
      */
     static createFromNodeUrl(nodeUrl: string): BlockchainFacade {
-        const reader = CacheBlockchainReader.createFromBlockchainReader(
-            ABCINodeBlockchainReader.createFromNodeURL(nodeUrl)
-        );
-        return new BlockchainFacade(reader);
+        const reader = ABCINodeBlockchainReader.createFromNodeURL(nodeUrl);
+        return new BlockchainFacade(nodeUrl, reader);
     }
 
     /**
-     * Configures the private key for the blockchain writer.
+     * Creates an instance of BlockchainFacade using the provided node URL and private signature key.
      *
-     * @param {PrivateSignatureKey} privateKey - The private signature key to be used for configuring the blockchain writer.
-     * @return {void} This method does not return any value.
+     * @param {string} nodeUrl - The URL of the blockchain node to connect to.
+     * @param {PrivateSignatureKey} privateKey - The private signature key for authentication and signing transactions.
+     * @return {BlockchainFacade} A new instance of BlockchainFacade configured with the given node URL and private key.
      */
-    configurePrivateKey(privateKey: PrivateSignatureKey) {
-        this.writer = new ABCINodeBlockchainWriter();
+    static createFromNodeUrlAndPrivateKey(nodeUrl: string, privateKey: PrivateSignatureKey): BlockchainFacade {
+        const reader = ABCINodeBlockchainReader.createFromNodeURL(nodeUrl);
+        const writer = ABCINodeBlockchainWriter.createWriter(reader, nodeUrl, privateKey);
+        return new BlockchainFacade(nodeUrl, reader, writer);
     }
+
+
 
     private getBlockchainWriter(): BlockchainWriter {
         if (!this.writer) {
@@ -65,25 +74,49 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
 
 
     async getApplicationDescription(applicationId: Hash): Promise<AppDescription> {
-        const view = await this.reader.getFirstMicroBlockInVirtualBlockchain<ApplicationVirtualBlockchainView>(applicationId);
-        const microblock = view.getFirstMicroBlock()
-        return microblock.getDescription();
+        const description = await this.reader.getApplicationDescription(applicationId);
+        return new class extends AppDescription {
+            getDescription(): string {
+                return description.description;
+            }
+
+            getHomepageUrl(): string {
+                return description.homepageUrl;
+            }
+
+            getLogoUrl(): string {
+                return description.logoUrl;
+            }
+
+            getName(): string {
+                return description.name;
+            }
+        };
     }
 
-    async getOrganisationDescription(organisationIc: Hash): Promise<OrgDescription> {
-        const view = await this.reader.getFirstMicroBlockInVirtualBlockchain<OrganisationVirtualBlockchainView>(organisationIc);
-        const microblock = view.getFirstMicroBlock()
-        return microblock.getDescription();
+    async getOrganisationDescription(organisationId: Hash): Promise<OrgDescription> {
+        const description = await this.reader.getOrganisationDescription(organisationId);
+        return new class extends OrgDescription {
+            getCity(): string {
+                return description.city;
+            }
+
+            getCountryCode(): string {
+                return description.countryCode;
+            }
+
+            getName(): string {
+                return description.name;
+            }
+
+            getWebsite(): string {
+                return description.website;
+            }
+        }
     }
 
     getAccountBalance(accountHash: Hash): Promise<CMTSToken> {
         return this.reader.getBalanceOfAccount(accountHash)
-    }
-
-    async getAccountCreationInformation(accountHash: Hash): Promise<AccountCreation> {
-        const view = await this.reader.getFirstMicroBlockInVirtualBlockchain<AccountVirtualBlockchainView>(accountHash);
-        const microblock = view.getFirstMicroBlock();
-        return microblock.getAccountCreation();
     }
 
     getAccountHistory(accountHash: Hash): Promise<AccountHistoryView> {
@@ -91,9 +124,8 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
     }
 
     async getIdOfOrganisationOwningApplication(applicationId: Hash): Promise<Hash> {
-        const view = await this.reader.getFirstMicroBlockInVirtualBlockchain<ApplicationVirtualBlockchainView>(applicationId);
-        const microblock = view.getFirstMicroBlock();
-        return microblock.getDeclarationOrgId();
+        const application = await this.reader.loadApplication(applicationId);
+        return await application.getOrganizationId();
     }
 
     /**
@@ -105,12 +137,8 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
      * @return {Promise<PublicSignatureKey>} A promise that resolves to the public key of the given account.
      */
     async getPublicKeyOfAccount(accountHash: Hash): Promise<PublicSignatureKey> {
-        const accountState = await this.reader.getAccountState(accountHash);
-        const lastPublicKeyDeclarationState = accountState.getLastPublicKeyDeclarationHeight();
-        const view = await this.reader.getVirtualBlockchainView<AccountVirtualBlockchainView>(accountHash, [lastPublicKeyDeclarationState]);
-        const microblock = view.getMicroBlockAtHeigh(lastPublicKeyDeclarationState);
-        const signatureEncoder = new BytesSignatureEncoder();
-        return signatureEncoder.decodePublicKey(microblock.getPublicKey());
+        const account = await this.reader.loadAccount(accountHash);
+        return account.getPublicKey();
     }
 
 
@@ -124,16 +152,209 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
     }
 
     async getPublicKeyOfOrganisation(organisationId: Hash): Promise<PublicSignatureKey> {
-        const view = await this.reader.getFirstMicroBlockInVirtualBlockchain<OrganisationVirtualBlockchainView>(organisationId)
-        const microblock = view.getFirstMicroBlock();
-        return microblock.getPublicKey();
+        return await this.reader.getPublicKeyOfOrganisation(organisationId);
     }
 
-    async getRecord<T = any>(vbId: Hash, height: number, privateKey?: PrivateSignatureKey): Promise<T> {
-        const vb = await this.reader.getVirtualBlockchainView<AppLedgerVirtualBlockchainView>(vbId, [height]);
-        if (vb.getType() !== VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN) throw new IllegalParameterError("Attempting to obtain record from non-app-ledger virtual blockchain");
-        const i = new IntermediateRepresentation();
-        // TODO
-        throw new NotImplementedError();
+    /**
+     * Loads the application ledger associated with the given virtual block identifier (vbId).
+     *
+     * @param {Hash} vbId - The unique identifier of the virtual block whose application ledger is to be loaded.
+     * @return {Promise<ApplicationLedger>} A promise that resolves to the application ledger associated with the provided vbId.
+     */
+    async loadApplicationLedger(vbId: Hash): Promise<ApplicationLedger> {
+        return this.reader.loadApplicationLedger(vbId);
     }
+
+    /**
+     * Loads an application based on the provided identifier.
+     *
+     * @param {Hash} identifier - The unique identifier of the application to be loaded.
+     * @return {Promise<Application>} A promise that resolves to the loaded application.
+     */
+    async loadApplication(identifier: Hash): Promise<Application> {
+        return this.reader.loadApplication(identifier);
+    }
+
+    /**
+     * Loads an organization based on the provided identifier.
+     *
+     * @param {Hash} identifierString - The unique identifier of the organization to be loaded.
+     * @return {Promise<Organization>} A promise that resolves to the loaded organization.
+     */
+    async loadOrganization(identifierString: Hash): Promise<Organization> {
+       return this.reader.loadOrganization(identifierString);
+    }
+
+    /**
+     * Loads an account using the given identifier.
+     *
+     * @param {Hash} identifier - The unique identifier of the account to load.
+     * @return {Promise<Account>} A promise that resolves to the loaded account object.
+     */
+    async loadAccount(identifier: Hash) {
+        return this.reader.loadAccount(identifier);
+    }
+
+    /**
+     * Creates a new genesis account and publishes its updates.
+     *
+     * Note: This method is only reserved to create genesis account. Once created, next calls throw an exception.
+     *
+     * @return {Promise<Account>} A promise that resolves to the location of the created genesis account.
+     */
+    async createAndPublishGenesisAccount(context: PublicationExecutionContext) {
+        const genesisAccount = await this.getWriter().createGenesisAccount();
+        genesisAccount.setGasPrice(context.getGasPrice())
+        return await genesisAccount.publishUpdates();
+    }
+
+    /**
+     * Creates an account based on the seller's account, buyer's public key, and initial amount,
+     * then publishes updates to reflect the account changes.
+     *
+     * @param {AccountPublicationExecutionContext} context - The execution context containing the seller's account, buyer's public key, initial account amount, and gas price.
+     * @return {Promise<Account>} A promise that resolves to the created and published account.
+     */
+    async createAndPublishAccount(context: AccountPublicationExecutionContext) {
+        const writer = this.getWriter();
+        const account = await writer.createAccount(
+            context.getSellerAccount(),
+            context.getBuyerPublicKey(),
+            context.getInitialBuyerAccountAmount()
+        );
+        account.setGasPrice(context.getGasPrice())
+        return await account.publishUpdates();
+    }
+
+    /**
+     * Creates an organisation, configures it with the provided context, and publishes updates.
+     *
+     * @param {OrganisationPublicationExecutionContext} context - The context containing configuration and execution details for the organisation publication.
+     * @return {Promise<Hash>} A promise that resolves to the location of the published organisation.
+     */
+    async createAndPublishOrganisation(context: OrganisationPublicationExecutionContext) {
+        const writer = this.getWriter();
+        const organisation = await writer.createOrganization();
+        organisation.setGasPrice(context.getGasPrice());
+        await organisation.setDescription(context.build())
+       return  await organisation.publishUpdates();
+    }
+
+    /**
+     * Creates and publishes an application based on the provided context.
+     *
+     * @param {ApplicationPublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organisation information, application metadata, and gas price settings.
+     * @return {Promise<Object>} A promise that resolves to the location of the created application.
+     */
+    async createAndPublishApplication(context: ApplicationPublicationExecutionContext) {
+        const writer = this.getWriter();
+        const data = context.build();
+        const application = await writer.createApplication(data.organisationId);
+        await application.setDescription({
+            name: data.applicationName,
+            logoUrl: data.logoUrl,
+            homepageUrl: data.homepageUrl,
+            description: data.applicationDescription
+        });
+
+        application.setGasPrice(context.getGasPrice());
+        return await application.publishUpdates();
+    }
+
+    /**
+     * Publishes a record using the provided execution context.
+     *
+     * @param {RecordPublicationExecutionContext<T>} context - The context containing the necessary data to build and publish the record.
+     * @return {Promise<Hash>} A promise that resolves the hash of the published micro-block.
+     */
+    async publishRecord<T = any>(context: RecordPublicationExecutionContext<T>) {
+        const writer = this.getWriter();
+        const applicationLedger = await writer.createApplicationLedgerFromJson(context.build());
+        applicationLedger.setGasPrice(context.getGasPrice());
+        return await applicationLedger.publishUpdates();
+    }
+
+    async publishTokenTransfer(context: AccountTransferPublicationExecutionContext) {
+        const writer = this.getWriter();
+        const data = context.build();
+        return writer.createTokenTransfer(
+            data.sellerPrivateKey,
+            data.buyerAccount,
+            data.amount,
+            data.publicReference,
+            data.privateReference,
+        );
+    }
+
+    async createProofBuilderForApplicationLedger(applicationLedgerId: Hash) {
+        const appLedger = await this.loadApplicationLedger(applicationLedgerId);
+        return ProofBuilder.createProofBuilder(applicationLedgerId, appLedger);
+    }
+
+    async verifyProofFromJson(proof: Proof) {
+        return this.reader.verifyProofFromJson(proof);
+    }
+
+    async getRecord<T = any>(vbId: Hash, height: Height, privateKey?: PrivateSignatureKey): Promise<T> {
+        return this.reader.getRecord(vbId, height, privateKey);
+    }
+
+    async getRecordAtFirstBlock<T = any>(vbId: Hash, privateKey?: PrivateSignatureKey): Promise<T> {
+        return this.getRecord(vbId, 1, privateKey);
+    }
+
+
+    /**
+     * Retrieves all accounts.
+     *
+     * @return {Promise<Hash[]>} A promise that resolves to an array of account hashes.
+     */
+    async getAllAccounts(): Promise<Hash[]> {
+        return this.reader.getAllAccounts();
+    }
+
+    /**
+     * Retrieves a list of all organisations from the data source.
+     *
+     * @return {Promise<Hash[]>} A promise that resolves to an array of organisation data represented as hashes.
+     */
+    async getAllOrganisations(): Promise<Hash[]> {
+        return this.reader.getAllOrganisations();
+    }
+
+    /**
+     * Retrieves all validator nodes.
+     *
+     * @return {Promise<Hash[]>} A promise that resolves to an array of validator node hashes.
+     */
+    async getAllValidatorNodes(): Promise<Hash[]> {
+        return this.reader.getAllValidatorNodes();
+    }
+
+    /**
+     * Retrieves all applications from the data source.
+     *
+     * @return {Promise<Hash[]>} A promise that resolves with an array of Hash objects representing all applications.
+     */
+    async getAllApplications(): Promise<Hash[]> {
+        return this.reader.getAllApplications();
+    }
+
+    /**
+     * Retrieves the current state of the account associated with the provided account hash.
+     *
+     * @param {Hash} accountHash - The unique hash identifying the account whose state is to be retrieved.
+     * @return {Promise<AccountState>} A promise that resolves to the state of the account associated with the given hash.
+     */
+    async getAccountState(accountHash: Hash): Promise<AccountState> {
+        return this.reader.getAccountState(accountHash);
+    }
+
+
+    private getWriter(): BlockchainWriter {
+        if (!this.writer) throw new IllegalUsageError("No blockchain writer configured. Call BlockchainFacade.createFromNodeUrlAndPrivateKey(...) instead.");
+        return this.writer;
+    }
+
+
 }

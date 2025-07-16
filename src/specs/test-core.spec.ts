@@ -1,6 +1,6 @@
 import {describe, expect, test} from '@jest/globals';
-import {KeyedProvider} from "../common/providers/keyed-provider";
-import {MemoryProvider} from "../common/providers/memoryProvider";
+import {KeyedProvider} from "../common/providers/KeyedProvider";
+import {MemoryProvider} from "../common/providers/MemoryProvider";
 import {ServerNetworkProvider} from "../common/providers/serverNetworkProvider";
 import {Blockchain} from "../common/blockchain/blockchain";
 import {IntermediateRepresentation} from "../common/records/intermediateRepresentation";

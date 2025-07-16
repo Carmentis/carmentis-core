@@ -7,10 +7,9 @@
     "clean": "rimraf dist && rimraf types",
     "build:client": "rollup --config rollup.config.client.js",
     "build:server": "rollup --config rollup.config.server.js",
-    "build:common-export": "npm run gen:proto && npm run gen:code && npx barrelsby --delete -d src/common -e test -e Test -e benchmark -e spec -n common",
+    "build:common-export": "npx barrelsby --delete -d src/common -e test -e Test -e benchmark -e spec -n common",
     "build": "npm run build:common-export && tsc && npm run build:client && npm run build:server",
     "docs": "jsdoc -r -c jsdoc.json -t ./node_modules/better-docs -d docs src",
-    "gen:proto": "protoc --plugin=protoc-gen-ts=node_modules/.bin/protoc-gen-ts_proto --ts_out=src/common/proto --proto_path=./src/proto ./src/proto/section.proto",
     "gen:code": "tsx src/bin/generate-sections.ts"
   },
   "exports": {

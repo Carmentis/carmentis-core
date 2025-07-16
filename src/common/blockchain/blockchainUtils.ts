@@ -4,7 +4,6 @@ import { Crypto } from "../crypto/crypto";
 import { Utils } from "../utils/utils";
 
 import {MicroblockInformationSchema, VirtualBlockchainStateInterface} from "./types";
-import {MicroBlockHeaderSchema} from "../proto/section";
 import {MicroBlockHeaderInterface} from "../entities/MicroBlockHeaderInterface";
 
 

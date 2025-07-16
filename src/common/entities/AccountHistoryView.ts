@@ -51,15 +51,4 @@ export class AccountHistoryView {
         return transaction;
     }
 
-
 }
-
-/*
-  height: number,
-    previousHistoryHash: Uint8Array,
-    type: number,
-    timestamp: number,
-    linkedAccount: Uint8Array,
-    amount: number,
-    chainReference: Uint8Array
- */

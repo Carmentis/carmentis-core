@@ -88,11 +88,11 @@ const VALIDATOR_NODE: Schema[] = [] as const;
 // ============================================================================================================================ //
 //  Organization                                                                                                                //
 // ============================================================================================================================ //
-export const ORG_SIG_ALGORITHM = 0;
-export const ORG_PUBLIC_KEY    = 1;
-export const ORG_DESCRIPTION   = 2;
-export const ORG_SERVER        = 3;
-export const ORG_SIGNATURE     = 4;
+export const ORG_SIG_ALGORITHM = SectionType.ORG_SIG_ALGORITHM;
+export const ORG_PUBLIC_KEY    = SectionType.ORG_PUBLIC_KEY;
+export const ORG_DESCRIPTION   = SectionType.ORG_DESCRIPTION;
+export const ORG_SERVER        = SectionType.ORG_SERVER;
+export const ORG_SIGNATURE     = SectionType.ORG_SIGNATURE;
 
 const ORGANIZATION: Schema[] = [] as const;
 
@@ -137,10 +137,10 @@ ORGANIZATION[ORG_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Application                                                                                                                 //
 // ============================================================================================================================ //
-export const APP_SIG_ALGORITHM = 0;
-export const APP_DECLARATION   = 1;
-export const APP_DESCRIPTION   = 2;
-export const APP_SIGNATURE     = 3;
+export const APP_SIG_ALGORITHM = SectionType.APP_SIG_ALGORITHM;
+export const APP_DECLARATION   = SectionType.APP_DECLARATION;
+export const APP_DESCRIPTION   = SectionType.APP_DESCRIPTION;
+export const APP_SIGNATURE     = SectionType.APP_SIGNATURE;
 
 const APPLICATION: Schema[] = [] as const;
 
@@ -180,19 +180,19 @@ APPLICATION[APP_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Application ledger                                                                                                          //
 // ============================================================================================================================ //
-export const APP_LEDGER_SIG_ALGORITHM        = 0;
-export const APP_LEDGER_DECLARATION          = 1;
-export const APP_LEDGER_ACTOR_CREATION       = 2;
-export const APP_LEDGER_CHANNEL_CREATION     = 3;
-export const APP_LEDGER_SHARED_SECRET        = 4;
-export const APP_LEDGER_CHANNEL_INVITATION   = 5;
-export const APP_LEDGER_ACTOR_SUBSCRIPTION   = 6;
-export const APP_LEDGER_PUBLIC_CHANNEL_DATA  = 7;
-export const APP_LEDGER_PRIVATE_CHANNEL_DATA = 8;
-export const APP_LEDGER_AUTHOR               = 9;
-export const APP_LEDGER_ENDORSER             = 10;
-export const APP_LEDGER_ENDORSER_SIGNATURE   = 11;
-export const APP_LEDGER_AUTHOR_SIGNATURE     = 12;
+export const APP_LEDGER_SIG_ALGORITHM        = SectionType.APP_LEDGER_SIG_ALGORITHM;
+export const APP_LEDGER_DECLARATION          = SectionType.APP_LEDGER_DECLARATION;
+export const APP_LEDGER_ACTOR_CREATION       = SectionType.APP_LEDGER_ACTOR_CREATION;
+export const APP_LEDGER_CHANNEL_CREATION     = SectionType.APP_LEDGER_CHANNEL_CREATION;
+export const APP_LEDGER_SHARED_SECRET        = SectionType.APP_LEDGER_SHARED_SECRET;
+export const APP_LEDGER_CHANNEL_INVITATION   = SectionType.APP_LEDGER_CHANNEL_INVITATION;
+export const APP_LEDGER_ACTOR_SUBSCRIPTION   = SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION;
+export const APP_LEDGER_PUBLIC_CHANNEL_DATA  = SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA;
+export const APP_LEDGER_PRIVATE_CHANNEL_DATA = SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA;
+export const APP_LEDGER_AUTHOR               = SectionType.APP_LEDGER_AUTHOR;
+export const APP_LEDGER_ENDORSER             = SectionType.APP_LEDGER_ENDORSER;
+export const APP_LEDGER_ENDORSER_SIGNATURE   = SectionType.APP_LEDGER_ENDORSER_SIGNATURE;
+export const APP_LEDGER_AUTHOR_SIGNATURE     = SectionType.APP_LEDGER_AUTHOR_SIGNATURE;
 
 const APP_LEDGER: Schema[] = [] as const;
 

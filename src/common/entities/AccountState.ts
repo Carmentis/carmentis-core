@@ -9,10 +9,14 @@ export class AccountState {
     static createFromDTO(dto: AccountStateDTO) {
         return new AccountState(
             dto.height,
-            CMTSToken.createCMTS(dto.balance),
+            CMTSToken.createAtomic(dto.balance),
             Hash.from(dto.lastHistoryHash),
             0
         )
+    }
+
+    isEmpty(): boolean {
+        return this.height === 0;
     }
 
     getHeight(): number {

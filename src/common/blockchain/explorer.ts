@@ -1,14 +1,14 @@
 import {CHAIN} from "../constants/constants";
 import {Utils} from "../utils/utils";
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
-import {Provider} from "../providers/provider";
+import {Provider} from "../providers/Provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/factory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {AccountHash, MicroBlockHeader} from "./types";
 import {SchemaUnserializer} from "../data/schemaSerializer";
 import {MICROBLOCK_HEADER} from "../constants/schemas";
-import {Microblock} from "./microblock";
+import {Microblock} from "./Microblock";
 import {Hash} from "../entities/Hash";
 
 

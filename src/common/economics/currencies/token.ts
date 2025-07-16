@@ -89,6 +89,14 @@ export class CMTSToken implements Currency{
         return new CMTSToken(amount, TokenUnit.ATOMIC);
     }
 
+    static zero() {
+        return this.createAtomic(0);
+    }
+
+    static oneCMTS() {
+        return this.createCMTS(1);
+    }
+
     /**
      * Parses a string representing a token amount and returns a TokenAmount instance.
      *
@@ -117,6 +125,14 @@ export class CMTSToken implements Currency{
             case TokenUnit.MICRO_TOKEN: return this.amount / TokenUnit.MICRO_TOKEN;
             case TokenUnit.ATOMIC: return this.amount;
         }
+    }
+
+    getAmountAsAtomic() {
+        return this.getAmount(TokenUnit.ATOMIC)
+    }
+
+    getAmountAsCMTS() {
+        return this.getAmount(TokenUnit.TOKEN)
     }
 
 

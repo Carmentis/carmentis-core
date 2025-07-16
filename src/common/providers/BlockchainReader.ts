@@ -39,8 +39,6 @@ export interface BlockchainReader {
     getRecord<T = any>(vbId: Hash, height: number, privateKey?: PrivateSignatureKey): Promise<T>
     verifyProofFromJson(proof: Proof): Promise<ProofVerificationResult>;
     getPublicKeyOfOrganisation(organisationId: Hash): Promise<PublicSignatureKey>;
-    getApplicationDescription(applicationId: Hash): Promise<ApplicationDescription>;
-    getOrganisationDescription(organisationId: Hash): Promise<OrganizationDescription>;
     getAllAccounts(): Promise<Hash[]>;
     getAllValidatorNodes(): Promise<Hash[]>;
     getAllOrganisations(): Promise<Hash[]>;

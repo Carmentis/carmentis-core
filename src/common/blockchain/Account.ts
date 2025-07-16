@@ -8,6 +8,7 @@ import {CryptoSchemeFactory} from "../crypto/factory";
 import {Provider} from "../providers/Provider";
 import {CMTSToken} from "../economics/currencies/token";
 import {IllegalParameterError, IllegalStateError} from "../errors/carmentis-error";
+import {Hash} from "../entities/Hash";
 
 /**
  * Represents an Account that interacts with a provider for managing cryptographic operations
@@ -123,5 +124,9 @@ export class Account {
         } else {
             throw new IllegalStateError("Cannot get private signature key without a keyed provider.")
         }
+    }
+
+    getVirtualBlockchainId() {
+        return Hash.from(this.vb.identifier);
     }
 }

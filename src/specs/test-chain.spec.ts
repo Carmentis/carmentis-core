@@ -290,19 +290,19 @@ describe('Chain test', () => {
                 .withName("Carmentis SAS")
                 .withWebsite("www.carmentis.io");
             const organizationId = await blockchain.createAndPublishOrganisation(organisationCreationContext);
-            const organizationDescription = await blockchain.getOrganisationDescription(organizationId);
-            expect(organizationDescription.getCity()).toEqual("Paris");
-            expect(organizationDescription.getCountryCode()).toEqual("FR");
-            expect(organizationDescription.getName()).toEqual("Carmentis SAS");
-            expect(organizationDescription.getWebsite()).toEqual("www.carmentis.io");
+            const organisation = await blockchain.loadOrganization(organizationId);
+            expect(organisation.getCity()).toEqual("Paris");
+            expect(organisation.getCountryCode()).toEqual("FR");
+            expect(organisation.getName()).toEqual("Carmentis SAS");
+            expect(organisation.getWebsite()).toEqual("www.carmentis.io");
 
             // Testing application
             const applicationCreationContext = new ApplicationPublicationExecutionContext()
                 .withOrganisationId(organizationId)
                 .withApplicationName("My application");
             const applicationId = await blockchain.createAndPublishApplication(applicationCreationContext);
-            const applicationDescription = await blockchain.getApplicationDescription(applicationId);
-            expect(applicationDescription.getName()).toEqual("My application");
+            const application = await blockchain.loadApplication(applicationId);
+            expect(application.getName()).toEqual("My application");
 
             // Testing application ledger by submitting two elements
             const data = {
@@ -333,16 +333,14 @@ describe('Chain test', () => {
                 .withRecord(object);
             const appLedgerId = await blockchain.publishRecord(recordPublicationContext);
             const appLedger = await blockchain.loadApplicationLedger(appLedgerId);
-            const recoveredData = await appLedger.getRecord(1);
-            const otherRecoveredData = await blockchain.getRecord(appLedgerId, 1);
-            expect(recoveredData).toEqual(otherRecoveredData);
+            const recoveredData = await appLedger.getRecordAtHeight(1);
             expect(recoveredData).toEqual(data);
 
 
             const secondData = {
-                firstname: "John",
-                lastname: "Doe",
-                email: "john.doe@gmail.com"
+                firstname: "Foo",
+                lastname: "Bar",
+                email: "foo.bar@gmail.com"
             };
             const otherObject: RecordDescription = {
                 virtualBlockchainId: appLedgerId.encode(),
@@ -362,7 +360,7 @@ describe('Chain test', () => {
                 .withRecord(otherObject);
             await blockchain.publishRecord(secondRecordPublicationContext);
             const secondAppLedger = await blockchain.loadApplicationLedger(appLedgerId);
-            expect(await secondAppLedger.getRecord(2)).toEqual(await blockchain.getRecord(appLedgerId, 2));
+            expect(await secondAppLedger.getRecordAtHeight(2)).toEqual(secondData);
 
             // we export the proof
             const proofBuilder = await blockchain.createProofBuilderForApplicationLedger(appLedgerId);

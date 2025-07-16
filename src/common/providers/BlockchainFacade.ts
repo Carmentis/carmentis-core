@@ -5,7 +5,6 @@ import {IllegalUsageError, NotImplementedError} from "../errors/carmentis-error"
 import {AccountCreationInformation, AppDescription, OrgDescription} from "../entities/MicroBlock";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
-import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
 import {Hash} from "../entities/Hash";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {BlockchainReader} from "./BlockchainReader";
@@ -27,6 +26,10 @@ import {
 } from "./publicationContexts/AccountTransferPublicationExecutionContext";
 import {Height} from "../entities/Height";
 import {AccountState} from "../entities/AccountState";
+import {OrganisationWrapper} from "../wrappers/OrganisationWrapper";
+import {ApplicationWrapper} from "../wrappers/ApplicationWrapper";
+import {ApplicationLedgerWrapper} from "../wrappers/ApplicationLedgerWrapper";
+import {AccountWrapper} from "../wrappers/AccountWrapper";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.
@@ -35,7 +38,7 @@ import {AccountState} from "../entities/AccountState";
  *
  * Implements the BlockchainFacadeInterface.
  */
-export class BlockchainFacade implements BlockchainFacadeInterface {
+export class BlockchainFacade{
 
     constructor(private nodeUrl: string, private reader: BlockchainReader, private writer?: BlockchainWriter) {}
 
@@ -65,55 +68,7 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
 
 
 
-    private getBlockchainWriter(): BlockchainWriter {
-        if (!this.writer) {
-            throw new IllegalUsageError("No blockchain writer configured. Call configurePrivateKey() first.")
-        }
-        return this.writer;
-    }
 
-
-    async getApplicationDescription(applicationId: Hash): Promise<AppDescription> {
-        const description = await this.reader.getApplicationDescription(applicationId);
-        return new class extends AppDescription {
-            getDescription(): string {
-                return description.description;
-            }
-
-            getHomepageUrl(): string {
-                return description.homepageUrl;
-            }
-
-            getLogoUrl(): string {
-                return description.logoUrl;
-            }
-
-            getName(): string {
-                return description.name;
-            }
-        };
-    }
-
-    async getOrganisationDescription(organisationId: Hash): Promise<OrgDescription> {
-        const description = await this.reader.getOrganisationDescription(organisationId);
-        return new class extends OrgDescription {
-            getCity(): string {
-                return description.city;
-            }
-
-            getCountryCode(): string {
-                return description.countryCode;
-            }
-
-            getName(): string {
-                return description.name;
-            }
-
-            getWebsite(): string {
-                return description.website;
-            }
-        }
-    }
 
     getAccountBalance(accountHash: Hash): Promise<CMTSToken> {
         return this.reader.getBalanceOfAccount(accountHash)
@@ -152,55 +107,61 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
     }
 
     async getPublicKeyOfOrganisation(organisationId: Hash): Promise<PublicSignatureKey> {
-        return await this.reader.getPublicKeyOfOrganisation(organisationId);
+        const org = await this.reader.loadOrganization(organisationId);
+        return org.getPublicKey();
     }
 
     /**
      * Loads the application ledger associated with the given virtual block identifier (vbId).
      *
      * @param {Hash} vbId - The unique identifier of the virtual block whose application ledger is to be loaded.
-     * @return {Promise<ApplicationLedger>} A promise that resolves to the application ledger associated with the provided vbId.
+     * @return {Promise<ApplicationLedgerWrapper>} A promise that resolves to the application ledger associated with the provided vbId.
      */
-    async loadApplicationLedger(vbId: Hash): Promise<ApplicationLedger> {
-        return this.reader.loadApplicationLedger(vbId);
+    async loadApplicationLedger(vbId: Hash): Promise<ApplicationLedgerWrapper> {
+        const appLedger = await this.reader.loadApplicationLedger(vbId);
+        return ApplicationLedgerWrapper.wrap(appLedger)
     }
 
     /**
      * Loads an application based on the provided identifier.
      *
      * @param {Hash} identifier - The unique identifier of the application to be loaded.
-     * @return {Promise<Application>} A promise that resolves to the loaded application.
+     * @return {Promise<ApplicationWrapper>} A promise that resolves to the loaded application.
      */
-    async loadApplication(identifier: Hash): Promise<Application> {
-        return this.reader.loadApplication(identifier);
+    async loadApplication(identifier: Hash): Promise<ApplicationWrapper> {
+        const application = await this.reader.loadApplication(identifier);
+        return await ApplicationWrapper.wrap(application);
     }
 
     /**
      * Loads an organization based on the provided identifier.
      *
-     * @param {Hash} identifierString - The unique identifier of the organization to be loaded.
-     * @return {Promise<Organization>} A promise that resolves to the loaded organization.
+     * @param {Hash} organisationId - The unique identifier of the organization to be loaded.
+     * @return {Promise<OrganisationWrapper>} A promise that resolves to the loaded organization.
      */
-    async loadOrganization(identifierString: Hash): Promise<Organization> {
-       return this.reader.loadOrganization(identifierString);
+    async loadOrganization(organisationId: Hash): Promise<OrganisationWrapper> {
+       const organisation = await this.reader.loadOrganization(organisationId);
+       return await OrganisationWrapper.wrap(organisation);
     }
 
     /**
      * Loads an account using the given identifier.
      *
      * @param {Hash} identifier - The unique identifier of the account to load.
-     * @return {Promise<Account>} A promise that resolves to the loaded account object.
+     * @return {Promise<AccountWrapper>} A promise that resolves to the loaded account object.
      */
-    async loadAccount(identifier: Hash) {
-        return this.reader.loadAccount(identifier);
+    async loadAccount(identifier: Hash): Promise<AccountWrapper> {
+        const account = await this.reader.loadAccount(identifier);
+        return AccountWrapper.wrap(account);
     }
 
     /**
+import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
      * Creates a new genesis account and publishes its updates.
      *
      * Note: This method is only reserved to create genesis account. Once created, next calls throw an exception.
      *
-     * @return {Promise<Account>} A promise that resolves to the location of the created genesis account.
+     * @return {Promise<Hash>} A promise that resolves to the location of the created genesis account.
      */
     async createAndPublishGenesisAccount(context: PublicationExecutionContext) {
         const genesisAccount = await this.getWriter().createGenesisAccount();
@@ -287,20 +248,12 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
     }
 
     async createProofBuilderForApplicationLedger(applicationLedgerId: Hash) {
-        const appLedger = await this.loadApplicationLedger(applicationLedgerId);
+        const appLedger = await this.reader.loadApplicationLedger(applicationLedgerId);
         return ProofBuilder.createProofBuilder(applicationLedgerId, appLedger);
     }
 
     async verifyProofFromJson(proof: Proof) {
         return this.reader.verifyProofFromJson(proof);
-    }
-
-    async getRecord<T = any>(vbId: Hash, height: Height, privateKey?: PrivateSignatureKey): Promise<T> {
-        return this.reader.getRecord(vbId, height, privateKey);
-    }
-
-    async getRecordAtFirstBlock<T = any>(vbId: Hash, privateKey?: PrivateSignatureKey): Promise<T> {
-        return this.getRecord(vbId, 1, privateKey);
     }
 
 
@@ -355,6 +308,5 @@ export class BlockchainFacade implements BlockchainFacadeInterface {
         if (!this.writer) throw new IllegalUsageError("No blockchain writer configured. Call BlockchainFacade.createFromNodeUrlAndPrivateKey(...) instead.");
         return this.writer;
     }
-
 
 }

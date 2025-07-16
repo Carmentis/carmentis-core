@@ -70,10 +70,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         this.publicProvider = new Provider(cacheProvider, this.networkProvider);
     }
 
-    async getOrganisationDescription(organisationId: Hash): Promise<OrganizationDescription> {
-        const organisation = await this.loadOrganization(organisationId);
-        return organisation.getDescription();
-    }
+
 
 
     getMicroBlockBody(microblockHash: Hash): Promise<void> {
@@ -85,10 +82,6 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return organisation.getPublicKey();
     }
 
-    async getApplicationDescription(applicationId: Hash): Promise<ApplicationDescription> {
-        const application = await this.loadApplication(applicationId);
-        return application.getDescription();
-    }
 
     async getMicroBlock(type: VirtualBlockchainType, hash: Hash) {
         const info = await this.publicProvider.getMicroblockInformation(hash.toBytes());

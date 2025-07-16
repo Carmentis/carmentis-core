@@ -33,6 +33,10 @@ export class ApplicationLedger {
     }
   }
 
+  async getVirtualBlockchainId() {
+    return Hash.from(this.vb.getId());
+  }
+
   async getGenesisSeed() {
     return this.vb.getGenesisSeed();
   }

@@ -19,7 +19,7 @@ export class ApplicationLedgerWrapper {
         return this.getRecordAtHeight(1);
     }
 
-    async getId() {
+    getId() {
         return this.appLedger.getVirtualBlockchainId();
     }
 

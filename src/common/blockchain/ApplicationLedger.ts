@@ -33,7 +33,7 @@ export class ApplicationLedger {
     }
   }
 
-  async getVirtualBlockchainId() {
+  getVirtualBlockchainId() {
     return Hash.from(this.vb.getId());
   }
 

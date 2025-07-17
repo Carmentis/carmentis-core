@@ -330,6 +330,7 @@ describe('Chain test', () => {
             expect(organisation.getCountryCode()).toEqual("FR");
             expect(organisation.getName()).toEqual("Carmentis SAS");
             expect(organisation.getWebsite()).toEqual("www.carmentis.io");
+            expect(organisation.getPublicKey()).toBeDefined()
 
             // Testing application
             const applicationCreationContext = new ApplicationPublicationExecutionContext()

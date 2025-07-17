@@ -4,6 +4,7 @@ import {IllegalParameterError} from "../errors/carmentis-error";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Optional} from "./Optional";
 import {Height} from "./Height";
+import {Hash} from "./Hash";
 
 /**
  * Represents the result of a proof verification process, encapsulating the verified data and
@@ -24,14 +25,40 @@ export class ProofVerificationResult {
         return new ProofVerificationResult(false, appLedger, Optional.none());
     }
 
+    /**
+     * Checks if the current state is verified.
+     *
+     * @return {boolean} Returns true if verified, otherwise false.
+     */
+    isVerified(): boolean {
+        return this.verified
+    }
 
     /**
-     * Asynchronously checks if the proof is verified.
+     * Retrieves the heights of the involved blocks based on the imported proofs.
      *
-     * @return {Promise<boolean>} A promise that resolves to true if the proof is verified, false otherwise.
+     * If there are imported proofs, the method returns an array of block heights
+     * extracted from the proofs. If there are no imported proofs, it returns an empty array.
+     *
+     * @return {Height[]} An array of block heights involved in the imported proofs,
+     * or an empty array if no proofs are available.
      */
-    async isVerified(): Promise<boolean> {
-        return this.verified
+    getInvolvedBlockHeights(): Height[] {
+        if (this.importedProofs.isSome()) {
+            return this.importedProofs.unwrap().map(importedProof => importedProof.height)
+        } else {
+            return []
+        }
+    }
+
+
+    /**
+     * Retrieves the ledger ID of the application as a hash.
+     *
+     * @return {Hash} The virtual blockchain ID associated with the application's ledger.
+     */
+    getApplicationLedgerId(): Hash {
+        return this.appLedger.getVirtualBlockchainId()
     }
 
 

@@ -35,6 +35,15 @@ export class AccountHistoryView {
     }
 
     /**
+     * Retrieves all the transactions stored in the view.
+     *
+     * @return {Transaction[]} An array containing all the Transaction objects.
+     */
+    getAllTransactions(): Transaction[] {
+        return Array.from(this.transactionByHeight.values()).map(transaction => new Transaction(transaction));
+    }
+
+    /**
      * Retrieves the total number of transactions.
      *
      * @return {number} The count of transactions.

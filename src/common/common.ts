@@ -69,6 +69,7 @@ export * from "./entities/Optional";
 export * from "./entities/ProofBuilder";
 export * from "./entities/ProofVerificationResult";
 export * from "./entities/SectionType";
+export * from "./entities/Transaction";
 export * from "./entities/VirtualBlockchainState";
 export * from "./entities/VirtualBlockchainType";
 export * from "./entities/VirtualBlockchainUpdate";

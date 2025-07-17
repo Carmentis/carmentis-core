@@ -2,6 +2,8 @@ import {AccountTransactionInterface} from "../blockchain/types";
 import {CMTSToken} from "../economics/currencies/token";
 import {IllegalParameterError} from "../errors/carmentis-error";
 import {Hash} from "./Hash";
+import {Transaction} from "./Transaction";
+import {Height} from "./Height";
 
 export class AccountHistoryView {
     private transactionByHeight: Map<number, AccountTransactionInterface>;
@@ -47,6 +49,7 @@ export class AccountHistoryView {
      */
     containsTransactionAtHeight(height: number): boolean { return this.transactionByHeight.has(height) }
 
+    /*
     getAmountOfTransactionAtHeight(height: number): CMTSToken {
         const transaction = this.getTransactionAtHeight(height);
         return CMTSToken.createAtomic(transaction.amount);
@@ -72,14 +75,16 @@ export class AccountHistoryView {
         return Hash.from(transaction.previousHistoryHash);
     }
 
-    /**
-     * Retrieves a transaction at the specified height from the account's transaction history.
-     *
-     * @param {number*/
-    private getTransactionAtHeight(height: number) {
+     */
+
+    getTransactionAtHeight(height: Height): Transaction {
         const transaction = this.transactionByHeight.get(height);
-        if (transaction === undefined) throw new IllegalParameterError("No transaction found at height " + height + " in account history view.");
-        return transaction;
+        if (transaction === undefined) {
+            throw new IllegalParameterError(`No transaction found at height ${height}`);
+        }
+        return new Transaction(transaction);
     }
+
+
 
 }

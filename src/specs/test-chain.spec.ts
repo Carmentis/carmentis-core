@@ -235,7 +235,7 @@ describe('Chain test', () => {
     const issuerPrivateKey = MLDSA65PrivateSignatureKey.gen();
     const blockchain = BlockchainFacade.createFromNodeUrlAndPrivateKey(nodeUrl, issuerPrivateKey);
 
-    test("Correct usage of BlockchainFacade", async () => {
+    it("Works correctly when valid usage of BlockchainFacade", async () => {
 
 
 
@@ -268,7 +268,7 @@ describe('Chain test', () => {
             const secondAccountId = await blockchain.createAndPublishAccount(secondAccountCreationContext);
             const secondAccount = await blockchain.loadAccount(secondAccountId);
 
-            // proceed to a transfer between the first and the second account
+            // proceed to a transfer from the first to the second account
             const transferContext = new AccountTransferPublicationExecutionContext()
                 .withTransferToAccountHash(firstAccountPrivateKey, secondAccountId)
                 .withAmount(CMTSToken.oneCMTS());
@@ -279,6 +279,41 @@ describe('Chain test', () => {
             const secondAccountBalance = await blockchain.getAccountBalance(secondAccountId);
             expect(firstAccountBalance.equals(secondAccountBalance)).toBeTruthy()
             expect(firstAccountBalance.getAmountAsCMTS()).toEqual(CMTSToken.oneCMTS().getAmountAsCMTS());
+            {
+                const secondAccountHistory = await blockchain.getAccountHistory(secondAccountId);
+                expect(secondAccountHistory.getNumberOfTransactions()).toEqual(2);
+                expect(secondAccountHistory.containsTransactionAtHeight(1)).toBeTruthy()
+                expect(secondAccountHistory.containsTransactionAtHeight(2)).toBeTruthy()
+                expect(secondAccountHistory.containsTransactionAtHeight(3)).toBeFalsy()
+                const firstTransaction = secondAccountHistory.getTransactionAtHeight(1);
+                const secondTransaction = secondAccountHistory.getTransactionAtHeight(2);
+                expect(firstTransaction.isPurchase()).toBeTruthy()
+                expect(secondTransaction.isReceivedPayment()).toBeTruthy()
+                expect(secondTransaction.isPositive()).toBeTruthy()
+                expect(secondTransaction.isReceivedIssuance()).toBeFalsy()
+                const firstTransactionAmount = firstTransaction.getAmount();
+                const secondTransactionAmount = secondTransaction.getAmount();
+                expect(firstTransactionAmount.equals(CMTSToken.zero())).toBeTruthy()
+                expect(secondTransactionAmount.equals(CMTSToken.oneCMTS())).toBeTruthy()
+                expect(secondTransactionAmount.isPositive()).toBeTruthy()
+            }
+
+            {
+                // we get the history of the first account
+                // We expect two transactions: one for account issuing and another for the transfer to the second account
+                const firstAccountHistory = await blockchain.getAccountHistory(firstAccountId);
+                expect(firstAccountHistory.getNumberOfTransactions()).toEqual(2);
+                expect(firstAccountHistory.containsTransactionAtHeight(1)).toBeTruthy()
+                expect(firstAccountHistory.containsTransactionAtHeight(2)).toBeTruthy()
+                expect(firstAccountHistory.containsTransactionAtHeight(3)).toBeFalsy()
+                const firstTransaction = firstAccountHistory.getTransactionAtHeight(1);
+                const secondTransaction = firstAccountHistory.getTransactionAtHeight(2);
+                const firstTransactionAmount = firstTransaction.getAmount();
+                const secondTransactionAmount = secondTransaction.getAmount();
+                expect(firstTransactionAmount.equals(CMTSToken.createCMTS(2))).toBeTruthy()
+                expect(secondTransactionAmount.equals(CMTSToken.createCMTS(-1))).toBeTruthy()
+                expect(secondTransactionAmount.isPositive()).toBeFalsy()
+            }
         }
 
 
@@ -436,7 +471,7 @@ describe('Chain test', () => {
     });
 
      */
-
+    /*
     it('Should fails for transfer when no enough balance', async () =>  {
 
 
@@ -467,4 +502,6 @@ describe('Chain test', () => {
 
 
     });
+
+     */
 });

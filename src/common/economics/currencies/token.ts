@@ -154,6 +154,18 @@ export class CMTSToken implements Currency{
         return this.amount >= 0;
     }
 
+    isPositiveStrict(): boolean {
+        return this.isPositive() && !this.isZero();
+    }
+
+    isNegative(): boolean {
+        return this.amount < 0;
+    }
+
+    isZero(): boolean {
+        return this.amount === 0;
+    }
+
 
     /**
      * Compares the current TokenAmount instance with another TokenAmount instance for equality.

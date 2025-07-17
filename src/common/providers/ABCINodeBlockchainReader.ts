@@ -161,6 +161,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
                 maxRecords
             }
         );
+        console.log(`Here is the transactions history for account ${accountHash.encode()}:`, answer)
 
         // convert the response into transactions
         const transactions = new AccountHistoryView();

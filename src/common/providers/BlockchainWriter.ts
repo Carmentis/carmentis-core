@@ -6,6 +6,7 @@ import {Application} from "../blockchain/Application";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {CMTSToken} from "../economics/currencies/token";
 import {RecordDescription} from "../blockchain/RecordDescription";
+import {OrganizationDescription} from "../blockchain/types";
 
 export interface BlockchainWriter {
     createGenesisAccount(): Promise<Account>;
@@ -14,6 +15,8 @@ export interface BlockchainWriter {
     createApplication(organizationIdentifierString: Hash): Promise<Application>;
     createApplicationLedger(applicationId: Hash): Promise<ApplicationLedger>;
     createApplicationLedgerFromJson<T = any>(object: RecordDescription<T>): Promise<ApplicationLedger>;
+    loadOrganisation(organisationId: Hash): Promise<Organization>;
+    loadApplication(applicationId: Hash): Promise<Application>;
 
     /*
     sendMicroblock(...args: any[]): Promise<any>;

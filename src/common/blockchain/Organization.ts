@@ -34,7 +34,7 @@ export class Organization {
     await this.vb.setPublicKey(publicKey);
   }
 
-  async _load(identifier: any) {
+  async _load(identifier: Uint8Array) {
     await this.vb.load(identifier);
   }
 

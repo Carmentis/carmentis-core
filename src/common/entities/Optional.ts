@@ -24,6 +24,13 @@ export class Optional<T> {
         return this.value;
     }
 
+    unwrapOrThrow(error: Error) {
+        if (this.value === null) {
+            throw error;
+        }
+        return this.value;
+    }
+
     unwrapOr(defaultValue: T): T {
         return this.value === null ? defaultValue : this.value;
     }

@@ -55,10 +55,6 @@ export class CarmentisError extends Error {
         return this.code
     }
 
-    printStackTrace() {
-        console.log(this.stack);
-    }
-
     static isCarmentisError(error: any): error is CarmentisError {
         return error instanceof CarmentisError;
     }

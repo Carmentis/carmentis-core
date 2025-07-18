@@ -1,16 +1,23 @@
 import {PublicationExecutionContext} from "./PublicationExecutionContext";
 import {Hash} from "../../entities/Hash";
 import {IllegalUsageError} from "../../errors/carmentis-error";
+import {Optional} from "../../entities/Optional";
 
 export class ApplicationPublicationExecutionContext extends PublicationExecutionContext {
-    private organisationId?: Hash;
+    private applicationId: Optional<Hash> = Optional.none();
+    private organisationId: Optional<Hash> = Optional.none();
     private applicationName: string = '';
     private applicationDescription: string = '';
     private logoUrl: string = "";
     private homepageUrl: string = "";
 
+    withExistingApplicationId(applicationId: Hash): ApplicationPublicationExecutionContext {
+        this.applicationId = Optional.some(applicationId);
+        return this;
+    }
+
     withOrganisationId(organisationId: Hash): ApplicationPublicationExecutionContext {
-        this.organisationId = organisationId;
+        this.organisationId = Optional.some(organisationId);
         return this;
     }
 
@@ -25,8 +32,8 @@ export class ApplicationPublicationExecutionContext extends PublicationExecution
     }
 
     build() {
-        if (!this.organisationId) throw new IllegalUsageError("Organisation ID is required for application publication.");
         return {
+            applicationId: this.applicationId,
             organisationId: this.organisationId,
             applicationName: this.applicationName,
             applicationDescription: this.applicationDescription,

@@ -17,7 +17,6 @@ import {VirtualBlockchainUpdate} from "../entities/VirtualBlockchainUpdate";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 import {Microblock} from "../blockchain/Microblock";
 import {ProofVerificationResult} from "../entities/ProofVerificationResult";
-import {VB_ACCOUNT, VB_APPLICATION, VB_ORGANIZATION, VB_VALIDATOR_NODE} from "../constants/chain";
 
 export interface BlockchainReader {
     //getMicroBlockHeader(vbId: Hash, height: number): Promise<AbstractMicroBlockHeader>;
@@ -33,7 +32,6 @@ export interface BlockchainReader {
     getMicroblockInformation(hash: Hash): Promise<MicroBlockInformation>;
     loadApplicationLedger(vbId: Hash): Promise<ApplicationLedger>;
     loadAccount(vbId: Hash): Promise<Account>
-    loadApplicationLedger(vbId: Hash): Promise<ApplicationLedger>
     loadApplication(identifier: Hash): Promise<Application>;
     loadOrganization(identifierString: Hash): Promise<Organization>;
     getRecord<T = any>(vbId: Hash, height: number, privateKey?: PrivateSignatureKey): Promise<T>

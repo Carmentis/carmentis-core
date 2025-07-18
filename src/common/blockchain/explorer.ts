@@ -11,7 +11,9 @@ import {MICROBLOCK_HEADER} from "../constants/schemas";
 import {Microblock} from "./Microblock";
 import {Hash} from "../entities/Hash";
 
-
+/**
+ * @deprecated Use BlockchainFacade.
+ */
 export class Explorer {
   provider: Provider;
   constructor({

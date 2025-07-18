@@ -165,7 +165,7 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
      *
      * @return {Promise<Hash>} A promise that resolves to the location of the created genesis account.
      */
-    async createAndPublishGenesisAccount(context: PublicationExecutionContext) {
+    async publishGenesisAccount(context: PublicationExecutionContext) {
         const genesisAccount = await this.getWriter().createGenesisAccount();
         genesisAccount.setGasPrice(context.getGasPrice())
         return await genesisAccount.publishUpdates();
@@ -178,7 +178,7 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
      * @param {AccountPublicationExecutionContext} context - The execution context containing the seller's account, buyer's public key, initial account amount, and gas price.
      * @return {Promise<Account>} A promise that resolves to the created and published account.
      */
-    async createAndPublishAccount(context: AccountPublicationExecutionContext) {
+    async publishAccount(context: AccountPublicationExecutionContext) {
         const writer = this.getWriter();
         const account = await writer.createAccount(
             context.getSellerAccount(),
@@ -190,36 +190,79 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     }
 
     /**
-     * Creates an organisation, configures it with the provided context, and publishes updates.
+     * Publish an organisation, configures it with the provided context, and publishes updates.
      *
      * @param {OrganisationPublicationExecutionContext} context - The context containing configuration and execution details for the organisation publication.
      * @return {Promise<Hash>} A promise that resolves to the location of the published organisation.
      */
-    async createAndPublishOrganisation(context: OrganisationPublicationExecutionContext) {
+    async publishOrganisation(context: OrganisationPublicationExecutionContext) {
+        const build = context.build();
+        const focusOnExistingOrganisation = build.existingOrganisationId.isSome();
+        if (focusOnExistingOrganisation) {
+            return this.publishOrganisationUpdate(context);
+        } else {
+            return this.publishOrganisationCreation(context);
+        }
+    }
+
+    async publishOrganisationCreation(context: OrganisationPublicationExecutionContext) {
         const writer = this.getWriter();
+        const build = context.build();
         const organisation = await writer.createOrganization();
+        await organisation.setDescription(build);
         organisation.setGasPrice(context.getGasPrice());
-        await organisation.setDescription(context.build())
-       return  await organisation.publishUpdates();
+        return  await organisation.publishUpdates()
+    }
+
+    async publishOrganisationUpdate(context: OrganisationPublicationExecutionContext) {
+        const build = context.build();
+        const existingOrganisationId = build.existingOrganisationId
+            .unwrapOrThrow(new IllegalUsageError("Cannot update organisation: no organisation id provided "));
+        const writer = this.getWriter();
+        const organisation = await writer.loadOrganisation(existingOrganisationId);
+        const description = await organisation.getDescription();
+        await organisation.setDescription({
+            name: build.name || description.name,
+            city: build.city || description.city,
+            countryCode: build.city || description.countryCode,
+            website: build.website || description.website,
+        });
+        organisation.setGasPrice(context.getGasPrice());
+        return await organisation.publishUpdates();
     }
 
     /**
      * Creates and publishes an application based on the provided context.
      *
      * @param {ApplicationPublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organisation information, application metadata, and gas price settings.
-     * @return {Promise<Object>} A promise that resolves to the location of the created application.
+     * @return {Promise<Hash>} A promise that resolves to the location of the created application.
      */
-    async createAndPublishApplication(context: ApplicationPublicationExecutionContext) {
+    async publishApplication(context: ApplicationPublicationExecutionContext) {
         const writer = this.getWriter();
         const data = context.build();
-        const application = await writer.createApplication(data.organisationId);
-        await application.setDescription({
-            name: data.applicationName,
-            logoUrl: data.logoUrl,
-            homepageUrl: data.homepageUrl,
-            description: data.applicationDescription
-        });
-
+        const isUpdatingApplication = data.applicationId.isSome();
+        let application;
+        if (isUpdatingApplication) {
+            application = await writer.loadApplication(data.applicationId.unwrap());
+            const description = await application.getDescription();
+            await application.setDescription({
+                name: data.applicationName || description.name,
+                logoUrl: data.logoUrl || description.logoUrl,
+                homepageUrl: data.homepageUrl || description.homepageUrl,
+                description: data.applicationDescription || description.description,
+            });
+        } else {
+            const organisationId = data.organisationId.unwrapOrThrow(
+                new IllegalUsageError("Organisation ID is required for application publication.")
+            );
+            application = await writer.createApplication(organisationId);
+            await application.setDescription({
+                name: data.applicationName,
+                logoUrl: data.logoUrl,
+                homepageUrl: data.homepageUrl,
+                description: data.applicationDescription
+            });
+        }
         application.setGasPrice(context.getGasPrice());
         return await application.publishUpdates();
     }
@@ -311,6 +354,19 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     private getWriter(): BlockchainWriter {
         if (!this.writer) throw new IllegalUsageError("No blockchain writer configured. Call BlockchainFacade.createFromNodeUrlAndPrivateKey(...) instead.");
         return this.writer;
+    }
+
+    /**
+     * Removes undefined entries.
+     *
+     * @param obj
+     *
+     * @private
+     */
+    private cleanObject<T extends Record<string, any>>(obj: T): Partial<T> {
+        return Object.fromEntries(
+            Object.entries(obj).filter(([_, v]) => v !== undefined)
+        ) as Partial<T>;
     }
 
 }

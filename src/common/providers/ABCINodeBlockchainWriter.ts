@@ -90,4 +90,15 @@ export class ABCINodeBlockchainWriter implements BlockchainWriter {
         return applicationLedger;
     }
 
+    async loadOrganisation(organisationId: Hash): Promise<Organization> {
+        const organization = new Organization({ provider: this.defaultKeyedProvider });
+        await organization._load(organisationId.toBytes());
+        return organization;
+    }
+
+    async loadApplication(applicationId: Hash): Promise<Application> {
+        const application = new Application({ provider: this.defaultKeyedProvider });
+        await application._load(applicationId.toBytes());
+        return application;
+    }
 }

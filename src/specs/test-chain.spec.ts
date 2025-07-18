@@ -243,7 +243,7 @@ describe('Chain test', () => {
         console.log("creating genesis account");
         // create the genesis account
         const genesisCreationContext = new PublicationExecutionContext();
-        const genesisAccountId = await blockchain.createAndPublishGenesisAccount(genesisCreationContext);
+        const genesisAccountId = await blockchain.publishGenesisAccount(genesisCreationContext);
         const genesisAccount = await blockchain.loadAccount(genesisAccountId);
         console.log("Genesis account created with id ", genesisAccountId.encode());
 
@@ -256,7 +256,7 @@ describe('Chain test', () => {
                 .withBuyerPublicKey(firstAccountPrivateKey.getPublicKey())
                 .withSellerAccount(genesisAccountId)
                 .withInitialBuyerAccountAmount(CMTSToken.createCMTS(2));
-            const firstAccountId = await blockchain.createAndPublishAccount(firstAccountCreationContext);
+            const firstAccountId = await blockchain.publishAccount(firstAccountCreationContext);
             const firstAccount = await blockchain.loadAccount(firstAccountId);
 
             // create a second account
@@ -265,7 +265,7 @@ describe('Chain test', () => {
                 .withBuyerPublicKey(secondAccountPrivateKey.getPublicKey())
                 .withSellerAccount(genesisAccountId)
                 .withInitialBuyerAccountAmount(CMTSToken.zero())
-            const secondAccountId = await blockchain.createAndPublishAccount(secondAccountCreationContext);
+            const secondAccountId = await blockchain.publishAccount(secondAccountCreationContext);
             const secondAccount = await blockchain.loadAccount(secondAccountId);
 
             // proceed to a transfer from the first to the second account
@@ -324,7 +324,7 @@ describe('Chain test', () => {
                 .withCountryCode("FR")
                 .withName("Carmentis SAS")
                 .withWebsite("www.carmentis.io");
-            const organizationId = await blockchain.createAndPublishOrganisation(organisationCreationContext);
+            const organizationId = await blockchain.publishOrganisation(organisationCreationContext);
             const organisation = await blockchain.loadOrganization(organizationId);
             expect(organisation.getCity()).toEqual("Paris");
             expect(organisation.getCountryCode()).toEqual("FR");
@@ -332,13 +332,29 @@ describe('Chain test', () => {
             expect(organisation.getWebsite()).toEqual("www.carmentis.io");
             expect(organisation.getPublicKey()).toBeDefined()
 
+            // update organisation
+            const organisationUpdateContext = new OrganisationPublicationExecutionContext()
+                .withExistingOrganisationId(organizationId)
+                .withWebsite("https://www.carmentis.io");
+            await blockchain.publishOrganisation(organisationUpdateContext);
+            const updatedOrganisation = await blockchain.loadOrganization(organizationId);
+            expect(updatedOrganisation.getWebsite()).toEqual("https://www.carmentis.io");
+
             // Testing application
             const applicationCreationContext = new ApplicationPublicationExecutionContext()
                 .withOrganisationId(organizationId)
                 .withApplicationName("My application");
-            const applicationId = await blockchain.createAndPublishApplication(applicationCreationContext);
+            const applicationId = await blockchain.publishApplication(applicationCreationContext);
             const application = await blockchain.loadApplication(applicationId);
             expect(application.getName()).toEqual("My application");
+
+            // update the application
+            const applicationUpdateContext = new ApplicationPublicationExecutionContext()
+                .withExistingApplicationId(applicationId)
+                .withApplicationName("My updated application");
+            await blockchain.publishApplication(applicationUpdateContext);
+            const updatedApplication = await blockchain.loadApplication(applicationId);
+            expect(updatedApplication.getName()).toEqual("My updated application");
 
             // Testing application ledger by submitting two elements
             const data = {

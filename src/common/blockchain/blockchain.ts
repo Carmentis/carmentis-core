@@ -15,7 +15,9 @@ import {RecordDescription} from "./RecordDescription";
 
 export type OperatorAnchorRequest = Omit<RecordDescription, 'applicationId'> & { approvalMessage: string }
 
-
+/**
+ * @deprecated Use BlockchainFacade.
+ */
 export class Blockchain {
   provider: Provider;
   constructor(provider: Provider) {

@@ -1,6 +1,8 @@
 import {PublicationExecutionContext} from "./PublicationExecutionContext";
 import {OrganizationDescription} from "../../blockchain/types";
 import {IllegalParameterError} from "../../errors/carmentis-error";
+import {Hash} from "../../entities/Hash";
+import {Optional} from "../../entities/Optional";
 
 /**
  * Represents the execution context specific to an organisation's publication process.
@@ -21,10 +23,23 @@ import {IllegalParameterError} from "../../errors/carmentis-error";
  *   additional organisation-specific modifications or extensions.
  */
 export class OrganisationPublicationExecutionContext extends PublicationExecutionContext {
+    private organisationId: Optional<Hash> = Optional.none();
     private name: string = '';
     private city: string = '';
     private countryCode: string = '';
     private website: string = '';
+
+    /**
+     * Specifies that publication is being performed on an existing organisation.
+     *
+     * If the organisation is not found, publication will fail.
+     *
+     * @param organisationId
+     */
+    withExistingOrganisationId(organisationId: Hash): OrganisationPublicationExecutionContext {
+        this.organisationId = Optional.some(organisationId);
+        return this;
+    }
 
     withName(name: string): OrganisationPublicationExecutionContext {
         this.name = name;
@@ -47,8 +62,10 @@ export class OrganisationPublicationExecutionContext extends PublicationExecutio
         return this;
     }
 
-    build(): OrganizationDescription {
+
+    build() {
         return {
+            existingOrganisationId: this.organisationId,
             name: this.name,
             city: this.city,
             countryCode: this.countryCode,

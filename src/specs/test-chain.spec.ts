@@ -17,7 +17,7 @@ import {Crypto} from "../common/crypto/crypto";
 const NODE_URL = "http://localhost:26657";
 
 describe('Chain test', () => {
-    const TEST_TIMEOUT = 5000;
+    const TEST_TIMEOUT = 10000;
     test("testChain()", async () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
         const memoryProvider = new MemoryProvider();

@@ -8,6 +8,7 @@ export const Utils = {
   truncateStringMiddle,
   getNullHash,
   getTimestampInSeconds,
+  bufferToUint8Array,
   binaryToHexa,
   binaryFromHexa,
   binaryFrom,
@@ -39,6 +40,10 @@ function getTimestampInSeconds() {
   return Math.floor(Date.now() / 1000);
 }
 
+function bufferToUint8Array(b: any) {
+  return new Uint8Array(b.buffer, b.byteOffset, b.byteLength / Uint8Array.BYTES_PER_ELEMENT);
+}
+
 function binaryToHexa(array: any) {
   if(!(array instanceof Uint8Array)) {
     return "";
@@ -57,7 +62,7 @@ function binaryFromHexa(str: any) {
   );
 }
 
-function binaryFrom(this: any, ...arg: any[]) {
+function binaryFrom(...arg: any[]) {
   const list = Array(arg.length);
   let ndx = 0;
 
@@ -66,7 +71,7 @@ function binaryFrom(this: any, ...arg: any[]) {
 
     switch(t) {
       case DATA.TYPE_NUMBER: {
-        arg[i] = this.intToByteArray(data);
+        arg[i] = intToByteArray(data);
         break;
       }
       case DATA.TYPE_STRING: {

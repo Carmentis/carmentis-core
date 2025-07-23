@@ -62,6 +62,10 @@ export abstract class VirtualBlockchain<CustomState> {
         return this.identifier
     }
 
+    isVirtualBlockchainIdDefined(): boolean {
+        return this.identifier instanceof Uint8Array;
+    }
+
     abstract checkStructure(microblock: any): void;
 
     /**

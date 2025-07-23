@@ -23,7 +23,7 @@ import {
 } from "../errors/carmentis-error";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
-import {CryptoSchemeFactory} from "../crypto/factory";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 import {BlockchainUtils} from "../blockchain/blockchainUtils";

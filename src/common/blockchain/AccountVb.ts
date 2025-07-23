@@ -3,7 +3,7 @@ import {VirtualBlockchain} from "./VirtualBlockchain";
 import {StructureChecker} from "./StructureChecker";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {AccountTokenIssuance, AccountTransfer, AccountVBState} from "./types";
-import {CryptoSchemeFactory} from "../crypto/factory";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Provider} from "../providers/Provider";
 
 export class AccountVb extends VirtualBlockchain<AccountVBState> {

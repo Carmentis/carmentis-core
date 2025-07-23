@@ -1,6 +1,7 @@
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Height} from "../entities/Height";
 import {ProofBuilder} from "../entities/ProofBuilder";
+import {Hash} from "../entities/Hash";
 
 export class ApplicationLedgerWrapper {
     static async wrap(appLedger: ApplicationLedger) {
@@ -21,6 +22,14 @@ export class ApplicationLedgerWrapper {
 
     getId() {
         return this.appLedger.getVirtualBlockchainId();
+    }
+
+    isActorSubscribed(actorName: string): boolean {
+        return this.appLedger.actorIsSubscribed(actorName);
+    }
+
+    getApplicationId(): Hash {
+        return this.appLedger.getApplicationId()
     }
 
 

@@ -577,7 +577,7 @@ WI_REQUESTS[WIRQ_GET_USER_DATA] = {
 WI_REQUESTS[WIRQ_DATA_APPROVAL] = {
   label: "WiRqDataApproval",
   definition: [
-    { name: "dataId", type: DATA.TYPE_BINARY },
+    { name: "anchorRequestId", type: DATA.TYPE_BINARY },
     { name: "serverUrl", type: DATA.TYPE_STRING }
   ]
 };
@@ -638,14 +638,14 @@ WALLET_OP_MESSAGES[MSG_ANS_ERROR] = {
 WALLET_OP_MESSAGES[MSG_APPROVAL_HANDSHAKE] = {
   label: "MessageApprovalHandshake",
   definition: [
-    { name: "dataId", type: DATA.TYPE_BINARY }
+    { name: "anchorRequestId", type: DATA.TYPE_BINARY }
   ]
 };
 
 WALLET_OP_MESSAGES[MSG_ACTOR_KEY] = {
   label: "MessageActorKey",
   definition: [
-    { name: "dataId",   type: DATA.TYPE_BINARY },
+    { name: "anchorRequestId",   type: DATA.TYPE_BINARY },
     { name: "actorKey", type: DATA.TYPE_STRING }
   ]
 };
@@ -653,7 +653,7 @@ WALLET_OP_MESSAGES[MSG_ACTOR_KEY] = {
 WALLET_OP_MESSAGES[MSG_APPROVAL_SIGNATURE] = {
   label: "MessageApprovalSignature",
   definition: [
-    { name: "dataId",    type: DATA.TYPE_BINARY },
+    { name: "anchorRequestId",    type: DATA.TYPE_BINARY },
     { name: "signature", type: DATA.TYPE_BINARY }
   ]
 };

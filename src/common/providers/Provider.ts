@@ -2,7 +2,7 @@ import {BlockchainUtils} from "../blockchain/blockchainUtils";
 import {Utils} from "../utils/utils";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
-import {CryptoSchemeFactory} from "../crypto/factory";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {AccountHistoryInterface, AccountStateDTO, MicroblockInformationSchema, ObjectList} from "../blockchain/types";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";

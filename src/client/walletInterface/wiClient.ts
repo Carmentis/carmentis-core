@@ -6,7 +6,7 @@ import * as web from "../web/web";
 import {SchemaSerializer, SchemaUnserializer} from "../../common/data/schemaSerializer";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
-import {CryptoSchemeFactory} from "../../common/crypto/factory";
+import {CryptoSchemeFactory} from "../../common/crypto/CryptoSchemeFactory";
 import {SignatureAlgorithmId} from "../../common/crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
 import {WI_INVALID_SIGNATURE} from "../../common/constants/errors";
@@ -43,6 +43,22 @@ export class wiClient {
     if(!this.qrElement) {
       throw `Container '${id}' not found`;
     }
+  }
+
+  attachQrCodeElement(element: any) {
+    this.qrElement = element
+  }
+
+  attachExtensionButtonElement(element: any) {
+    if(this.buttonAttached) {
+      throw `Extension button already attached`;
+    }
+    this.button = element
+    this.eventOfButtonAttached = this.button.addEventListener(
+        "click",
+        (_: any) => this.buttonCallback && this.buttonCallback()
+    );
+    this.buttonAttached = true;
   }
 
   attachExtensionButton(id: any) {
@@ -179,17 +195,17 @@ export class wiClient {
   /**
    * Data approval process.
    *
-   * @param {string} dataId - The data identifier returned by the operator server.
+   * @param {string} anchorRequestId - The data identifier returned by the operator server.
    *
    * @return {Promise<{vbHash: string, mbHash: string, height: number}>} The hash of the block and chain where the block of the event is located.
    * @throws {Error} If the process fails.
    */
-  async getApprovalData(dataId: string) {
+  async getApprovalData(anchorRequestId: string) {
     const encoder = EncoderFactory.defaultBytesToStringEncoder();
     let answer = await this.request<{vbHash: Uint8Array, mbHash: Uint8Array, height: number}>(
       SCHEMAS.WIRQ_DATA_APPROVAL,
       {
-        dataId: encoder.decode(dataId),
+        anchorRequestId: encoder.decode(anchorRequestId),
         serverUrl: this.serverUrl
       }
     );
@@ -268,7 +284,8 @@ export class wiClient {
             let qr = qrCode.create(object.qrId, object.timestamp, _this.serverUrl);
 
             _this.qrElement.setAttribute("qrData", qr.data);
-            _this.qrElement.html(qr.imageTag);
+            if ('html' in _this.qrElement) _this.qrElement.html(qr.imageTag);
+            if ('innerHTML' in _this.qrElement ) _this.qrElement.innerHTML(qr.imageTag);
             break;
           }
 

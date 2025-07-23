@@ -50,7 +50,7 @@ export function setOperatorUrl(operatorUrl: any) {
  * @returns {Promise<{
  *     success: boolean,
  *     error: string,
- *     data: {dataId: string} | undefined
+ *     data: {anchorRequestId: string} | undefined
  * }>} A promise that resolves with the response from the endpoint.
  */
 export async function sendPrepareUserApprovalToOperator(data: any) {
@@ -65,11 +65,11 @@ export async function sendPrepareUserApprovalToOperator(data: any) {
 /**
  * Fetches record information from the operator by querying a specific path.
  *
- * @param {string} dataId - The unique identifier for the data to be fetched.
+ * @param {string} anchorRequestId - The unique identifier for the data to be fetched.
  * @returns {Promise<{success: boolean, error: string, data: {virtualBlockchainId: string} | undefined}>} A promise resolving to the record information retrieved from the operator.
  */
-export async function getRecordInformationFromOperator(dataId: any) {
-    return queryOperator(GET_RECORD_INFORMATION_PATH, dataId)
+export async function getRecordInformationFromOperator(anchorRequestId: any) {
+    return queryOperator(GET_RECORD_INFORMATION_PATH, anchorRequestId)
 }
 
 /**

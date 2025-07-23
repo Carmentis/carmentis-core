@@ -1,7 +1,7 @@
 import {CHAIN, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {StructureChecker} from "./StructureChecker";
-import {CryptoSchemeFactory} from "../crypto/factory";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Crypto} from "../crypto/crypto";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";

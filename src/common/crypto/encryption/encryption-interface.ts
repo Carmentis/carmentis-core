@@ -1,6 +1,12 @@
 import { gcm } from "@noble/ciphers/aes";
 
 
+export interface SymmetricEncryptionKeyScheme {
+    getSymmetricEncryptionSchemeId(): number;
+    getSupportedKeyLengths(): number[];
+    getDefaultKeyLength(): number;
+}
+
 /**
  * Represents a symmetric encryption key capable of performing encryption and decryption
  * operations, as well as providing the associated encryption algorithm identifier and raw key.
@@ -12,6 +18,7 @@ export interface SymmetricEncryptionKey  {
      * @return {number} The unique algorithm identifier as a numeric value.
      */
     getSymmetricEncryptionSchemeId(): number;
+
     /**
      * Encrypts the given plaintext using a predefined encryption algorithm.
      *
@@ -49,6 +56,24 @@ export interface SymmetricEncryptionKey  {
  */
 export enum SymmetricEncryptionAlgorithmId {
     AES_256_GCM,
+}
+
+
+export class AES256GCMSymmetricEncryptionScheme implements SymmetricEncryptionKeyScheme {
+    private static KEY_LENGTH_IN_BYTES = 32;
+
+    getSymmetricEncryptionSchemeId(): number {
+        return SymmetricEncryptionAlgorithmId.AES_256_GCM;
+    }
+
+    getSupportedKeyLengths(): number[] {
+        return [AES256GCMSymmetricEncryptionScheme.KEY_LENGTH_IN_BYTES];
+    }
+
+    getDefaultKeyLength(): number {
+        return AES256GCMSymmetricEncryptionScheme.KEY_LENGTH_IN_BYTES;
+    }
+
 }
 
 /**

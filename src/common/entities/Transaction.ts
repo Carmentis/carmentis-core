@@ -21,8 +21,8 @@ export class Transaction {
         return this.transaction.height;
     }
 
-    public getPreviousHistoryHash(): Uint8Array {
-        return this.transaction.previousHistoryHash;
+    public getPreviousHistoryHash(): Hash {
+        return Hash.from(this.transaction.previousHistoryHash);
     }
 
     public getTimestamp(): number {

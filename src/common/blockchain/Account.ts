@@ -4,7 +4,7 @@ import {Utils} from "../utils/utils";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
 import {AccountTransfer} from "./types";
-import {CryptoSchemeFactory} from "../crypto/factory";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Provider} from "../providers/Provider";
 import {CMTSToken} from "../economics/currencies/token";
 import {IllegalParameterError, IllegalStateError} from "../errors/carmentis-error";

@@ -66,8 +66,19 @@ export class BlockchainFacade{
         return this.reader.getBalanceOfAccount(accountHash)
     }
 
+    async getAccountBalanceFromPublicKey(publicKey: PublicSignatureKey): Promise<CMTSToken> {
+        const accountHash = await this.getAccountHashFromPublicKey(publicKey);
+        return this.getAccountBalance(accountHash)
+    }
+
     getAccountHistory(accountHash: Hash): Promise<AccountHistoryView> {
         return this.reader.getAccountHistory(accountHash);
+    }
+
+
+    async getAccountHistoryFromPublicKey(publicKey: PublicSignatureKey) {
+        const accountHash = await this.getAccountHashFromPublicKey(publicKey);
+        return this.getAccountHistory(accountHash)
     }
 
     async getIdOfOrganisationOwningApplication(applicationId: Hash): Promise<Hash> {

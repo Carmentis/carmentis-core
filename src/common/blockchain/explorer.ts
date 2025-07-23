@@ -3,7 +3,7 @@ import {Utils} from "../utils/utils";
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
 import {Provider} from "../providers/Provider";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
-import {CryptoSchemeFactory} from "../crypto/factory";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {AccountHash, MicroBlockHeader} from "./types";
 import {SchemaUnserializer} from "../data/schemaSerializer";

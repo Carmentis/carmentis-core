@@ -2,7 +2,7 @@ import {
     SignatureAlgorithmId
 } from "./signature-interface";
 import {toBytes} from "@noble/ciphers/utils";
-import {CryptoSchemeFactory} from "../factory";
+import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./ml-dsa-65";
 import {Secp256k1PrivateSignatureKey} from "./secp256k1";
 import {BytesSignatureEncoder} from "./signature-encoder";

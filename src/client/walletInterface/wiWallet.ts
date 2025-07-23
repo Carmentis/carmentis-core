@@ -3,7 +3,7 @@ import {SchemaUnserializer} from "../../common/data/schemaSerializer";
 import * as network from "../../common/network/network";
 import {PrivateSignatureKey} from "../../common/crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
-import {CryptoSchemeFactory} from "../../common/crypto/factory";
+import {CryptoSchemeFactory} from "../../common/crypto/CryptoSchemeFactory";
 import {EncoderFactory} from "../../common/utils/encoder";
 
 export abstract class wiWallet<T> {
@@ -55,20 +55,20 @@ export abstract class wiWallet<T> {
 
 
     /**
-     * Gets the approval data identified by object.dataId, from the operator at object.serverUrl.*
+     * Gets the approval data identified by object.anchorRequestId, from the operator at object.serverUrl.*
      *
      * @param {PrivateSignatureKey} privateKey
      * @param object
      * @returns {Promise<*>}
      */
-    async getApprovalData(privateKey: PrivateSignatureKey, walletSeed: Uint8Array, object: { serverUrl: string, dataId: string }) {
+    async getApprovalData(privateKey: PrivateSignatureKey, walletSeed: Uint8Array, object: { serverUrl: string, anchorRequestId: string }) {
 
-        // send an initial message approval handshake containing the dataId provided by the web client.
+        // send an initial message approval handshake containing the anchorRequestId provided by the web client.
         let answer = await network.sendWalletToOperatorMessage<{ genesisSeed?: Uint8Array, data: Uint8Array }>(
             object.serverUrl,
             SCHEMAS.MSG_APPROVAL_HANDSHAKE,
             {
-                dataId: object.dataId
+                anchorRequestId: object.anchorRequestId
             }
         );
         console.log("Received getApprovalData answer: ", answer)
@@ -82,9 +82,10 @@ export abstract class wiWallet<T> {
             if (genesisSeed === undefined) throw 'Invalid genesisSeed provided, expected string, got: ' + typeof genesisSeed;
 
             // derive the actor key from the private key and the genesis seed
-            const cryptoFactory = new CryptoSchemeFactory();
             const algorithmId = privateKey.getSignatureAlgorithmId();
-            const actorPrivateKey = cryptoFactory.createVirtualBlockchainPrivateSignatureScheme(
+            const kdf = CryptoSchemeFactory.createDefaultKDF();
+            const actorPrivateKey = CryptoSchemeFactory.createVirtualBlockchainPrivateSignature(
+                kdf,
                 algorithmId,
                 walletSeed,
                 genesisSeed
@@ -97,7 +98,7 @@ export abstract class wiWallet<T> {
                 object.serverUrl,
                 SCHEMAS.MSG_ACTOR_KEY,
                 {
-                    dataId: object.dataId,
+                    anchorRequestId: object.anchorRequestId,
                     actorKey: signatureEncoder.encodePublicKey(actorPublicKey)
                 }
             );
@@ -112,7 +113,7 @@ export abstract class wiWallet<T> {
     }
 
     /**
-     * Sends the signature of the approval data identified by object.dataId to the operator at object.serverUrl.
+     * Sends the signature of the approval data identified by object.anchorRequestId to the operator at object.serverUrl.
      * Returns the answer to be sent to the client, which consists of { vbHash, mbHash, height }.
      */
     async sendApprovalSignature(privateKey: any, object: any, signature: any) {
@@ -120,7 +121,7 @@ export abstract class wiWallet<T> {
             object.serverUrl,
             SCHEMAS.MSG_APPROVAL_SIGNATURE,
             {
-                dataId: object.dataId,
+                anchorRequestId: object.anchorRequestId,
                 signature: signature
             }
         );

@@ -1,5 +1,5 @@
 import {PrivateSignatureKey, PublicSignatureKey} from "./signature-interface";
-import {CryptoSchemeFactory} from "../factory";
+import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
 import {bytesToHex, bytesToUtf8, hexToBytes} from "@noble/ciphers/utils";
 import {utf8ToBytes} from "@noble/hashes/utils";
 import {EncoderFactory, EncoderInterface} from "../../utils/encoder";

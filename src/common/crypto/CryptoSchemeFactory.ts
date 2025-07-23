@@ -1,29 +1,40 @@
 import {
-    AES256GCMSymmetricEncryptionKey,
+    AES256GCMSymmetricEncryptionKey, AES256GCMSymmetricEncryptionScheme,
     DecapsulationKey,
     EncapsulationKey,
     InsecureKeyExchangeScheme,
     KeyExchangeAlgorithmId,
     SymmetricEncryptionAlgorithmId,
-    SymmetricEncryptionKey,
+    SymmetricEncryptionKey, SymmetricEncryptionKeyScheme,
 } from "./encryption/encryption-interface";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId,} from "./signature/signature-interface";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./signature/ml-dsa-65";
 import {CryptographicHash, CryptographicHashAlgorithmId, Sha256CryptographicHash} from "./hash/hash-interface";
 import {Secp256k1PrivateSignatureKey, Secp256k1PublicSignatureKey} from "./signature/secp256k1";
-import {PBKDF2} from "./kdf/kdf-interface";
+
+import {PBKDF2} from "./kdf/PBKDF2";
+import {PasswordBasedKeyDerivationFunction} from "./kdf/PasswordBasedKeyDerivationFunction";
+import {KeyDerivationFunction} from "./kdf/KeyDerivationFunction";
+import {HKDF} from "./kdf/HKDF";
+import {PasswordBasedKeyDerivationFunctionAlgorithmId} from "./kdf/PasswordBasedKeyDerivationFunctionAlgorithmId";
 
 export class CryptoSchemeFactory {
 
 
-    static createPrivateSignatureKey( schemeId: number, walletSeed: Uint8Array ): PrivateSignatureKey {
+    static createPrivateSignatureKey( schemeId: number, seed: Uint8Array ): PrivateSignatureKey {
         switch (schemeId) {
-            case SignatureAlgorithmId.SECP256K1: return new Secp256k1PrivateSignatureKey(walletSeed);
-            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(walletSeed);
+            case SignatureAlgorithmId.SECP256K1: return new Secp256k1PrivateSignatureKey(seed);
+            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(seed);
             default: throw `Not supported signature scheme ID: ${schemeId}`
         }
     }
 
+    /**
+     * @deprecated Use CryptoSchemeFactory.createVirtualBlockchainPrivateSignature instead.
+     * @param schemeId
+     * @param walletSeed
+     * @param vbSeed
+     */
     createVirtualBlockchainPrivateSignatureScheme( schemeId: SignatureAlgorithmId, walletSeed: Uint8Array , vbSeed: Uint8Array ): PrivateSignatureKey {
         // TODO: implement correctly instead of just hashing
         /*
@@ -40,6 +51,38 @@ export class CryptoSchemeFactory {
             case SignatureAlgorithmId.SECP256K1: return Secp256k1PrivateSignatureKey.genFromSeed(actorSeed);
             default: throw `Not supported signature scheme ID: ${schemeId}`
         }
+    }
+
+    static createVirtualBlockchainPrivateSignature( kdf: KeyDerivationFunction, schemeId: SignatureAlgorithmId, walletSeed: Uint8Array , vbSeed: Uint8Array ): PrivateSignatureKey {
+        const actorSeed = new Uint8Array([...walletSeed, ...vbSeed])
+        const encoder = new TextEncoder();
+        const seed = kdf.deriveKeyNoSalt(actorSeed, encoder.encode("VB_ACTOR_KEY"), 32);
+
+        switch (schemeId) {
+            case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(seed);
+            case SignatureAlgorithmId.SECP256K1: return Secp256k1PrivateSignatureKey.genFromSeed(seed);
+            default: throw `Not supported signature scheme ID: ${schemeId}`
+        }
+    }
+
+    /**
+     * Derives a symmetric encryption key from the provided password using the specified key derivation and encryption algorithms.
+     *
+     * @param {string} password - The password from which the encryption key will be derived.
+     * @param {PasswordBasedKeyDerivationFunctionAlgorithmId} [pbkdfAlgorithmId=PasswordBasedKeyDerivationFunctionAlgorithmId.PBKDF2] - The ID of the password-based key derivation function algorithm to use.
+     * @param {SymmetricEncryptionAlgorithmId} [symmetricEncryptionSchemeId=SymmetricEncryptionAlgorithmId.AES_256_GCM] - The ID of the symmetric encryption algorithm to create the key for.
+     * @return {SymmetricEncryptionKey} A symmetric encryption key derived from the password using the specified algorithms.
+     */
+    static deriveKeyFromPassword(
+        password: string,
+        pbkdfAlgorithmId: PasswordBasedKeyDerivationFunctionAlgorithmId = PasswordBasedKeyDerivationFunctionAlgorithmId.PBKDF2,
+        symmetricEncryptionSchemeId: SymmetricEncryptionAlgorithmId = SymmetricEncryptionAlgorithmId.AES_256_GCM,
+    ): SymmetricEncryptionKey {
+        const symmetricEncryptionScheme = CryptoSchemeFactory.createSymmetricEncryptionKeyScheme(symmetricEncryptionSchemeId);
+        const keyLength = symmetricEncryptionScheme.getDefaultKeyLength();
+        const pbkdf = CryptoSchemeFactory.createDefaultPBKDF();
+        const rawKey = pbkdf.deriveKeyNoSalt(password, keyLength);
+        return CryptoSchemeFactory.createSymmetricEncryptionKey(symmetricEncryptionSchemeId, rawKey);
     }
 
 
@@ -82,8 +125,21 @@ export class CryptoSchemeFactory {
      * @return {SymmetricEncryptionKey} The generated symmetric encryption key.
      */
     createSymmetricEncryptionKey(symmetricEncryptionSchemeId: number, rawKey: Uint8Array<ArrayBufferLike>): SymmetricEncryptionKey {
+        return CryptoSchemeFactory.createSymmetricEncryptionKey(symmetricEncryptionSchemeId, rawKey);
+    }
+
+    static createSymmetricEncryptionKey(symmetricEncryptionSchemeId: number, rawKey: Uint8Array<ArrayBufferLike>): SymmetricEncryptionKey {
         switch (symmetricEncryptionSchemeId) {
-            case SymmetricEncryptionAlgorithmId.AES_256_GCM: return AES256GCMSymmetricEncryptionKey.createFromBytes(rawKey);
+            case SymmetricEncryptionAlgorithmId.AES_256_GCM:
+                return AES256GCMSymmetricEncryptionKey.createFromBytes(rawKey);
+            default:
+                throw `Not supported encryption scheme ID: ${symmetricEncryptionSchemeId}`
+        }
+    }
+
+    static createSymmetricEncryptionKeyScheme(symmetricEncryptionSchemeId: number): SymmetricEncryptionKeyScheme {
+        switch (symmetricEncryptionSchemeId) {
+            case SymmetricEncryptionAlgorithmId.AES_256_GCM: return new AES256GCMSymmetricEncryptionScheme();
             default: throw `Not supported encryption scheme ID: ${symmetricEncryptionSchemeId}`
         }
     }
@@ -100,7 +156,11 @@ export class CryptoSchemeFactory {
         return new Sha256CryptographicHash()
     }
 
-    static createDefaultPBKDF() {
+    static createDefaultPBKDF(): PasswordBasedKeyDerivationFunction {
         return new PBKDF2();
+    }
+
+    static createDefaultKDF() {
+        return new HKDF();
     }
 }

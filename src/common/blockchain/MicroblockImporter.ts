@@ -7,7 +7,7 @@ import { Application } from "./Application";
 import { ApplicationLedger } from "./ApplicationLedger";
 import { Crypto } from "../crypto/crypto";
 import { Utils } from "../utils/utils";
-import {CryptoSchemeFactory} from "../crypto/factory";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Microblock} from "./Microblock";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Optional} from "../entities/Optional";

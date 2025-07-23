@@ -2,6 +2,10 @@ export class Optional<T> {
     private constructor(private value: T | null) {
     }
 
+    static of<T>(value: T | null): Optional<T> {
+        return new Optional(value);
+    }
+
     static some<T>(value: T): Optional<T> {
         return new Optional(value);
     }

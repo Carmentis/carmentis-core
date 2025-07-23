@@ -7,6 +7,7 @@ export enum CarmentisErrorCode {
     // unspecified error
     CARMENTIS_ERROR = 0,
     NODE_ERROR = 1,
+    NODE_NOT_AVAILABLE_DURING_SYNCHRONISATION_ERROR = 2,
 
     // internal error
     INTERNAL_ERROR = 500,
@@ -73,6 +74,12 @@ export class NodeConnectionRefusedError extends NodeError {
         super(`Connection with node at ${nodeUrl} refused`, CarmentisErrorCode.NODE_ERROR)
     }
 
+}
+
+export class NodeEndpointClosedWhileCatchingUpError extends NodeError {
+    constructor() {
+        super(`Query rejected while catching up`, CarmentisErrorCode.NODE_ERROR)
+    }
 }
 
 export class EconomicsError extends CarmentisError {

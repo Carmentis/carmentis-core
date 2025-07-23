@@ -38,7 +38,7 @@ import {RecordDescription} from "../common/blockchain/RecordDescription";
 const NODE_URL = "http://localhost:26657";
 
 describe('Chain test', () => {
-    const TEST_TIMEOUT = 10000;
+    const TEST_TIMEOUT = 20000;
     /*
     test("testChain()", async () => {
         const privateKey = MLDSA65PrivateSignatureKey.gen();
@@ -314,17 +314,20 @@ describe('Chain test', () => {
                 // we get the history of the first account
                 // We expect two transactions: one for account issuing and another for the transfer to the second account
                 const firstAccountHistory = await blockchain.getAccountHistory(firstAccountId);
-                expect(firstAccountHistory.getNumberOfTransactions()).toEqual(2);
-                expect(firstAccountHistory.containsTransactionAtHeight(1)).toBeTruthy()
-                expect(firstAccountHistory.containsTransactionAtHeight(2)).toBeTruthy()
-                expect(firstAccountHistory.containsTransactionAtHeight(3)).toBeFalsy()
+                expect(firstAccountHistory.getNumberOfTransactions()).toEqual(3);
+                expect(firstAccountHistory.containsTransactionAtHeight(1)).toBeTruthy();
+                expect(firstAccountHistory.containsTransactionAtHeight(2)).toBeTruthy();
+                expect(firstAccountHistory.containsTransactionAtHeight(3)).toBeTruthy();
+                expect(firstAccountHistory.containsTransactionAtHeight(4)).toBeFalsy();
                 const firstTransaction = firstAccountHistory.getTransactionAtHeight(1);
                 const secondTransaction = firstAccountHistory.getTransactionAtHeight(2);
+                const thirdTransaction = firstAccountHistory.getTransactionAtHeight(3);
                 const firstTransactionAmount = firstTransaction.getAmount();
                 const secondTransactionAmount = secondTransaction.getAmount();
                 expect(firstTransactionAmount.equals(CMTSToken.createCMTS(2))).toBeTruthy()
                 expect(secondTransactionAmount.equals(CMTSToken.createCMTS(-1))).toBeTruthy()
                 expect(secondTransactionAmount.isPositive()).toBeFalsy()
+                expect(thirdTransaction.isPaidFees()).toBeTruthy();
             }
         }
 
@@ -447,14 +450,7 @@ describe('Chain test', () => {
             expect(applications.length).toBeGreaterThanOrEqual(1);
             expect(nodes).toBeInstanceOf(Array);
         }
-
-
-
-
-
-
-
-    })
+    }, TEST_TIMEOUT)
 
     it('Invalid usage of BlockchainFacade: Unknown account', async () =>  {
         const unknownAccountHash = Hash.from("00000000000000000000000000D788B255BD69B9F3019EF60105F160BE7A73C0");

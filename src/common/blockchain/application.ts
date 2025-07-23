@@ -1,6 +1,5 @@
 import {SECTIONS} from "../constants/constants";
 import {ApplicationVb} from "./applicationVb";
-import {Crypto} from "../crypto/crypto";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ApplicationDeclaration, ApplicationDescription, Hash} from "./types";
 import {Provider} from "../providers/provider";
@@ -30,7 +29,7 @@ export class Application {
     });
 
     await this.vb.setDeclaration({
-      organizationId: organizationId
+      organizationId
     });
   }
 

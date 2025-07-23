@@ -3,7 +3,6 @@ import {VirtualBlockchain} from "./virtualBlockchain";
 import {Organization} from "./organization";
 import {StructureChecker} from "./structureChecker";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
-import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/provider";
 import {ApplicationDeclaration, ApplicationDescription, ApplicationVBState} from "./types";

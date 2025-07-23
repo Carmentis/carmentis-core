@@ -109,6 +109,30 @@ describe('Chain test', () => {
         console.log(await organization.getDescription());
 
         /**
+          Testing validator node
+        */
+        console.log("creating validator node");
+
+        let node = await blockchain.createValidatorNode(organizationId);
+
+        await node.setDescription({
+            cometPublicKeyType: "tendermint/PubKeyEd25519",
+            cometPublicKey: "LNMVoOPtPV+hVB/eilwPp6Os+KzvxZXhUiEFe6bOlNw=",
+            power: 10
+        });
+
+        node.setGasPrice(ECO.TOKEN);
+        let nodeId = await node.publishUpdates();
+
+        console.log("loading back node");
+
+        node = await blockchain.loadValidatorNode(nodeId);
+
+        memoryProvider.clear();
+        console.log(await node.getDescription());
+        console.log(await node.getDescription());
+
+        /**
           Testing application
         */
         console.log("creating application");

@@ -23,11 +23,25 @@ export interface OrganizationDescription {
     website: string
 }
 
-export interface ValidatorNodeVBState {}
+export interface ValidatorNodeDescription {
+    power: number,
+    cometPublicKeyType: string,
+    cometPublicKey: string
+}
+
+export interface ValidatorNodeDeclaration {
+    organizationId: Uint8Array
+}
 
 export interface OrganizationVBState {
     signatureAlgorithmId: number;
     publicKeyHeight: number;
+    descriptionHeight: number;
+}
+
+export interface ValidatorNodeVBState {
+    signatureAlgorithmId: number;
+    organizationId: Uint8Array;
     descriptionHeight: number;
 }
 
@@ -107,7 +121,6 @@ export interface VirtualBlockchainState<CustomState = any> {
     lastMicroblockHash: Uint8Array,
     customState: CustomState
 }
-
 
 export interface MicroBlockHeader {
     magicString: string;

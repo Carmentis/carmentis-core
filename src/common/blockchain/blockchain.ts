@@ -3,13 +3,13 @@ import {Explorer} from "./explorer";
 import {MicroblockImporter} from "./microblockImporter";
 import {Account} from "./account";
 import {Organization} from "./organization";
+import {ValidatorNode} from "./validatorNode";
 import {Application} from "./application";
 import {ApplicationLedger} from "./applicationLedger";
 import {Utils} from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {Hash} from "./types";
-
 
 export interface RecordActor {
   name: string;
@@ -151,6 +151,29 @@ export class Blockchain {
     const organization = new Organization({ provider: this.provider });
     await organization._load(identifierString.toBytes());
     return organization;
+  }
+
+  /**
+   * Should be used with a keyed provider.
+   *
+   * @returns {Promise<ValidatorNode>}
+   */
+  async createValidatorNode(organizationIdentifierString: Hash) {
+    const validatorNode = new ValidatorNode({ provider: this.provider });
+    await validatorNode._create(organizationIdentifierString.toBytes());
+    return validatorNode;
+  }
+
+  /**
+   * Can be used with a keyed provider.
+   *
+   * @param identifier
+   * @returns {Promise<ValidatorNode>}
+   */
+  async loadValidatorNode(identifier: Hash) {
+    const validatorNode = new ValidatorNode({ provider: this.provider });
+    await validatorNode._load(identifier.toBytes());
+    return validatorNode;
   }
 
   /**

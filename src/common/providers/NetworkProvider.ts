@@ -124,7 +124,7 @@ export class NetworkProvider {
     return answer;
   }
 
-  async query(urlObject: any): Promise<{data: string}> {
+  async query(urlObject: any): Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
         const response = await axios.post(urlObject, {}, {
@@ -165,7 +165,9 @@ export class NetworkProvider {
     urlObject.searchParams.append("data", "0x" + Utils.binaryToHexa(data));
 
     const responseData = await this.query(urlObject);
+    console.log("responseData", responseData)
     const binary = Base64.decodeBinary(responseData.data);
+    //const binary = Base64.decodeBinary(responseData.result.response.value);
     const { type, object } = unserializer.unserialize(binary);
 
     if(type == SCHEMAS.MSG_ERROR) {

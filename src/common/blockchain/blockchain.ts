@@ -3,6 +3,7 @@ import {Explorer} from "./explorer";
 import {MicroblockImporter} from "./MicroblockImporter";
 import {Account} from "./Account";
 import {Organization} from "./Organization";
+import {ValidatorNode} from "./ValidatorNode";
 import {Application} from "./Application";
 import {ApplicationLedger} from "./ApplicationLedger";
 import {Utils} from "../utils/utils";
@@ -102,6 +103,29 @@ export class Blockchain {
     const organization = new Organization({ provider: this.provider });
     await organization._load(identifierString.toBytes());
     return organization;
+  }
+
+  /**
+   * Should be used with a keyed provider.
+   *
+   * @returns {Promise<ValidatorNode>}
+   */
+  async createValidatorNode(organizationIdentifierString: Hash) {
+    const validatorNode = new ValidatorNode({ provider: this.provider });
+    await validatorNode._create(organizationIdentifierString.toBytes());
+    return validatorNode;
+  }
+
+  /**
+   * Can be used with a keyed provider.
+   *
+   * @param identifier
+   * @returns {Promise<ValidatorNode>}
+   */
+  async loadValidatorNode(identifier: Hash) {
+    const validatorNode = new ValidatorNode({ provider: this.provider });
+    await validatorNode._load(identifier.toBytes());
+    return validatorNode;
   }
 
   /**

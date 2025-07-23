@@ -71,6 +71,7 @@ export class Provider {
             BlockchainUtils.encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, headerData)
         );
         await this.internalProvider.setMicroblockBody(hash, bodyData);
+        await this.internalProvider.setMicroblock(hash, headerData, bodyData);
     }
 
     async updateVirtualBlockchainState(virtualBlockchainId: any, type: any, height: any, lastMicroblockHash: any, customStateObject: any) {

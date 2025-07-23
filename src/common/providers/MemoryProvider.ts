@@ -33,6 +33,10 @@ export class MemoryProvider  {
     return await MemoryProvider.get(this.microblockInformationStore, hash);
   }
 
+  async getMicroblock(identifier: any) {
+    return new Uint8Array();
+  }
+
   async getMicroblockBody(identifier: any) {
     return await MemoryProvider.get(this.microblockBodyStore, identifier);
   }
@@ -48,6 +52,10 @@ export class MemoryProvider  {
 
   async setMicroblockInformation(identifier: any, data: any) {
     return await MemoryProvider.set(this.microblockInformationStore, identifier, data);
+  }
+
+  async setMicroblock(identifier: any, headerData: any, bodyData: any) {
+    // ignored
   }
 
   async setMicroblockBody(identifier: any, data: any) {

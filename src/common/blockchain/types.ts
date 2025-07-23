@@ -80,11 +80,25 @@ export interface OrganizationDescription {
     website: string
 }
 
-export interface ValidatorNodeVBState {}
+export interface ValidatorNodeDescription {
+    power: number,
+    cometPublicKeyType: string,
+    cometPublicKey: string
+}
+
+export interface ValidatorNodeDeclaration {
+    organizationId: Uint8Array
+}
 
 export interface OrganizationVBState {
     signatureAlgorithmId: number;
     publicKeyHeight: number;
+    descriptionHeight: number;
+}
+
+export interface ValidatorNodeVBState {
+    signatureAlgorithmId: number;
+    organizationId: Uint8Array;
     descriptionHeight: number;
 }
 
@@ -172,12 +186,6 @@ export interface VirtualBlockchainStateInterface<CustomState = object> {
     customState: CustomState
 }
 
-/*
-export class VirtualBlockchainState<CustomState = object> {
-    constructor(private state: VirtualBlockchainStateDTO<CustomState>) {}
-}
-
- */
 
 
 export interface MicroBlockHeader {

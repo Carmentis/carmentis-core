@@ -3,7 +3,10 @@ import {Height} from "./Height";
 import {Hash} from "./Hash";
 import {CMTSToken} from "../economics/currencies/token";
 import {
-    BK_EARNED_FEES, BK_PAID_FEES,
+    BK_EARNED_BLOCK_FEES,
+    BK_EARNED_TX_FEES,
+    BK_PAID_BLOCK_FEES,
+    BK_PAID_TX_FEES,
     BK_PLUS, BK_PURCHASE,
     BK_RECEIVED_ISSUANCE, BK_RECEIVED_PAYMENT,
     BK_SALE,
@@ -78,7 +81,23 @@ export class Transaction {
      * @return {boolean} Returns true if the transaction is earned fees, otherwise false.
      */
     public isEarnedFees(): boolean {
-        return this.transaction.type === BK_EARNED_FEES;
+        return this.isEarnedBlockFees() || this.isEarnedTxFees();
+    }
+
+    public isEarnedBlockFees(): boolean {
+        return this.transaction.type === BK_EARNED_BLOCK_FEES;
+    }
+
+    public isEarnedTxFees(): boolean {
+        return this.transaction.type === BK_EARNED_TX_FEES;
+    }
+
+    public isPaidBlockFees(): boolean {
+        return this.transaction.type === BK_PAID_BLOCK_FEES;
+    }
+
+    public isPaidTxFees(): boolean {
+        return this.transaction.type === BK_PAID_TX_FEES;
     }
 
     /**
@@ -120,7 +139,7 @@ export class Transaction {
     }
 
     public isPaidFees(): boolean {
-        return this.transaction.type == BK_PAID_FEES
+        return this.isPaidBlockFees() || this.isPaidTxFees();
     }
 
 

@@ -83,7 +83,42 @@ ACCOUNT[ACCOUNT_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Validator node                                                                                                              //
 // ============================================================================================================================ //
+export const VN_SIG_ALGORITHM = 0;
+export const VN_DECLARATION   = 1;
+export const VN_DESCRIPTION   = 2;
+export const VN_SIGNATURE     = 3;
+
 const VALIDATOR_NODE: Schema[] = [] as const;
+
+VALIDATOR_NODE[VN_SIG_ALGORITHM] = {
+  label: "VN_SIG_ALGORITHM",
+  definition: [
+    { name: "algorithmId", type: DATA.TYPE_UINT8 }
+  ]
+};
+
+VALIDATOR_NODE[VN_DECLARATION] = {
+  label: "VN_DECLARATION",
+  definition: [
+    { name: "organizationId", type: DATA.TYPE_BIN256 }
+  ]
+};
+
+VALIDATOR_NODE[VN_DESCRIPTION] = {
+  label: "VN_DESCRIPTION",
+  definition: [
+    { name: "cometPublicKeyType", type: DATA.TYPE_STRING },
+    { name: "cometPublicKey",     type: DATA.TYPE_STRING },
+    { name: "power",              type: DATA.TYPE_UINT48 }
+  ]
+};
+
+VALIDATOR_NODE[VN_SIGNATURE] = {
+  label: "VN_SIGNATURE",
+  definition: [
+    { name: "signature", type: DATA.TYPE_BINARY }
+  ]
+};
 
 // ============================================================================================================================ //
 //  Organization                                                                                                                //

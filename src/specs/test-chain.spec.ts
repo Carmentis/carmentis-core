@@ -126,7 +126,28 @@ describe('Chain test', () => {
         console.log(await organization.getDescription());
         console.log(await organization.getDescription());
 
-        // Testing application
+
+        console.log("creating validator node");
+
+        let node = await blockchain.createValidatorNode(organizationId);
+
+        await node.setDescription({
+            cometPublicKeyType: "tendermint/PubKeyEd25519",
+            cometPublicKey: "LNMVoOPtPV+hVB/eilwPp6Os+KzvxZXhUiEFe6bOlNw=",
+            power: 10
+        });
+
+        node.setGasPrice(ECO.TOKEN);
+        let nodeId = await node.publishUpdates();
+
+        console.log("loading back node");
+
+        node = await blockchain.loadValidatorNode(nodeId);
+
+        memoryProvider.clear();
+        console.log(await node.getDescription());
+        console.log(await node.getDescription());
+
         console.log("creating application");
 
         let application = await blockchain.createApplication(organizationId);
@@ -167,14 +188,6 @@ describe('Chain test', () => {
             actorAssignations: [
                 { channelName: "mainChannel", actorName: "seller" }
             ],
-//          maskableFields: [
-//              {
-//                  fieldPath: "this.email",
-//                  maskedParts: [
-//                      { position: 1, length: 7, replacementString: "***" }
-//                  ]
-//              }
-//          ],
             author: "seller"
         };
 
@@ -227,8 +240,7 @@ describe('Chain test', () => {
         console.log("explorer.getVirtualBlockchainState", await explorer.getVirtualBlockchainState(genesisAccountId));
         console.log("explorer.getAccounts", await explorer.getAccounts());
     }, TEST_TIMEOUT);
-
-     */
+    */
 
     // init the content
     const nodeUrl = "http://localhost:26657";

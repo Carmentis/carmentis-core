@@ -158,6 +158,9 @@ const ACCOUNT_VB_STATE: Schema = {
 const VALIDATOR_NODE_VB_STATE: Schema = {
   label: "ValidatorNodeVbState",
   definition: [
+    { name: "signatureAlgorithmId", type: DATA.TYPE_UINT8 },
+    { name: "organizationId",       type: DATA.TYPE_BIN256 },
+    { name: "descriptionHeight",    type: DATA.TYPE_UINT48 }
   ]
 };
 

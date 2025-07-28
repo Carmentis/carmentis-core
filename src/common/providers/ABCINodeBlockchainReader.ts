@@ -343,6 +343,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
 
 
 
+    /*
     private async query(urlObject: string): Promise<{data: string}> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -365,17 +366,16 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         })
     }
 
+     */
+
 
     private async abciQuery<T = object>(msgId: any, msgData: any): Promise<T> {
+        return NetworkProvider.sendQueryToNodeServer(msgId, msgData, this.nodeUrl);
+        /*
         const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
         const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
         const data = serializer.serialize(msgId, msgData);
-        /*
-        const urlObject = new URL(this.nodeUrl);
-        urlObject.pathname = "abci_query";
-        urlObject.searchParams.append("path", '"/carmentis"');
-        urlObject.searchParams.append("data", "0x" + Utils.binaryToHexa(data));
-         */
+
         const params = new URLSearchParams();
         params.append("path", '"/carmentis"');
         params.append("data", "0x" + Utils.binaryToHexa(data));
@@ -392,6 +392,8 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         }
 
         return object as T;
+
+         */
     }
 
 

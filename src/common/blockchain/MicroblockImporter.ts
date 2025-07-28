@@ -53,7 +53,11 @@ export class MicroblockImporter {
     }
 
     get error(): string {
-        return this._error.unwrap().toString();
+        if (this.containsError()) {
+            return this.getError().toString();
+        } else {
+            return '';
+        }
     }
 
 

@@ -78,6 +78,7 @@ export * from "./entities/Transaction";
 export * from "./entities/VirtualBlockchainState";
 export * from "./entities/VirtualBlockchainType";
 export * from "./entities/VirtualBlockchainUpdate";
+export * from "./errors/CometBFTErrorCode";
 export * from "./errors/carmentis-error";
 export * from "./network/network";
 export * from "./providers/ABCINodeBlockchainReader";

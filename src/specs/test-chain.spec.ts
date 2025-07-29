@@ -23,6 +23,9 @@ import {
     OrganisationPublicationExecutionContext
 } from "../common/providers/publicationContexts/OrganisationPublicationExecutionContext";
 import {
+    ValidatorNodePublicationExecutionContext
+} from "../common/providers/publicationContexts/ValidatorNodePublicationExecutionContext";
+import {
     ApplicationPublicationExecutionContext
 } from "../common/providers/publicationContexts/ApplicationPublicationExecutionContext";
 import {
@@ -331,7 +334,6 @@ describe('Chain test', () => {
             }
         }
 
-
         {
             // Testing organization
             const organisationCreationContext = new OrganisationPublicationExecutionContext()
@@ -354,6 +356,20 @@ describe('Chain test', () => {
             await blockchain.publishOrganisation(organisationUpdateContext);
             const updatedOrganisation = await blockchain.loadOrganization(organizationId);
             expect(updatedOrganisation.getWebsite()).toEqual("https://www.carmentis.io");
+
+            // Testing validator node
+            const CometPublicKeyType = "tendermint/PubKeyEd25519";
+            const CometPublicKey = "LNMVoOPtPV+hVB/eilwPp6Os+KzvxZXhUiEFe6bOlNw=";
+
+            const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
+                .withPower(10)
+                .withCometPublicKeyType(CometPublicKeyType)
+                .withCometPublicKey(CometPublicKey);
+            const validatorNodeId = await blockchain.publishValidatorNode(validatorNodeCreationContext);
+            const validatorNode = await blockchain.loadValidatorNode(validatorNodeId);
+            expect(validatorNode.getPower()).toEqual(10);
+            expect(validatorNode.getCometPublicKeyType()).toEqual(CometPublicKeyType);
+            expect(validatorNode.getCometPublicKey()).toEqual(CometPublicKey);
 
             // Testing application
             const applicationCreationContext = new ApplicationPublicationExecutionContext()

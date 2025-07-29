@@ -36,6 +36,7 @@ import {AccountState} from "../entities/AccountState";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Application} from "../blockchain/Application";
 import {Organization} from "../blockchain/Organization";
+import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {BlockchainReader} from "./BlockchainReader";
 import {Account} from "../blockchain/Account";
 import {MemoryProvider} from "./MemoryProvider";
@@ -68,9 +69,6 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         this.publicProvider = new Provider(cacheProvider, this.networkProvider);
     }
 
-
-
-
     getMicroBlockBody(microblockHash: Hash): Promise<void> {
         throw new Error("Method not implemented.");
     }
@@ -79,7 +77,6 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         const organisation = await this.loadOrganization(organisationId);
         return organisation.getPublicKey();
     }
-
 
     async getMicroBlock(type: VirtualBlockchainType, hash: Hash) {
         const info = await this.publicProvider.getMicroblockInformation(hash.toBytes());
@@ -117,10 +114,6 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
 
         return NodeTranslator.translateMicroBlockInformation(header, virtualBlockchainState);
     }
-
-
-
-
 
     /**
      * Locks the current process until the specified microblock is published.
@@ -211,7 +204,6 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return NodeTranslator.translateVirtualBlockchainState(vbId, state);
     }
 
-
     /**
      * Loads the application ledger associated with the given VB ID.
      *
@@ -231,6 +223,20 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
                throw e
            }
        }
+    }
+
+    async loadValidatorNode(identifier: Hash): Promise<ValidatorNode> {
+        try {
+            const validatorNode = new ValidatorNode({ provider: this.publicProvider });
+            await validatorNode._load(identifier.toBytes());
+            return validatorNode;
+        } catch (e) {
+            if (e instanceof VirtualBlockchainNotFoundError) {
+                throw new ApplicationNotFoundError(identifier)
+            } else {
+                throw e
+            }
+        }
     }
 
     async loadApplication(identifier: Hash): Promise<Application> {
@@ -341,8 +347,6 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return response.list.map(Hash.from)
     }
 
-
-
     /*
     private async query(urlObject: string): Promise<{data: string}> {
         return new Promise(async (resolve, reject) => {
@@ -395,11 +399,4 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
 
          */
     }
-
-
-
-
-
-
-
 }

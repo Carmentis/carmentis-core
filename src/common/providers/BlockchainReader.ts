@@ -8,6 +8,7 @@ import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {MicroBlockInformation} from "../entities/MicroBlockInformation";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Account} from "../blockchain/Account";
+import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {Organization} from "../blockchain/Organization";
 import {Application} from "../blockchain/Application";
 
@@ -32,6 +33,7 @@ export interface BlockchainReader {
     getMicroblockInformation(hash: Hash): Promise<MicroBlockInformation>;
     loadApplicationLedger(vbId: Hash): Promise<ApplicationLedger>;
     loadAccount(vbId: Hash): Promise<Account>
+    loadValidatorNode(identifier: Hash): Promise<ValidatorNode>;
     loadApplication(identifier: Hash): Promise<Application>;
     loadOrganization(identifierString: Hash): Promise<Organization>;
     getRecord<T = any>(vbId: Hash, height: number, privateKey?: PrivateSignatureKey): Promise<T>

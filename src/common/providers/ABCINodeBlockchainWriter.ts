@@ -6,6 +6,7 @@ import {ProviderFactory} from "./ProviderFactory";
 import {Hash} from "../entities/Hash";
 import {Account} from "../blockchain/Account";
 import {Organization} from "../blockchain/Organization";
+import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Application} from "../blockchain/Application";
 import {BlockchainWriter} from "./BlockchainWriter";
@@ -27,8 +28,6 @@ export class ABCINodeBlockchainWriter implements BlockchainWriter {
         this.defaultPrivateKey = defaultPrivateKey;
         this.defaultKeyedProvider = ProviderFactory.createKeyedProviderExternalProvider(defaultPrivateKey, nodeUrl);
     }
-
-
 
     async createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string): Promise<any> {
         const provider = ProviderFactory.createKeyedProviderExternalProvider(sellerPrivateKey, this.nodeUrl);
@@ -63,20 +62,23 @@ export class ABCINodeBlockchainWriter implements BlockchainWriter {
         return account;
     }
 
-
     async createOrganization() {
         const organization = new Organization({ provider: this.defaultKeyedProvider });
         await organization._create();
         return organization;
     }
 
+    async createValidatorNode(organizationIdentifierString: Hash) {
+        const validatorNode = new ValidatorNode({ provider: this.defaultKeyedProvider });
+        await validatorNode._create(organizationIdentifierString.toBytes());
+        return validatorNode;
+    }
 
     async createApplication(organizationIdentifierString: Hash) {
         const application = new Application({ provider: this.defaultKeyedProvider });
         await application._create(organizationIdentifierString.toBytes());
         return application;
     }
-
 
     async createApplicationLedger(applicationId: Hash) {
         const applicationLedger = new ApplicationLedger({ provider: this.defaultKeyedProvider });
@@ -94,6 +96,12 @@ export class ABCINodeBlockchainWriter implements BlockchainWriter {
         const organization = new Organization({ provider: this.defaultKeyedProvider });
         await organization._load(organisationId.toBytes());
         return organization;
+    }
+
+    async loadValidatorNode(validatorNodeId: Hash): Promise<ValidatorNode> {
+        const validatorNode = new ValidatorNode({ provider: this.defaultKeyedProvider });
+        await validatorNode._load(validatorNodeId.toBytes());
+        return validatorNode;
     }
 
     async loadApplication(applicationId: Hash): Promise<Application> {

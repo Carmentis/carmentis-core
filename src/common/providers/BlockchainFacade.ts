@@ -10,6 +10,7 @@ import {BlockchainWriter} from "./BlockchainWriter";
 import {PublicationExecutionContext} from "./publicationContexts/PublicationExecutionContext";
 import {OrganisationPublicationExecutionContext} from "./publicationContexts/OrganisationPublicationExecutionContext";
 import {AccountPublicationExecutionContext} from "./publicationContexts/AccountPublicationExecutionContext";
+import {ValidatorNodePublicationExecutionContext} from "./publicationContexts/ValidatorNodePublicationExecutionContext";
 import {ApplicationPublicationExecutionContext} from "./publicationContexts/ApplicationPublicationExecutionContext";
 import {RecordPublicationExecutionContext} from "./publicationContexts/RecordPublicationExecutionContext";
 import {ProofBuilder} from "../entities/ProofBuilder";
@@ -19,6 +20,7 @@ import {
 } from "./publicationContexts/AccountTransferPublicationExecutionContext";
 import {AccountState} from "../entities/AccountState";
 import {OrganisationWrapper} from "../wrappers/OrganisationWrapper";
+import {ValidatorNodeWrapper} from "../wrappers/ValidatorNodeWrapper";
 import {ApplicationWrapper} from "../wrappers/ApplicationWrapper";
 import {ApplicationLedgerWrapper} from "../wrappers/ApplicationLedgerWrapper";
 import {AccountWrapper} from "../wrappers/AccountWrapper";
@@ -58,10 +60,6 @@ export class BlockchainFacade{
         return new BlockchainFacade(nodeUrl, reader, writer);
     }
 
-
-
-
-
     getAccountBalance(accountHash: Hash): Promise<CMTSToken> {
         return this.reader.getBalanceOfAccount(accountHash)
     }
@@ -74,7 +72,6 @@ export class BlockchainFacade{
     getAccountHistory(accountHash: Hash): Promise<AccountHistoryView> {
         return this.reader.getAccountHistory(accountHash);
     }
-
 
     async getAccountHistoryFromPublicKey(publicKey: PublicSignatureKey) {
         const accountHash = await this.getAccountHashFromPublicKey(publicKey);
@@ -122,6 +119,17 @@ export class BlockchainFacade{
      */
     async getAccountHashFromPublicKey(publicKey: PublicSignatureKey): Promise<Hash> {
         return this.reader.getAccountByPublicKey(publicKey)
+    }
+
+    /**
+     * Loads a validator node based on the provided identifier.
+     *
+     * @param {Hash} identifier - The unique identifier of the validator node to be loaded.
+     * @return {Promise<ValidatorNodeWrapper>} A promise that resolves to the loaded validator node.
+     */
+    async loadValidatorNode(identifier: Hash): Promise<ValidatorNodeWrapper> {
+        const validatorNode = await this.reader.loadValidatorNode(identifier);
+        return await ValidatorNodeWrapper.wrap(validatorNode);
     }
 
     /**
@@ -279,6 +287,40 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     }
 
     /**
+     * Creates and publishes a validator node based on the provided context.
+     *
+     * @param {ValidatorNodePublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organisation information, application metadata, and gas price settings.
+     * @return {Promise<Hash>} A promise that resolves to the location of the created application.
+     */
+    async publishValidatorNode(context: ValidatorNodePublicationExecutionContext) {
+        const writer = this.getWriter();
+        const data = context.build();
+        const isUpdatingValidatorNode = data.validatorNodeId.isSome();
+        let validatorNode;
+        if (isUpdatingValidatorNode) {
+            validatorNode = await writer.loadValidatorNode(data.validatorNodeId.unwrap());
+            const description = await validatorNode.getDescription();
+            await validatorNode.setDescription({
+                power: data.power || description.power,
+                cometPublicKeyType: data.cometPublicKeyType || description.cometPublicKeyType,
+                cometPublicKey: data.cometPublicKey || description.cometPublicKey,
+            });
+        } else {
+            const validatorNodeId = data.validatorNodeId.unwrapOrThrow(
+                new IllegalUsageError("Validator node ID is required for validator node publication.")
+            );
+            validatorNode = await writer.createValidatorNode(validatorNodeId);
+            await validatorNode.setDescription({
+                power: data.power,
+                cometPublicKeyType: data.cometPublicKeyType,
+                cometPublicKey: data.cometPublicKey
+            });
+        }
+        validatorNode.setGasPrice(context.getGasPrice());
+        return await validatorNode.publishUpdates();
+    }
+
+    /**
      * Publishes a record using the provided execution context.
      *
      * @param {RecordPublicationExecutionContext<T>} context - The context containing the necessary data to build and publish the record.
@@ -313,7 +355,6 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     async verifyProofFromJson(proof: Proof) {
         return this.reader.verifyProofFromJson(proof);
     }
-
 
     /**
      * Retrieves all accounts.
@@ -361,7 +402,6 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
         return this.reader.getAccountState(accountHash);
     }
 
-
     private getWriter(): BlockchainWriter {
         if (!this.writer) throw new IllegalUsageError("No blockchain writer configured. Call BlockchainFacade.createFromNodeUrlAndPrivateKey(...) instead.");
         return this.writer;
@@ -379,5 +419,4 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
             Object.entries(obj).filter(([_, v]) => v !== undefined)
         ) as Partial<T>;
     }
-
 }

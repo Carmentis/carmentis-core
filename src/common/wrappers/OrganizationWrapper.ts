@@ -2,12 +2,12 @@ import {Organization} from "../blockchain/Organization";
 import {OrganizationDescription} from "../blockchain/types";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 
-export class OrganisationWrapper {
+export class OrganizationWrapper {
 
-    static async wrap(organisation: Organization) {
-        const publicKey = await organisation.getPublicKey();
-        const organisationDescription = await organisation.getDescription();
-        return new OrganisationWrapper(publicKey, organisationDescription);
+    static async wrap(organization: Organization) {
+        const publicKey = await organization.getPublicKey();
+        const organizationDescription = await organization.getDescription();
+        return new OrganizationWrapper(publicKey, organizationDescription);
     }
 
     private constructor(

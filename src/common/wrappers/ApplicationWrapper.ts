@@ -5,23 +5,23 @@ import {ApplicationDescription} from "../blockchain/types";
 export class ApplicationWrapper {
     static async wrap(application: Application) {
         const declaration = await application.getDeclaration();
-        const organisationId = Hash.from(declaration.organizationId);
+        const organizationId = Hash.from(declaration.organizationId);
         const description =  await application.getDescription();
-        return new ApplicationWrapper(organisationId, description);
+        return new ApplicationWrapper(organizationId, description);
     }
 
     private constructor(
-        private readonly organisationId: Hash,
+        private readonly organizationId: Hash,
         private readonly description: ApplicationDescription
     ) {}
 
     /**
-     * Retrieves the id of the organisation managing the application.
+     * Retrieves the id of the organization managing the application.
      *
-     * @return {Hash} The organisation ID managing the application.
+     * @return {Hash} The organization ID managing the application.
      */
-    getOrganisationId(): Hash {
-        return this.organisationId;
+    getOrganizationId(): Hash {
+        return this.organizationId;
     }
 
 

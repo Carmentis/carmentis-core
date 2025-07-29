@@ -20,8 +20,8 @@ import {
     AccountTransferPublicationExecutionContext
 } from "../common/providers/publicationContexts/AccountTransferPublicationExecutionContext";
 import {
-    OrganisationPublicationExecutionContext
-} from "../common/providers/publicationContexts/OrganisationPublicationExecutionContext";
+    OrganizationPublicationExecutionContext
+} from "../common/providers/publicationContexts/OrganizationPublicationExecutionContext";
 import {
     ApplicationPublicationExecutionContext
 } from "../common/providers/publicationContexts/ApplicationPublicationExecutionContext";

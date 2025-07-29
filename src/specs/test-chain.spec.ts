@@ -20,8 +20,8 @@ import {
     AccountTransferPublicationExecutionContext
 } from "../common/providers/publicationContexts/AccountTransferPublicationExecutionContext";
 import {
-    OrganisationPublicationExecutionContext
-} from "../common/providers/publicationContexts/OrganisationPublicationExecutionContext";
+    OrganizationPublicationExecutionContext
+} from "../common/providers/publicationContexts/OrganizationPublicationExecutionContext";
 import {
     ValidatorNodePublicationExecutionContext
 } from "../common/providers/publicationContexts/ValidatorNodePublicationExecutionContext";
@@ -34,7 +34,7 @@ import {
 import {
     AccountNotFoundForAccountHashError, ApplicationLedgerNotFoundError, ApplicationNotFoundError,
     CarmentisError,
-    OrganisationNotFoundError
+    OrganizationNotFoundError
 } from "../common/errors/carmentis-error";
 import {RecordDescription} from "../common/blockchain/RecordDescription";
 
@@ -336,32 +336,33 @@ describe('Chain test', () => {
 
         {
             // Testing organization
-            const organisationCreationContext = new OrganisationPublicationExecutionContext()
+            const organizationCreationContext = new OrganizationPublicationExecutionContext()
                 .withCity("Paris")
                 .withCountryCode("FR")
                 .withName("Carmentis SAS")
                 .withWebsite("www.carmentis.io");
-            const organizationId = await blockchain.publishOrganisation(organisationCreationContext);
-            const organisation = await blockchain.loadOrganization(organizationId);
-            expect(organisation.getCity()).toEqual("Paris");
-            expect(organisation.getCountryCode()).toEqual("FR");
-            expect(organisation.getName()).toEqual("Carmentis SAS");
-            expect(organisation.getWebsite()).toEqual("www.carmentis.io");
-            expect(organisation.getPublicKey()).toBeDefined()
+            const organizationId = await blockchain.publishOrganization(organizationCreationContext);
+            const organization = await blockchain.loadOrganization(organizationId);
+            expect(organization.getCity()).toEqual("Paris");
+            expect(organization.getCountryCode()).toEqual("FR");
+            expect(organization.getName()).toEqual("Carmentis SAS");
+            expect(organization.getWebsite()).toEqual("www.carmentis.io");
+            expect(organization.getPublicKey()).toBeDefined()
 
-            // update organisation
-            const organisationUpdateContext = new OrganisationPublicationExecutionContext()
-                .withExistingOrganisationId(organizationId)
+            // update organization
+            const organizationUpdateContext = new OrganizationPublicationExecutionContext()
+                .withExistingOrganizationId(organizationId)
                 .withWebsite("https://www.carmentis.io");
-            await blockchain.publishOrganisation(organisationUpdateContext);
-            const updatedOrganisation = await blockchain.loadOrganization(organizationId);
-            expect(updatedOrganisation.getWebsite()).toEqual("https://www.carmentis.io");
+            await blockchain.publishOrganization(organizationUpdateContext);
+            const updatedOrganization = await blockchain.loadOrganization(organizationId);
+            expect(updatedOrganization.getWebsite()).toEqual("https://www.carmentis.io");
 
             // Testing validator node
             const CometPublicKeyType = "tendermint/PubKeyEd25519";
             const CometPublicKey = "LNMVoOPtPV+hVB/eilwPp6Os+KzvxZXhUiEFe6bOlNw=";
 
             const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
+                .withOrganizationId(organizationId)
                 .withPower(10)
                 .withCometPublicKeyType(CometPublicKeyType)
                 .withCometPublicKey(CometPublicKey);
@@ -373,7 +374,7 @@ describe('Chain test', () => {
 
             // Testing application
             const applicationCreationContext = new ApplicationPublicationExecutionContext()
-                .withOrganisationId(organizationId)
+                .withOrganizationId(organizationId)
                 .withApplicationName("My application");
             const applicationId = await blockchain.publishApplication(applicationCreationContext);
             const application = await blockchain.loadApplication(applicationId);
@@ -455,13 +456,13 @@ describe('Chain test', () => {
         {
             // Testing access to all items
             const accounts = await blockchain.getAllAccounts();
-            const organisations = await blockchain.getAllOrganisations();
+            const organizations = await blockchain.getAllOrganizations();
             const applications = await blockchain.getAllApplications();
             const nodes = await blockchain.getAllValidatorNodes();
             expect(accounts).toBeInstanceOf(Array);
             expect(accounts.length).toBeGreaterThanOrEqual(2);
-            expect(organisations).toBeInstanceOf(Array);
-            expect(organisations.length).toBeGreaterThanOrEqual(1);
+            expect(organizations).toBeInstanceOf(Array);
+            expect(organizations.length).toBeGreaterThanOrEqual(1);
             expect(applications).toBeInstanceOf(Array);
             expect(applications.length).toBeGreaterThanOrEqual(1);
             expect(nodes).toBeInstanceOf(Array);
@@ -486,10 +487,10 @@ describe('Chain test', () => {
             .rejects
             .toThrow(AccountNotFoundForAccountHashError);
 
-        // search for unknown organisation
+        // search for unknown organization
         await expect(async () => await blockchain.loadOrganization(unknownAccountHash))
             .rejects
-            .toThrow(OrganisationNotFoundError)
+            .toThrow(OrganizationNotFoundError)
 
         // search for unkown application
         await expect(async () => await blockchain.loadApplication(unknownAccountHash))

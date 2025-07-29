@@ -8,7 +8,7 @@ import {Hash} from "../entities/Hash";
 import {BlockchainReader} from "./BlockchainReader";
 import {BlockchainWriter} from "./BlockchainWriter";
 import {PublicationExecutionContext} from "./publicationContexts/PublicationExecutionContext";
-import {OrganisationPublicationExecutionContext} from "./publicationContexts/OrganisationPublicationExecutionContext";
+import {OrganizationPublicationExecutionContext} from "./publicationContexts/OrganizationPublicationExecutionContext";
 import {AccountPublicationExecutionContext} from "./publicationContexts/AccountPublicationExecutionContext";
 import {ValidatorNodePublicationExecutionContext} from "./publicationContexts/ValidatorNodePublicationExecutionContext";
 import {ApplicationPublicationExecutionContext} from "./publicationContexts/ApplicationPublicationExecutionContext";
@@ -19,7 +19,7 @@ import {
     AccountTransferPublicationExecutionContext
 } from "./publicationContexts/AccountTransferPublicationExecutionContext";
 import {AccountState} from "../entities/AccountState";
-import {OrganisationWrapper} from "../wrappers/OrganisationWrapper";
+import {OrganizationWrapper} from "../wrappers/OrganizationWrapper";
 import {ValidatorNodeWrapper} from "../wrappers/ValidatorNodeWrapper";
 import {ApplicationWrapper} from "../wrappers/ApplicationWrapper";
 import {ApplicationLedgerWrapper} from "../wrappers/ApplicationLedgerWrapper";
@@ -78,7 +78,7 @@ export class BlockchainFacade{
         return this.getAccountHistory(accountHash)
     }
 
-    async getIdOfOrganisationOwningApplication(applicationId: Hash): Promise<Hash> {
+    async getIdOfOrganizationOwningApplication(applicationId: Hash): Promise<Hash> {
         const application = await this.reader.loadApplication(applicationId);
         return await application.getOrganizationId();
     }
@@ -106,8 +106,8 @@ export class BlockchainFacade{
         throw new NotImplementedError();
     }
 
-    async getPublicKeyOfOrganisation(organisationId: Hash): Promise<PublicSignatureKey> {
-        const org = await this.reader.loadOrganization(organisationId);
+    async getPublicKeyOfOrganization(organizationId: Hash): Promise<PublicSignatureKey> {
+        const org = await this.reader.loadOrganization(organizationId);
         return org.getPublicKey();
     }
 
@@ -157,12 +157,12 @@ export class BlockchainFacade{
     /**
      * Loads an organization based on the provided identifier.
      *
-     * @param {Hash} organisationId - The unique identifier of the organization to be loaded.
-     * @return {Promise<OrganisationWrapper>} A promise that resolves to the loaded organization.
+     * @param {Hash} organizationId - The unique identifier of the organization to be loaded.
+     * @return {Promise<OrganizationWrapper>} A promise that resolves to the loaded organization.
      */
-    async loadOrganization(organisationId: Hash): Promise<OrganisationWrapper> {
-       const organisation = await this.reader.loadOrganization(organisationId);
-       return await OrganisationWrapper.wrap(organisation);
+    async loadOrganization(organizationId: Hash): Promise<OrganizationWrapper> {
+       const organization = await this.reader.loadOrganization(organizationId);
+       return await OrganizationWrapper.wrap(organization);
     }
 
     /**
@@ -209,51 +209,51 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     }
 
     /**
-     * Publish an organisation, configures it with the provided context, and publishes updates.
+     * Publish an organization, configures it with the provided context, and publishes updates.
      *
-     * @param {OrganisationPublicationExecutionContext} context - The context containing configuration and execution details for the organisation publication.
-     * @return {Promise<Hash>} A promise that resolves to the location of the published organisation.
+     * @param {OrganizationPublicationExecutionContext} context - The context containing configuration and execution details for the organization publication.
+     * @return {Promise<Hash>} A promise that resolves to the location of the published organization.
      */
-    async publishOrganisation(context: OrganisationPublicationExecutionContext) {
+    async publishOrganization(context: OrganizationPublicationExecutionContext) {
         const build = context.build();
-        const focusOnExistingOrganisation = build.existingOrganisationId.isSome();
-        if (focusOnExistingOrganisation) {
-            return this.publishOrganisationUpdate(context);
+        const focusOnExistingOrganization = build.existingOrganizationId.isSome();
+        if (focusOnExistingOrganization) {
+            return this.publishOrganizationUpdate(context);
         } else {
-            return this.publishOrganisationCreation(context);
+            return this.publishOrganizationCreation(context);
         }
     }
 
-    async publishOrganisationCreation(context: OrganisationPublicationExecutionContext) {
+    async publishOrganizationCreation(context: OrganizationPublicationExecutionContext) {
         const writer = this.getWriter();
         const build = context.build();
-        const organisation = await writer.createOrganization();
-        await organisation.setDescription(build);
-        organisation.setGasPrice(context.getGasPrice());
-        return  await organisation.publishUpdates()
+        const organization = await writer.createOrganization();
+        await organization.setDescription(build);
+        organization.setGasPrice(context.getGasPrice());
+        return  await organization.publishUpdates()
     }
 
-    async publishOrganisationUpdate(context: OrganisationPublicationExecutionContext) {
+    async publishOrganizationUpdate(context: OrganizationPublicationExecutionContext) {
         const build = context.build();
-        const existingOrganisationId = build.existingOrganisationId
-            .unwrapOrThrow(new IllegalUsageError("Cannot update organisation: no organisation id provided "));
+        const existingOrganizationId = build.existingOrganizationId
+            .unwrapOrThrow(new IllegalUsageError("Cannot update organization: no organization id provided "));
         const writer = this.getWriter();
-        const organisation = await writer.loadOrganisation(existingOrganisationId);
-        const description = await organisation.getDescription();
-        await organisation.setDescription({
+        const organization = await writer.loadOrganization(existingOrganizationId);
+        const description = await organization.getDescription();
+        await organization.setDescription({
             name: build.name || description.name,
             city: build.city || description.city,
             countryCode: build.city || description.countryCode,
             website: build.website || description.website,
         });
-        organisation.setGasPrice(context.getGasPrice());
-        return await organisation.publishUpdates();
+        organization.setGasPrice(context.getGasPrice());
+        return await organization.publishUpdates();
     }
 
     /**
      * Creates and publishes an application based on the provided context.
      *
-     * @param {ApplicationPublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organisation information, application metadata, and gas price settings.
+     * @param {ApplicationPublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organization information, application metadata, and gas price settings.
      * @return {Promise<Hash>} A promise that resolves to the location of the created application.
      */
     async publishApplication(context: ApplicationPublicationExecutionContext) {
@@ -271,10 +271,10 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
                 description: data.applicationDescription || description.description,
             });
         } else {
-            const organisationId = data.organisationId.unwrapOrThrow(
-                new IllegalUsageError("Organisation ID is required for application publication.")
+            const organizationId = data.organizationId.unwrapOrThrow(
+                new IllegalUsageError("Organization ID is required for application publication.")
             );
-            application = await writer.createApplication(organisationId);
+            application = await writer.createApplication(organizationId);
             await application.setDescription({
                 name: data.applicationName,
                 logoUrl: data.logoUrl,
@@ -289,7 +289,7 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     /**
      * Creates and publishes a validator node based on the provided context.
      *
-     * @param {ValidatorNodePublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organisation information, application metadata, and gas price settings.
+     * @param {ValidatorNodePublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organization information, application metadata, and gas price settings.
      * @return {Promise<Hash>} A promise that resolves to the location of the created application.
      */
     async publishValidatorNode(context: ValidatorNodePublicationExecutionContext) {
@@ -306,10 +306,10 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
                 cometPublicKey: data.cometPublicKey || description.cometPublicKey,
             });
         } else {
-            const validatorNodeId = data.validatorNodeId.unwrapOrThrow(
-                new IllegalUsageError("Validator node ID is required for validator node publication.")
+            const organizationId = data.organizationId.unwrapOrThrow(
+                new IllegalUsageError("Organization ID is required for validator node publication.")
             );
-            validatorNode = await writer.createValidatorNode(validatorNodeId);
+            validatorNode = await writer.createValidatorNode(organizationId);
             await validatorNode.setDescription({
                 power: data.power,
                 cometPublicKeyType: data.cometPublicKeyType,
@@ -366,12 +366,12 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     }
 
     /**
-     * Retrieves a list of all organisations from the data source.
+     * Retrieves a list of all organizations from the data source.
      *
-     * @return {Promise<Hash[]>} A promise that resolves to an array of organisation data represented as hashes.
+     * @return {Promise<Hash[]>} A promise that resolves to an array of organization data represented as hashes.
      */
-    async getAllOrganisations(): Promise<Hash[]> {
-        return this.reader.getAllOrganisations();
+    async getAllOrganizations(): Promise<Hash[]> {
+        return this.reader.getAllOrganizations();
     }
 
     /**

@@ -18,7 +18,7 @@ import {
     ApplicationLedgerNotFoundError,
     ApplicationNotFoundError, NodeConnectionRefusedError,
     NodeError,
-    OrganisationNotFoundError,
+    OrganizationNotFoundError,
     VirtualBlockchainNotFoundError
 } from "../errors/carmentis-error";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
@@ -73,9 +73,9 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         throw new Error("Method not implemented.");
     }
 
-    async getPublicKeyOfOrganisation(organisationId: Hash): Promise<PublicSignatureKey> {
-        const organisation = await this.loadOrganization(organisationId);
-        return organisation.getPublicKey();
+    async getPublicKeyOfOrganization(organizationId: Hash): Promise<PublicSignatureKey> {
+        const organization = await this.loadOrganization(organizationId);
+        return organization.getPublicKey();
     }
 
     async getMicroBlock(type: VirtualBlockchainType, hash: Hash) {
@@ -260,7 +260,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
             return organization;
         } catch (e) {
             if (e instanceof VirtualBlockchainNotFoundError) {
-                throw new OrganisationNotFoundError(vbId);
+                throw new OrganizationNotFoundError(vbId);
             } else {
                 throw e
             }
@@ -329,7 +329,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
      *
      * @return {Promise<Hash[]>} A promise that resolves to an array of organizations.
      */
-    async getAllOrganisations() {
+    async getAllOrganizations() {
         return await this.getObjectList(VB_ORGANIZATION);
     }
 

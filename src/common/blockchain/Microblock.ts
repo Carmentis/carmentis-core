@@ -76,7 +76,7 @@ export class Microblock {
     const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
 
     if(!Utils.binaryIsEqual(this.header.bodyHash, bodyHash)) {
-      throw `inconsistent body hash`;
+      throw new Error(`inconsistent body hash`);
     }
 
     this.hash = Crypto.Hashes.sha256AsBinary(headerData);

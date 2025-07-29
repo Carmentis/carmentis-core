@@ -76,7 +76,7 @@ export abstract class AppDescription {
 
 
 // --------------------------------------------------------------------------------------------------------------------
-// Organisation
+// Organization
 
 
 
@@ -241,13 +241,13 @@ export class ApplicationMicroBlock extends AbstractMicroBlock {
 }
 
 
-export class OrganisationMicroBlock extends AbstractMicroBlock {
+export class OrganizationMicroBlock extends AbstractMicroBlock {
     protected encodeBody(): Uint8Array {
         return new Uint8Array(0);
     }
 
     getSupportedVirtualBlockchainType(): VirtualBlockchainType {
-        return VirtualBlockchainType.ORGANISATION_VIRTUAL_BLOCKCHAIN
+        return VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN
     }
 
     getSectionConstraints(): MicroBlockSectionConstraint {

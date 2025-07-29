@@ -26,7 +26,7 @@ export enum CarmentisErrorCode {
     ACCOUNT_NOT_FOUND_FOR_ADDRESS,
 
 
-    ORGANISATION_NOT_FOUND,
+    ORGANIZATION_NOT_FOUND,
     APPLICATION_NOT_FOUND,
     APPLICATION_LEDGER_NOT_FOUND,
     VALIDATOR_NODE_NOT_FOUND,
@@ -171,11 +171,11 @@ export class AccountNotFoundForAccountHashError extends BlockchainError {
     }
 }
 
-export class OrganisationNotFoundError extends BlockchainError {
-    constructor(organisationHash: Hash) {
+export class OrganizationNotFoundError extends BlockchainError {
+    constructor(organizationHash: Hash) {
         super(
-            `Organisation not found for hash: ${organisationHash.encode()}`,
-            CarmentisErrorCode.ORGANISATION_NOT_FOUND
+            `Organization not found for hash: ${organizationHash.encode()}`,
+            CarmentisErrorCode.ORGANIZATION_NOT_FOUND
         );
     }
 }

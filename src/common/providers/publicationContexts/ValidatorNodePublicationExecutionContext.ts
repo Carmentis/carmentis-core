@@ -4,6 +4,7 @@ import {Hash} from "../../entities/Hash";
 
 export class ValidatorNodePublicationExecutionContext extends PublicationExecutionContext {
     private validatorNodeId: Optional<Hash> = Optional.none();
+    private organizationId: Optional<Hash> = Optional.none();
     private cometPublicKeyType: string = "";
     private cometPublicKey: string = "";
     private power: number = 0;
@@ -25,10 +26,16 @@ export class ValidatorNodePublicationExecutionContext extends PublicationExecuti
 
     build() {
         return {
+            organizationId: this.organizationId,
             validatorNodeId: this.validatorNodeId,
             cometPublicKeyType: this.cometPublicKeyType,
             cometPublicKey: this.cometPublicKey,
             power: this.power
         };
+    }
+
+    withOrganizationId(organizationId: Hash) {
+        this.organizationId = Optional.some(organizationId);
+        return this;
     }
 }

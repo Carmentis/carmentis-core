@@ -24,6 +24,8 @@ import {ValidatorNodeWrapper} from "../wrappers/ValidatorNodeWrapper";
 import {ApplicationWrapper} from "../wrappers/ApplicationWrapper";
 import {ApplicationLedgerWrapper} from "../wrappers/ApplicationLedgerWrapper";
 import {AccountWrapper} from "../wrappers/AccountWrapper";
+import {RPCNodeWebSocketClient} from "./nodeRpc/WebSocketClient";
+import {NodeStatusWrapper} from "./nodeRpc/NodeStatusWrapper";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.
@@ -48,6 +50,16 @@ export class BlockchainFacade{
     }
 
     /**
+     * Creates and initializes a WebSocket client for a specified node URL.
+     *
+     * @param {string} wsNodeUrl - The WebSocket URL of the node to connect to.
+     * @return {RPCNodeWebSocketClient} An instance of RPCNodeWebSocketClient configured for the given node URL.
+     */
+    static createWebSocketForNode(wsNodeUrl: string): RPCNodeWebSocketClient {
+        return RPCNodeWebSocketClient.new(wsNodeUrl);
+    }
+
+    /**
      * Creates an instance of BlockchainFacade using the provided node URL and private signature key.
      *
      * @param {string} nodeUrl - The URL of the blockchain node to connect to.
@@ -58,6 +70,10 @@ export class BlockchainFacade{
         const reader = ABCINodeBlockchainReader.createFromNodeURL(nodeUrl);
         const writer = ABCINodeBlockchainWriter.createWriter(reader, nodeUrl, privateKey);
         return new BlockchainFacade(nodeUrl, reader, writer);
+    }
+
+    async getNodeStatus() {
+        return NodeStatusWrapper.fromStatus(await this.reader.getNodeStatus());
     }
 
     getAccountBalance(accountHash: Hash): Promise<CMTSToken> {

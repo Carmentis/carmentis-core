@@ -18,6 +18,7 @@ import {VirtualBlockchainUpdate} from "../entities/VirtualBlockchainUpdate";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 import {Microblock} from "../blockchain/Microblock";
 import {ProofVerificationResult} from "../entities/ProofVerificationResult";
+import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseType";
 
 export interface BlockchainReader {
     //getMicroBlockHeader(vbId: Hash, height: number): Promise<AbstractMicroBlockHeader>;
@@ -43,4 +44,5 @@ export interface BlockchainReader {
     getAllValidatorNodes(): Promise<Hash[]>;
     getAllOrganizations(): Promise<Hash[]>;
     getAllApplications(): Promise<Hash[]>;
+    getNodeStatus(): Promise<RPCNodeStatusResponseType>;
 }

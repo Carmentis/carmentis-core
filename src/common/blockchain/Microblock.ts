@@ -5,6 +5,7 @@ import { Crypto } from "../crypto/crypto";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {MicroblockHeader, MicroblockSection} from "./types";
 import {Hash} from "../entities/Hash";
+import {CarmentisError} from "../errors/carmentis-error";
 
 export interface Section<T = any> {
   type: number,
@@ -76,7 +77,7 @@ export class Microblock {
     const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
 
     if(!Utils.binaryIsEqual(this.header.bodyHash, bodyHash)) {
-      throw new Error(`inconsistent body hash`);
+      throw new CarmentisError(`Body hash in the header is different of the locally computed body hash`);
     }
 
     this.hash = Crypto.Hashes.sha256AsBinary(headerData);

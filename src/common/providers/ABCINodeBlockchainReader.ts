@@ -45,6 +45,7 @@ import {KeyedProvider} from "./KeyedProvider";
 import {ProofVerificationResult} from "../entities/ProofVerificationResult";
 import {Microblock} from "../blockchain/Microblock";
 import {VB_ACCOUNT, VB_APPLICATION, VB_ORGANIZATION, VB_VALIDATOR_NODE} from "../constants/chain";
+import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseType";
 
 export class ABCINodeBlockchainReader implements BlockchainReader {
     /**
@@ -333,6 +334,10 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return await this.getObjectList(VB_ORGANIZATION);
     }
 
+    async getNodeStatus(): Promise<RPCNodeStatusResponseType> {
+        return NetworkProvider.sendStatusQueryToNodeServer(this.nodeUrl);
+    }
+
     /**
      * Retrieves a list of applications from the specified chain.
      *
@@ -374,7 +379,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
 
 
     private async abciQuery<T = object>(msgId: any, msgData: any): Promise<T> {
-        return NetworkProvider.sendQueryToNodeServer(msgId, msgData, this.nodeUrl);
+        return NetworkProvider.sendABCIQueryToNodeServer(msgId, msgData, this.nodeUrl);
         /*
         const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
         const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);

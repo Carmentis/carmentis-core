@@ -16,9 +16,10 @@ import {BlockchainReader} from "./BlockchainReader";
 import {
     NodeConnectionRefusedError,
     NodeEndpointClosedWhileCatchingUpError,
-    NodeError
+    NodeError, NotImplementedError
 } from "../errors/carmentis-error";
 import {CometBFTErrorCode} from "../errors/CometBFTErrorCode";
+import {RPCNodeStatusResponseSchema} from "./nodeRpc/RPCNodeStatusResponseSchema";
 
 export class NetworkProvider {
     nodeUrl: any;
@@ -162,7 +163,7 @@ export class NetworkProvider {
                     }
                 });
                 const data = response.data
-                return resolve(data);
+                resolve(data);
             } catch (e) {
                 if (e instanceof AxiosError) {
                     // connection refused
@@ -201,10 +202,10 @@ export class NetworkProvider {
     }
 
     async abciQuery<T = object>(msgId: any, msgData: any): Promise<T> {
-        return NetworkProvider.sendQueryToNodeServer(msgId, msgData, this.nodeUrl);
+        return NetworkProvider.sendABCIQueryToNodeServer(msgId, msgData, this.nodeUrl);
     }
 
-    static async sendQueryToNodeServer<T = object>(msgId: any, msgData: any, nodeUrl: string): Promise<T> {
+    static async sendABCIQueryToNodeServer<T = object>(msgId: any, msgData: any, nodeUrl: string): Promise<T> {
         const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
         const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
         const data = serializer.serialize(msgId, msgData);
@@ -226,5 +227,32 @@ export class NetworkProvider {
         }
 
         return object as T;
+    }
+
+    static async sendStatusQueryToNodeServer(nodeUrl: string) {
+        const urlObject = new URL(nodeUrl);
+        urlObject.pathname = "status";
+        const data  = await NetworkProvider.query(urlObject) as any;
+        const parsingResult = RPCNodeStatusResponseSchema.safeParse(data);
+        if (parsingResult.success) {
+            return parsingResult.data;
+        }
+        throw new NodeError(parsingResult.error.message);
+    }
+
+    static async sendBlockByHeightQueryToNodeServer(nodeUrl: string, blockHeight: number) {
+        const urlObject = new URL(nodeUrl);
+        urlObject.pathname = "block";
+        urlObject.searchParams.append("height", blockHeight.toString());
+        const data  = await NetworkProvider.query(urlObject) as any;
+        throw new NotImplementedError();
+        /*
+        const parsingResult = RPCNodeStatusResponseSchema.safeParse(data);
+        if (parsingResult.success) {
+            return parsingResult.data;
+        }
+        throw new NodeError(parsingResult.error.message);
+
+         */
     }
 }

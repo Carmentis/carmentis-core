@@ -466,6 +466,7 @@ describe('Chain test', () => {
             expect(applications).toBeInstanceOf(Array);
             expect(applications.length).toBeGreaterThanOrEqual(1);
             expect(nodes).toBeInstanceOf(Array);
+            expect(nodes.length).toBeGreaterThanOrEqual(1);
         }
     }, TEST_TIMEOUT)
 

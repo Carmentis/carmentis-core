@@ -140,7 +140,6 @@ export interface MicroblockBody {
 export interface MicroblockInformationSchema {
     virtualBlockchainId: Uint8Array;
     virtualBlockchainType: number;
-    expirationDay: number;
     header: Uint8Array;
 }
 

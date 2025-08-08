@@ -67,10 +67,10 @@ export class Provider {
     async storeMicroblock(hash: any, virtualBlockchainId: any, virtualBlockchainType: number, expirationDay: number, height: any, headerData: any, bodyData: any) {
         await this.internalProvider.setMicroblockInformation(
             hash,
-            BlockchainUtils.encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, expirationDay, headerData)
+            BlockchainUtils.encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, headerData)
         );
         await this.internalProvider.setMicroblockBody(hash, bodyData);
-        await this.internalProvider.setMicroblock(hash, headerData, bodyData);
+        await this.internalProvider.setMicroblock(hash, expirationDay, headerData, bodyData);
     }
 
     async updateVirtualBlockchainState(virtualBlockchainId: Uint8Array, type: number, expirationDay: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: any) {
@@ -86,7 +86,7 @@ export class Provider {
             const info = await this.externalProvider.getMicroblockInformation(hash);
 
             if(info) {
-                data = BlockchainUtils.encodeMicroblockInformation(info.virtualBlockchainType, info.virtualBlockchainId, info.expirationDay, info.header);
+                data = BlockchainUtils.encodeMicroblockInformation(info.virtualBlockchainType, info.virtualBlockchainId, info.header);
                 await this.internalProvider.setMicroblockInformation(hash, data);
             }
         }
@@ -243,7 +243,7 @@ export class Provider {
             for(let n = 0; n < vbUpdate.headers.length; n++) {
                 await this.internalProvider.setMicroblockInformation(
                     check.hashes[n],
-                    BlockchainUtils.encodeMicroblockInformation(state.type, virtualBlockchainId, state.expirationDay, vbUpdate.headers[n])
+                    BlockchainUtils.encodeMicroblockInformation(state.type, virtualBlockchainId, vbUpdate.headers[n])
                 );
             }
 

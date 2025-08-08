@@ -22,12 +22,10 @@ export class Microblock {
   header: MicroblockHeader;
   sections: Section[];
   type: number;
-  expirationDay: number;
   feesPayerAccount: Uint8Array | null;
 
-  constructor(type: number, expirationDay: number) {
+  constructor(type: number) {
     this.type = type;
-    this.expirationDay = expirationDay;
     this.sections = [];
     this.gasPrice = 0;
     this.feesPayerAccount = null;
@@ -37,16 +35,16 @@ export class Microblock {
     Creates a microblock at a given height.
     If the height is greater than 1, a 'previousHash' is expected.
   */
-  create(height: number, previousHash: Uint8Array|null) {
+  create(height: number, previousHash: Uint8Array|null, expirationDay: number) {
     if(height == 1) {
       const genesisSeed = Crypto.Random.getBytes(24);
 
       previousHash = Utils.getNullHash();
       previousHash[0] = this.type;
-      previousHash[1] = this.expirationDay >> 24;
-      previousHash[2] = this.expirationDay >> 16;
-      previousHash[3] = this.expirationDay >> 8;
-      previousHash[4] = this.expirationDay;
+      previousHash[1] = expirationDay >> 24;
+      previousHash[2] = expirationDay >> 16;
+      previousHash[3] = expirationDay >> 8;
+      previousHash[4] = expirationDay;
       previousHash.set(genesisSeed, 8);
     }
     else if(previousHash === null) {

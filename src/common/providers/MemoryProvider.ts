@@ -52,7 +52,7 @@ export class MemoryProvider  {
     return await MemoryProvider.set(this.microblockInformationStore, identifier, data);
   }
 
-  async setMicroblock(identifier: any, headerData: any, bodyData: any) {
+  async setMicroblock(identifier: any, expirationDay: number, headerData: any, bodyData: any) {
     // ignored
   }
 

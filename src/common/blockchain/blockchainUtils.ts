@@ -63,9 +63,9 @@ function decodeMicroblockHeader(data: Uint8Array) {
   return object;
 }
 
-function encodeMicroblockInformation(virtualBlockchainType: number, virtualBlockchainId: Uint8Array, expirationDay: number, header: Uint8Array) {
+function encodeMicroblockInformation(virtualBlockchainType: number, virtualBlockchainId: Uint8Array, header: Uint8Array) {
   const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_INFORMATION);
-  const data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId, expirationDay, header });
+  const data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId, header });
 
   return data;
 }

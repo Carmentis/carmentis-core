@@ -277,7 +277,6 @@ export const MICROBLOCK_INFORMATION: Schema = {
   definition: [
     { name: 'virtualBlockchainId',   type: DATA.TYPE_BIN256 },
     { name: 'virtualBlockchainType', type: DATA.TYPE_UINT8 },
-    { name: 'expirationDay',         type: DATA.TYPE_UINT32 },
     { name: 'header',                type: DATA.TYPE_BINARY }
   ]
 };

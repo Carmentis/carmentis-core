@@ -107,7 +107,7 @@ export abstract class VirtualBlockchain<CustomState> {
      Imports a microblock defined by its header data and body data.
      */
     async importMicroblock(headerData: any, bodyData: any) {
-        this.currentMicroblock = new Microblock(this.type, this.expirationDay);
+        this.currentMicroblock = new Microblock(this.type);
 
         this.currentMicroblock.load(headerData, bodyData);
         this.checkStructure(this.currentMicroblock);
@@ -149,7 +149,7 @@ export abstract class VirtualBlockchain<CustomState> {
         }
         const info = await this.provider.getMicroblockInformation(hash);
         const bodyList = await this.provider.getMicroblockBodys([ hash ]);
-        const microblock = new Microblock(this.type, this.expirationDay);
+        const microblock = new Microblock(this.type);
         microblock.load(info.header, bodyList[0].body);
 
         return microblock;
@@ -164,10 +164,10 @@ export abstract class VirtualBlockchain<CustomState> {
      */
     async addSection(type: SectionType, object: any) {
         if(!this.currentMicroblock) {
-            this.currentMicroblock = new Microblock(this.type, this.expirationDay);
+            this.currentMicroblock = new Microblock(this.type);
             const previousHash = this.height ? this.microblockHashes[this.height - 1] : null;
             this.height++;
-            this.currentMicroblock.create(this.height, previousHash);
+            this.currentMicroblock.create(this.height, previousHash, this.expirationDay);
         }
 
         const section = this.currentMicroblock.addSection(type, object);

@@ -83,7 +83,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         const info = await this.publicProvider.getMicroblockInformation(hash.toBytes());
         const bodyList = await this.publicProvider.getMicroblockBodys([ hash.toBytes() ]);
 
-        const microblock = new Microblock(type, info.expirationDay);
+        const microblock = new Microblock(type);
         microblock.load(info.header, bodyList[0].body);
 
         return microblock;

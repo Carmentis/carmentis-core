@@ -121,7 +121,7 @@ export class Explorer {
   async getMicroBlock( microBlockHash: Hash ) {
     const info = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
     const body = await this.provider.getMicroblockBodys([microBlockHash.toBytes()]);
-    const microBlock = new Microblock(info.virtualBlockchainType, info.expirationDay);
+    const microBlock = new Microblock(info.virtualBlockchainType);
     microBlock.load(info.header, body[0].body);
     return microBlock;
   }

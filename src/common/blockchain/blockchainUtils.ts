@@ -63,9 +63,9 @@ function decodeMicroblockHeader(data: Uint8Array) {
   return object;
 }
 
-function encodeMicroblockInformation(virtualBlockchainType: any, virtualBlockchainId: any, header: any) {
+function encodeMicroblockInformation(virtualBlockchainType: number, virtualBlockchainId: Uint8Array, expirationDay: number, header: Uint8Array) {
   const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_INFORMATION);
-  const data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId, header });
+  const data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId, expirationDay, header });
 
   return data;
 }
@@ -84,12 +84,13 @@ function decodeMicroblockInformation(data: Uint8Array) {
  * @param lastMicroblockHash
  * @param customStateObject
  */
-function encodeVirtualBlockchainState(type: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: object) {
+function encodeVirtualBlockchainState(type: number, expirationDay: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: object) {
   const customStateSerializer = new SchemaSerializer(SCHEMAS.VB_STATES[type]);
   const customState = customStateSerializer.serialize(customStateObject);
 
   const stateObject = {
     type,
+    expirationDay,
     height,
     lastMicroblockHash,
     customState

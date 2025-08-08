@@ -9,7 +9,6 @@ import {NetworkProvider} from "./NetworkProvider";
 import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
 import {KeyedProvider} from "./KeyedProvider";
 
-
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
  */
@@ -58,24 +57,24 @@ export class Provider {
     ) {
         const rawPublicKey = publicKey.getPublicKeyAsBytes();
         const publicKeyHash = hashScheme.hash(rawPublicKey);
-        return  await this.getAccountByPublicKeyHash(publicKeyHash);
+        return await this.getAccountByPublicKeyHash(publicKeyHash);
     }
 
     async getObjectList(type: number): Promise<ObjectList> {
         return await this.externalProvider.getObjectList(type);
     }
 
-    async storeMicroblock(hash: any, virtualBlockchainId: any, virtualBlockchainType: any, height: any, headerData: any, bodyData: any) {
+    async storeMicroblock(hash: any, virtualBlockchainId: any, virtualBlockchainType: number, expirationDay: number, height: any, headerData: any, bodyData: any) {
         await this.internalProvider.setMicroblockInformation(
             hash,
-            BlockchainUtils.encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, headerData)
+            BlockchainUtils.encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, expirationDay, headerData)
         );
         await this.internalProvider.setMicroblockBody(hash, bodyData);
         await this.internalProvider.setMicroblock(hash, headerData, bodyData);
     }
 
-    async updateVirtualBlockchainState(virtualBlockchainId: any, type: any, height: any, lastMicroblockHash: any, customStateObject: any) {
-        const stateData = BlockchainUtils.encodeVirtualBlockchainState(type, height, lastMicroblockHash, customStateObject);
+    async updateVirtualBlockchainState(virtualBlockchainId: Uint8Array, type: number, expirationDay: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: any) {
+        const stateData = BlockchainUtils.encodeVirtualBlockchainState(type, expirationDay, height, lastMicroblockHash, customStateObject);
         await this.internalProvider.setVirtualBlockchainState(virtualBlockchainId, stateData);
     }
 
@@ -87,7 +86,7 @@ export class Provider {
             const info = await this.externalProvider.getMicroblockInformation(hash);
 
             if(info) {
-                data = BlockchainUtils.encodeMicroblockInformation(info.virtualBlockchainType, info.virtualBlockchainId, info.header);
+                data = BlockchainUtils.encodeMicroblockInformation(info.virtualBlockchainType, info.virtualBlockchainId, info.expirationDay, info.header);
                 await this.internalProvider.setMicroblockInformation(hash, data);
             }
         }
@@ -244,7 +243,7 @@ export class Provider {
             for(let n = 0; n < vbUpdate.headers.length; n++) {
                 await this.internalProvider.setMicroblockInformation(
                     check.hashes[n],
-                    BlockchainUtils.encodeMicroblockInformation(state.type, virtualBlockchainId, vbUpdate.headers[n])
+                    BlockchainUtils.encodeMicroblockInformation(state.type, virtualBlockchainId, state.expirationDay, vbUpdate.headers[n])
                 );
             }
 

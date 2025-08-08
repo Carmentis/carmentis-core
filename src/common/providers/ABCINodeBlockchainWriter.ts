@@ -80,14 +80,18 @@ export class ABCINodeBlockchainWriter implements BlockchainWriter {
         return application;
     }
 
-    async createApplicationLedger(applicationId: Hash) {
+    async createApplicationLedger(applicationId: Hash, expirationDay: number) {
         const applicationLedger = new ApplicationLedger({ provider: this.defaultKeyedProvider });
+        applicationLedger.vb.setExpirationDay(expirationDay);
         await applicationLedger._create(applicationId.encode());
         return applicationLedger;
     }
 
-    async createApplicationLedgerFromJson<T = any>(object: RecordDescription<T>) {
+    async createApplicationLedgerFromJson<T = any>(object: RecordDescription<T>, expirationDay: number) {
         const applicationLedger = new ApplicationLedger({ provider: this.defaultKeyedProvider });
+        if(applicationLedger.vb.getHeight() == 0) {
+            applicationLedger.vb.setExpirationDay(expirationDay);
+        }
         await applicationLedger._processJson(object);
         return applicationLedger;
     }

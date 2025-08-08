@@ -8,6 +8,10 @@ export const Utils = {
   truncateStringMiddle,
   getNullHash,
   getTimestampInSeconds,
+  encodeDay,
+  decodeDay,
+  dateToDay,
+  dayToDate,
   bufferToUint8Array,
   binaryToHexa,
   binaryFromHexa,
@@ -38,6 +42,32 @@ function getNullHash() {
 
 function getTimestampInSeconds() {
   return Math.floor(Date.now() / 1000);
+}
+
+function encodeDay(year: number, month: number, day: number) {
+  return year << 9 | month << 5 | day;
+}
+
+function decodeDay(value: number) {
+  const day = value & 0x1F;
+  const month = value >> 5 & 0xF;
+  const year = value >>> 9;
+
+  return [ year, month, day ];
+}
+
+function dateToDay(date: Date) {
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
+  return encodeDay(year, month, day);
+}
+
+function dayToDate(value: number) {
+  const [ year, month, day ] = decodeDay(value);
+
+  return new Date(year, month - 1, day);
 }
 
 function bufferToUint8Array(b: any) {

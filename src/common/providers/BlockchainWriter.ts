@@ -15,8 +15,8 @@ export interface BlockchainWriter {
     createOrganization(): Promise<Organization>;
     createValidatorNode(organizationIdentifierString: Hash): Promise<ValidatorNode>;
     createApplication(organizationIdentifierString: Hash): Promise<Application>;
-    createApplicationLedger(applicationId: Hash): Promise<ApplicationLedger>;
-    createApplicationLedgerFromJson<T = any>(object: RecordDescription<T>): Promise<ApplicationLedger>;
+    createApplicationLedger(applicationId: Hash, expirationDay: number): Promise<ApplicationLedger>;
+    createApplicationLedgerFromJson<T = any>(object: RecordDescription<T>, expirationDay: number): Promise<ApplicationLedger>;
     loadOrganization(organizationId: Hash): Promise<Organization>;
     loadValidatorNode(validatorNodeId: Hash): Promise<ValidatorNode>;
     loadApplication(applicationId: Hash): Promise<Application>;

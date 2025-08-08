@@ -44,19 +44,6 @@ export interface MerkleProof {
     witnesses: string;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 export interface AccountVBState {
     signatureAlgorithmId: number;
     publicKeyHeight: number;
@@ -153,6 +140,7 @@ export interface MicroblockBody {
 export interface MicroblockInformationSchema {
     virtualBlockchainId: Uint8Array;
     virtualBlockchainType: number;
+    expirationDay: number;
     header: Uint8Array;
 }
 
@@ -182,11 +170,10 @@ export interface VirtualBlockchainStateDTO<CustomState = any> {
 export interface VirtualBlockchainStateInterface<CustomState = object> {
     type: number,
     height: number,
+    expirationDay: number,
     lastMicroblockHash: Uint8Array,
     customState: CustomState
 }
-
-
 
 export interface MicroBlockHeader {
     magicString: string;

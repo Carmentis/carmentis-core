@@ -119,10 +119,10 @@ export class Explorer {
    * @return {Promise<Microblock>} A promise that resolves to the retrieved microblock.
    */
   async getMicroBlock( microBlockHash: Hash ) {
-    const header = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    const info = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
     const body = await this.provider.getMicroblockBodys([microBlockHash.toBytes()]);
-    const microBlock = new Microblock(header.virtualBlockchainType);
-    microBlock.load(header.header, body[0].body);
+    const microBlock = new Microblock(info.virtualBlockchainType, info.expirationDay);
+    microBlock.load(info.header, body[0].body);
     return microBlock;
   }
 

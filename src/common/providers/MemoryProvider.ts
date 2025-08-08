@@ -21,8 +21,6 @@ export class MemoryProvider  {
     this.virtualBlockchainStateStore = new Map;
   }
 
-
-
   clear() {
     this.microblockInformationStore = new Map;
     this.microblockBodyStore = new Map;

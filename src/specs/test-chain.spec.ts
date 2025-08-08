@@ -414,12 +414,12 @@ describe('Chain test', () => {
 
             const recordPublicationContext = new RecordPublicationExecutionContext()
                 .withGasPrice(CMTSToken.createCMTS(2))
+                .withExpirationIn(365)
                 .withRecord(object);
             const appLedgerId = await blockchain.publishRecord(recordPublicationContext);
             const appLedger = await blockchain.loadApplicationLedger(appLedgerId);
             const recoveredData = await appLedger.getRecordAtHeight(1);
             expect(recoveredData).toEqual(data);
-
 
             const secondData = {
                 firstname: "Foo",

@@ -20,7 +20,6 @@ const OBJECT_CLASSES = [
     ApplicationLedger
 ];
 
-
 export class MicroblockImporter {
     bodyData: any;
     currentTimestamp: number;
@@ -151,7 +150,6 @@ export class MicroblockImporter {
         try {
             // check the body hash
             const hashScheme = CryptoSchemeFactory.createDefaultCryptographicHash();
-            //const bodyHash = Crypto.Hashes.sha256AsBinary(this.bodyData);
             const bodyHash = hashScheme.hash(this.bodyData);
 
             if(!Utils.binaryIsEqual(bodyHash, this.header.bodyHash)) {
@@ -161,6 +159,7 @@ export class MicroblockImporter {
 
             // check the previous microblock, or get the type from the leading byte of the previousHash field if genesis
             let type;
+            let expirationDay = 0;
             let vbIdentifier;
 
             if(this.header.height > 1) {
@@ -185,7 +184,14 @@ export class MicroblockImporter {
                 vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
             }
             else {
+                // extract the type and the expiration day from the special previousHash field
                 type = this.header.previousHash[0];
+
+                expirationDay =
+                    this.header.previousHash[1] << 24 |
+                    this.header.previousHash[2] << 16 |
+                    this.header.previousHash[3] << 8 |
+                    this.header.previousHash[4];
             }
 
             // attempt to instantiate the VB class
@@ -199,9 +205,14 @@ export class MicroblockImporter {
             this.object = new objectClass({ provider: this.provider });
             this.vb = this.object.vb;
 
-            // load the VB if this is an existing one
+            // if the VB exists ...
             if(this.header.height > 1) {
+                // ... load it
                 await this.vb.load(vbIdentifier);
+            }
+            else {
+                // otherwise, set its expiration day
+                this.vb.setExpirationDay(expirationDay);
             }
 
             // attempt to import the microblock
@@ -227,6 +238,6 @@ export class MicroblockImporter {
 
     async store() {
         await this.provider.storeMicroblock(this.hash, this.vb.identifier, this.vb.type, this.vb.height, this.headerData, this.bodyData);
-        await this.provider.updateVirtualBlockchainState(this.vb.identifier, this.vb.type, this.vb.height, this.hash, this.vb.state);
+        await this.provider.updateVirtualBlockchainState(this.vb.identifier, this.vb.type, this.vb.expirationDay, this.vb.height, this.hash, this.vb.state);
     }
 }

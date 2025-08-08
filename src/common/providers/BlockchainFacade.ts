@@ -193,7 +193,6 @@ export class BlockchainFacade{
     }
 
     /**
-import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
      * Creates a new genesis account and publishes its updates.
      *
      * Note: This method is only reserved to create genesis account. Once created, next calls throw an exception.
@@ -246,7 +245,7 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
         const organization = await writer.createOrganization();
         await organization.setDescription(build);
         organization.setGasPrice(context.getGasPrice());
-        return  await organization.publishUpdates()
+        return await organization.publishUpdates()
     }
 
     async publishOrganizationUpdate(context: OrganizationPublicationExecutionContext) {
@@ -344,7 +343,7 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
      */
     async publishRecord<T = any>(context: RecordPublicationExecutionContext<T>) {
         const writer = this.getWriter();
-        const applicationLedger = await writer.createApplicationLedgerFromJson(context.build());
+        const applicationLedger = await writer.createApplicationLedgerFromJson(context.build(), context.getExpirationDay());
         applicationLedger.setGasPrice(context.getGasPrice());
         return await applicationLedger.publishUpdates();
     }

@@ -3,12 +3,11 @@ import {RecordDescription} from "../../blockchain/RecordDescription";
 import {IllegalUsageError} from "../../errors/carmentis-error";
 
 export class RecordPublicationExecutionContext<T> extends PublicationExecutionContext {
-
     private record?: RecordDescription<T>;
+
     constructor() {
         super();
     }
-
 
     withRecord(record: RecordDescription<T>): RecordPublicationExecutionContext<T> {
         this.record = record;

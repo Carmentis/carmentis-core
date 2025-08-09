@@ -148,6 +148,11 @@ export abstract class VirtualBlockchain<CustomState> {
             throw new MicroBlockNotFoundInVirtualBlockchainAtHeightError(this.getIdentifier(), height);
         }
         const info = await this.provider.getMicroblockInformation(hash);
+
+        if(info === null) {
+            throw new Error("unable to load microblock information");
+        }
+
         const bodyList = await this.provider.getMicroblockBodys([ hash ]);
         const microblock = new Microblock(this.type);
         microblock.load(info.header, bodyList[0].body);

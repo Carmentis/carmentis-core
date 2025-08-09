@@ -79,8 +79,13 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return organization.getPublicKey();
     }
 
-    async getMicroBlock(type: VirtualBlockchainType, hash: Hash) {
+    async getMicroBlock(type: VirtualBlockchainType, hash: Hash): Promise<Microblock> {
         const info = await this.publicProvider.getMicroblockInformation(hash.toBytes());
+
+        if(info === null) {
+          throw new Error("unable to load microblock");
+        }
+
         const bodyList = await this.publicProvider.getMicroblockBodys([ hash.toBytes() ]);
 
         const microblock = new Microblock(type);
@@ -105,6 +110,11 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
 
     async getMicroblockInformation(hash: Hash): Promise<MicroBlockInformation> {
         const answer = await this.publicProvider.getMicroblockInformation(hash.toBytes());
+
+        if(answer === null) {
+            throw new Error("unable to load microblock information");
+        }
+
         // parse the header
         const headerObject: MicroBlockHeaderInterface = BlockchainUtils.decodeMicroblockHeader(answer.header);
         const header = NodeTranslator.translateMicroBlockHeader(headerObject);

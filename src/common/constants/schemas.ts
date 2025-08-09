@@ -272,12 +272,11 @@ export const MICROBLOCK_BODY: Schema = {
   ]
 };
 
-export const MICROBLOCK_INFORMATION: Schema = {
-  label: 'MicroblockInformation',
+export const MICROBLOCK_VB_INFORMATION: Schema = {
+  label: 'MicroblockVbInformation',
   definition: [
-    { name: 'virtualBlockchainId',   type: DATA.TYPE_BIN256 },
     { name: 'virtualBlockchainType', type: DATA.TYPE_UINT8 },
-    { name: 'header',                type: DATA.TYPE_BINARY }
+    { name: 'virtualBlockchainId',   type: DATA.TYPE_BIN256 }
   ]
 };
 
@@ -356,7 +355,11 @@ NODE_MESSAGES[MSG_GET_MICROBLOCK_INFORMATION] = {
 
 NODE_MESSAGES[MSG_MICROBLOCK_INFORMATION] = {
   label: 'MessageMicroblockInformation',
-  definition: MICROBLOCK_INFORMATION.definition
+  definition: [
+    { name: 'virtualBlockchainType', type: DATA.TYPE_UINT8 },
+    { name: 'virtualBlockchainId',   type: DATA.TYPE_BIN256 },
+    { name: 'header',                type: DATA.TYPE_BINARY }
+  ]
 };
 
 NODE_MESSAGES[MSG_AWAIT_MICROBLOCK_ANCHORING] = {
@@ -368,7 +371,7 @@ NODE_MESSAGES[MSG_AWAIT_MICROBLOCK_ANCHORING] = {
 
 NODE_MESSAGES[MSG_MICROBLOCK_ANCHORING] = {
   label: 'MessageMicroblockAnchoring',
-  definition: MICROBLOCK_INFORMATION.definition
+  definition: MICROBLOCK_VB_INFORMATION.definition
 };
 
 NODE_MESSAGES[MSG_GET_MICROBLOCK_BODYS] = {
@@ -718,7 +721,7 @@ export const ALL_SCHEMAS = {
     MICROBLOCK_HEADER,
     MICROBLOCK_SECTION,
     MICROBLOCK_BODY,
-    MICROBLOCK_INFORMATION,
+    MICROBLOCK_VB_INFORMATION,
 
     WI_QR_CODE
   ],

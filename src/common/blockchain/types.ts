@@ -68,9 +68,12 @@ export interface OrganizationDescription {
 }
 
 export interface ValidatorNodeDescription {
-    power: number,
     cometPublicKeyType: string,
     cometPublicKey: string
+}
+
+export interface ValidatorNodeNetworkIntegration {
+    votingPower: number
 }
 
 export interface ValidatorNodeDeclaration {
@@ -87,6 +90,7 @@ export interface ValidatorNodeVBState {
     signatureAlgorithmId: number;
     organizationId: Uint8Array;
     descriptionHeight: number;
+    networkIntegrationHeight: number;
 }
 
 export interface ApplicationVBState {

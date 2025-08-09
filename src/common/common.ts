@@ -105,6 +105,7 @@ export * from "./providers/publicationContexts/ApplicationPublicationExecutionCo
 export * from "./providers/publicationContexts/OrganizationPublicationExecutionContext";
 export * from "./providers/publicationContexts/PublicationExecutionContext";
 export * from "./providers/publicationContexts/RecordPublicationExecutionContext";
+export * from "./providers/publicationContexts/ValidatorNodeNetworkIntegrationPublicationExecutionContext";
 export * from "./providers/publicationContexts/ValidatorNodePublicationExecutionContext";
 export * from "./records/intermediateRepresentation";
 export * from "./records/maskManager";

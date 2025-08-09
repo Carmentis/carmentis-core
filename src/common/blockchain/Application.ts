@@ -49,7 +49,7 @@ export class Application {
     }
 
     async getDeclaration() {
-        const microblock = await this.vb.getMicroblock(1);
+        const microblock = await this.vb.getFirstMicroBlock();
         const section = microblock.getSection<ApplicationDeclaration>(
             (section: any) => section.type == SECTIONS.APP_DECLARATION
         );

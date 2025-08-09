@@ -304,7 +304,7 @@ export class BlockchainFacade{
     /**
      * Creates and publishes a validator node based on the provided context.
      *
-     * @param {ValidatorNodePublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organization information, application metadata, and gas price settings.
+     * @param {ValidatorNodePublicationExecutionContext} context - The execution context containing the details necessary to create and publish the validator node
      * @return {Promise<Hash>} A promise that resolves to the location of the created application.
      */
     async publishValidatorNode(context: ValidatorNodePublicationExecutionContext) {
@@ -316,7 +316,6 @@ export class BlockchainFacade{
             validatorNode = await writer.loadValidatorNode(data.validatorNodeId.unwrap());
             const description = await validatorNode.getDescription();
             await validatorNode.setDescription({
-                power: data.power || description.power,
                 cometPublicKeyType: data.cometPublicKeyType || description.cometPublicKeyType,
                 cometPublicKey: data.cometPublicKey || description.cometPublicKey,
             });
@@ -326,7 +325,6 @@ export class BlockchainFacade{
             );
             validatorNode = await writer.createValidatorNode(organizationId);
             await validatorNode.setDescription({
-                power: data.power,
                 cometPublicKeyType: data.cometPublicKeyType,
                 cometPublicKey: data.cometPublicKey
             });

@@ -64,13 +64,13 @@ export class Provider {
         return await this.externalProvider.getObjectList(type);
     }
 
-    async storeMicroblock(hash: any, virtualBlockchainId: any, virtualBlockchainType: number, expirationDay: number, height: any, headerData: any, bodyData: any) {
-        await this.internalProvider.setMicroblockInformation(
+    async storeMicroblock(hash: any, virtualBlockchainId: any, virtualBlockchainType: number, height: number, headerData: Uint8Array, bodyData: Uint8Array) {
+        await this.internalProvider.setMicroblockVbInformation(
             hash,
-            BlockchainUtils.encodeMicroblockInformation(virtualBlockchainType, virtualBlockchainId, headerData)
+            BlockchainUtils.encodeMicroblockVbInformation(virtualBlockchainType, virtualBlockchainId)
         );
+        await this.internalProvider.setMicroblockHeader(hash, headerData);
         await this.internalProvider.setMicroblockBody(hash, bodyData);
-        await this.internalProvider.setMicroblock(hash, expirationDay, headerData, bodyData);
     }
 
     async updateVirtualBlockchainState(virtualBlockchainId: Uint8Array, type: number, expirationDay: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: any) {
@@ -78,19 +78,26 @@ export class Provider {
         await this.internalProvider.setVirtualBlockchainState(virtualBlockchainId, stateData);
     }
 
-    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema> {
-        // FIXME: we should avoid the encoding/decoding passes when getting data from the external provider
-        let data = await this.internalProvider.getMicroblockInformation(hash);
+    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema|null> {
+        const data = await this.internalProvider.getMicroblockVbInformation(hash);
+        const header = await this.internalProvider.getMicroblockHeader(hash);
 
-        if(!data) {
-            const info = await this.externalProvider.getMicroblockInformation(hash);
-
-            if(info) {
-                data = BlockchainUtils.encodeMicroblockInformation(info.virtualBlockchainType, info.virtualBlockchainId, info.header);
-                await this.internalProvider.setMicroblockInformation(hash, data);
-            }
+        if(data && header) {
+          return {
+            ...BlockchainUtils.decodeMicroblockVbInformation(data),
+            header
+          };
         }
-        return data && BlockchainUtils.decodeMicroblockInformation(data);
+
+        const info = await this.externalProvider.getMicroblockInformation(hash);
+
+        if(info) {
+            const data = BlockchainUtils.encodeMicroblockVbInformation(info.virtualBlockchainType, info.virtualBlockchainId);
+            await this.internalProvider.setMicroblockVbInformation(hash, data);
+            await this.internalProvider.setMicroblockHeader(hash, info.header);
+            return info;
+        }
+        return null;
     }
 
     async getMicroblockBodys(hashes: Uint8Array[]) {
@@ -153,10 +160,9 @@ export class Provider {
         const headers = [];
 
         while(height > knownHeight) {
-            const infoData = await this.internalProvider.getMicroblockInformation(microblockHash);
-            const info = BlockchainUtils.decodeMicroblockInformation(infoData);
-            headers.push(info.header);
-            microblockHash = BlockchainUtils.previousHashFromHeader(info.header);
+            const header = await this.internalProvider.getMicroblockHeader(microblockHash);
+            headers.push(header);
+            microblockHash = BlockchainUtils.previousHashFromHeader(header);
             height--;
         }
         return headers;
@@ -178,14 +184,13 @@ export class Provider {
             const headers = [];
 
             while(height) {
-                const infoData = await this.internalProvider.getMicroblockInformation(microblockHash);
+                const header = await this.internalProvider.getMicroblockHeader(microblockHash);
 
-                if(!infoData) {
+                if(!header) {
                     break;
                 }
-                const info = BlockchainUtils.decodeMicroblockInformation(infoData);
-                headers.push(info.header);
-                microblockHash = BlockchainUtils.previousHashFromHeader(info.header);
+                headers.push(header);
+                microblockHash = BlockchainUtils.previousHashFromHeader(header);
                 height--;
             }
 
@@ -239,11 +244,15 @@ export class Provider {
 
             state = BlockchainUtils.decodeVirtualBlockchainState(vbUpdate.stateData);
 
-            // update the microblock information in our internal provider
+            // update the microblock information and header in our internal provider
             for(let n = 0; n < vbUpdate.headers.length; n++) {
-                await this.internalProvider.setMicroblockInformation(
+                await this.internalProvider.setMicroblockVbInformation(
                     check.hashes[n],
-                    BlockchainUtils.encodeMicroblockInformation(state.type, virtualBlockchainId, vbUpdate.headers[n])
+                    BlockchainUtils.encodeMicroblockVbInformation(state.type, virtualBlockchainId)
+                );
+                await this.internalProvider.setMicroblockHeader(
+                    check.hashes[n],
+                    vbUpdate.headers[n]
                 );
             }
 

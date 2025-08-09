@@ -7,7 +7,6 @@ export class ValidatorNodePublicationExecutionContext extends PublicationExecuti
     private organizationId: Optional<Hash> = Optional.none();
     private cometPublicKeyType: string = "";
     private cometPublicKey: string = "";
-    private power: number = 0;
 
     withCometPublicKeyType(cometPublicKeyType: string): ValidatorNodePublicationExecutionContext {
         this.cometPublicKeyType = cometPublicKeyType;
@@ -19,8 +18,8 @@ export class ValidatorNodePublicationExecutionContext extends PublicationExecuti
         return this;
     }
 
-    withPower(power: number): ValidatorNodePublicationExecutionContext {
-        this.power = power;
+    withOrganizationId(organizationId: Hash) {
+        this.organizationId = Optional.some(organizationId);
         return this;
     }
 
@@ -29,13 +28,7 @@ export class ValidatorNodePublicationExecutionContext extends PublicationExecuti
             organizationId: this.organizationId,
             validatorNodeId: this.validatorNodeId,
             cometPublicKeyType: this.cometPublicKeyType,
-            cometPublicKey: this.cometPublicKey,
-            power: this.power
+            cometPublicKey: this.cometPublicKey
         };
-    }
-
-    withOrganizationId(organizationId: Hash) {
-        this.organizationId = Optional.some(organizationId);
-        return this;
     }
 }

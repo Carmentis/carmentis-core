@@ -363,12 +363,12 @@ describe('Chain test', () => {
 
             const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
                 .withOrganizationId(organizationId)
-                .withPower(10)
+//              .withVotingPower(10)
                 .withCometPublicKeyType(CometPublicKeyType)
                 .withCometPublicKey(CometPublicKey);
             const validatorNodeId = await blockchain.publishValidatorNode(validatorNodeCreationContext);
             const validatorNode = await blockchain.loadValidatorNode(validatorNodeId);
-            expect(validatorNode.getPower()).toEqual(10);
+//          expect(validatorNode.getVotingPower()).toEqual(10);
             expect(validatorNode.getCometPublicKeyType()).toEqual(CometPublicKeyType);
             expect(validatorNode.getCometPublicKey()).toEqual(CometPublicKey);
 

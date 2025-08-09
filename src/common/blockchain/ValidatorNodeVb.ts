@@ -5,7 +5,7 @@ import {StructureChecker} from "./StructureChecker";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
-import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeVBState} from "./types";
+import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeNetworkIntegration, ValidatorNodeVBState} from "./types";
 
 export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
   constructor(provider: Provider) {
@@ -14,6 +14,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
     this.registerSectionCallback(SECTIONS.VN_SIG_ALGORITHM, this.signatureAlgorithmCallback);
     this.registerSectionCallback(SECTIONS.VN_DECLARATION, this.declarationCallback);
     this.registerSectionCallback(SECTIONS.VN_DESCRIPTION, this.descriptionCallback);
+    this.registerSectionCallback(SECTIONS.VN_NETWORK_INTEGRATION, this.networkIntegrationCallback);
     this.registerSectionCallback(SECTIONS.VN_SIGNATURE, this.signatureCallback);
   }
 
@@ -41,6 +42,10 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
     return this.getState().descriptionHeight;
   }
 
+  getNetworkIntegrationHeight(): number {
+    return this.getState().networkIntegrationHeight;
+  }
+
   /**
     Section callbacks
    */
@@ -54,6 +59,10 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
 
   async descriptionCallback(microblock: any, section: any) {
     this.getState().descriptionHeight = microblock.header.height;
+  }
+
+  async networkIntegrationCallback(microblock: any, section: any) {
+    this.getState().networkIntegrationHeight = microblock.header.height;
   }
 
   async signatureCallback(microblock: any, section: any) {
@@ -71,13 +80,15 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
 
   private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
   private static UNDEFINED_ORGANIZATION_ID = Utils.getNullHash();
-  private static UNDEFINED_DESCRIPTION_HEIGHT = -1;
+  private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
+  private static UNDEFINED_NETWORK_INTEGRATION_HEIGHT = 0;
 
   getInitialState(): ValidatorNodeVBState {
     return {
       signatureAlgorithmId: ValidatorNodeVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
       organizationId: ValidatorNodeVb.UNDEFINED_ORGANIZATION_ID,
-      descriptionHeight: ValidatorNodeVb.UNDEFINED_DESCRIPTION_HEIGHT
+      descriptionHeight: ValidatorNodeVb.UNDEFINED_DESCRIPTION_HEIGHT,
+      networkIntegrationHeight: ValidatorNodeVb.UNDEFINED_NETWORK_INTEGRATION_HEIGHT
     }
   }
 
@@ -96,10 +107,16 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
       SECTIONS.VN_DECLARATION
     );
     checker.group(
-      SECTIONS.AT_LEAST_ONE,
-      [
-        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ]
-      ]
+      SECTIONS.ONE,
+      checker.isFirstBlock() ? 
+        [
+          [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ]
+        ]
+      :
+        [
+          [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ],
+          [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_NETWORK_INTEGRATION ]
+        ]
     );
     checker.expects(SECTIONS.ONE, SECTIONS.VN_SIGNATURE);
     checker.endsHere();

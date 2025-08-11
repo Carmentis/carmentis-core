@@ -107,9 +107,12 @@ export class Explorer {
    * @return {Promise<MicroBlockHeader>} A promise that resolves to the deserialized microblock header.
    */
   async getMicroBlockHeader( microBlockHash: Hash ) {
-    const header = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    const info = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    if(info === null) {
+      throw new Error("unable to load microblock information");
+    }
     const schemaUnserializer = new SchemaUnserializer<MicroBlockHeader>(MICROBLOCK_HEADER);
-    return schemaUnserializer.unserialize(header.header);
+    return schemaUnserializer.unserialize(info.header);
   }
 
   /**
@@ -119,10 +122,13 @@ export class Explorer {
    * @return {Promise<Microblock>} A promise that resolves to the retrieved microblock.
    */
   async getMicroBlock( microBlockHash: Hash ) {
-    const header = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    const info = await this.provider.getMicroblockInformation(microBlockHash.toBytes());
+    if(info === null) {
+      throw new Error("unable to load microblock information");
+    }
     const body = await this.provider.getMicroblockBodys([microBlockHash.toBytes()]);
-    const microBlock = new Microblock(header.virtualBlockchainType);
-    microBlock.load(header.header, body[0].body);
+    const microBlock = new Microblock(info.virtualBlockchainType);
+    microBlock.load(info.header, body[0].body);
     return microBlock;
   }
 

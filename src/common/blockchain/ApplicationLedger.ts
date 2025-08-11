@@ -22,11 +22,9 @@ export class ApplicationLedger {
     provider
   }: {provider: Provider}) {
     this.vb = new ApplicationLedgerVb({ provider });
-    //this.publicKey = publicKey;
-    //this.privateKey = privateKey;
     this.provider = provider
     this.gasPrice = CMTSToken.zero();
-    //this.signatureAlgorithmId = Crypto.SECP256K1;
+
     if (this.provider.isKeyed()) {
       const privateKey = this.provider.getPrivateSignatureKey();
       this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
@@ -42,7 +40,7 @@ export class ApplicationLedger {
   }
 
   getVirtualBlockchain() {
-    if (!this.vb) throw new Error("Cannot return appliaction ledger virtual blockchain: undefined virtual blockchain. ")
+    if (!this.vb) throw new Error("Cannot return application ledger virtual blockchain: undefined virtual blockchain. ")
     return this.vb;
   }
 
@@ -162,7 +160,6 @@ export class ApplicationLedger {
     const actor = this.vb.getActor(name);
     return actor.subscribed;
   }
-
 
   async getRecord<T = any>(height: Height) {
     const ir = await this.getMicroblockIntermediateRepresentation(height);

@@ -1,18 +1,20 @@
 import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {Hash} from "../entities/Hash";
-import {ValidatorNodeDescription} from "../blockchain/types";
+import {ValidatorNodeDescription, ValidatorNodeNetworkIntegration} from "../blockchain/types";
 
 export class ValidatorNodeWrapper {
     static async wrap(validatorNode: ValidatorNode) {
         const declaration = await validatorNode.getDeclaration();
         const organizationId = Hash.from(declaration.organizationId);
-        const description =  await validatorNode.getDescription();
-        return new ValidatorNodeWrapper(organizationId, description);
+        const description = await validatorNode.getDescription();
+        const networkIntegration = await validatorNode.getNetworkIntegration();
+        return new ValidatorNodeWrapper(organizationId, description, networkIntegration);
     }
 
     private constructor(
         private readonly organizationId: Hash,
-        private readonly description: ValidatorNodeDescription
+        private readonly description: ValidatorNodeDescription,
+        private readonly networkIntegration: ValidatorNodeNetworkIntegration
     ) {}
 
     /**
@@ -29,8 +31,8 @@ export class ValidatorNodeWrapper {
      *
      * @return {number} The voting power of the validator node.
      */
-    getPower(): number {
-        return this.description.power;
+    getVotingPower(): number {
+        return this.networkIntegration.votingPower;
     }
 
     /**

@@ -8,16 +8,21 @@ export const Utils = {
   truncateStringMiddle,
   getNullHash,
   getTimestampInSeconds,
+  encodeDay,
+  decodeDay,
+  dateToDay,
+  dayToDate,
   bufferToUint8Array,
   binaryToHexa,
   binaryFromHexa,
   binaryFrom,
   binaryIsEqual,
   binaryCompare,
-  intToByteArray
+  intToByteArray,
+  byteArrayToInt
 };
 
-function numberToHexa(value: number, size: number) {
+function numberToHexa(value: number, size?: number) {
   return value.toString(16).toUpperCase().padStart(size || 1, "0");
 }
 
@@ -38,6 +43,32 @@ function getNullHash() {
 
 function getTimestampInSeconds() {
   return Math.floor(Date.now() / 1000);
+}
+
+function encodeDay(year: number, month: number, day: number) {
+  return year << 9 | month << 5 | day;
+}
+
+function decodeDay(value: number) {
+  const day = value & 0x1F;
+  const month = value >> 5 & 0xF;
+  const year = value >>> 9;
+
+  return [ year, month, day ];
+}
+
+function dateToDay(date: Date) {
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
+  return encodeDay(year, month, day);
+}
+
+function dayToDate(value: number) {
+  const [ year, month, day ] = decodeDay(value);
+
+  return new Date(year, month - 1, day);
 }
 
 function bufferToUint8Array(b: any) {
@@ -127,16 +158,21 @@ function binaryCompare(a: any, b: any) {
   return 0;
 }
 
-function intToByteArray(n: number, size: number = 1) {
+function intToByteArray(n: number, minSize: number = 1) {
   const arr: number[] = [];
 
   let remaining = n;
+  let size = minSize;
 
   while (remaining > 0 || size > 0) {
-    arr.push(remaining & 0xFF); // same as n % 0x100
+    arr.push(remaining & 0xFF);
     remaining = Math.floor(remaining / 0x100);
-    if (size > 0) size--;
+    size--;
   }
 
   return arr.reverse();
+}
+
+function byteArrayToInt(array: number[]) {
+  return array.reduce((t, n) => t * 0x100 + n, 0);
 }

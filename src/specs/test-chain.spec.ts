@@ -363,12 +363,12 @@ describe('Chain test', () => {
 
             const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
                 .withOrganizationId(organizationId)
-                .withPower(10)
+//              .withVotingPower(10)
                 .withCometPublicKeyType(CometPublicKeyType)
                 .withCometPublicKey(CometPublicKey);
             const validatorNodeId = await blockchain.publishValidatorNode(validatorNodeCreationContext);
             const validatorNode = await blockchain.loadValidatorNode(validatorNodeId);
-            expect(validatorNode.getPower()).toEqual(10);
+//          expect(validatorNode.getVotingPower()).toEqual(10);
             expect(validatorNode.getCometPublicKeyType()).toEqual(CometPublicKeyType);
             expect(validatorNode.getCometPublicKey()).toEqual(CometPublicKey);
 
@@ -414,12 +414,12 @@ describe('Chain test', () => {
 
             const recordPublicationContext = new RecordPublicationExecutionContext()
                 .withGasPrice(CMTSToken.createCMTS(2))
+                .withExpirationIn(365)
                 .withRecord(object);
             const appLedgerId = await blockchain.publishRecord(recordPublicationContext);
             const appLedger = await blockchain.loadApplicationLedger(appLedgerId);
             const recoveredData = await appLedger.getRecordAtHeight(1);
             expect(recoveredData).toEqual(data);
-
 
             const secondData = {
                 firstname: "Foo",

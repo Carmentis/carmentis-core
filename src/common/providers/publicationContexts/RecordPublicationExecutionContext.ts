@@ -5,13 +5,13 @@ import {ExpirationDate} from "../ExpirationDate";
 
 export class RecordPublicationExecutionContext<T> extends PublicationExecutionContext {
 
-    private expirationDate?: ExpirationDate;
+    private expirationDate: ExpirationDate;
     private record?: RecordDescription<T>;
+
     constructor() {
         super();
         this.expirationDate = ExpirationDate.endless();
     }
-
 
     withRecord(record: RecordDescription<T>): RecordPublicationExecutionContext<T> {
         this.record = record;

@@ -19,7 +19,6 @@ export class AccountTransferPublicationExecutionContext extends PublicationExecu
         this.publicReference = "";
     }
 
-
     getBuyerAccount(): Hash {
         return this.buyerAccountHash!;
     }

@@ -11,30 +11,35 @@ export class MemoryProvider  {
     return this.instance;
   }
 
+  microblockHeaderStore: any;
   microblockBodyStore: any;
-  microblockInformationStore: any;
+  microblockVbInformationStore: any;
   virtualBlockchainStateStore: any;
 
   constructor() {
-    this.microblockInformationStore = new Map;
+    this.microblockHeaderStore = new Map;
     this.microblockBodyStore = new Map;
+    this.microblockVbInformationStore = new Map;
     this.virtualBlockchainStateStore = new Map;
   }
-
-
 
   clear() {
-    this.microblockInformationStore = new Map;
+    this.microblockHeaderStore = new Map;
     this.microblockBodyStore = new Map;
+    this.microblockVbInformationStore = new Map;
     this.virtualBlockchainStateStore = new Map;
   }
 
-  async getMicroblockInformation(hash: Uint8Array): Promise<Uint8Array> {
-    return await MemoryProvider.get(this.microblockInformationStore, hash);
+  async getMicroblockVbInformation(hash: Uint8Array): Promise<Uint8Array> {
+    return await MemoryProvider.get(this.microblockVbInformationStore, hash);
   }
 
   async getMicroblock(identifier: any) {
     return new Uint8Array();
+  }
+
+  async getMicroblockHeader(identifier: any) {
+    return await MemoryProvider.get(this.microblockHeaderStore, identifier);
   }
 
   async getMicroblockBody(identifier: any) {
@@ -50,12 +55,12 @@ export class MemoryProvider  {
     return null;
   }
 
-  async setMicroblockInformation(identifier: any, data: any) {
-    return await MemoryProvider.set(this.microblockInformationStore, identifier, data);
+  async setMicroblockVbInformation(identifier: any, data: any) {
+    return await MemoryProvider.set(this.microblockVbInformationStore, identifier, data);
   }
 
-  async setMicroblock(identifier: any, headerData: any, bodyData: any) {
-    // ignored
+  async setMicroblockHeader(identifier: any, data: any) {
+    return await MemoryProvider.set(this.microblockHeaderStore, identifier, data);
   }
 
   async setMicroblockBody(identifier: any, data: any) {

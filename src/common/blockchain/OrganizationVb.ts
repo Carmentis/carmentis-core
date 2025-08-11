@@ -131,8 +131,8 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     }
 
     private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
-    private static UNDEFINED_PUBLIC_KEY_HEIGHT = -1;
-    private static UNDEFINED_DESCRIPTION_HEIGHT = -1;
+    private static UNDEFINED_PUBLIC_KEY_HEIGHT = 0;
+    private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
 
     protected getInitialState(): OrganizationVBState {
         return {

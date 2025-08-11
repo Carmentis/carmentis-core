@@ -77,7 +77,7 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
 
   private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
   private static UNDEFINED_ORGANIZATION_ID = Utils.getNullHash();
-  private static UNDEFINED_DESCRIPTION_HEIGHT = -1;
+  private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
 
   getInitialState(): ApplicationVBState {
     return {

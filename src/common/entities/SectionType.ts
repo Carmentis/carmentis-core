@@ -35,5 +35,3 @@ export enum SectionType {
     APP_LEDGER_ENDORSER_SIGNATURE = 41,
     APP_LEDGER_AUTHOR_SIGNATURE = 42,
 }
-
-

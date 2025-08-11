@@ -79,14 +79,14 @@ ACCOUNT[ACCOUNT_SIGNATURE] = {
   ]
 };
 
-
 // ============================================================================================================================ //
 //  Validator node                                                                                                              //
 // ============================================================================================================================ //
-export const VN_SIG_ALGORITHM = 0;
-export const VN_DECLARATION   = 1;
-export const VN_DESCRIPTION   = 2;
-export const VN_SIGNATURE     = 3;
+export const VN_SIG_ALGORITHM       = 0;
+export const VN_DECLARATION         = 1;
+export const VN_DESCRIPTION         = 2;
+export const VN_NETWORK_INTEGRATION = 3;
+export const VN_SIGNATURE           = 4;
 
 const VALIDATOR_NODE: Schema[] = [] as const;
 
@@ -108,8 +108,14 @@ VALIDATOR_NODE[VN_DESCRIPTION] = {
   label: "VN_DESCRIPTION",
   definition: [
     { name: "cometPublicKeyType", type: DATA.TYPE_STRING },
-    { name: "cometPublicKey",     type: DATA.TYPE_STRING },
-    { name: "power",              type: DATA.TYPE_UINT48 }
+    { name: "cometPublicKey",     type: DATA.TYPE_STRING }
+  ]
+};
+
+VALIDATOR_NODE[VN_NETWORK_INTEGRATION] = {
+  label: "VN_NETWORK_INTEGRATION",
+  definition: [
+    { name: "votingPower", type: DATA.TYPE_UINT48 }
   ]
 };
 
@@ -209,8 +215,6 @@ APPLICATION[APP_SIGNATURE] = {
     { name: "signature", type: DATA.TYPE_BINARY }
   ]
 };
-
-
 
 // ============================================================================================================================ //
 //  Application ledger                                                                                                          //
@@ -339,8 +343,6 @@ APP_LEDGER[APP_LEDGER_AUTHOR_SIGNATURE] = {
     { name: "signature", type: DATA.TYPE_BINARY }
   ]
 };
-
-
 
 export const ALL_SECTIONS_SCHEMAS = {
   ...ORGANIZATION,

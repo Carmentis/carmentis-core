@@ -23,7 +23,7 @@ import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseType";
 export interface BlockchainReader {
     //getMicroBlockHeader(vbId: Hash, height: number): Promise<AbstractMicroBlockHeader>;
     getManyMicroBlock(type: VirtualBlockchainType, hashes: Hash[]): Promise<Microblock[]>;
-    getMicroBlock(type: VirtualBlockchainType, hashes: Hash): Promise<Microblock>
+    getMicroBlock(type: VirtualBlockchainType, hashes: Hash): Promise<Microblock|null>
     getVirtualBlockchainState(vbId: Hash): Promise<VirtualBlockchainState>;
     getBalanceOfAccount(accountHash: Hash): Promise<CMTSToken>;
     getAccountState(accountHash: Hash): Promise<AccountState>;

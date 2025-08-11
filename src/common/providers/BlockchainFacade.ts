@@ -112,7 +112,6 @@ export class BlockchainFacade{
         return account.getPublicKey();
     }
 
-
     /**
      * Retrieves the public signature key of the issuer.
      *
@@ -193,7 +192,6 @@ export class BlockchainFacade{
     }
 
     /**
-import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
      * Creates a new genesis account and publishes its updates.
      *
      * Note: This method is only reserved to create genesis account. Once created, next calls throw an exception.
@@ -246,7 +244,7 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
         const organization = await writer.createOrganization();
         await organization.setDescription(build);
         organization.setGasPrice(context.getGasPrice());
-        return  await organization.publishUpdates()
+        return await organization.publishUpdates()
     }
 
     async publishOrganizationUpdate(context: OrganizationPublicationExecutionContext) {
@@ -305,7 +303,7 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
     /**
      * Creates and publishes a validator node based on the provided context.
      *
-     * @param {ValidatorNodePublicationExecutionContext} context - The execution context containing the details necessary to create and publish the application, such as organization information, application metadata, and gas price settings.
+     * @param {ValidatorNodePublicationExecutionContext} context - The execution context containing the details necessary to create and publish the validator node
      * @return {Promise<Hash>} A promise that resolves to the location of the created application.
      */
     async publishValidatorNode(context: ValidatorNodePublicationExecutionContext) {
@@ -317,7 +315,6 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
             validatorNode = await writer.loadValidatorNode(data.validatorNodeId.unwrap());
             const description = await validatorNode.getDescription();
             await validatorNode.setDescription({
-                power: data.power || description.power,
                 cometPublicKeyType: data.cometPublicKeyType || description.cometPublicKeyType,
                 cometPublicKey: data.cometPublicKey || description.cometPublicKey,
             });
@@ -327,7 +324,6 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
             );
             validatorNode = await writer.createValidatorNode(organizationId);
             await validatorNode.setDescription({
-                power: data.power,
                 cometPublicKeyType: data.cometPublicKeyType,
                 cometPublicKey: data.cometPublicKey
             });
@@ -344,7 +340,7 @@ import {BlockchainFacadeInterface} from "./BlockchainFacadeInterface";
      */
     async publishRecord<T = any>(context: RecordPublicationExecutionContext<T>) {
         const writer = this.getWriter();
-        const applicationLedger = await writer.createApplicationLedgerFromJson(context.build());
+        const applicationLedger = await writer.createApplicationLedgerFromJson(context.build(), context.getExpirationDay());
         applicationLedger.setGasPrice(context.getGasPrice());
         return await applicationLedger.publishUpdates();
     }

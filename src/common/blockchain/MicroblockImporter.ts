@@ -1,12 +1,13 @@
-import { CHAIN, SCHEMAS } from "../constants/constants";
-import { SchemaUnserializer } from "../data/schemaSerializer";
-import { Account } from "./Account";
-import { ValidatorNode } from "./ValidatorNode";
-import { Organization } from "./Organization";
-import { Application } from "./Application";
-import { ApplicationLedger } from "./ApplicationLedger";
-import { Crypto } from "../crypto/crypto";
-import { Utils } from "../utils/utils";
+import {CHAIN, SCHEMAS} from "../constants/constants";
+import {SchemaUnserializer} from "../data/schemaSerializer";
+import {Account} from "./Account";
+import {ValidatorNode} from "./ValidatorNode";
+import {Organization} from "./Organization";
+import {Application} from "./Application";
+import {ApplicationLedger} from "./ApplicationLedger";
+import {Provider} from "../providers/Provider";
+import {Crypto} from "../crypto/crypto";
+import {Utils} from "../utils/utils";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Microblock} from "./Microblock";
 import {VirtualBlockchain} from "./VirtualBlockchain";
@@ -20,15 +21,13 @@ const OBJECT_CLASSES = [
     ApplicationLedger
 ];
 
-
 export class MicroblockImporter {
     bodyData: any;
-    currentTimestamp: number;
     _error: Optional<Error> = Optional.none();
     hash: any;
     header: any;
     headerData: any;
-    provider: any;
+    provider: Provider;
     // @ts-ignore Add an initial value to the vb (possibly undefined).
     vb: VirtualBlockchain<any>;
     object: any;
@@ -41,7 +40,6 @@ export class MicroblockImporter {
         this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
         this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
         this.hash = Crypto.Hashes.sha256AsBinary(this.headerData);
-        this.currentTimestamp = 0;
     }
 
     containsError() {
@@ -59,7 +57,6 @@ export class MicroblockImporter {
             return '';
         }
     }
-
 
     private setErrorFromErrorMessage(errorMessage: string) {
         this._error = Optional.some(new Error(errorMessage));
@@ -82,7 +79,7 @@ export class MicroblockImporter {
      * @return {Promise<boolean>} A promise that resolves to a boolean indicating whether the micro block is valid.
      */
     async isValidMicroBlock(currentTimestamp?: number): Promise<boolean> {
-        const verificationResult = await this.check(currentTimestamp);
+        const verificationResult = await this.checkAll(currentTimestamp);
         return verificationResult === 0;
     }
 
@@ -97,14 +94,18 @@ export class MicroblockImporter {
         return this.vb as VB
     }
 
-    async check(currentTimestamp?: number) {
-        this.currentTimestamp = currentTimestamp || Utils.getTimestampInSeconds();
-
-        return (await this.checkHeader()) || (await this.checkTimestamp()) || (await this.checkContent());
+    async checkAll(currentTimestamp?: number) {
+        return (
+            (await this.checkHeader()) ||
+            (await this.checkTimestamp(currentTimestamp)) ||
+            (await this.instantiateVirtualBlockchain()) ||
+            (await this.importMicroblock()) ||
+            (await this.checkGas())
+        );
     }
 
     /**
-     Checks the consistency of the serialized header, the magic string and the protocol version.
+     * Checks the consistency of the serialized header, the magic string and the protocol version.
      */
     async checkHeader() {
         try {
@@ -128,14 +129,16 @@ export class MicroblockImporter {
     }
 
     /**
-     Checks the timestamp declared in the header.
+     * Checks the timestamp declared in the header.
      */
-    async checkTimestamp() {
-        if(this.header.timestamp < this.currentTimestamp - CHAIN.MAX_MICROBLOCK_PAST_DELAY) {
+    async checkTimestamp(currentTimestamp?: number) {
+        currentTimestamp = currentTimestamp || Utils.getTimestampInSeconds();
+
+        if(this.header.timestamp < currentTimestamp - CHAIN.MAX_MICROBLOCK_PAST_DELAY) {
             this.setErrorFromErrorMessage(`timestamp is too far in the past`);
             return CHAIN.MB_STATUS_TIMESTAMP_ERROR;
         }
-        if(this.header.timestamp > this.currentTimestamp + CHAIN.MAX_MICROBLOCK_FUTURE_DELAY) {
+        if(this.header.timestamp > currentTimestamp + CHAIN.MAX_MICROBLOCK_FUTURE_DELAY) {
             this.setErrorFromErrorMessage(`timestamp is too far in the future`);
             return CHAIN.MB_STATUS_TIMESTAMP_ERROR;
         }
@@ -143,15 +146,13 @@ export class MicroblockImporter {
     }
 
     /**
-     Checks the body hash declared in the header, the existence of the previous microblock (if any) and the microblock height.
-     Then instantiates a virtual blockchain of the relevant type and attempts to import the microblock (which includes the
-     state update). Finally, verifies that the declared gas matches the computed gas.
+     * First checks the body hash declared in the header, the existence of the previous microblock (if any) and the microblock height.
+     * Then instantiates a virtual blockchain of the relevant type.
      */
-    async checkContent() {
+    async instantiateVirtualBlockchain() {
         try {
             // check the body hash
             const hashScheme = CryptoSchemeFactory.createDefaultCryptographicHash();
-            //const bodyHash = Crypto.Hashes.sha256AsBinary(this.bodyData);
             const bodyHash = hashScheme.hash(this.bodyData);
 
             if(!Utils.binaryIsEqual(bodyHash, this.header.bodyHash)) {
@@ -161,7 +162,8 @@ export class MicroblockImporter {
 
             // check the previous microblock, or get the type from the leading byte of the previousHash field if genesis
             let type;
-            let vbIdentifier;
+            let expirationDay = 0;
+            let vbIdentifier = new Uint8Array();
 
             if(this.header.height > 1) {
                 const previousMicroblockInfo = await this.provider.getMicroblockInformation(this.header.previousHash);
@@ -185,7 +187,14 @@ export class MicroblockImporter {
                 vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
             }
             else {
+                // extract the type and the expiration day from the special previousHash field
                 type = this.header.previousHash[0];
+
+                expirationDay =
+                    this.header.previousHash[1] << 24 |
+                    this.header.previousHash[2] << 16 |
+                    this.header.previousHash[3] << 8 |
+                    this.header.previousHash[4];
             }
 
             // attempt to instantiate the VB class
@@ -199,14 +208,45 @@ export class MicroblockImporter {
             this.object = new objectClass({ provider: this.provider });
             this.vb = this.object.vb;
 
-            // load the VB if this is an existing one
+            // if the VB exists ...
             if(this.header.height > 1) {
+                // ... load it
                 await this.vb.load(vbIdentifier);
             }
+            else {
+                // otherwise, set its expiration day
+                this.vb.setExpirationDay(expirationDay);
+            }
+        }
+        catch(error) {
+            // @ts-expect-error TS(2571): Object is of type 'unknown'.
+            this._error = error.toString();
+            return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+        }
+        return 0;
+    }
 
+    /**
+     * attempts to import the microblock (which includes the state update).
+     */
+    async importMicroblock() {
+        try {
             // attempt to import the microblock
             await this.vb.importMicroblock(this.headerData, this.bodyData);
+        }
+        catch(error) {
+            // @ts-expect-error TS(2571): Object is of type 'unknown'.
+            this._error = error.toString();
+            return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
+        }
+        return 0;
+    }
 
+    /**
+     * verifies that the declared gas matches the computed gas.
+     */
+    async checkGas() {
+        try {
             // check the gas
             const mb = this.getMicroBlock();
             const declaredGas = mb.header.gas;
@@ -225,8 +265,11 @@ export class MicroblockImporter {
         return 0;
     }
 
+    /**
+     * stores the microblock and update the VB state in the internal provider.
+     */
     async store() {
         await this.provider.storeMicroblock(this.hash, this.vb.identifier, this.vb.type, this.vb.height, this.headerData, this.bodyData);
-        await this.provider.updateVirtualBlockchainState(this.vb.identifier, this.vb.type, this.vb.height, this.hash, this.vb.state);
+        await this.provider.updateVirtualBlockchainState(this.vb.identifier, this.vb.type, this.vb.expirationDay, this.vb.height, this.hash, this.vb.state);
     }
 }

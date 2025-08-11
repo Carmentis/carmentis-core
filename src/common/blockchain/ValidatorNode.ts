@@ -1,7 +1,7 @@
 import {SECTIONS} from "../constants/constants";
 import {ValidatorNodeVb} from "./ValidatorNodeVb";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
-import {ValidatorNodeDeclaration, ValidatorNodeDescription} from "./types";
+import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeNetworkIntegration} from "./types";
 import {CMTSToken} from "../economics/currencies/token";
 import {Hash} from "../entities/Hash";
 import {Provider} from "../providers/Provider";
@@ -48,7 +48,7 @@ export class ValidatorNode {
   }
 
   async getDeclaration() {
-    const microblock = await this.vb.getMicroblock(1);
+    const microblock = await this.vb.getFirstMicroBlock();
     const section = microblock.getSection<ValidatorNodeDeclaration>(
         (section: any) => section.type == SECTIONS.VN_DECLARATION
     );
@@ -59,6 +59,20 @@ export class ValidatorNode {
     const microblock = await this.vb.getMicroblock(this.vb.getDescriptionHeight());
     const section = microblock.getSection<ValidatorNodeDescription>(
         (section: any) => section.type == SECTIONS.VN_DESCRIPTION
+    );
+    return section.object;
+  }
+
+  async getNetworkIntegration() {
+    const height = this.vb.getNetworkIntegrationHeight();
+
+    if(!height) {
+      return { votingPower: 0 };
+    }
+
+    const microblock = await this.vb.getMicroblock(height);
+    const section = microblock.getSection<ValidatorNodeNetworkIntegration>(
+        (section: any) => section.type == SECTIONS.VN_NETWORK_INTEGRATION
     );
     return section.object;
   }

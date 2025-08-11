@@ -44,19 +44,6 @@ export interface MerkleProof {
     witnesses: string;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 export interface AccountVBState {
     signatureAlgorithmId: number;
     publicKeyHeight: number;
@@ -81,9 +68,12 @@ export interface OrganizationDescription {
 }
 
 export interface ValidatorNodeDescription {
-    power: number,
     cometPublicKeyType: string,
     cometPublicKey: string
+}
+
+export interface ValidatorNodeNetworkIntegration {
+    votingPower: number
 }
 
 export interface ValidatorNodeDeclaration {
@@ -100,6 +90,7 @@ export interface ValidatorNodeVBState {
     signatureAlgorithmId: number;
     organizationId: Uint8Array;
     descriptionHeight: number;
+    networkIntegrationHeight: number;
 }
 
 export interface ApplicationVBState {
@@ -128,6 +119,36 @@ export interface ApplicationLedgerVBState {
     applicationId: Uint8Array;
     channels: ApplicationLedgeChannel[];
     actors: ApplicationLedgerActor[];
+}
+
+export interface ChainInformationDTO {
+    height: number;
+    lastBlockTimestamp: number;
+    microblockCount: number;
+    objectCounts: number[];
+}
+
+export interface BlockInformationDTO {
+    hash: Uint8Array;
+    timestamp: number;
+    proposerAddress: Uint8Array;
+    size: number;
+    microblockCount: number;
+}
+
+export interface BlockContentDTO {
+    microblocks: {
+        hash: Uint8Array;
+        vbIdentifier: Uint8Array;
+        vbType: number;
+        height: number;
+        size: number;
+        sectionCount: number;
+    }[];
+}
+
+export interface ValidatorNodeDTO {
+    validatorNodeHash: Uint8Array;
 }
 
 export interface MicroblockHeader {
@@ -182,11 +203,10 @@ export interface VirtualBlockchainStateDTO<CustomState = any> {
 export interface VirtualBlockchainStateInterface<CustomState = object> {
     type: number,
     height: number,
+    expirationDay: number,
     lastMicroblockHash: Uint8Array,
     customState: CustomState
 }
-
-
 
 export interface MicroBlockHeader {
     magicString: string;

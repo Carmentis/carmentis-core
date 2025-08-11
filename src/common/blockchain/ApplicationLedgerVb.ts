@@ -14,7 +14,7 @@ import {
     ChannelNotDefinedError
 } from "../errors/carmentis-error";
 
-export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
+export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {x
     constructor({provider}: { provider: Provider }) {
         super({ provider, type: CHAIN.VB_APP_LEDGER });
         this.state = {

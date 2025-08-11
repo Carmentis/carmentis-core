@@ -121,6 +121,36 @@ export interface ApplicationLedgerVBState {
     actors: ApplicationLedgerActor[];
 }
 
+export interface ChainInformationDTO {
+    height: number;
+    lastBlockTimestamp: number;
+    microblockCount: number;
+    objectCounts: number[];
+}
+
+export interface BlockInformationDTO {
+    hash: Uint8Array;
+    timestamp: number;
+    proposerAddress: Uint8Array;
+    size: number;
+    microblockCount: number;
+}
+
+export interface BlockContentDTO {
+    microblocks: {
+        hash: Uint8Array;
+        vbIdentifier: Uint8Array;
+        vbType: number;
+        height: number;
+        size: number;
+        sectionCount: number;
+    }[];
+}
+
+export interface ValidatorNodeDTO {
+    validatorNodeHash: Uint8Array;
+}
+
 export interface MicroblockHeader {
     magicString: string;
     protocolVersion: number;

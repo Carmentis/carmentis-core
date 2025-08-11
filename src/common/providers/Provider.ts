@@ -3,7 +3,15 @@ import {Utils} from "../utils/utils";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
-import {AccountHistoryInterface, AccountStateDTO, MicroblockInformationSchema, ObjectList} from "../blockchain/types";
+import {
+    AccountHistoryInterface,
+    ChainInformationDTO,
+    BlockInformationDTO,
+    BlockContentDTO,
+    AccountStateDTO,
+    MicroblockInformationSchema,
+    ObjectList
+} from "../blockchain/types";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
 import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
@@ -28,6 +36,18 @@ export class Provider {
 
     async awaitMicroblockAnchoring(hash: Uint8Array) {
         return await this.externalProvider.awaitMicroblockAnchoring(hash);
+    }
+
+    async getChainInformation() : Promise<ChainInformationDTO> {
+        return await this.externalProvider.getChainInformation();
+    }
+
+    async getBlockInformation(height: number) : Promise<BlockInformationDTO> {
+        return await this.externalProvider.getBlockInformation(height);
+    }
+
+    async getBlockContent(height: number) : Promise<BlockContentDTO> {
+        return await this.externalProvider.getBlockContent(height);
     }
 
     async getAccountState(accountHash: Uint8Array) : Promise<AccountStateDTO> {

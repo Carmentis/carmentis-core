@@ -6,6 +6,10 @@ import {
     AccountHash,
     AccountHistoryInterface,
     AccountStateDTO,
+    ChainInformationDTO,
+    BlockInformationDTO,
+    BlockContentDTO,
+    ValidatorNodeDTO,
     MicroBlockBodys,
     MicroblockInformationSchema, MsgVirtualBlockchainState, VirtualBlockchainStateInterface,
     VirtualBlockchainUpdateInterface,
@@ -43,6 +47,44 @@ export class NetworkProvider {
             SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
             {
                 hash
+            }
+        );
+        return answer;
+    }
+
+    async getChainInformation() {
+        const answer = await this.abciQuery<ChainInformationDTO>(
+            SCHEMAS.MSG_GET_CHAIN_INFORMATION,
+            {}
+        );
+        return answer;
+    }
+
+    async getBlockInformation(height: number) {
+        const answer = await this.abciQuery<BlockInformationDTO>(
+            SCHEMAS.MSG_GET_BLOCK_INFORMATION,
+            {
+                height
+            }
+        );
+        return answer;
+    }
+
+    async getBlockContent(height: number) {
+        const answer = await this.abciQuery<BlockContentDTO>(
+            SCHEMAS.MSG_GET_BLOCK_CONTENT,
+            {
+                height
+            }
+        );
+        return answer;
+    }
+
+    async getValidatorNodeByAddress(address: Uint8Array) {
+        const answer = await this.abciQuery<ValidatorNodeDTO>(
+            SCHEMAS.MSG_GET_VALIDATOR_NODE_BY_ADDRESS,
+            {
+                address
             }
         );
         return answer;

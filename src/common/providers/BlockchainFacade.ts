@@ -112,7 +112,6 @@ export class BlockchainFacade{
         return account.getPublicKey();
     }
 
-
     /**
      * Retrieves the public signature key of the issuer.
      *

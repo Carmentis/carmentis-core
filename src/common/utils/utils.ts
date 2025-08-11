@@ -18,10 +18,11 @@ export const Utils = {
   binaryFrom,
   binaryIsEqual,
   binaryCompare,
-  intToByteArray
+  intToByteArray,
+  byteArrayToInt
 };
 
-function numberToHexa(value: number, size: number) {
+function numberToHexa(value: number, size?: number) {
   return value.toString(16).toUpperCase().padStart(size || 1, "0");
 }
 
@@ -157,16 +158,21 @@ function binaryCompare(a: any, b: any) {
   return 0;
 }
 
-function intToByteArray(n: number, size: number = 1) {
+function intToByteArray(n: number, minSize: number = 1) {
   const arr: number[] = [];
 
   let remaining = n;
+  let size = minSize;
 
   while (remaining > 0 || size > 0) {
-    arr.push(remaining & 0xFF); // same as n % 0x100
+    arr.push(remaining & 0xFF);
     remaining = Math.floor(remaining / 0x100);
-    if (size > 0) size--;
+    size--;
   }
 
   return arr.reverse();
+}
+
+function byteArrayToInt(array: number[]) {
+  return array.reduce((t, n) => t * 0x100 + n, 0);
 }

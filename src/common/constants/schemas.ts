@@ -237,6 +237,38 @@ export const VB_STATES: Schema[] = [
 ];
 
 // ============================================================================================================================ //
+//  Block                                                                                                                       //
+// ============================================================================================================================ //
+export const BLOCK_INFORMATION = {
+  label: 'BlockInformation',
+  definition: [
+    { name: 'hash', type: DATA.TYPE_BIN256 },
+    { name: 'timestamp', type: DATA.TYPE_UINT48 },
+    { name: 'proposerAddress', type: DATA.TYPE_BINARY },
+    { name: 'size', type: DATA.TYPE_UINT48 },
+    { name: 'microblockCount', type: DATA.TYPE_UINT48 }
+  ]
+};
+
+export const BLOCK_CONTENT = {
+  label: 'BlockContent',
+  definition: [
+    {
+      name: 'microblocks',
+      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+      definition: [
+        { name: 'hash', type: DATA.TYPE_BIN256 },
+        { name: 'vbIdentifier', type: DATA.TYPE_BIN256 },
+        { name: 'vbType', type: DATA.TYPE_UINT8 },
+        { name: 'height', type: DATA.TYPE_UINT48 },
+        { name: 'size', type: DATA.TYPE_UINT48 },
+        { name: 'sectionCount', type: DATA.TYPE_UINT48 },
+      ],
+    },
+  ],
+};
+
+// ============================================================================================================================ //
 //  Microblock                                                                                                                  //
 // ============================================================================================================================ //
 export const MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET = 12;
@@ -284,26 +316,32 @@ export const MICROBLOCK_VB_INFORMATION: Schema = {
 //  Node messages                                                                                                               //
 // ============================================================================================================================ //
 export const MSG_ERROR                          = 0x00;
-export const MSG_GET_VIRTUAL_BLOCKCHAIN_STATE   = 0x01;
-export const MSG_VIRTUAL_BLOCKCHAIN_STATE       = 0x02;
-export const MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE  = 0x03;
-export const MSG_VIRTUAL_BLOCKCHAIN_UPDATE      = 0x04;
-export const MSG_GET_MICROBLOCK_INFORMATION     = 0x05;
-export const MSG_MICROBLOCK_INFORMATION         = 0x06;
-export const MSG_AWAIT_MICROBLOCK_ANCHORING     = 0x07;
-export const MSG_MICROBLOCK_ANCHORING           = 0x08;
-export const MSG_GET_MICROBLOCK_BODYS           = 0x09;
-export const MSG_MICROBLOCK_BODYS               = 0x0A;
-export const MSG_GET_ACCOUNT_STATE              = 0x0B;
-export const MSG_ACCOUNT_STATE                  = 0x0C;
-export const MSG_GET_ACCOUNT_HISTORY            = 0x0D;
-export const MSG_ACCOUNT_HISTORY                = 0x0E;
-export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH = 0x0F;
-export const MSG_ACCOUNT_BY_PUBLIC_KEY_HASH     = 0x10;
-export const MSG_GET_NODE_BY_ADDRESS            = 0x11;
-export const MSG_NODE_BY_ADDRESS                = 0x12;
-export const MSG_GET_OBJECT_LIST                = 0x13;
-export const MSG_OBJECT_LIST                    = 0x14;
+export const MSG_GET_CHAIN_INFORMATION          = 0x01;
+export const MSG_CHAIN_INFORMATION              = 0x02;
+export const MSG_GET_BLOCK_INFORMATION          = 0x03;
+export const MSG_BLOCK_INFORMATION              = 0x02;
+export const MSG_GET_BLOCK_CONTENT              = 0x04;
+export const MSG_BLOCK_CONTENT                  = 0x05;
+export const MSG_GET_VIRTUAL_BLOCKCHAIN_STATE   = 0x06;
+export const MSG_VIRTUAL_BLOCKCHAIN_STATE       = 0x07;
+export const MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE  = 0x08;
+export const MSG_VIRTUAL_BLOCKCHAIN_UPDATE      = 0x09;
+export const MSG_GET_MICROBLOCK_INFORMATION     = 0x0A;
+export const MSG_MICROBLOCK_INFORMATION         = 0x0B;
+export const MSG_AWAIT_MICROBLOCK_ANCHORING     = 0x0C;
+export const MSG_MICROBLOCK_ANCHORING           = 0x0D;
+export const MSG_GET_MICROBLOCK_BODYS           = 0x0E;
+export const MSG_MICROBLOCK_BODYS               = 0x0F;
+export const MSG_GET_ACCOUNT_STATE              = 0x10;
+export const MSG_ACCOUNT_STATE                  = 0x11;
+export const MSG_GET_ACCOUNT_HISTORY            = 0x12;
+export const MSG_ACCOUNT_HISTORY                = 0x13;
+export const MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH = 0x14;
+export const MSG_ACCOUNT_BY_PUBLIC_KEY_HASH     = 0x15;
+export const MSG_GET_VALIDATOR_NODE_BY_ADDRESS  = 0x16;
+export const MSG_VALIDATOR_NODE_BY_ADDRESS      = 0x17;
+export const MSG_GET_OBJECT_LIST                = 0x18;
+export const MSG_OBJECT_LIST                    = 0x19;
 
 export const NODE_MESSAGES: Schema[] = [] as const;
 
@@ -312,6 +350,45 @@ NODE_MESSAGES[MSG_ERROR] = {
   definition: [
     { name: 'error', type: DATA.TYPE_STRING }
   ]
+};
+
+NODE_MESSAGES[MSG_GET_CHAIN_INFORMATION] = {
+  label: 'MessageGetChainInformation',
+  definition: []
+};
+
+NODE_MESSAGES[MSG_CHAIN_INFORMATION] = {
+  label: 'MessageChainInformation',
+  definition: [
+    { name: 'height', type: DATA.TYPE_UINT48 },
+    { name: 'lastBlockTimestamp', type: DATA.TYPE_UINT48 },
+    { name: 'microblockCount', type: DATA.TYPE_UINT48 },
+    { name: 'objectCounts', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT48, size: CHAIN.N_VIRTUAL_BLOCKCHAINS }
+  ]
+};
+
+NODE_MESSAGES[MSG_GET_BLOCK_INFORMATION] = {
+  label: 'MessageGetBlockInformation',
+  definition: [
+    { name: 'height', type: DATA.TYPE_UINT48 }
+  ]
+};
+
+NODE_MESSAGES[MSG_BLOCK_INFORMATION] = {
+  label: 'MessageBlockInformation',
+  definition: BLOCK_INFORMATION.definition
+};
+
+NODE_MESSAGES[MSG_GET_BLOCK_CONTENT] = {
+  label: 'MessageGetBlockContent',
+  definition: [
+    { name: 'height', type: DATA.TYPE_UINT48 }
+  ]
+};
+
+NODE_MESSAGES[MSG_BLOCK_CONTENT] = {
+  label: 'MessageBlockContent',
+  definition: BLOCK_CONTENT.definition
 };
 
 NODE_MESSAGES[MSG_GET_VIRTUAL_BLOCKCHAIN_STATE] = {
@@ -441,17 +518,17 @@ NODE_MESSAGES[MSG_ACCOUNT_BY_PUBLIC_KEY_HASH] = {
   ]
 };
 
-NODE_MESSAGES[MSG_GET_NODE_BY_ADDRESS] = {
-  label: 'MessageGetNodeByAddress',
+NODE_MESSAGES[MSG_GET_VALIDATOR_NODE_BY_ADDRESS] = {
+  label: 'MessageGetValidatorNodeByAddress',
   definition: [
     { name: 'address', type: DATA.TYPE_BINARY }
   ]
 };
 
-NODE_MESSAGES[MSG_NODE_BY_ADDRESS] = {
-  label: 'MessageNodeByAddress',
+NODE_MESSAGES[MSG_VALIDATOR_NODE_BY_ADDRESS] = {
+  label: 'MessageValidatorNodeByAddress',
   definition: [
-    { name: 'nodeHash', type: DATA.TYPE_BIN256 }
+    { name: 'validatorNodeHash', type: DATA.TYPE_BIN256 }
   ]
 };
 

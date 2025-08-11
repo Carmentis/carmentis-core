@@ -46,6 +46,10 @@ import {ProofVerificationResult} from "../entities/ProofVerificationResult";
 import {Microblock} from "../blockchain/Microblock";
 import {VB_ACCOUNT, VB_APPLICATION, VB_ORGANIZATION, VB_VALIDATOR_NODE} from "../constants/chain";
 import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseType";
+import {ChainInformationWrapper} from "../wrappers/ChainInformationWrapper";
+import {ValidatorNodeWrapper} from "../wrappers/ValidatorNodeWrapper";
+import {BlockInformationWrapper} from "../wrappers/BlockInformationWrapper";
+import {BlockContentWrapper} from "../wrappers/BlockContentWrapper";
 
 export class ABCINodeBlockchainReader implements BlockchainReader {
     /**
@@ -70,8 +74,22 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         this.publicProvider = new Provider(cacheProvider, this.networkProvider);
     }
 
-    getMicroBlockBody(microblockHash: Hash): Promise<void> {
-        throw new Error("Method not implemented.");
+    async getChainInformation() {
+        return await this.networkProvider.getChainInformation();
+    }
+
+    async getBlockInformation(height: number) {
+        return await this.networkProvider.getBlockInformation(height);
+    }
+
+    async getBlockContent(height: number) {
+        return await this.networkProvider.getBlockContent(height);
+    }
+
+    async getValidatorNodeByAddress(address: string) {
+        const textEncoder = new TextEncoder();
+        const validatorNodeDto = await this.networkProvider.getValidatorNodeByAddress(textEncoder.encode(address));
+        return Hash.from(validatorNodeDto.validatorNodeHash);
     }
 
     async getPublicKeyOfOrganization(organizationId: Hash): Promise<PublicSignatureKey> {
@@ -133,12 +151,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
      * @return {Promise<Hash>} A promise that resolves to the virtual blockchain ID where the micro-block is published
      */
     async lockUntilMicroBlockPublished(microblockHash: Hash): Promise<Hash> {
-        const answer = await this.abciQuery<MicroblockInformationSchema>(
-            SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
-            {
-                hash: microblockHash.toBytes()
-            }
-        );
+        const answer = await this.networkProvider.awaitMicroblockAnchoring(microblockHash.toBytes());
         return Hash.from(answer.virtualBlockchainId);
     }
 
@@ -157,14 +170,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         }
 
         // search the account
-        const answer = await this.abciQuery<AccountHistoryInterface>(
-            SCHEMAS.MSG_GET_ACCOUNT_HISTORY,
-            {
-                accountHash: accountHash.toBytes(),
-                lastHistoryHash: usedLastHistoryHash.toBytes(),
-                maxRecords
-            }
-        );
+        const answer = await this.networkProvider.getAccountHistory(accountHash.toBytes(), usedLastHistoryHash.toBytes(), maxRecords);
         console.log(`Here is the transactions history for account ${accountHash.encode()}:`, answer)
 
         // convert the response into transactions
@@ -177,12 +183,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
     }
 
     async getAccountState(accountHash: Hash): Promise<AccountState> {
-        const answer = await this.abciQuery<AccountStateDTO>(
-            SCHEMAS.MSG_GET_ACCOUNT_STATE,
-            {
-                accountHash: accountHash.toBytes()
-            }
-        );
+        const answer = await this.networkProvider.getAccountState(accountHash.toBytes());
         const state = AccountState.createFromDTO(answer);
         if (state.isEmpty()) throw new AccountNotFoundForAccountHashError(accountHash);
         return state;
@@ -194,23 +195,12 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
     }
 
     async getAccountByPublicKey(publicKey: PublicSignatureKey, hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()): Promise<Hash> {
-        const answer = await this.abciQuery<AccountHash>(
-            SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
-            {
-                publicKeyHash: hashScheme.hash(publicKey.getPublicKeyAsBytes())
-            }
-        );
+        const answer = await this.networkProvider.getAccountByPublicKeyHash(hashScheme.hash(publicKey.getPublicKeyAsBytes()));
         return Hash.from(answer.accountHash);
     }
 
     async getVirtualBlockchainState(vbId: Hash): Promise<VirtualBlockchainState> {
-        const answer = await this.abciQuery<MsgVirtualBlockchainState>(
-            SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_STATE,
-            {
-                virtualBlockchainState: vbId.toBytes(),
-            }
-        );
-
+        const answer = await this.networkProvider.getVirtualBlockchainState(vbId.toBytes());
         const state =  BlockchainUtils.decodeVirtualBlockchainState(answer.stateData);
         return NodeTranslator.translateVirtualBlockchainState(vbId, state);
     }
@@ -360,58 +350,5 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
     private async getObjectList( objectType: number ): Promise<Hash[]> {
         const response = await this.publicProvider.getObjectList(objectType);
         return response.list.map(Hash.from)
-    }
-
-    /*
-    private async query(urlObject: string): Promise<{data: string}> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const response = await axios.post(urlObject, {}, {
-                    headers: {
-                        'Content-Type': 'application/json; charset=UTF-8',
-                        'Accept': 'application/json',
-                    }
-                });
-                const data = response.data
-                return resolve(data);
-            } catch (e) {
-                if (e instanceof AxiosError) {
-                    if (e.code === 'ECONNREFUSED') {
-                        throw new NodeConnectionRefusedError(urlObject)
-                    }
-                }
-                reject(e);
-            }
-        })
-    }
-
-     */
-
-
-    private async abciQuery<T = object>(msgId: any, msgData: any): Promise<T> {
-        return NetworkProvider.sendABCIQueryToNodeServer(msgId, msgData, this.nodeUrl);
-        /*
-        const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
-        const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
-        const data = serializer.serialize(msgId, msgData);
-
-        const params = new URLSearchParams();
-        params.append("path", '"/carmentis"');
-        params.append("data", "0x" + Utils.binaryToHexa(data));
-        const abciUrl = this.nodeUrl.replace(/\/+$/, "") + "/abci_query?" + params.toString();
-
-
-        const responseData = await this.query(abciUrl);
-        const binary = Base64.decodeBinary(responseData.data);
-        const { type, object } = unserializer.unserialize(binary);
-
-        if(type == SCHEMAS.MSG_ERROR) {
-            // @ts-expect-error TS(2339): Property 'error' does not exist on type '{}'.... Remove this comment to see the full error message
-            throw new NodeError(object.error);
-        }
-
-        return object as T;
-
-         */
     }
 }

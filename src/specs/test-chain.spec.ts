@@ -42,208 +42,6 @@ const NODE_URL = "http://localhost:26657";
 
 describe('Chain test', () => {
     const TEST_TIMEOUT = 20000;
-    /*
-    test("testChain()", async () => {
-        const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const memoryProvider = new MemoryProvider();
-        const networkProvider = new NetworkProvider(NODE_URL);
-        const keyedProvider = new KeyedProvider(privateKey, memoryProvider, networkProvider);
-
-        let blockchain = new Blockchain(keyedProvider);
-
-        // Testing account
-        console.log("creating genesis account");
-
-        let genesisAccount = await blockchain.createGenesisAccount();
-
-        genesisAccount.setGasPrice(ECO.TOKEN);
-        let genesisAccountId = await genesisAccount.publishUpdates();
-
-        console.log("genesisAccountId", genesisAccountId);
-
-        console.log("creating test account");
-
-        const testPrivateKey = MLDSA65PrivateSignatureKey.gen();
-        const testPublicKey = testPrivateKey.getPublicKey();
-
-        let testAccount = await blockchain.createAccount(genesisAccountId, testPublicKey, 10);
-
-        testAccount.setGasPrice(ECO.TOKEN);
-        let testAccountId = await testAccount.publishUpdates();
-
-        console.log("testAccountId", testAccountId);
-
-        console.log("processing transfer #1");
-
-        genesisAccount = await blockchain.loadAccount(genesisAccountId);
-
-        const hexEncoder = EncoderFactory.bytesToHexEncoder();
-        await genesisAccount.transfer({
-            account: testAccountId.toBytes(),
-            amount: 1 * ECO.TOKEN,
-            publicReference: "transfer #1",
-            privateReference: "private ref."
-        });
-
-        genesisAccount.setGasPrice(ECO.TOKEN);
-        await genesisAccount.publishUpdates();
-
-        console.log("processing transfer #2");
-
-        genesisAccount = await blockchain.loadAccount(genesisAccountId);
-
-        await genesisAccount.transfer({
-            account: testAccountId.toBytes(),
-            amount: 2 * ECO.TOKEN,
-            publicReference: "transfer #2",
-            privateReference: "private ref."
-        });
-
-        genesisAccount.setGasPrice(ECO.TOKEN);
-        await genesisAccount.publishUpdates();
-
-        console.log("loading back genesis account");
-
-        genesisAccount = await blockchain.loadAccount(genesisAccountId);
-
-        // Testing organization
-        console.log("creating organization");
-
-        let organization = await blockchain.createOrganization();
-
-        await organization.setDescription({
-            name: "Carmentis SAS",
-            city: "Paris",
-            countryCode: "FR",
-            website: "www.carmentis.io"
-        });
-
-        organization.setGasPrice(ECO.TOKEN);
-        let organizationId = await organization.publishUpdates();
-
-        console.log("loading back organization");
-
-        organization = await blockchain.loadOrganization(organizationId);
-
-        memoryProvider.clear();
-        console.log(await organization.getDescription());
-        console.log(await organization.getDescription());
-
-
-        console.log("creating validator node");
-
-        let node = await blockchain.createValidatorNode(organizationId);
-
-        await node.setDescription({
-            cometPublicKeyType: "tendermint/PubKeyEd25519",
-            cometPublicKey: "LNMVoOPtPV+hVB/eilwPp6Os+KzvxZXhUiEFe6bOlNw=",
-            power: 10
-        });
-
-        node.setGasPrice(ECO.TOKEN);
-        let nodeId = await node.publishUpdates();
-
-        console.log("loading back node");
-
-        node = await blockchain.loadValidatorNode(nodeId);
-
-        memoryProvider.clear();
-        console.log(await node.getDescription());
-        console.log(await node.getDescription());
-
-        console.log("creating application");
-
-        let application = await blockchain.createApplication(organizationId);
-
-        await application.setDescription({
-            name: "My Application",
-            logoUrl: "http://example.com/logo.png",
-            homepageUrl: "http://example.com",
-            description: "This is my application."
-        });
-
-        application.setGasPrice(ECO.TOKEN);
-        let applicationId = await application.publishUpdates();
-
-        console.log("loading back application");
-
-        application = await blockchain.loadApplication(applicationId);
-        console.log("declaration", await application.getDeclaration());
-        console.log("description", await application.getDescription());
-
-        // Testing application ledger
-        const object = {
-            applicationId: applicationId.encode(),
-            data: {
-                firstname: "John",
-                lastname: "Doe",
-                email: "john.doe@gmail.com"
-            },
-            actors: [
-                { name: "seller" }
-            ],
-            channels: [
-                { name: "mainChannel", public: false }
-            ],
-            channelAssignations: [
-                { channelName: "mainChannel", fieldPath: "this.*" }
-            ],
-            actorAssignations: [
-                { channelName: "mainChannel", actorName: "seller" }
-            ],
-            author: "seller"
-        };
-
-        const appLedger = await blockchain.getApplicationLedgerFromJson(object);
-
-        appLedger.setGasPrice(ECO.TOKEN);
-        const hash = await appLedger.publishUpdates();
-
-        const record = await appLedger.getRecord(1);
-
-        console.log("record at height 1", record);
-
-        const microblockData = appLedger.getMicroblockData();
-        console.log("microblockData", microblockData);
-
-        const ledgerProof = await appLedger.exportProof({ author: "John Doe" });
-        console.log("exported proof", JSON.stringify(ledgerProof, null, 2));
-
-        const dataFromProof = await blockchain.importApplicationLedgerProof(ledgerProof);
-        console.log("imported proof", dataFromProof);
-
-        const importer = blockchain.getMicroblockImporter(microblockData);
-        const importStatus = await importer.check();
-        console.log(`import: status=${importStatus}, error=${importer.error}`);
-
-        // Testing explorer
-        const explorerProvider = new Provider(memoryProvider, networkProvider);
-
-        blockchain = new Blockchain(explorerProvider);
-
-        const explorer = blockchain.getExplorer();
-
-        console.log("explorer.getAccountState / genesis", await explorer.getAccountState(genesisAccountId));
-        const accountState = await explorer.getAccountState(testAccountId);
-        console.log("explorer.getAccountState / test", accountState);
-        console.log("explorer.getAccountHistory / test", await explorer.getAccountHistory(testAccountId, Hash.from(accountState.lastHistoryHash), 50));
-
-        const testPublicKeyHash = Crypto.Hashes.sha256AsBinary(testPublicKey.getPublicKeyAsBytes());
-        console.log("explorer.getAccountByPublicKeyHash (valid)", await explorer.getAccountByPublicKeyHash(Hash.from(testPublicKeyHash)));
-        console.log("explorer.getAccountByPublicKey (valid)", await explorer.getAccountByPublicKey(testPublicKey));
-
-        try {
-          console.log("explorer.getAccountByPublicKeyHash (invalid)");
-          await explorer.getAccountByPublicKeyHash(Hash.from("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"));
-        }
-        catch(e) {
-          console.log(e);
-        }
-
-        console.log("explorer.getVirtualBlockchainState", await explorer.getVirtualBlockchainState(genesisAccountId));
-        console.log("explorer.getAccounts", await explorer.getAccounts());
-    }, TEST_TIMEOUT);
-    */
 
     // init the content
     const nodeUrl = "http://localhost:26657";
@@ -468,6 +266,26 @@ describe('Chain test', () => {
             expect(nodes).toBeInstanceOf(Array);
             expect(nodes.length).toBeGreaterThanOrEqual(1);
         }
+
+        {
+            // Testing first block information
+            const firstBlockInformation = await blockchain.getBlockInformation(1);
+            expect(firstBlockInformation).toBeDefined();
+            expect(firstBlockInformation.anchoredAt()).toBeInstanceOf(Date);
+            expect(firstBlockInformation.getBlockHash()).toBeInstanceOf(Hash);
+
+            // Testing first block content
+            const firstBlockContent = await blockchain.getBlockContent(1);
+            expect(firstBlockContent).toBeDefined();
+            expect(firstBlockContent.getContainedMicroBlockHashes()).toBeInstanceOf(Array);
+            expect(firstBlockContent.getContainedMicroBlockHashes().length).toBeGreaterThanOrEqual(1);
+
+            // Testing access chain information
+            const chainInformation = await blockchain.getChainInformation();
+            expect(chainInformation).toBeDefined();
+            expect(chainInformation.getHeight()).toBeGreaterThanOrEqual(1);
+            expect(chainInformation.getLatestPublicationTime()).toBeGreaterThanOrEqual(new Date().getTime());
+        }
     }, TEST_TIMEOUT)
 
     it('Invalid usage of BlockchainFacade: Unknown account', async () =>  {
@@ -509,11 +327,12 @@ describe('Chain test', () => {
     it('Should fails when creating an (issuer) account with the same key', async () => {
         await expect(async () => {
             const genesisCreationContext = new PublicationExecutionContext();
-            const genesisAccountId = await blockchain.createAndPublishGenesisAccount(genesisCreationContext);
+            const genesisAccountId = await blockchain.publishGenesisAccount(genesisCreationContext);
         }).rejects.toThrow(CarmentisError);
     });
-
      */
+
+
     /*
     it('Should fails for transfer when no enough balance', async () =>  {
 

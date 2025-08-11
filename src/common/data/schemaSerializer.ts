@@ -1,7 +1,7 @@
 import { DATA, SCHEMAS } from "../constants/constants";
 import { WriteStream, ReadStream } from "./byteStreams";
 import { TypeManager, TypeChecker } from "./types";
-import {TypeCheckingFailureError} from "../errors/carmentis-error";
+import {CarmentisError, TypeCheckingFailureError} from "../errors/carmentis-error";
 
 export class SchemaSerializer<T = any> {
   schema: SCHEMAS.Schema;
@@ -117,7 +117,7 @@ export class SchemaUnserializer<T = object> {
     const size = stream.length;
 
     if(pointer != size) {
-      throw `Invalid stream length (decoded ${pointer} bytes, actual length is ${size} bytes)`;
+      throw new CarmentisError(`Invalid stream length (decoded ${pointer} bytes, actual length is ${size} bytes)`);
     }
 
     return object as T;

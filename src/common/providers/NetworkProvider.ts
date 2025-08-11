@@ -43,7 +43,7 @@ export class NetworkProvider {
     }
 
     async awaitMicroblockAnchoring(hash: any) {
-        const answer = await this.abciQuery(
+        const answer = await this.abciQuery<MicroblockInformationSchema>(
             SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
             {
                 hash
@@ -260,7 +260,14 @@ export class NetworkProvider {
         const responseData = await NetworkProvider.query(urlObject);
         //const binary = Base64.decodeBinary(responseData.data);
         // @ts-ignore
-        const binary = Base64.decodeBinary(responseData.result.response.value);
+        const rawBase64EncodedResponse = responseData?.result?.response?.value;
+        if (typeof rawBase64EncodedResponse !== "string") {
+            console.error("Invalid response type detected:", responseData)
+            console.log("rawBase64EncodedResponse: ", rawBase64EncodedResponse);
+            throw new NodeError("Invalid response detected")
+        }
+        console.error(`Unserializing ${rawBase64EncodedResponse}`) // TODO: remove this log
+        const binary = Base64.decodeBinary(rawBase64EncodedResponse);
         const { type, object } = unserializer.unserialize(binary);
 
         if(type == SCHEMAS.MSG_ERROR) {

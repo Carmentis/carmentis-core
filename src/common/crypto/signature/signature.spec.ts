@@ -6,6 +6,7 @@ import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./ml-dsa-65";
 import {Secp256k1PrivateSignatureKey} from "./secp256k1";
 import {BytesSignatureEncoder} from "./signature-encoder";
+import {HCVSignatureEncoder} from "./HCVSignatureEncoder";
 
 describe('ML DSA 65 Signature', () => {
     test("Signature verification", () => {
@@ -74,5 +75,30 @@ describe('Generic signature encoder', () => {
         const publicKey2 = encoder.decodePublicKey(rawPublicKey);
         expect(publicKey2.getPublicKeyAsBytes()).toEqual(publicKey.getPublicKeyAsBytes());
         expect(publicKey2.getSignatureAlgorithmId()).toEqual(publicKey.getSignatureAlgorithmId());
+    })
+})
+
+describe('HCV signature encoder', () => {
+
+
+    const privateKey = MLDSA65PrivateSignatureKey.gen();
+    const publicKey = privateKey.getPublicKey();
+
+    test("With base64 encoder", () => {
+        const encoder = HCVSignatureEncoder.createBase64HCVSignatureEncoder();
+        const recoveredPublicKey = encoder.decodePublicKey(encoder.encodePublicKey(publicKey));
+        const recoveredPrivateKey = encoder.decodePrivateKey(encoder.encodePrivateKey(privateKey));
+        expect(publicKey.getPublicKeyAsBytes()).toEqual(recoveredPublicKey.getPublicKeyAsBytes());
+        expect(privateKey.getPrivateKeyAsBytes()).toEqual(recoveredPrivateKey.getPrivateKeyAsBytes());
+        expect(privateKey.getSignatureAlgorithmId()).toEqual(recoveredPrivateKey.getSignatureAlgorithmId());
+    })
+
+    test("With Hex encoder", () => {
+        const encoder = HCVSignatureEncoder.createHexHCVSignatureEncoder();
+        const recoveredPublicKey = encoder.decodePublicKey(encoder.encodePublicKey(publicKey));
+        const recoveredPrivateKey = encoder.decodePrivateKey(encoder.encodePrivateKey(privateKey));
+        expect(publicKey.getPublicKeyAsBytes()).toEqual(recoveredPublicKey.getPublicKeyAsBytes());
+        expect(privateKey.getPrivateKeyAsBytes()).toEqual(recoveredPrivateKey.getPrivateKeyAsBytes());
+        expect(privateKey.getSignatureAlgorithmId()).toEqual(recoveredPrivateKey.getSignatureAlgorithmId());
     })
 })

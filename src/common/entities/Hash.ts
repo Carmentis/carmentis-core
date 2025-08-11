@@ -62,4 +62,13 @@ export class Hash {
     toBytes(): Uint8Array {
         return this.hash
     }
+
+    /**
+     * Checks equality of this hash with respect to another hash provided in parameter.
+     *
+     * @param other
+     */
+    equals(other: Hash): boolean {
+        return this.hash.every((value, index) => value === other.hash[index])
+    }
 }

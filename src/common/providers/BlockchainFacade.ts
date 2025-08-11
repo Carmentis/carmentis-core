@@ -26,6 +26,9 @@ import {ApplicationLedgerWrapper} from "../wrappers/ApplicationLedgerWrapper";
 import {AccountWrapper} from "../wrappers/AccountWrapper";
 import {RPCNodeWebSocketClient} from "./nodeRpc/WebSocketClient";
 import {NodeStatusWrapper} from "./nodeRpc/NodeStatusWrapper";
+import {ChainInformationWrapper} from "../wrappers/ChainInformationWrapper";
+import {BlockInformationWrapper} from "../wrappers/BlockInformationWrapper";
+import {BlockContentWrapper} from "../wrappers/BlockContentWrapper";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.
@@ -414,10 +417,31 @@ export class BlockchainFacade{
         return this.reader.getAccountState(accountHash);
     }
 
+
+    async getChainInformation() {
+        const chainInformationDTO = await this.reader.getChainInformation();
+        return ChainInformationWrapper.createFromDTO(chainInformationDTO);
+    }
+
+    async getBlockInformation(height: number) {
+        const answer = await this.reader.getBlockInformation(height);
+        return BlockInformationWrapper.createFromDTO(answer);
+    }
+
+    async getBlockContent(height: number) {
+        const blockContentDTO = await this.reader.getBlockContent(height);
+        return BlockContentWrapper.createFromDTO(blockContentDTO);
+    }
+
+    async getValidatorNodeIdByAddress(address: string) {
+        return await this.reader.getValidatorNodeByAddress(address);
+    }
+
     private getWriter(): BlockchainWriter {
         if (!this.writer) throw new IllegalUsageError("No blockchain writer configured. Call BlockchainFacade.createFromNodeUrlAndPrivateKey(...) instead.");
         return this.writer;
     }
+
 
     /**
      * Removes undefined entries.

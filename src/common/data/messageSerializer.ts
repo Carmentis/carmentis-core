@@ -41,7 +41,10 @@ export class MessageUnserializer<T = object> {
   */
   unserialize(stream: Uint8Array) {
     const type = stream[0];
-    const schema = this.collection[type];
+    const schema = this.collection[type]; // TODO: check if type is in collections (otherwise raise an exception)
+    if (!schema) {
+      throw new Error(`Unknown message type ${type}: I do not know how to unserialize this message.`);
+    }
     const unserializer = new SchemaUnserializer(schema);
     const object = unserializer.unserialize(stream.slice(1));
 

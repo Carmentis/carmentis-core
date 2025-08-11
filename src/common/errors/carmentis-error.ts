@@ -115,6 +115,12 @@ export class MicroBlockNotFoundInVirtualBlockchainAtHeightError extends Blockcha
     }
 }
 
+export class MicroBlockNotFoundInBlockError extends BlockchainError {
+    constructor() {
+        super(`MicroBlock not found in block`);
+    }
+}
+
 export class ActorAlreadyDefinedError extends IllegalUsageError {
     constructor(actorName: string) {
         super(`Actor '${actorName}' already defined`);

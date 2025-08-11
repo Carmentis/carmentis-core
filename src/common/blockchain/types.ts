@@ -121,6 +121,9 @@ export interface ApplicationLedgerVBState {
     actors: ApplicationLedgerActor[];
 }
 
+/**
+ * Provides information on the chain.
+ */
 export interface ChainInformationDTO {
     height: number;
     lastBlockTimestamp: number;

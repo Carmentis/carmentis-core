@@ -101,8 +101,11 @@ export class CryptoSchemeFactory {
     }
 
 
-
     createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): PublicSignatureKey {
+       return CryptoSchemeFactory.createPublicSignatureKey(schemeId, publicKey);
+    }
+
+    static createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): PublicSignatureKey {
         switch (schemeId) {
             case SignatureAlgorithmId.SECP256K1: return new Secp256k1PublicSignatureKey(publicKey);
             case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PublicSignatureKey(publicKey);

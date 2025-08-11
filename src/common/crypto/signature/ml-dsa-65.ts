@@ -126,7 +126,7 @@ export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
     }
 
     getPrivateKeyAsBytes(): Uint8Array {
-        return this.signatureKey
+        return this.seed;
     }
 
     /**

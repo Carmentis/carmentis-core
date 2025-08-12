@@ -266,7 +266,7 @@ export class NetworkProvider {
             console.log("rawBase64EncodedResponse: ", rawBase64EncodedResponse);
             throw new NodeError("Invalid response detected")
         }
-        console.error(`Unserializing ${rawBase64EncodedResponse}`) // TODO: remove this log
+//      console.error(`Unserializing ${rawBase64EncodedResponse}`) // TODO: remove this log
         const binary = Base64.decodeBinary(rawBase64EncodedResponse);
         const { type, object } = unserializer.unserialize(binary);
 

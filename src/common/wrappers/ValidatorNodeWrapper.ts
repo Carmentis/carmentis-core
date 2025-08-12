@@ -1,6 +1,7 @@
 import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {Hash} from "../entities/Hash";
 import {ValidatorNodeDescription, ValidatorNodeNetworkIntegration} from "../blockchain/types";
+import {CometBFTPublicKey} from "../cometbft/CometBFTPublicKey";
 
 export class ValidatorNodeWrapper {
     static async wrap(validatorNode: ValidatorNode) {
@@ -49,5 +50,14 @@ export class ValidatorNodeWrapper {
      */
     getCometPublicKey() {
         return this.description.cometPublicKey;
+    }
+
+    /**
+     * Retrieves the public key associated with the CometBFT instance.
+     *
+     * @return {CometBFTPublicKey} The public key created from the Ed25519 public key.
+     */
+    getPublicKey(): CometBFTPublicKey {
+        return CometBFTPublicKey.createFromEd25519PublicKey(this.description.cometPublicKey);
     }
 }

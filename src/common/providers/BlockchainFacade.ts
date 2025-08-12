@@ -29,6 +29,10 @@ import {NodeStatusWrapper} from "./nodeRpc/NodeStatusWrapper";
 import {ChainInformationWrapper} from "../wrappers/ChainInformationWrapper";
 import {BlockInformationWrapper} from "../wrappers/BlockInformationWrapper";
 import {BlockContentWrapper} from "../wrappers/BlockContentWrapper";
+import {CometBFTPublicKey} from "../cometbft/CometBFTPublicKey";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
+import {CryptographicHashAlgorithmId} from "../crypto/hash/hash-interface";
+import {EncoderFactory} from "../utils/encoder";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.
@@ -440,26 +444,19 @@ export class BlockchainFacade{
         }
     }
 
-    async getValidatorNodeIdByAddress(address: string) {
-        return await this.reader.getValidatorNodeByAddress(address);
+
+    async getValidatorNodeByCometBFTPublicKey(publicKey: CometBFTPublicKey) {
+        const sha256 = CryptoSchemeFactory.createCryptographicHash(CryptographicHashAlgorithmId.SHA256);
+        const base64 = EncoderFactory.bytesToBase64Encoder();
+        const key = base64.decode(publicKey.getPublicKey());
+        const hashedKey = sha256.hash(key);
+        const truncatedHashedKey = hashedKey.slice(0, 20);
+        console.assert(truncatedHashedKey.length === 20);
+        return this.reader.getValidatorNodeByAddress(truncatedHashedKey)
     }
 
     private getWriter(): BlockchainWriter {
         if (!this.writer) throw new IllegalUsageError("No blockchain writer configured. Call BlockchainFacade.createFromNodeUrlAndPrivateKey(...) instead.");
         return this.writer;
-    }
-
-
-    /**
-     * Removes undefined entries.
-     *
-     * @param obj
-     *
-     * @private
-     */
-    private cleanObject<T extends Record<string, any>>(obj: T): Partial<T> {
-        return Object.fromEntries(
-            Object.entries(obj).filter(([_, v]) => v !== undefined)
-        ) as Partial<T>;
     }
 }

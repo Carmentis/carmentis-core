@@ -86,9 +86,8 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return await this.networkProvider.getBlockContent(height);
     }
 
-    async getValidatorNodeByAddress(address: string) {
-        const textEncoder = new TextEncoder();
-        const validatorNodeDto = await this.networkProvider.getValidatorNodeByAddress(textEncoder.encode(address));
+    async getValidatorNodeByAddress(address: Uint8Array) {
+        const validatorNodeDto = await this.networkProvider.getValidatorNodeByAddress(address);
         return Hash.from(validatorNodeDto.validatorNodeHash);
     }
 

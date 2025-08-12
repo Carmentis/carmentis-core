@@ -21,6 +21,7 @@ export * from "./blockchain/blockchain";
 export * from "./blockchain/blockchainUtils";
 export * from "./blockchain/explorer";
 export * from "./blockchain/types";
+export * from "./cometbft/CometBFTPublicKey";
 export * from "./constants/chain";
 export * from "./constants/constants";
 export * from "./constants/data";

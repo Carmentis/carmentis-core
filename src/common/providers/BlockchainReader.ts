@@ -81,5 +81,5 @@ export interface BlockchainReader {
 
     getBlockContent(height: number): Promise<BlockContentDTO>;
 
-    getValidatorNodeByAddress(address: string): Promise<Hash>;
+    getValidatorNodeByAddress(address: Uint8Array): Promise<Hash>;
 }

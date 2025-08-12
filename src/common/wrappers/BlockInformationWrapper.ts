@@ -1,5 +1,5 @@
 import {BlockInformationDTO} from "../blockchain/types";
-import { Hash } from "../common";
+import {Hash} from "../entities/Hash";
 
 export class BlockInformationWrapper {
 

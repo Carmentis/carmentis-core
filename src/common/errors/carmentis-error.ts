@@ -61,6 +61,13 @@ export class CarmentisError extends Error {
     }
 }
 
+
+export class EmptyBlockError extends CarmentisError {
+    constructor(message: string) {
+        super(message, CarmentisErrorCode.BLOCKCHAIN_ERROR);
+    }
+}
+
 export class InternalError extends CarmentisError {}
 export class TypeCheckingFailureError extends InternalError {
     constructor(message: string) {

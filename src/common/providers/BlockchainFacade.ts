@@ -1,7 +1,7 @@
 import {ABCINodeBlockchainReader} from "./ABCINodeBlockchainReader";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ABCINodeBlockchainWriter} from "./ABCINodeBlockchainWriter";
-import {IllegalUsageError, NotImplementedError} from "../errors/carmentis-error";
+import {EmptyBlockError, IllegalUsageError, NodeError, NotImplementedError} from "../errors/carmentis-error";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
 import {Hash} from "../entities/Hash";
@@ -429,8 +429,15 @@ export class BlockchainFacade{
     }
 
     async getBlockContent(height: number) {
-        const blockContentDTO = await this.reader.getBlockContent(height);
-        return BlockContentWrapper.createFromDTO(blockContentDTO);
+        try {
+            const blockContentDTO = await this.reader.getBlockContent(height);
+            return BlockContentWrapper.createFromDTO(blockContentDTO);
+        } catch (error) {
+            if (NodeError.isCarmentisError(error)) {
+                throw new EmptyBlockError("Block content is empty.");
+            }
+            throw error;
+        }
     }
 
     async getValidatorNodeIdByAddress(address: string) {

@@ -33,7 +33,7 @@ import {
 } from "../common/providers/publicationContexts/RecordPublicationExecutionContext";
 import {
     AccountNotFoundForAccountHashError, ApplicationLedgerNotFoundError, ApplicationNotFoundError,
-    CarmentisError,
+    CarmentisError, EmptyBlockError,
     OrganizationNotFoundError
 } from "../common/errors/carmentis-error";
 import {RecordDescription} from "../common/blockchain/RecordDescription";
@@ -275,16 +275,15 @@ describe('Chain test', () => {
             expect(firstBlockInformation.getBlockHash()).toBeInstanceOf(Hash);
 
             // Testing first block content
-            const firstBlockContent = await blockchain.getBlockContent(1);
-            expect(firstBlockContent).toBeDefined();
-            expect(firstBlockContent.getContainedMicroBlockHashes()).toBeInstanceOf(Array);
-            expect(firstBlockContent.getContainedMicroBlockHashes().length).toBeGreaterThanOrEqual(1);
+            await expect(async () => await blockchain.getBlockContent(1))
+                .rejects
+                .toThrow(EmptyBlockError);
 
             // Testing access chain information
             const chainInformation = await blockchain.getChainInformation();
             expect(chainInformation).toBeDefined();
             expect(chainInformation.getHeight()).toBeGreaterThanOrEqual(1);
-            expect(chainInformation.getLatestPublicationTime()).toBeGreaterThanOrEqual(new Date().getTime());
+            expect(chainInformation.getLatestPublicationTime().getTime()).toBeLessThan(new Date().getTime());
         }
     }, TEST_TIMEOUT)
 

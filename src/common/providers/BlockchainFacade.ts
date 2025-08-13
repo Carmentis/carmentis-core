@@ -11,6 +11,7 @@ import {PublicationExecutionContext} from "./publicationContexts/PublicationExec
 import {OrganizationPublicationExecutionContext} from "./publicationContexts/OrganizationPublicationExecutionContext";
 import {AccountPublicationExecutionContext} from "./publicationContexts/AccountPublicationExecutionContext";
 import {ValidatorNodePublicationExecutionContext} from "./publicationContexts/ValidatorNodePublicationExecutionContext";
+import {ValidatorNodeNetworkIntegrationPublicationExecutionContext} from "./publicationContexts/ValidatorNodeNetworkIntegrationPublicationExecutionContext";
 import {ApplicationPublicationExecutionContext} from "./publicationContexts/ApplicationPublicationExecutionContext";
 import {RecordPublicationExecutionContext} from "./publicationContexts/RecordPublicationExecutionContext";
 import {ProofBuilder} from "../entities/ProofBuilder";
@@ -335,6 +336,20 @@ export class BlockchainFacade{
                 cometPublicKey: data.cometPublicKey
             });
         }
+        validatorNode.setGasPrice(context.getGasPrice());
+        return await validatorNode.publishUpdates();
+    }
+
+    async publishValidatorNodeNetworkIntegration(context: ValidatorNodeNetworkIntegrationPublicationExecutionContext) {
+        const writer = this.getWriter();
+        const data = context.build();
+        const validatorNodeId = data.validatorNodeId.unwrapOrThrow(
+            new IllegalUsageError("Validator node ID is required for network integration publication.")
+        );
+        const validatorNode = await writer.loadValidatorNode(validatorNodeId);
+        await validatorNode.setNetworkIntegration({
+            votingPower: data.votingPower,
+        });
         validatorNode.setGasPrice(context.getGasPrice());
         return await validatorNode.publishUpdates();
     }

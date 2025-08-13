@@ -1,15 +1,6 @@
 import {describe, expect, test} from '@jest/globals';
-import {Provider} from "../common/providers/Provider";
-import {KeyedProvider} from "../common/providers/KeyedProvider";
-import {MemoryProvider} from "../common/providers/MemoryProvider";
-import {Blockchain} from "../common/blockchain/blockchain";
-import {IntermediateRepresentation} from "../common/records/intermediateRepresentation";
-import {DATA, ECO} from '../common/constants/constants';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
-import {EncoderFactory} from "../common/utils/encoder";
-import {Crypto} from "../common/crypto/crypto";
 import {Hash} from "../common/entities/Hash";
-import {NetworkProvider} from "../common/providers/NetworkProvider";
 import {BlockchainFacade} from "../common/providers/BlockchainFacade";
 import {PublicationExecutionContext} from "../common/providers/publicationContexts/PublicationExecutionContext";
 import {
@@ -25,6 +16,9 @@ import {
 import {
     ValidatorNodePublicationExecutionContext
 } from "../common/providers/publicationContexts/ValidatorNodePublicationExecutionContext";
+import {
+    ValidatorNodeNetworkIntegrationPublicationExecutionContext
+} from "../common/providers/publicationContexts/ValidatorNodeNetworkIntegrationPublicationExecutionContext";
 import {
     ApplicationPublicationExecutionContext
 } from "../common/providers/publicationContexts/ApplicationPublicationExecutionContext";
@@ -161,14 +155,19 @@ describe('Chain test', () => {
 
             const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
                 .withOrganizationId(organizationId)
-//              .withVotingPower(10)
                 .withCometPublicKeyType(CometPublicKeyType)
                 .withCometPublicKey(CometPublicKey);
             const validatorNodeId = await blockchain.publishValidatorNode(validatorNodeCreationContext);
             const validatorNode = await blockchain.loadValidatorNode(validatorNodeId);
-//          expect(validatorNode.getVotingPower()).toEqual(10);
             expect(validatorNode.getCometPublicKeyType()).toEqual(CometPublicKeyType);
             expect(validatorNode.getCometPublicKey()).toEqual(CometPublicKey);
+
+            const validatorNodeNetworkIntegrationPublicationContext = new ValidatorNodeNetworkIntegrationPublicationExecutionContext()
+                .withExistingValidatorNodeId(validatorNodeId)
+                .withVotingPower(10);
+            await blockchain.publishValidatorNodeNetworkIntegration(validatorNodeNetworkIntegrationPublicationContext);
+            const reloadedValidatorNode = await blockchain.loadValidatorNode(validatorNodeId);
+            expect(reloadedValidatorNode.getVotingPower()).toEqual(10);
 
             // Testing application
             const applicationCreationContext = new ApplicationPublicationExecutionContext()

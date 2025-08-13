@@ -6,6 +6,11 @@ export class ValidatorNodeNetworkIntegrationPublicationExecutionContext extends 
     private validatorNodeId: Optional<Hash> = Optional.none();
     private votingPower: number = 0;
 
+    withExistingValidatorNodeId(validatorNodeId: Hash): ValidatorNodeNetworkIntegrationPublicationExecutionContext {
+        this.validatorNodeId = Optional.some(validatorNodeId);
+        return this;
+    }
+
     withVotingPower(votingPower: number): ValidatorNodeNetworkIntegrationPublicationExecutionContext {
         this.votingPower = votingPower;
         return this;

@@ -1,4 +1,5 @@
 import {RPCNodeStatusResponseType} from "./RPCNodeStatusResponseType";
+import {CometBFTPublicKey} from "../../cometbft/CometBFTPublicKey";
 
 export class NodeStatusWrapper {
     private constructor(private status: RPCNodeStatusResponseType) {}
@@ -13,6 +14,15 @@ export class NodeStatusWrapper {
 
     getNodeName() {
         return this.getNodeInfo().moniker;
+    }
+
+    isCatchingUp() {
+        return this.getResponse().sync_info.catching_up;
+    }
+
+    getPublicKey() {
+        const publicKey = this.getResponse().validator_info.pub_key;
+        return CometBFTPublicKey.createFromEd25519PublicKey(publicKey.value);
     }
 
     getCometBFTVersion() {

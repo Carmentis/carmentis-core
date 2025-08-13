@@ -43,6 +43,10 @@ export class ValidatorNode {
     await this.vb.setDescription(object);
   }
 
+  async setNetworkIntegration(object: ValidatorNodeNetworkIntegration) {
+    await this.vb.setNetworkIntegration(object);
+  }
+
   setGasPrice(gasPrice: CMTSToken) {
     this.gasPrice = gasPrice;
   }

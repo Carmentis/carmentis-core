@@ -286,7 +286,6 @@ export class Microblock {
     the body hash and the body data.
   */
   serialize() {
-    console.debug("sections:", this.sections)
     const body = {
       body: this.sections.map(({
         type,

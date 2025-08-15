@@ -27,10 +27,8 @@ import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
-import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
+import {VirtualBlockchainStateWrapper} from "../wrappers/VirtualBlockchainStateWrapper";
 import {MicroBlockInformation} from "../entities/MicroBlockInformation";
-import {MicroBlockHeaderInterface} from "../entities/MicroBlockHeaderInterface";
-import {NodeTranslator} from "../entities/NodeTranslator";
 import {Hash} from "../entities/Hash";
 import {AccountState} from "../entities/AccountState";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
@@ -50,6 +48,8 @@ import {ChainInformationWrapper} from "../wrappers/ChainInformationWrapper";
 import {ValidatorNodeWrapper} from "../wrappers/ValidatorNodeWrapper";
 import {BlockInformationWrapper} from "../wrappers/BlockInformationWrapper";
 import {BlockContentWrapper} from "../wrappers/BlockContentWrapper";
+import {VirtualBlockchainWrapper} from "../wrappers/VirtualBlockchainWrapper";
+import {MicroBlockHeaderWrapper} from "../wrappers/MicroBlockHeaderWrapper";
 
 export class ABCINodeBlockchainReader implements BlockchainReader {
     /**
@@ -117,12 +117,12 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         }))
     }
 
-    async getVirtualBlockchainContent(vbId: Hash){
+    async getVirtualBlockchain(vbId: Hash){
         const content = await this.publicProvider.getVirtualBlockchainContent(vbId);
         if (content === null || content.state === undefined) throw new NodeError("Invalid response from node")
-        const state = NodeTranslator.translateVirtualBlockchainState(vbId, content.state);
+        const state = new VirtualBlockchainStateWrapper(vbId, content.state);
         const hashes = content.microblockHashes.map(Hash.from);
-        return NodeTranslator.translateVirtualBlockchainUpdate(state, hashes);
+        return new VirtualBlockchainWrapper(state, hashes)
     }
 
     async getMicroblockInformation(hash: Hash): Promise<MicroBlockInformation> {
@@ -133,14 +133,15 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         }
 
         // parse the header
-        const headerObject: MicroBlockHeaderInterface = BlockchainUtils.decodeMicroblockHeader(answer.header);
-        const header = NodeTranslator.translateMicroBlockHeader(headerObject);
+        const header = new MicroBlockHeaderWrapper(
+            BlockchainUtils.decodeMicroblockHeader(answer.header)
+        );
 
         // parse and retrieve virtual blockchain state
         const virtualBlockchainId = Hash.from(answer.virtualBlockchainId);
         const virtualBlockchainState = await this.getVirtualBlockchainState(virtualBlockchainId);
 
-        return NodeTranslator.translateMicroBlockInformation(header, virtualBlockchainState);
+        return new MicroBlockInformation(header, virtualBlockchainState);
     }
 
     /**
@@ -198,10 +199,10 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
         return Hash.from(answer.accountHash);
     }
 
-    async getVirtualBlockchainState(vbId: Hash): Promise<VirtualBlockchainState> {
+    async getVirtualBlockchainState(vbId: Hash): Promise<VirtualBlockchainStateWrapper> {
         const answer = await this.networkProvider.getVirtualBlockchainState(vbId.toBytes());
         const state =  BlockchainUtils.decodeVirtualBlockchainState(answer.stateData);
-        return NodeTranslator.translateVirtualBlockchainState(vbId, state);
+        return new VirtualBlockchainStateWrapper(vbId, state);
     }
 
     /**

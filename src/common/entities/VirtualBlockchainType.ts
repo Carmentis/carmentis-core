@@ -7,12 +7,3 @@ export enum VirtualBlockchainType {
     ORGANIZATION_VIRTUAL_BLOCKCHAIN = VB_ORGANIZATION,
     APP_LEDGER_VIRTUAL_BLOCKCHAIN = VB_APP_LEDGER,
 }
-
-/*
-export const VB_ACCOUNT        = 0;
-export const VB_VALIDATOR_NODE = 1;
-export const VB_ORGANIZATION   = 2;
-export const VB_APPLICATION    = 3;
-export const VB_APP_LEDGER     = 4;
-
- */

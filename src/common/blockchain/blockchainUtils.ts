@@ -4,7 +4,7 @@ import { Crypto } from "../crypto/crypto";
 import { Utils } from "../utils/utils";
 
 import {MicroblockInformationSchema, VirtualBlockchainStateInterface} from "./types";
-import {MicroBlockHeaderInterface} from "../entities/MicroBlockHeaderInterface";
+import {MicroBlockHeaderDto} from "../entities/MicroBlockHeaderDto";
 
 
 export const BlockchainUtils = {
@@ -59,7 +59,7 @@ function previousHashFromHeader(header: any) {
 
 
 function decodeMicroblockHeader(data: Uint8Array) {
-  const unserializer = new SchemaUnserializer<MicroBlockHeaderInterface>(SCHEMAS.MICROBLOCK_HEADER);
+  const unserializer = new SchemaUnserializer<MicroBlockHeaderDto>(SCHEMAS.MICROBLOCK_HEADER);
   const object = unserializer.unserialize(data);
 
   return object;

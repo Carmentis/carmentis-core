@@ -1,5 +1,5 @@
 import {Hash} from "../entities/Hash";
-import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
+import {VirtualBlockchainStateWrapper} from "../wrappers/VirtualBlockchainStateWrapper";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountState} from "../entities/AccountState";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
@@ -20,12 +20,12 @@ import {
     OrganizationDescription,
     Proof
 } from "../blockchain/types";
-import {VirtualBlockchainUpdate} from "../entities/VirtualBlockchainUpdate";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 import {Microblock} from "../blockchain/Microblock";
 import {ProofVerificationResult} from "../entities/ProofVerificationResult";
 import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseType";
 import {ChainInformationWrapper} from "../wrappers/ChainInformationWrapper";
+import {VirtualBlockchainWrapper} from "../wrappers/VirtualBlockchainWrapper";
 
 export interface BlockchainReader {
     //getMicroBlockHeader(vbId: Hash, height: number): Promise<AbstractMicroBlockHeader>;
@@ -33,7 +33,7 @@ export interface BlockchainReader {
 
     getMicroBlock(type: VirtualBlockchainType, hashes: Hash): Promise<Microblock | null>
 
-    getVirtualBlockchainState(vbId: Hash): Promise<VirtualBlockchainState>;
+    getVirtualBlockchainState(vbId: Hash): Promise<VirtualBlockchainStateWrapper>;
 
     getBalanceOfAccount(accountHash: Hash): Promise<CMTSToken>;
 
@@ -45,7 +45,7 @@ export interface BlockchainReader {
 
     lockUntilMicroBlockPublished(microblockHash: Hash): Promise<Hash>;
 
-    getVirtualBlockchainContent(vbId: Hash): Promise<VirtualBlockchainUpdate>;
+    getVirtualBlockchain(vbId: Hash): Promise<VirtualBlockchainWrapper>;
 
     getMicroblockInformation(hash: Hash): Promise<MicroBlockInformation>;
 

@@ -1,7 +1,13 @@
 import {ABCINodeBlockchainReader} from "./ABCINodeBlockchainReader";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ABCINodeBlockchainWriter} from "./ABCINodeBlockchainWriter";
-import {EmptyBlockError, IllegalUsageError, NodeError, NotImplementedError} from "../errors/carmentis-error";
+import {
+    EmptyBlockError,
+    IllegalUsageError, MicroBlockNotFoundError,
+    MicroBlockNotFoundInBlockError,
+    NodeError,
+    NotImplementedError
+} from "../errors/carmentis-error";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
 import {Hash} from "../entities/Hash";
@@ -34,6 +40,7 @@ import {CometBFTPublicKey} from "../cometbft/CometBFTPublicKey";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {CryptographicHashAlgorithmId} from "../crypto/hash/hash-interface";
 import {EncoderFactory} from "../utils/encoder";
+import {MicroBlockWrapper} from "../wrappers/MicroBlockWrapper";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.
@@ -106,6 +113,44 @@ export class BlockchainFacade{
         const application = await this.reader.loadApplication(applicationId);
         return await application.getOrganizationId();
     }
+
+    async getMicroblockInformation(hash: Hash) {
+        return await this.reader.getMicroblockInformation(hash);
+    }
+
+    async getMicroBlock(hash: Hash) {
+        const info = await this.reader.getMicroblockInformation(hash);
+        const mb = await this.reader.getMicroBlock(
+            info.getVirtualBlockchainState().getType(),
+            hash
+        )
+        if (mb == null) throw new MicroBlockNotFoundError();
+        return MicroBlockWrapper.createFromMicroBlock(info, mb);
+    }
+
+    /**
+     * This method returns information about a virtual blockchain.
+     *
+     * @param vbId Identifier of the virtual blockchain.
+     *
+     *
+     */
+    async getVirtualBlockchainInformation(vbId: Hash) {
+        return await this.reader.getVirtualBlockchainState(vbId);
+    }
+
+    /**
+     * This method returns information and hashes of micro-blocks contained in the virtual blockchain.
+     *
+     * @param vbId Identifier of the virtual blockchain.
+     */
+    async getVirtualBlockchain(vbId: Hash) {
+       return this.reader.getVirtualBlockchain(vbId)
+    }
+
+
+
+
 
     /**
      * Retrieves the public key associated with a given account hash.

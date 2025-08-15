@@ -122,6 +122,12 @@ export class MicroBlockNotFoundInVirtualBlockchainAtHeightError extends Blockcha
     }
 }
 
+export class MicroBlockNotFoundError extends BlockchainError {
+    constructor() {
+        super(`MicroBlock not found`);
+    }
+}
+
 export class MicroBlockNotFoundInBlockError extends BlockchainError {
     constructor() {
         super(`MicroBlock not found in block`);

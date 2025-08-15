@@ -11,7 +11,6 @@ import {
     VirtualBlockchainNotFoundError
 } from "../errors/carmentis-error";
 import {SectionType} from "../entities/SectionType";
-import {NodeTranslator} from "../entities/NodeTranslator";
 
 export abstract class VirtualBlockchain<CustomState> {
     currentMicroblock: Microblock | null;

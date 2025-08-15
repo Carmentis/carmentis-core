@@ -14,7 +14,7 @@ import {
 } from "../blockchain/types";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
-import {VirtualBlockchainState} from "../entities/VirtualBlockchainState";
+import {VirtualBlockchainStateWrapper} from "../wrappers/VirtualBlockchainStateWrapper";
 import {KeyedProvider} from "./KeyedProvider";
 
 /**
@@ -163,7 +163,7 @@ export class Provider {
         return content.microblockHashes;
     }
 
-    async getVirtualBlockchainStateInternal(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainState> {
+    async getVirtualBlockchainStateInternal(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainStateWrapper> {
         return await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
     }
 

@@ -1,4 +1,4 @@
-export interface MicroBlockHeaderInterface {
+export interface MicroBlockHeaderDto {
     magicString: string;
     protocolVersion: number;
     height: number;

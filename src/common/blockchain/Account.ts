@@ -54,7 +54,7 @@ export class Account {
      * @private
      */
     async _create(sellerAccount: Uint8Array, buyerPublicKey: PublicSignatureKey, amount: number) {
-        if (!this.provider.isKeyed()) throw "Cannot create an account without a keyed provider."
+        if (!this.provider.isKeyed()) throw new IllegalStateError("Cannot create an account without a keyed provider.")
         await this.vb.setSignatureAlgorithm({
             algorithmId: this.getSignatureAlgorithmId()
         });
@@ -105,7 +105,7 @@ export class Account {
             await this.vb.setSignature(this.getPrivateSignatureKey());
             return await this.vb.publish();
         } else {
-            throw "Cannot publish updates without a keyed provider.";
+            throw new IllegalStateError("Cannot publish updates without a keyed provider.");
         }
 
     }

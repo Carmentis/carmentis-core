@@ -16,6 +16,7 @@ import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
 import {VirtualBlockchainStateWrapper} from "../wrappers/VirtualBlockchainStateWrapper";
 import {KeyedProvider} from "./KeyedProvider";
+import {Hash} from "../entities/Hash";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -188,7 +189,7 @@ export class Provider {
         return headers;
     }
 
-    async getVirtualBlockchainContent(virtualBlockchainId: any) {
+    async getVirtualBlockchainContent(virtualBlockchainId: Uint8Array) {
         let microblockHashes: string | any[] = [];
         let state;
 
@@ -235,7 +236,10 @@ export class Provider {
 
         // query our external provider for state update and new headers, starting at the known height
         const knownHeight = microblockHashes.length;
-        const vbUpdate = await this.externalProvider.getVirtualBlockchainUpdate(virtualBlockchainId, knownHeight);
+        const vbUpdate = await this.externalProvider.getVirtualBlockchainUpdate(
+            virtualBlockchainId,
+            knownHeight
+        );
 
         if(!vbUpdate.exists) {
             return null;
@@ -268,7 +272,10 @@ export class Provider {
             for(let n = 0; n < vbUpdate.headers.length; n++) {
                 await this.internalProvider.setMicroblockVbInformation(
                     check.hashes[n],
-                    BlockchainUtils.encodeMicroblockVbInformation(state.type, virtualBlockchainId)
+                    BlockchainUtils.encodeMicroblockVbInformation(
+                        state.type,
+                        virtualBlockchainId
+                    )
                 );
                 await this.internalProvider.setMicroblockHeader(
                     check.hashes[n],

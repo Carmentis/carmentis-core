@@ -489,7 +489,7 @@ export class BlockchainFacade{
 
     async getBlockInformation(height: number) {
         const answer = await this.reader.getBlockInformation(height);
-        return BlockInformationWrapper.createFromDTO(answer);
+        return new BlockInformationWrapper(height, answer);
     }
 
     async getBlockContent(height: number) {

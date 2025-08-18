@@ -3,11 +3,15 @@ import {Hash} from "../entities/Hash";
 
 export class BlockInformationWrapper {
 
-    static createFromDTO(answer: BlockInformationDTO) {
-        return new BlockInformationWrapper(answer);
-    }
 
-    constructor(private readonly blockInformation: BlockInformationDTO) {}
+    constructor(
+        private readonly height: number,
+        private readonly blockInformation: BlockInformationDTO
+    ) {}
+
+    getBlockHeight() {
+        return this.height;
+    }
 
     getBlockHash() {
         return Hash.from(this.blockInformation.hash);

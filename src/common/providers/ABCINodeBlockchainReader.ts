@@ -118,7 +118,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
     }
 
     async getVirtualBlockchain(vbId: Hash){
-        const content = await this.publicProvider.getVirtualBlockchainContent(vbId);
+        const content = await this.publicProvider.getVirtualBlockchainContent(vbId.toBytes());
         if (content === null || content.state === undefined) throw new NodeError("Invalid response from node")
         const state = new VirtualBlockchainStateWrapper(vbId, content.state);
         const hashes = content.microblockHashes.map(Hash.from);

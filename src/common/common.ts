@@ -67,7 +67,6 @@ export * from "./entities/AccountHistoryView";
 export * from "./entities/AccountState";
 export * from "./entities/Hash";
 export * from "./entities/Height";
-export * from "./entities/MicroBlock";
 export * from "./entities/MicroBlockHeaderDto";
 export * from "./entities/MicroBlockInformation";
 export * from "./entities/Optional";

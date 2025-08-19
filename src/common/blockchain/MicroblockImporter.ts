@@ -220,7 +220,7 @@ export class MicroblockImporter {
         }
         catch(error) {
             // @ts-expect-error TS(2571): Object is of type 'unknown'.
-            this._error = error.toString();
+            this._error = Optional.some(error);
             return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
         }
         return 0;
@@ -236,7 +236,7 @@ export class MicroblockImporter {
         }
         catch(error) {
             // @ts-expect-error TS(2571): Object is of type 'unknown'.
-            this._error = error.toString();
+            this._error = Optional.some(error);
             return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
         }
         return 0;
@@ -259,7 +259,7 @@ export class MicroblockImporter {
         }
         catch(error) {
             // @ts-expect-error TS(2571): Object is of type 'unknown'.
-            this._error = error.toString();
+            this._error = Optional.some(error);
             return CHAIN.MB_STATUS_UNRECOVERABLE_ERROR;
         }
         return 0;

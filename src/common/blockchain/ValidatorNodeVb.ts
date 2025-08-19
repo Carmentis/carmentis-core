@@ -37,9 +37,9 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
     await this.addSection(SECTIONS.VN_NETWORK_INTEGRATION, object);
   }
 
-  async setSignature(privateKey: PrivateSignatureKey) {
+  async setSignature(privateKey: PrivateSignatureKey, enableCallback: boolean = true) {
     const object = this.createSignature(privateKey);
-    await this.addSection(SECTIONS.VN_SIGNATURE, object);
+    await this.addSection(SECTIONS.VN_SIGNATURE, object, enableCallback);
   }
 
   getDescriptionHeight(): number {

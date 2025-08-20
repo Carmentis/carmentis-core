@@ -12,7 +12,7 @@ export const NewBlockEventSchema = z.object({
                     header: z.object({
                         version: z.object({
                             block: z.string(),
-                            app: z.string(),
+                            app: z.string().optional(),
                         }),
                         chain_id: z.string(),
                         height: z.string(),
@@ -68,7 +68,7 @@ export const NewBlockEventSchema = z.object({
                     }),
                 }),
                 result_finalize_block: z.object({
-                    validator_updates: z.union([z.null(), z.any()]),
+                    validator_updates: z.union([z.null(), z.any()]).optional(),
                     app_hash: z.string(),
                 }),
             }),

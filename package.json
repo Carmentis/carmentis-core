@@ -7,10 +7,13 @@
     "clean": "rimraf dist && rimraf types",
     "build:client": "rollup --config rollup.config.client.js",
     "build:server": "rollup --config rollup.config.server.js",
-    "build:common-export": "npx barrelsby --delete -d src/common -e test -e Test -e benchmark -e spec -n common",
+    "build:common-export": "npx barrelsby --delete -d src/common -e test -e Test -e benchmark -e src/bin/carmentis-cli.ts -e node_modules -e spec -n common",
     "build": "npm run build:common-export && tsc && npm run build:client && npm run build:server",
     "docs": "jsdoc -r -c jsdoc.json -t ./node_modules/better-docs -d docs src",
     "gen:code": "tsx src/bin/generate-sections.ts"
+  },
+  "bin": {
+    "carmentis-cli": "dist/bin/carmentis-cli.js"
   },
   "exports": {
     "./client": {
@@ -92,6 +95,7 @@
     "arktype": "^2.1.20",
     "axios": "^1.10.0",
     "barrelsby": "^2.8.1",
+    "clipanion": "^3.2.1",
     "conventional-changelog-eslint": "^6.0.0",
     "level": "^10.0.0",
     "protoc": "^1.1.3",

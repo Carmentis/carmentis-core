@@ -166,7 +166,7 @@ export abstract class VirtualBlockchain<CustomState> {
     /**
      Adds a section to the current microblock.
      */
-    async addSection(type: SectionType, object: any, enableCallback: boolean = true) {
+    async addSection(type: SectionType, object: any) {
         if(!this.currentMicroblock) {
             this.currentMicroblock = new Microblock(this.type);
             const previousHash = this.height ? this.microblockHashes[this.height - 1] : null;
@@ -175,9 +175,7 @@ export abstract class VirtualBlockchain<CustomState> {
         }
 
         const section = this.currentMicroblock.addSection(type, object);
-        if (enableCallback) {
-            await this.processSectionCallback(this.currentMicroblock, section);
-        }
+        await this.processSectionCallback(this.currentMicroblock, section);
     }
 
     /**

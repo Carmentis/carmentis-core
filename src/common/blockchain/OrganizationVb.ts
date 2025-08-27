@@ -72,17 +72,19 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         this.getState().descriptionHeight = microblock.header.height;
     }
 
+
+
     async signatureCallback(microblock: any, section: any) {
         const publicKey = await this.getPublicKey();
 
-        const valid = microblock.verifySignature(
+        const isMicroBlockSignatureValid = microblock.verifySignature(
             publicKey,
             section.object.signature,
             true,
             section.index
         );
 
-        if(!valid) {
+        if(!isMicroBlockSignatureValid) {
             throw `invalid signature`;
         }
 

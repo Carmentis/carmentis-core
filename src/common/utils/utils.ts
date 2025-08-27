@@ -19,7 +19,8 @@ export const Utils = {
   binaryIsEqual,
   binaryCompare,
   intToByteArray,
-  byteArrayToInt
+  byteArrayToInt,
+    getGenesisEpochInTimestamp: getInitialTimestampInSeconds
 };
 
 function numberToHexa(value: number, size?: number) {
@@ -43,6 +44,10 @@ function getNullHash() {
 
 function getTimestampInSeconds() {
   return Math.floor(Date.now() / 1000);
+}
+
+function getInitialTimestampInSeconds() {
+    return 0;
 }
 
 function encodeDay(year: number, month: number, day: number) {
@@ -86,7 +91,7 @@ function binaryToHexa(array: any) {
 function binaryFromHexa(str: any) {
   return new Uint8Array(
     typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ?
-      // @ts-expect-error TS(2531): Object is possibly 'null'.
+      // @ts-ignore
       str.match(/../g).map((s) => parseInt(s, 16))
     :
       []

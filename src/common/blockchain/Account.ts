@@ -26,22 +26,24 @@ export class Account {
         this.gasPrice = CMTSToken.zero();
     }
 
-    async _createGenesis() {
-        if (this.provider.isKeyed()) {
-            await this.vb.setSignatureAlgorithm({
-                algorithmId: this.getSignatureAlgorithmId()
-            });
-
-            const sk = this.provider.getPrivateSignatureKey();
-            const publicKey: PublicSignatureKey = sk.getPublicKey();
-            await this.vb.setPublicKey(publicKey);
-
-            await this.vb.setTokenIssuance({
-                amount: ECO.INITIAL_OFFER
-            });
-        } else {
-            throw "Cannot create a genesis account without a keyed provider."
+    async _createGenesis(genesisPublicKey?: PublicSignatureKey) {
+        // we need a public key to create the genesis account, so we raise an exception if
+        // both the provider and the default public key are undefined
+        const isUnkeyed = !this.provider.isKeyed();
+        const undefinedGenesisPublicKey = genesisPublicKey === undefined;
+        if (isUnkeyed && undefinedGenesisPublicKey) {
+            throw new IllegalStateError("Cannot create a genesis account without a keyed provider or default public key.")
         }
+
+        // we use in priority the default public key, if provided, or the keyed provider's public key
+        const publicKey = genesisPublicKey || this.getPrivateSignatureKey().getPublicKey();
+        await this.vb.setSignatureAlgorithm({
+            algorithmId: this.getSignatureAlgorithmId()
+        });
+        await this.vb.setPublicKey(publicKey);
+        await this.vb.setTokenIssuance({
+            amount: ECO.INITIAL_OFFER
+        });
 
     }
 

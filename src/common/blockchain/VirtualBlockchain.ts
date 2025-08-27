@@ -140,7 +140,6 @@ export abstract class VirtualBlockchain<CustomState> {
         if(height == this.microblockHashes.length + 1 && this.currentMicroblock) {
             return this.currentMicroblock;
         }
-
         const hash = this.microblockHashes[height - 1];
 
         if(!hash) {

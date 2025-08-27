@@ -3,6 +3,7 @@ import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
 import {bytesToHex, bytesToUtf8, hexToBytes} from "@noble/ciphers/utils";
 import {utf8ToBytes} from "@noble/hashes/utils";
 import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
+import {HCVSignatureEncoder} from "./HCVSignatureEncoder";
 
 
 /**
@@ -157,8 +158,9 @@ export class StringSignatureEncoder implements SignatureEncoderInterface<string>
      *
      * @return {StringSignatureEncoder} The default string signature encoder instance.
      */
-    static defaultStringSignatureEncoder(): StringSignatureEncoder {
-        return new StringSignatureEncoder(EncoderFactory.defaultBytesToStringEncoder());
+    static defaultStringSignatureEncoder(): SignatureEncoderInterface<string> {
+        return new HCVSignatureEncoder(EncoderFactory.defaultBytesToStringEncoder());
+        //return new StringSignatureEncoder(EncoderFactory.defaultBytesToStringEncoder());
     }
 
     static defaultBytesSignatureEncoder(): BytesSignatureEncoder {

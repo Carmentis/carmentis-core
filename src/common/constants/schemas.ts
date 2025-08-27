@@ -343,6 +343,8 @@ export const MSG_GET_VALIDATOR_NODE_BY_ADDRESS  = 0x17;
 export const MSG_VALIDATOR_NODE_BY_ADDRESS      = 0x18;
 export const MSG_GET_OBJECT_LIST                = 0x19;
 export const MSG_OBJECT_LIST                    = 0x1A;
+export const MSG_GET_GENESIS_SNAPSHOT           = 0x1B;
+export const MSG_GENESIS_SNAPSHOT               = 0x1C;
 
 export const NODE_MESSAGES: Schema[] = [] as const;
 
@@ -545,6 +547,18 @@ NODE_MESSAGES[MSG_OBJECT_LIST] = {
   definition: [
     { name: 'list', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
   ]
+};
+
+NODE_MESSAGES[MSG_GET_GENESIS_SNAPSHOT] = {
+    label: 'MessageGetGenesisSnapshot',
+    definition: []
+};
+
+NODE_MESSAGES[MSG_GENESIS_SNAPSHOT] = {
+    label: 'MessageGenesisSnapshot',
+    definition: [
+        { name: 'base64EncodedChunks', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_STRING },
+    ]
 };
 
 // ============================================================================================================================ //

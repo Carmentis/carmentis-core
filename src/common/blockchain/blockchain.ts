@@ -42,14 +42,15 @@ export class Blockchain {
   }
 
   /**
-   * Should be used with a keyed provider.
+   * When creating a genesis account, a public key can be provided.
+   * If no public key is provided, the public key of the provider will be used.
    *
    * @returns {Promise<Account>}
    */
-  async createGenesisAccount() {
+  async createGenesisAccount(genesisPublicKey?: PublicSignatureKey) {
     if (!this.provider.isKeyed()) throw 'Cannot create a genesis account without a keyed provider.'
     const account = new Account({ provider: this.provider });
-    await account._createGenesis();
+    await account._createGenesis(genesisPublicKey);
     return account;
   }
 

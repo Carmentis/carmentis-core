@@ -122,6 +122,13 @@ export interface ApplicationLedgerVBState {
 }
 
 /**
+ * Describes the genesis snapshot which contains base64-encoded chunks.
+ */
+export interface GenesisSnapshotDTO {
+    base64EncodedChunks: string[];
+}
+
+/**
  * Provides information on the chain.
  */
 export interface ChainInformationDTO {

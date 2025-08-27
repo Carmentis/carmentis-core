@@ -13,7 +13,7 @@ import {
     MicroBlockBodys,
     MicroblockInformationSchema, MsgVirtualBlockchainState, VirtualBlockchainStateInterface,
     VirtualBlockchainUpdateInterface,
-    ObjectList
+    ObjectList, GenesisSnapshotDTO
 } from "../blockchain/types";
 import axios, {AxiosError} from "axios";
 import {BlockchainReader} from "./BlockchainReader";
@@ -303,5 +303,13 @@ export class NetworkProvider {
         throw new NodeError(parsingResult.error.message);
 
          */
+    }
+
+    async getGenesisSnapshot(): Promise<GenesisSnapshotDTO> {
+        return NetworkProvider.sendABCIQueryToNodeServer(
+            SCHEMAS.MSG_GET_GENESIS_SNAPSHOT,
+            {},
+            this.nodeUrl
+        )
     }
 }

@@ -10,7 +10,7 @@ import {
     BlockContentDTO,
     AccountStateDTO,
     MicroblockInformationSchema,
-    ObjectList
+    ObjectList, GenesisSnapshotDTO
 } from "../blockchain/types";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
@@ -41,6 +41,10 @@ export class Provider {
 
     async getChainInformation() : Promise<ChainInformationDTO> {
         return await this.externalProvider.getChainInformation();
+    }
+
+    async getGenesisSnapshot(): Promise<GenesisSnapshotDTO> {
+        return await this.externalProvider.getGenesisSnapshot();
     }
 
     async getBlockInformation(height: number) : Promise<BlockInformationDTO> {

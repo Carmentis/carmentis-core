@@ -169,7 +169,7 @@ export class MicroblockImporter {
             // check the previous microblock, or get the type from the leading byte of the previousHash field if genesis
             let type;
             let expirationDay = 0;
-            let vbIdentifier = new Uint8Array();
+            let vbIdentifier: Uint8Array = new Uint8Array();
 
             if(this.header.height > 1) {
                 const previousMicroblockInfo = await this.provider.getMicroblockInformation(this.header.previousHash);

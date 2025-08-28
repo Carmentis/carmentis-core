@@ -9,7 +9,7 @@
     "build:server": "rollup --config rollup.config.server.js",
     "build:common-export": "npx barrelsby --delete -d src/common -e test -e Test -e benchmark -e src/bin/carmentis-cli.ts -e node_modules -e spec -n common",
     "build": "npm run build:common-export && tsc && npm run build:client && npm run build:server",
-    "docs": "jsdoc -r -c jsdoc.json -t ./node_modules/better-docs -d docs src",
+    "docs": "jsdoc -r -c jsdoc.json -d docs src",
     "gen:code": "tsx src/bin/generate-sections.ts"
   },
   "bin": {
@@ -68,7 +68,6 @@
     "@types/jest": "^30.0.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
-    "better-docs": "^2.7.3",
     "eslint-plugin-security": "^3.0.1",
     "jest": "^30.0.1",
     "rimraf": "^6.0.1",

@@ -52,6 +52,8 @@ describe('Chain test', () => {
         const genesisCreationContext = new PublicationExecutionContext();
         const genesisAccountId = await blockchain.publishGenesisAccount(genesisCreationContext);
         const genesisAccount = await blockchain.loadAccount(genesisAccountId);
+        expect(genesisAccount).toBeDefined();
+        expect(await genesisAccount.isIssuer()).toBeTruthy();
         console.log("Genesis account created with id ", genesisAccountId.encode());
 
 
@@ -65,6 +67,7 @@ describe('Chain test', () => {
                 .withInitialBuyerAccountAmount(CMTSToken.createCMTS(2));
             const firstAccountId = await blockchain.publishAccount(firstAccountCreationContext);
             const firstAccount = await blockchain.loadAccount(firstAccountId);
+            expect(await firstAccount.isIssuer()).toBeFalsy();
 
             // create a second account
             const secondAccountPrivateKey = MLDSA65PrivateSignatureKey.gen();
@@ -74,6 +77,7 @@ describe('Chain test', () => {
                 .withInitialBuyerAccountAmount(CMTSToken.zero())
             const secondAccountId = await blockchain.publishAccount(secondAccountCreationContext);
             const secondAccount = await blockchain.loadAccount(secondAccountId);
+            expect(await secondAccount.isIssuer()).toBeFalsy();
 
             // proceed to a transfer from the first to the second account
             const transferContext = new AccountTransferPublicationExecutionContext()
@@ -274,7 +278,7 @@ describe('Chain test', () => {
             expect(firstBlockInformation.getBlockHash()).toBeInstanceOf(Hash);
 
             // Testing first block content
-            await expect(async () => await blockchain.getBlockContent(1))
+            await expect(async () => await blockchain.getBlockContent(4))
                 .rejects
                 .toThrow(EmptyBlockError);
 

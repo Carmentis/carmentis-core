@@ -9,6 +9,7 @@ import {Provider} from "../providers/Provider";
 import {CMTSToken} from "../economics/currencies/token";
 import {IllegalParameterError, IllegalStateError} from "../errors/carmentis-error";
 import {Hash} from "../entities/Hash";
+import {SectionType} from "../entities/SectionType";
 
 /**
  * Represents an Account that interacts with a provider for managing cryptographic operations
@@ -130,5 +131,16 @@ export class Account {
 
     getVirtualBlockchainId() {
         return Hash.from(this.vb.identifier);
+    }
+
+    async isIssuer() {
+        const firstBlock = await this.vb.getFirstMicroBlock();
+        try {
+            const foundSection = firstBlock.getSection(section => section.type === SectionType.ACCOUNT_TOKEN_ISSUANCE);
+            return true;
+        } catch (e) {
+            return false;
+        }
+
     }
 }

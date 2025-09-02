@@ -19,4 +19,8 @@ export class AccountWrapper {
     getPublicKey() : PublicSignatureKey {
         return this.publicKey
     }
+
+    async isIssuer(): Promise<boolean> {
+        return await this.account.isIssuer();
+    }
 }

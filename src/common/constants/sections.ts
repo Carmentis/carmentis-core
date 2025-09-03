@@ -85,8 +85,9 @@ ACCOUNT[ACCOUNT_SIGNATURE] = {
 export const VN_SIG_ALGORITHM       = 0;
 export const VN_DECLARATION         = 1;
 export const VN_DESCRIPTION         = 2;
-export const VN_NETWORK_INTEGRATION = 3;
-export const VN_SIGNATURE           = 4;
+export const VN_RPC_ENDPOINT        = 3;
+export const VN_NETWORK_INTEGRATION = 4;
+export const VN_SIGNATURE           = 5;
 
 const VALIDATOR_NODE: Schema[] = [] as const;
 
@@ -109,6 +110,13 @@ VALIDATOR_NODE[VN_DESCRIPTION] = {
   definition: [
     { name: "cometPublicKeyType", type: DATA.TYPE_STRING },
     { name: "cometPublicKey",     type: DATA.TYPE_STRING }
+  ]
+};
+
+VALIDATOR_NODE[VN_RPC_ENDPOINT] = {
+  label: "VN_RPC_ENDPOINT",
+  definition: [
+    { name: "rpcEndpoint", type: DATA.TYPE_STRING }
   ]
 };
 

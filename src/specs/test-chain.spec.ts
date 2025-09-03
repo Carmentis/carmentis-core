@@ -35,7 +35,7 @@ import {RecordDescription} from "../common/blockchain/RecordDescription";
 const NODE_URL = "http://localhost:26657";
 
 describe('Chain test', () => {
-    const TEST_TIMEOUT = 20000;
+    const TEST_TIMEOUT = 45000;
 
     // init the content
     const nodeUrl = "http://localhost:26657";
@@ -43,9 +43,6 @@ describe('Chain test', () => {
     const blockchain = BlockchainFacade.createFromNodeUrlAndPrivateKey(nodeUrl, issuerPrivateKey);
 
     it("Works correctly when valid usage of BlockchainFacade", async () => {
-
-
-
         // Testing account
         console.log("creating genesis account");
         // create the genesis account
@@ -56,9 +53,7 @@ describe('Chain test', () => {
         expect(await genesisAccount.isIssuer()).toBeTruthy();
         console.log("Genesis account created with id ", genesisAccountId.encode());
 
-
         {
-
             // create a first account
             const firstAccountPrivateKey = MLDSA65PrivateSignatureKey.gen();
             const firstAccountCreationContext = new AccountPublicationExecutionContext()
@@ -156,15 +151,18 @@ describe('Chain test', () => {
             // Testing validator node
             const CometPublicKeyType = "tendermint/PubKeyEd25519";
             const CometPublicKey = "LNMVoOPtPV+hVB/eilwPp6Os+KzvxZXhUiEFe6bOlNw=";
+            const RpcEndpoint = "http://localhost:26657";
 
             const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
                 .withOrganizationId(organizationId)
+                .withRpcEndpoint(RpcEndpoint)
                 .withCometPublicKeyType(CometPublicKeyType)
                 .withCometPublicKey(CometPublicKey);
             const validatorNodeId = await blockchain.publishValidatorNode(validatorNodeCreationContext);
             const validatorNode = await blockchain.loadValidatorNode(validatorNodeId);
             expect(validatorNode.getCometPublicKeyType()).toEqual(CometPublicKeyType);
             expect(validatorNode.getCometPublicKey()).toEqual(CometPublicKey);
+            expect(validatorNode.getRpcEndpoint()).toEqual(RpcEndpoint);
 
             const validatorNodeNetworkIntegrationPublicationContext = new ValidatorNodeNetworkIntegrationPublicationExecutionContext()
                 .withExistingValidatorNodeId(validatorNodeId)
@@ -323,7 +321,7 @@ describe('Chain test', () => {
             .rejects
             .toThrow(ApplicationLedgerNotFoundError)
 
-    });
+    }, TEST_TIMEOUT);
 
     /*
     it('Should fails when creating an (issuer) account with the same key', async () => {

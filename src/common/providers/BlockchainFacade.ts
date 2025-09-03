@@ -364,12 +364,17 @@ export class BlockchainFacade{
         const data = context.build();
         const isUpdatingValidatorNode = data.validatorNodeId.isSome();
         let validatorNode;
+
         if (isUpdatingValidatorNode) {
             validatorNode = await writer.loadValidatorNode(data.validatorNodeId.unwrap());
             const description = await validatorNode.getDescription();
             await validatorNode.setDescription({
                 cometPublicKeyType: data.cometPublicKeyType || description.cometPublicKeyType,
                 cometPublicKey: data.cometPublicKey || description.cometPublicKey,
+            });
+            const rpcEndpoint = await validatorNode.getRpcEndpoint();
+            await validatorNode.setRpcEndpoint({
+                rpcEndpoint: data.rpcEndpoint || rpcEndpoint.rpcEndpoint,
             });
         } else {
             const organizationId = data.organizationId.unwrapOrThrow(
@@ -379,6 +384,9 @@ export class BlockchainFacade{
             await validatorNode.setDescription({
                 cometPublicKeyType: data.cometPublicKeyType,
                 cometPublicKey: data.cometPublicKey
+            });
+            await validatorNode.setRpcEndpoint({
+                rpcEndpoint: data.rpcEndpoint
             });
         }
         validatorNode.setGasPrice(context.getGasPrice());

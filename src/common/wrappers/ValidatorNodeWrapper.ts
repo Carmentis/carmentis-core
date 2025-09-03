@@ -1,6 +1,6 @@
 import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {Hash} from "../entities/Hash";
-import {ValidatorNodeDescription, ValidatorNodeNetworkIntegration} from "../blockchain/types";
+import {ValidatorNodeDescription, ValidatorNodeRpcEndpoint, ValidatorNodeNetworkIntegration} from "../blockchain/types";
 import {CometBFTPublicKey} from "../cometbft/CometBFTPublicKey";
 
 export class ValidatorNodeWrapper {
@@ -8,13 +8,15 @@ export class ValidatorNodeWrapper {
         const declaration = await validatorNode.getDeclaration();
         const organizationId = Hash.from(declaration.organizationId);
         const description = await validatorNode.getDescription();
+        const rpcEndpoint = await validatorNode.getRpcEndpoint();
         const networkIntegration = await validatorNode.getNetworkIntegration();
-        return new ValidatorNodeWrapper(organizationId, description, networkIntegration);
+        return new ValidatorNodeWrapper(organizationId, description, rpcEndpoint, networkIntegration);
     }
 
     private constructor(
         private readonly organizationId: Hash,
         private readonly description: ValidatorNodeDescription,
+        private readonly rpcEndpoint: ValidatorNodeRpcEndpoint,
         private readonly networkIntegration: ValidatorNodeNetworkIntegration
     ) {}
 
@@ -34,6 +36,15 @@ export class ValidatorNodeWrapper {
      */
     getVotingPower(): number {
         return this.networkIntegration.votingPower;
+    }
+
+    /**
+     * Retrieves the RPC endpoint of the validator node
+     *
+     * @return {number} The RPC endpoint of the validator node.
+     */
+    getRpcEndpoint(): string {
+        return this.rpcEndpoint.rpcEndpoint;
     }
 
     /**

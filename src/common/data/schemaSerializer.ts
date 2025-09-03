@@ -1,6 +1,7 @@
 import { DATA, SCHEMAS } from "../constants/constants";
 import { WriteStream, ReadStream } from "./byteStreams";
 import { TypeManager, TypeChecker } from "./types";
+import { Utils } from "../utils/utils";
 import {CarmentisError, TypeCheckingFailureError} from "../errors/carmentis-error";
 
 export class SchemaSerializer<T = any> {
@@ -117,6 +118,7 @@ export class SchemaUnserializer<T = object> {
     const size = stream.length;
 
     if(pointer != size) {
+      console.error(Utils.binaryToHexa(stream));
       throw new CarmentisError(`Invalid stream length (decoded ${pointer} bytes, actual length is ${size} bytes)`);
     }
 

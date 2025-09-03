@@ -7,6 +7,7 @@ export class ValidatorNodePublicationExecutionContext extends PublicationExecuti
     private organizationId: Optional<Hash> = Optional.none();
     private cometPublicKeyType: string = "";
     private cometPublicKey: string = "";
+    private rpcEndpoint: string = "";
 
     withCometPublicKeyType(cometPublicKeyType: string): ValidatorNodePublicationExecutionContext {
         this.cometPublicKeyType = cometPublicKeyType;
@@ -23,10 +24,16 @@ export class ValidatorNodePublicationExecutionContext extends PublicationExecuti
         return this;
     }
 
+    withRpcEndpoint(rpcEndpoint: string) {
+        this.rpcEndpoint = rpcEndpoint;
+        return this;
+    }
+
     build() {
         return {
             organizationId: this.organizationId,
             validatorNodeId: this.validatorNodeId,
+            rpcEndpoint: this.rpcEndpoint,
             cometPublicKeyType: this.cometPublicKeyType,
             cometPublicKey: this.cometPublicKey
         };

@@ -5,7 +5,7 @@ import {StructureChecker} from "./StructureChecker";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
-import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeNetworkIntegration, ValidatorNodeVBState} from "./types";
+import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeRpcEndpoint, ValidatorNodeNetworkIntegration, ValidatorNodeVBState} from "./types";
 
 export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
   constructor(provider: Provider) {
@@ -14,6 +14,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
     this.registerSectionCallback(SECTIONS.VN_SIG_ALGORITHM, this.signatureAlgorithmCallback);
     this.registerSectionCallback(SECTIONS.VN_DECLARATION, this.declarationCallback);
     this.registerSectionCallback(SECTIONS.VN_DESCRIPTION, this.descriptionCallback);
+    this.registerSectionCallback(SECTIONS.VN_RPC_ENDPOINT, this.rpcEndpointCallback);
     this.registerSectionCallback(SECTIONS.VN_NETWORK_INTEGRATION, this.networkIntegrationCallback);
     this.registerSectionCallback(SECTIONS.VN_SIGNATURE, this.signatureCallback);
   }
@@ -33,6 +34,10 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
     await this.addSection(SECTIONS.VN_DESCRIPTION, object);
   }
 
+  async setRpcEndpoint(object: ValidatorNodeRpcEndpoint) {
+    await this.addSection(SECTIONS.VN_RPC_ENDPOINT, object);
+  }
+
   async setNetworkIntegration(object: ValidatorNodeNetworkIntegration) {
     await this.addSection(SECTIONS.VN_NETWORK_INTEGRATION, object);
   }
@@ -44,6 +49,10 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
 
   getDescriptionHeight(): number {
     return this.getState().descriptionHeight;
+  }
+
+  getRpcEndpointHeight(): number {
+    return this.getState().rpcEndpointHeight;
   }
 
   getNetworkIntegrationHeight(): number {
@@ -63,6 +72,10 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
 
   async descriptionCallback(microblock: any, section: any) {
     this.getState().descriptionHeight = microblock.header.height;
+  }
+
+  async rpcEndpointCallback(microblock: any, section: any) {
+    this.getState().rpcEndpointHeight = microblock.header.height;
   }
 
   async networkIntegrationCallback(microblock: any, section: any) {
@@ -85,6 +98,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
   private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
   private static UNDEFINED_ORGANIZATION_ID = Utils.getNullHash();
   private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
+  private static UNDEFINED_RPC_ENDPOINT_HEIGHT = 0;
   private static UNDEFINED_NETWORK_INTEGRATION_HEIGHT = 0;
 
   getInitialState(): ValidatorNodeVBState {
@@ -92,6 +106,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
       signatureAlgorithmId: ValidatorNodeVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
       organizationId: ValidatorNodeVb.UNDEFINED_ORGANIZATION_ID,
       descriptionHeight: ValidatorNodeVb.UNDEFINED_DESCRIPTION_HEIGHT,
+      rpcEndpointHeight: ValidatorNodeVb.UNDEFINED_RPC_ENDPOINT_HEIGHT,
       networkIntegrationHeight: ValidatorNodeVb.UNDEFINED_NETWORK_INTEGRATION_HEIGHT
     }
   }
@@ -111,14 +126,16 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
       SECTIONS.VN_DECLARATION
     );
     checker.group(
-      SECTIONS.ONE,
+      SECTIONS.AT_LEAST_ONE,
       checker.isFirstBlock() ? 
         [
-          [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ]
+          [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ],
+          [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_RPC_ENDPOINT ]
         ]
       :
         [
           [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ],
+          [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_RPC_ENDPOINT ],
           [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_NETWORK_INTEGRATION ]
         ]
     );

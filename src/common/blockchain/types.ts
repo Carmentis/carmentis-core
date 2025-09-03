@@ -72,6 +72,10 @@ export interface ValidatorNodeDescription {
     cometPublicKey: string
 }
 
+export interface ValidatorNodeRpcEndpoint {
+    rpcEndpoint: string
+}
+
 export interface ValidatorNodeNetworkIntegration {
     votingPower: number
 }
@@ -90,6 +94,7 @@ export interface ValidatorNodeVBState {
     signatureAlgorithmId: number;
     organizationId: Uint8Array;
     descriptionHeight: number;
+    rpcEndpointHeight: number;
     networkIntegrationHeight: number;
 }
 

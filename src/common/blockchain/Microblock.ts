@@ -61,17 +61,17 @@ export class Microblock {
             throw `previous hash not provided`;
         }
 
-    this.header = {
-        magicString: CHAIN.MAGIC_STRING,
-        protocolVersion: CHAIN.PROTOCOL_VERSION,
-        height: height,
-        previousHash: previousHash,
-        timestamp: Utils.getTimestampInSeconds(),
-        gas: 0,
-        gasPrice: 0,
-        bodyHash: Utils.getNullHash()
-    };
-  }
+        this.header = {
+            magicString: CHAIN.MAGIC_STRING,
+            protocolVersion: CHAIN.PROTOCOL_VERSION,
+            height: height,
+            previousHash: previousHash,
+            timestamp: Utils.getTimestampInSeconds(),
+            gas: 0,
+            gasPrice: 0,
+            bodyHash: Utils.getNullHash()
+        };
+    }
 
     /**
      Updates the timestamp.
@@ -312,10 +312,7 @@ export class Microblock {
      */
     serialize() {
         const body = {
-            body: this.sections.map(({
-                                         type,
-                                         data
-                                     }: any) => ({type, data}))
+            body: this.sections.map(({ type, data }: any) => ({type, data}))
         };
 
         this.setGasData(true);
@@ -336,9 +333,13 @@ export class Microblock {
     }
 
     computeGas(extraBytes = 0) {
-        const totalSize = this.sections.reduce((total: any, {
-            data
-        }: any) => total + data.length, extraBytes);
+        const totalSize = this.sections.reduce((total: any, { data }: any) =>
+            total + data.length,
+            extraBytes
+        );
         return ECO.FIXED_GAS_FEE + ECO.GAS_PER_BYTE * totalSize;
+    }
+
+    computeRetentionPeriod(mbTimestamp: number, expirationDay: number) {
     }
 }

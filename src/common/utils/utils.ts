@@ -20,17 +20,26 @@ export const Utils = {
   binaryCompare,
   intToByteArray,
   byteArrayToInt,
-    getGenesisEpochInTimestamp: getInitialTimestampInSeconds
+  getGenesisEpochInTimestamp: getInitialTimestampInSeconds
 };
 
+/**
+  Converts an integer to a hexadecimal string, padded with 0's to reach a given size
+*/
 function numberToHexa(value: number, size?: number) {
   return value.toString(16).toUpperCase().padStart(size || 1, "0");
 }
 
+/**
+  Truncates a string to a given size and appends "(...)" if it's longer
+*/
 function truncateString(str: string, size: number) {
   return str.slice(0, size) + (str.length > size ? "(...)" : "");
 }
 
+/**
+  Truncates a string on both ends and appends "(...)" in the middle if it's longer
+*/
 function truncateStringMiddle(str: string, leadingSize: number, trailingSize: number) {
   if(str.length <= leadingSize + trailingSize) {
     return str;
@@ -38,22 +47,37 @@ function truncateStringMiddle(str: string, leadingSize: number, trailingSize: nu
   return str.slice(0, leadingSize) + "(...)" + str.slice(str.length - trailingSize);
 }
 
+/**
+  Returns a null hash, i.e. an Uint8Array with 32 zero-bytes
+*/
 function getNullHash() {
   return new Uint8Array(32);
 }
 
+/**
+  Returns a timestamp in seconds
+*/
 function getTimestampInSeconds() {
   return Math.floor(Date.now() / 1000);
 }
 
+/**
+  Returns an initial timestamp set to 0
+*/
 function getInitialTimestampInSeconds() {
-    return 0;
+  return 0;
 }
 
+/**
+  Encodes a day given as (year, month, day) to a 32-bit value
+*/
 function encodeDay(year: number, month: number, day: number) {
   return year << 9 | month << 5 | day;
 }
 
+/**
+  Converts a 32-bit encoded day to [ year, month, day ]
+*/
 function decodeDay(value: number) {
   const day = value & 0x1F;
   const month = value >> 5 & 0xF;
@@ -62,6 +86,9 @@ function decodeDay(value: number) {
   return [ year, month, day ];
 }
 
+/**
+  Encodes a day given as a Date to a 32-bit value
+*/
 function dateToDay(date: Date) {
   const day = date.getDate();
   const month = date.getMonth() + 1;
@@ -70,16 +97,25 @@ function dateToDay(date: Date) {
   return encodeDay(year, month, day);
 }
 
+/**
+  Converts a 32-bit encoded day to an UTC Date
+*/
 function dayToDate(value: number) {
   const [ year, month, day ] = decodeDay(value);
 
-  return new Date(year, month - 1, day);
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
+/**
+  Converts a buffer to an Uint8Array
+*/
 function bufferToUint8Array(b: any) {
   return new Uint8Array(b.buffer, b.byteOffset, b.byteLength / Uint8Array.BYTES_PER_ELEMENT);
 }
 
+/**
+  converts an Uint8Array to a hexadecimal string
+*/
 function binaryToHexa(array: any) {
   if(!(array instanceof Uint8Array)) {
     return "";
@@ -88,6 +124,9 @@ function binaryToHexa(array: any) {
   return [...array].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("");
 }
 
+/**
+  Converts a hexadecimal string to an Uint8Array
+*/
 function binaryFromHexa(str: any) {
   return new Uint8Array(
     typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ?
@@ -98,6 +137,9 @@ function binaryFromHexa(str: any) {
   );
 }
 
+/**
+  Builds an Uint8Array from a list made of integers, strings and Uint8Array's
+*/
 function binaryFrom(...arg: any[]) {
   const list = Array(arg.length);
   let ndx = 0;
@@ -134,6 +176,9 @@ function binaryFrom(...arg: any[]) {
   return arr;
 }
 
+/**
+  Tests whether two Uint8Array's are equal
+*/
 function binaryIsEqual(a: any, b: any) {
   if(!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
     return false;
@@ -147,6 +192,9 @@ function binaryIsEqual(a: any, b: any) {
   return true;
 }
 
+/**
+  Compares two Uint8Array's and returns 0 for 'equal', -1 for 'less than', 1 for 'greater than'
+*/
 function binaryCompare(a: any, b: any) {
   if(!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
     throw "cannot compare";
@@ -163,6 +211,9 @@ function binaryCompare(a: any, b: any) {
   return 0;
 }
 
+/**
+  Converts an integer to an array of bytes, with an optional minimum number of bytes
+*/
 function intToByteArray(n: number, minSize: number = 1) {
   const arr: number[] = [];
 
@@ -178,6 +229,9 @@ function intToByteArray(n: number, minSize: number = 1) {
   return arr.reverse();
 }
 
+/**
+  Converts an array of bytes to an integer
+*/
 function byteArrayToInt(array: number[]) {
   return array.reduce((t, n) => t * 0x100 + n, 0);
 }

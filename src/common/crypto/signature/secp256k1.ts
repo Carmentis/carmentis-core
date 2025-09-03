@@ -91,7 +91,7 @@ export class Secp256k1PrivateSignatureKey extends BasePrivateSignatureKey {
      * @return {Secp256k1PrivateSignatureKey} The generated Secp256k1 private signature key.
      */
     static genFromSeed(seed: Uint8Array) {
-        return new Secp256k1PrivateSignatureKey(etc.hashToPrivateKey(seed))
+        return new Secp256k1PrivateSignatureKey(etc.bytesToHex(seed))
     }
 
     getPublicKey(): PublicSignatureKey {

@@ -26,6 +26,11 @@ export class ApplicationPublicationExecutionContext extends PublicationExecution
         return this;
     }
 
+    withWebsite(website: string): ApplicationPublicationExecutionContext {
+        this.homepageUrl = website;
+        return this;
+    }
+
     withApplicationDescription(applicationDescription: string): ApplicationPublicationExecutionContext {
         this.applicationDescription = applicationDescription;
         return this;

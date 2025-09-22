@@ -29,13 +29,13 @@ export class ABCINodeBlockchainWriter implements BlockchainWriter {
         this.defaultKeyedProvider = ProviderFactory.createKeyedProviderExternalProvider(defaultPrivateKey, nodeUrl);
     }
 
-    async createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string): Promise<any> {
+    async createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string, gasPrice: CMTSToken): Promise<any> {
         const provider = ProviderFactory.createKeyedProviderExternalProvider(sellerPrivateKey, this.nodeUrl);
         const sellerPublicKey = sellerPrivateKey.getPublicKey();
         const sellerAccountId = await provider.getAccountByPublicKey(sellerPublicKey);
         const sellerAccount = new Account({ provider: provider });
         await sellerAccount._load(sellerAccountId.accountHash);
-
+        sellerAccount.setGasPrice(gasPrice);
         await sellerAccount.transfer({
             account: buyerAccount.toBytes(),
             amount: amount.getAmountAsAtomic(),

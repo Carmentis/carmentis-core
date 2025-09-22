@@ -425,12 +425,14 @@ export class BlockchainFacade{
         const data = context.build();
         const buyerAccount = data.buyerAccount;
         const buyerAccountHash = buyerAccount instanceof Hash ? buyerAccount : await this.reader.getAccountByPublicKey(buyerAccount)
+        const gasPrice = context.getGasPrice();
         return writer.createTokenTransfer(
             data.sellerPrivateKey,
             buyerAccountHash,
             data.amount,
             data.publicReference,
             data.privateReference,
+            gasPrice,
         );
     }
 

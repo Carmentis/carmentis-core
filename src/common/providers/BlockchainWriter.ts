@@ -27,5 +27,5 @@ export interface BlockchainWriter {
     setMicroblockBody(...args: any[]): Promise<any>;
     setVirtualBlockchainState(...args: any[]): Promise<any>;
      */
-    createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string): Promise<any>;
+    createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string, gasPrice: CMTSToken): Promise<any>;
 }

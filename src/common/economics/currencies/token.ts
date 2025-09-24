@@ -17,12 +17,12 @@ import {Currency} from "./currency";
  * This enum can be used for token denomination conversions and comparisons.
  */
 export enum TokenUnit {
-    TOKEN = 100_000,       // unité entière
-    MILLI_TOKEN = 10_000,  // milli-token = 0.1
-    CENTI_TOKEN = 1_000,   // centi-token = 0.01
-    DECI_TOKEN = 100,      // deci-token = 0.001
-    MICRO_TOKEN = 10,      // micro-token = 0.0001
-    ATOMIC = 1,              // plus petite unité, ex. "atomic unit"
+    TOKEN = 100_000,       // 1 CMTS
+    DECI_TOKEN = 10_000,   // deci-token = 0.1 CMTS
+    CENTI_TOKEN = 1_000,   // centi-token = 0.01 CMTS
+    MILLI_TOKEN = 100,     // milli-token = 0.001 CMTS
+    MICRO_TOKEN = 10,      // micro-token = 0.0001 CMTS (FIXME: misleading name)
+    ATOMIC = 1,            // atomic unit = 0.00001 CMTS (smallest token unit)
 }
 
 /**
@@ -39,14 +39,13 @@ export enum TokenUnit {
  * Typically used in contexts where token structure or labeling standardization is required.
  */
 export enum TokenUnitLabel {
-    TOKEN = 'CMTS',          // 100_000
+    TOKEN = 'CMTS',          // 100_000 (1 CMTS)
     DECI_TOKEN = 'dCMTS',    // 10_000 (0.1 CMTS)
     CENTI_TOKEN = 'cCMTS',   // 1_000 (0.01 CMTS)
     MILLI_TOKEN = 'mCMTS',   // 100 (0.001 CMTS)
-    MICRO_TOKEN = 'μCMTS',   // 10 (0.0001 CMTS)
-    ATOMIC = 'aCMTS',           // 1 (plus petite unité, non affichée en CMTS)
+    MICRO_TOKEN = 'μCMTS',   // 10 (0.0001 CMTS) (FIXME: misleading name)
+    ATOMIC = 'aCMTS',        // 1 (0.00001 CMTS)
 }
-
 
 
 /**

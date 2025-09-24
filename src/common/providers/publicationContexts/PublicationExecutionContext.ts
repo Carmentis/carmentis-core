@@ -2,7 +2,7 @@ import {CMTSToken} from "../../economics/currencies/token";
 import {Utils} from "../../utils/utils";
 
 export class PublicationExecutionContext {
-    private static defaultGasPrice: CMTSToken = CMTSToken.createCMTS(1);
+    private static defaultGasPrice: CMTSToken = CMTSToken.createDeciToken(1);
     private static defaultExpirationDay: 0;
     private gasPrice: CMTSToken;
     private expirationDay: number;

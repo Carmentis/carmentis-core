@@ -148,10 +148,6 @@ export class BlockchainFacade{
        return this.reader.getVirtualBlockchain(vbId)
     }
 
-
-
-
-
     /**
      * Retrieves the public key associated with a given account hash.
      *
@@ -413,11 +409,11 @@ export class BlockchainFacade{
      * @param {RecordPublicationExecutionContext<T>} context - The context containing the necessary data to build and publish the record.
      * @return {Promise<Hash>} A promise that resolves the hash of the published micro-block.
      */
-    async publishRecord<T = any>(context: RecordPublicationExecutionContext<T>) {
+    async publishRecord<T = any>(context: RecordPublicationExecutionContext<T>, waitForAnchoring = true) {
         const writer = this.getWriter();
         const applicationLedger = await writer.createApplicationLedgerFromJson(context.build(), context.getExpirationDay());
         applicationLedger.setGasPrice(context.getGasPrice());
-        return await applicationLedger.publishUpdates();
+        return await applicationLedger.publishUpdates(waitForAnchoring);
     }
 
     async publishTokenTransfer(context: AccountTransferPublicationExecutionContext) {

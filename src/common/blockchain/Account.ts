@@ -102,11 +102,11 @@ export class Account {
         this.gasPrice = gasPrice;
     }
 
-    async publishUpdates() {
+    async publishUpdates(waitForAnchoring = true) {
         if (this.provider.isKeyed()) {
             this.vb.setGasPrice(this.gasPrice);
             await this.vb.setSignature(this.getPrivateSignatureKey());
-            return await this.vb.publish();
+            return await this.vb.publish(waitForAnchoring);
         } else {
             throw new IllegalStateError("Cannot publish updates without a keyed provider.");
         }

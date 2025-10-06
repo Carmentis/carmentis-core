@@ -102,11 +102,11 @@ export class ValidatorNode {
     return await this.vb.getOrganizationPublicKey();
   }
 
-  async publishUpdates() {
+  async publishUpdates(waitForAnchoring = true) {
     if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.'
     const privateKey = this.provider.getPrivateSignatureKey();
     this.vb.setGasPrice(this.gasPrice);
     await this.vb.setSignature(privateKey);
-    return await this.vb.publish();
+    return await this.vb.publish(waitForAnchoring);
   }
 }

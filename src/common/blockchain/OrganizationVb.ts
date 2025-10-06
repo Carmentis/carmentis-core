@@ -72,8 +72,6 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         this.getState().descriptionHeight = microblock.header.height;
     }
 
-
-
     async signatureCallback(microblock: any, section: any) {
         const publicKey = await this.getPublicKey();
 

@@ -149,27 +149,29 @@ describe('Chain test', () => {
             expect(updatedOrganization.getWebsite()).toEqual("https://www.carmentis.io");
 
             // Testing validator node
-            const CometPublicKeyType = "tendermint/PubKeyEd25519";
-            const CometPublicKey = "a5XTiHqlMwWLDpiBCcSk019gEPx9HAuICx0eouEVpaE=";
-            const RpcEndpoint = "http://localhost:26667";
+            {
+                const CometPublicKeyType = "tendermint/PubKeyEd25519";
+                const CometPublicKey = "a5XTiHqlMwWLDpiBCcSk019gEPx9HAuICx0eouEVpaE=";
+                const RpcEndpoint = "http://localhost:26667";
 
-            const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
-                .withOrganizationId(organizationId)
-                .withRpcEndpoint(RpcEndpoint)
-                .withCometPublicKeyType(CometPublicKeyType)
-                .withCometPublicKey(CometPublicKey);
-            const validatorNodeId = await blockchain.publishValidatorNode(validatorNodeCreationContext);
-            const validatorNode = await blockchain.loadValidatorNode(validatorNodeId);
-            expect(validatorNode.getCometPublicKeyType()).toEqual(CometPublicKeyType);
-            expect(validatorNode.getCometPublicKey()).toEqual(CometPublicKey);
-            expect(validatorNode.getRpcEndpoint()).toEqual(RpcEndpoint);
+                const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
+                    .withOrganizationId(organizationId)
+                    .withRpcEndpoint(RpcEndpoint)
+                    .withCometPublicKeyType(CometPublicKeyType)
+                    .withCometPublicKey(CometPublicKey);
+                const validatorNodeId = await blockchain.publishValidatorNode(validatorNodeCreationContext);
+                const validatorNode = await blockchain.loadValidatorNode(validatorNodeId);
+                expect(validatorNode.getCometPublicKeyType()).toEqual(CometPublicKeyType);
+                expect(validatorNode.getCometPublicKey()).toEqual(CometPublicKey);
+                expect(validatorNode.getRpcEndpoint()).toEqual(RpcEndpoint);
 
-            const validatorNodeNetworkIntegrationPublicationContext = new ValidatorNodeNetworkIntegrationPublicationExecutionContext()
-                .withExistingValidatorNodeId(validatorNodeId)
-                .withVotingPower(10);
-            await blockchain.publishValidatorNodeNetworkIntegration(validatorNodeNetworkIntegrationPublicationContext);
-            const reloadedValidatorNode = await blockchain.loadValidatorNode(validatorNodeId);
-            expect(reloadedValidatorNode.getVotingPower()).toEqual(10);
+                const validatorNodeNetworkIntegrationPublicationContext = new ValidatorNodeNetworkIntegrationPublicationExecutionContext()
+                    .withExistingValidatorNodeId(validatorNodeId)
+                    .withVotingPower(10);
+                await blockchain.publishValidatorNodeNetworkIntegration(validatorNodeNetworkIntegrationPublicationContext);
+                const reloadedValidatorNode = await blockchain.loadValidatorNode(validatorNodeId);
+                expect(reloadedValidatorNode.getVotingPower()).toEqual(10);
+            }
 /*
             // Testing application
             const applicationCreationContext = new ApplicationPublicationExecutionContext()

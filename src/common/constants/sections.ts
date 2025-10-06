@@ -228,6 +228,7 @@ APPLICATION[APP_SIGNATURE] = {
 //  Application ledger                                                                                                          //
 // ============================================================================================================================ //
 export const APP_LEDGER_SIG_ALGORITHM        = SectionType.APP_LEDGER_SIG_ALGORITHM;
+export const APP_LEDGER_PKE_ALGORITHM        = SectionType.APP_LEDGER_PKE_ALGORITHM;
 export const APP_LEDGER_DECLARATION          = SectionType.APP_LEDGER_DECLARATION;
 export const APP_LEDGER_ACTOR_CREATION       = SectionType.APP_LEDGER_ACTOR_CREATION;
 export const APP_LEDGER_CHANNEL_CREATION     = SectionType.APP_LEDGER_CHANNEL_CREATION;
@@ -245,6 +246,13 @@ const APP_LEDGER: Schema[] = [] as const;
 
 APP_LEDGER[APP_LEDGER_SIG_ALGORITHM] = {
   label: "APP_LEDGER_SIG_ALGORITHM",
+  definition: [
+    { name: "algorithmId", type: DATA.TYPE_UINT8 }
+  ]
+};
+
+APP_LEDGER[APP_LEDGER_PKE_ALGORITHM] = {
+  label: "APP_LEDGER_PKE_ALGORITHM",
   definition: [
     { name: "algorithmId", type: DATA.TYPE_UINT8 }
   ]

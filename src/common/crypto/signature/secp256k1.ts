@@ -52,8 +52,6 @@ export class Secp256k1PublicSignatureKey extends BasePublicSignatureKey {
     getScheme(): SignatureScheme {
         return new Secp256k1SignatureScheme();
     }
-
-
 }
 
 /**

@@ -243,6 +243,7 @@ export class ApplicationLedger {
         const privateChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA);
         const ir = this.vb.getIntermediateRepresentationInstance();
 
+
         // @ts-expect-error TS(2339): Property 'merkleRootHash' does not exist on type '... Remove this comment to see the full error message'
         const list: { channelId: number, data: object, merkleRootHash?: string } = [
             ...publicChannelDataSections.map((section: Section<{ channelId: number, data: object }>) => {
@@ -293,15 +294,15 @@ export class ApplicationLedger {
         return this.vb.height;
     }
 
-    async publishUpdates() {
+    async publishUpdates(waitForAnchoring : boolean = true) {
         if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.'
         const privateKey = this.provider.getPrivateSignatureKey();
         this.vb.setGasPrice(this.gasPrice);
         await this.vb.signAsAuthor(privateKey);
-        return await this.vb.publish();
+        return await this.vb.publish(waitForAnchoring);
     }
 
-    // add methods that needs to be implemented
+
     /**
      * Returns the list of created actors (name of the actor and its public key, if any).
      * @param height

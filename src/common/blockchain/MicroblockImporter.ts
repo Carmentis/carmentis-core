@@ -137,14 +137,14 @@ export class MicroblockImporter {
         // check if too far in the past
         const isTooFarInPast = this.header.timestamp < currentTimestamp - CHAIN.MAX_MICROBLOCK_PAST_DELAY;
         if (isTooFarInPast) {
-            this.setErrorFromErrorMessage(`timestamp is too far in the past`);
+            this.setErrorFromErrorMessage(`timestamp is too far in the past (header:${this.header.timestamp} / current:${currentTimestamp})`);
             return CHAIN.MB_STATUS_TIMESTAMP_ERROR;
         }
 
         // check if too far in the future
         const isTooFarInFuture = this.header.timestamp > currentTimestamp + CHAIN.MAX_MICROBLOCK_FUTURE_DELAY;
         if(isTooFarInFuture) {
-            this.setErrorFromErrorMessage(`timestamp is too far in the future`);
+            this.setErrorFromErrorMessage(`timestamp is too far in the future (header:${this.header.timestamp} / current:${currentTimestamp})`);
             return CHAIN.MB_STATUS_TIMESTAMP_ERROR;
         }
 

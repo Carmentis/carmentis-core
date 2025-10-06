@@ -20,11 +20,10 @@ export class MLDSA65SignatureScheme implements SignatureScheme {
     getSignatureSize(): number {
         return MLDSA65SignatureScheme.SIGNATURE_SIZE;
     }
-
 }
 
 /**
- * Represents a public signature key for the MLDSA44 signature scheme.
+ * Represents a public signature key for the MLDSA65 signature scheme.
  *
  * This class provides functionalities to verify digital signatures and retrieve
  * the raw public key used in the signing process. It extends the `MLDSA44SignatureScheme`
@@ -41,11 +40,9 @@ export class MLDSA65PublicSignatureKey extends BasePublicSignatureKey {
         super();
     }
 
-
     getPublicKeyAsString(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
         return encoder.encode(this.getPublicKeyAsBytes())
     }
-
 
     /**
      * Verifies the provided data and its signature using the stored public key.
@@ -77,10 +74,9 @@ export class MLDSA65PublicSignatureKey extends BasePublicSignatureKey {
 }
 
 /**
- *
+ * Represents a private signature key for the MLDSA65 signature scheme.
  */
 export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
-
     /**
      * Generates and returns a new private signature key.
      *
@@ -95,7 +91,6 @@ export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
 
     private verificationKey: Uint8Array;
     private signatureKey: Uint8Array;
-
 
     getPrivateKeyAsString(encoder: EncoderInterface<Uint8Array, string>): string {
         return encoder.encode(this.getPrivateKeyAsBytes())
@@ -114,7 +109,6 @@ export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
         this.signatureKey = keys.secretKey;
         this.verificationKey = keys.publicKey;
     }
-
 
     /**
      * Retrieves the public signature key associated with this instance.
@@ -145,6 +139,4 @@ export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
     getScheme(): SignatureScheme {
         return new MLDSA65SignatureScheme();
     }
-
-
 }

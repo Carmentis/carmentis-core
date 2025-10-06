@@ -74,7 +74,6 @@ export abstract class BasePrivateSignatureKey implements PrivateSignatureKey {
     abstract sign(data: Uint8Array): Uint8Array;
 
     abstract getScheme(): SignatureScheme;
-
 }
 
 /**
@@ -82,8 +81,7 @@ export abstract class BasePrivateSignatureKey implements PrivateSignatureKey {
  * This class provides a partial implementation for handling public keys and signing operations.
  * It serves as a foundation for specific public signature key implementations.
  */
-export abstract class BasePublicSignatureKey implements  PublicSignatureKey {
-
+export abstract class BasePublicSignatureKey implements PublicSignatureKey {
     getPublicKeyAsString(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
         return encoder.encode(this.getPublicKeyAsBytes());
     }
@@ -101,10 +99,6 @@ export abstract class BasePublicSignatureKey implements  PublicSignatureKey {
     getSignatureAlgorithmId(): SignatureAlgorithmId {
         return this.getScheme().getSignatureAlgorithmId();
     }
-
-
-
-
 }
 
 /**
@@ -119,5 +113,3 @@ export enum SignatureAlgorithmId {
     SECP256K1 = 0,
     ML_DSA_65 = 1,
 }
-
-

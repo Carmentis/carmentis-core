@@ -257,8 +257,6 @@ export class Microblock {
     /**
      * Verifies the provided cryptographic signature using the specified algorithm.
      *
-     *
-     *
      * @param {PublicSignatureKey} publicKey - The public key used to verify the signature.
      * @param {string} signature - The signature to be verified.
      * @param {boolean} includeGas - Indicates whether to include gas-related data in the signed payload.

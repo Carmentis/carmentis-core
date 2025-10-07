@@ -4,6 +4,7 @@ import {ml_kem768} from "@noble/post-quantum/ml-kem";
 import {AES256GCMSymmetricEncryptionKey} from "../encryption-interface";
 
 import {MlKemPublicKeyEncryptionScheme} from "./MlKemPublicKeyEncryptionScheme";
+import {MlKemCiphertextEncoder} from "./MlKemCiphertextEncoder";
 
 export class MlKemPublicEncryptionKey extends AbstractPublicEncryptionKey {
 
@@ -17,11 +18,8 @@ export class MlKemPublicEncryptionKey extends AbstractPublicEncryptionKey {
         const {cipherText: encryptedSharedSecret, sharedSecret} = ml_kem768.encapsulate(this.publicKey);
         const cipher = AES256GCMSymmetricEncryptionKey.createFromBytes(sharedSecret);
         const encryptedMessage = cipher.encrypt(message);
-        const encodedCiphertext = JSON.stringify({
-            encryptedSharedSecret,
-            encryptedMessage
-        });
-        return MlKemPublicEncryptionKey.encoder.decode(encodedCiphertext);
+        const encoder = new MlKemCiphertextEncoder();
+        return encoder.encode(encryptedSharedSecret, encryptedMessage);
     }
 
     getRawPublicKey(): Uint8Array {

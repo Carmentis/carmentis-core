@@ -40,6 +40,7 @@ export * from "./crypto/secp256k1";
 export * from "./crypto/encryption/encryption-interface";
 export * from "./crypto/encryption/generic-symmetric-key-encoder";
 export * from "./crypto/encryption/public-key-encryption/HCVPublicKeyEncryptionEncoder";
+export * from "./crypto/encryption/public-key-encryption/MlKemCiphertextEncoder";
 export * from "./crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 export * from "./crypto/encryption/public-key-encryption/MlKemPublicEncryptionKey";
 export * from "./crypto/encryption/public-key-encryption/MlKemPublicKeyEncryptionScheme";

@@ -28,7 +28,6 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
         return new MlKemPrivateDecryptionKey(random);
     }
 
-    private static encoder = EncoderFactory.bytesToBase64Encoder();
     private readonly privateKey: Uint8Array;
     private readonly publicKey: Uint8Array;
 

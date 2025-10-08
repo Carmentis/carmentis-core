@@ -2,7 +2,6 @@ import {
     AES256GCMSymmetricEncryptionKey, AES256GCMSymmetricEncryptionScheme,
     DecapsulationKey,
     EncapsulationKey,
-    InsecureKeyExchangeScheme,
     KeyExchangeAlgorithmId,
     SymmetricEncryptionAlgorithmId,
     SymmetricEncryptionKey, SymmetricEncryptionKeyScheme,
@@ -95,14 +94,12 @@ export class CryptoSchemeFactory {
 
     createDecapsulationKey( schemeId: number, walletSeed: Uint8Array  ): DecapsulationKey {
         switch (schemeId) {
-            case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
             default: throw `Not supported encryption scheme ID: ${schemeId}`
         }
     }
 
     createVirtualBlockchainDecapsulationKey( schemeId: number, walletSeed: Uint8Array, vbSeed: Uint8Array ): DecapsulationKey {
         switch (schemeId) {
-            case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
             default: throw `Not supported encryption scheme ID: ${schemeId}`
         }
     }

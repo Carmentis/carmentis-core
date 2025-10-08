@@ -37,8 +37,6 @@ export * from "./crypto/ml-dsa";
 export * from "./crypto/ml-kem";
 export * from "./crypto/random";
 export * from "./crypto/secp256k1";
-export * from "./crypto/encryption/symmetric-encryption/encryption-interface";
-export * from "./crypto/encryption/symmetric-encryption/generic-symmetric-key-encoder";
 export * from "./crypto/encryption/public-key-encryption/HCVPkeEncoder";
 export * from "./crypto/encryption/public-key-encryption/MlKemCiphertextEncoder";
 export * from "./crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
@@ -47,6 +45,8 @@ export * from "./crypto/encryption/public-key-encryption/MlKemPublicKeyEncryptio
 export * from "./crypto/encryption/public-key-encryption/PkeEncoderInterface";
 export * from "./crypto/encryption/public-key-encryption/PublicKeyEncryptionAlgorithmId";
 export * from "./crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+export * from "./crypto/encryption/symmetric-encryption/encryption-interface";
+export * from "./crypto/encryption/symmetric-encryption/generic-symmetric-key-encoder";
 export * from "./crypto/hash/hash-interface";
 export * from "./crypto/kdf/HKDF";
 export * from "./crypto/kdf/KeyDerivationFunction";

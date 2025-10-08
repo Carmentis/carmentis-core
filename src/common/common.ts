@@ -44,6 +44,7 @@ export * from "./crypto/encryption/public-key-encryption/MlKemCiphertextEncoder"
 export * from "./crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 export * from "./crypto/encryption/public-key-encryption/MlKemPublicEncryptionKey";
 export * from "./crypto/encryption/public-key-encryption/MlKemPublicKeyEncryptionScheme";
+export * from "./crypto/encryption/public-key-encryption/PkeEncoderInterface";
 export * from "./crypto/encryption/public-key-encryption/PublicKeyEncryptionAlgorithmId";
 export * from "./crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 export * from "./crypto/hash/hash-interface";

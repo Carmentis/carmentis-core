@@ -9,7 +9,7 @@
     "build:server": "rollup --config rollup.config.server.js",
     "build:common-export": "npx barrelsby --delete -d src/common -e test -e Test -e benchmark -e src/bin/carmentis-cli.ts -e node_modules -e spec -n common",
     "build": "npm run build:common-export && tsc && npm run build:client && npm run build:server",
-    "docs": "jsdoc -r -c jsdoc.json -d docs src",
+    "docs": "ts-node src/bin/gen-docs.ts",
     "gen:code": "tsx src/bin/generate-sections.ts"
   },
   "bin": {
@@ -77,6 +77,7 @@
     "ts-migrate": "^0.1.35",
     "ts-morph": "^26.0.0",
     "ts-node": "^10.9.2",
+    "tsdoc-markdown": "^1.4.1",
     "tslib": "^2.8.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",

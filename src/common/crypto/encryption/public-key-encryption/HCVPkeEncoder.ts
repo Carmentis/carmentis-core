@@ -3,20 +3,23 @@ import {AbstractPrivateDecryptionKey, AbstractPublicEncryptionKey} from "./Publi
 import {EncoderFactory, EncoderInterface} from "../../../utils/encoder";
 import {HCVCodec} from "../../../utils/HCVCodec";
 import {CryptoSchemeFactory} from "../../CryptoSchemeFactory";
+import {PublicKeyEncryptionAlgorithmId} from "./PublicKeyEncryptionAlgorithmId";
 
-/*
 export class HCVPkeEncoder implements PkeEncoderInterface {
 
     private static PKE_KEY = "PKE";
     private static SK_PKE_KEY = "SK";
     private static PK_PKE_KEY = "PK";
-    private static PKE_ML_KEM = "PKE_ML_KEM";
+
+    private static readonly PKE_SCHEMES = [
+        { algoId: PublicKeyEncryptionAlgorithmId.ML_KEM_768_AES_256_GCM, label: "MLKEM768AES256GCM" },
+    ];
 
     static createHexHCVPkeEncoder() {
         return new HCVPkeEncoder(EncoderFactory.bytesToHexEncoder());
     }
 
-    static createBase64HCVSignatureEncoder() {
+    static createBase64HCVPkeEncoder() {
         return new HCVPkeEncoder(EncoderFactory.bytesToBase64Encoder());
     }
 
@@ -25,33 +28,42 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
 
     decodePrivateDecryptionKey(privateKey: string): AbstractPrivateDecryptionKey {
         const result = HCVCodec.decode(privateKey);
-        for (const {algoId, label} of .SIG_SCHEME_KEYS) {
+        for (const {algoId, label} of HCVPkeEncoder.PKE_SCHEMES) {
             const matches = result.matchesKeys(
-                HCVSignatureEncoder.SIGNATURE_KEY,
+                HCVPkeEncoder.PKE_KEY,
                 label,
-                HCVSignatureEncoder.SK_SIGNATURE_KEY
+                HCVPkeEncoder.SK_PKE_KEY
             );
             if (matches) {
-                return CryptoSchemeFactory.createPrivateSignatureKey(algoId, this.stringEncoder.decode(result.getValue()));
+                return CryptoSchemeFactory.createPrivateDecryptionKey(algoId, this.stringEncoder.decode(result.getValue()));
             }
         }
-        throw new Error("Invalid private key format: no signature scheme key found");
+        throw new Error("Invalid private key format: no scheme key found");
     }
 
-    decodePublicEncryptionKey(key: string): AbstractPublicEncryptionKey {
-        return undefined;
+    decodePublicEncryptionKey(publicKey: string): AbstractPublicEncryptionKey {
+        const result = HCVCodec.decode(publicKey);
+        for (const {algoId, label} of HCVPkeEncoder.PKE_SCHEMES) {
+            const matches = result.matchesKeys(
+                HCVPkeEncoder.PKE_KEY,
+                label,
+                HCVPkeEncoder.PK_PKE_KEY
+            );
+            if (matches) {
+                return CryptoSchemeFactory.createPublicEncryptionKey(algoId, this.stringEncoder.decode(result.getValue()));
+            }
+        }
+        throw new Error("Invalid private key format: no scheme key found");
     }
 
-    encodePrivateDecryptionKey(key: AbstractPrivateDecryptionKey): string {
-        return "";
+    encodePrivateDecryptionKey(privateKey: AbstractPrivateDecryptionKey): string {
+       throw new Error("Not implemented");
     }
 
     encodePublicEncryptionKey(key: AbstractPublicEncryptionKey): string {
-        return "";
+        throw new Error("Not implemented");
     }
 
 
 
 }
-
- */

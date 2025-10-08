@@ -1,7 +1,7 @@
 import {AbstractPublicEncryptionKey, AbstractPublicKeyEncryptionScheme} from "./PublicKeyEncryptionSchemeInterface";
 import {EncoderFactory} from "../../../utils/encoder";
 import {ml_kem768} from "@noble/post-quantum/ml-kem";
-import {AES256GCMSymmetricEncryptionKey} from "../encryption-interface";
+import {AES256GCMSymmetricEncryptionKey} from "../symmetric-encryption/encryption-interface";
 
 import {MlKemPublicKeyEncryptionScheme} from "./MlKemPublicKeyEncryptionScheme";
 import {MlKemCiphertextEncoder} from "./MlKemCiphertextEncoder";

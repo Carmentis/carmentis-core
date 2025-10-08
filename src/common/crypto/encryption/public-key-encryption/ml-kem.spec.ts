@@ -1,6 +1,7 @@
 import { MlKemPrivateDecryptionKey } from "./MlKemPrivateDecryptionKey";
 import { MlKemPublicEncryptionKey } from "./MlKemPublicEncryptionKey";
 import { PublicKeyEncryptionAlgorithmId } from "./PublicKeyEncryptionAlgorithmId";
+import {AES256GCMSymmetricEncryptionKey} from "../symmetric-encryption/encryption-interface";
 
 function u8(arr: number[] | number, len?: number): Uint8Array {
   if (typeof arr === 'number') {
@@ -72,4 +73,17 @@ describe("ML-KEM Public/Private Key Encryption", () => {
 
     expect(() => sk.decrypt(tampered)).toThrow();
   });
+
+
+  it("should work for encrypting an AES-256-GCM key (repeated 100 times)", () => {
+      for (let i = 0; i < 100; i++) {
+          const key = AES256GCMSymmetricEncryptionKey.generate();
+          const rawKey = key.getRawSecretKey();
+          const sk = MlKemPrivateDecryptionKey.gen();
+          const pk = sk.getPublicKey();
+          const ct = pk.encrypt(rawKey);
+          const pt = sk.decrypt(ct);
+          expect(pt).toEqual(rawKey);
+      }
+  })
 });

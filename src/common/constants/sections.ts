@@ -28,6 +28,7 @@ export const PROTOCOL_SIG_ALGORITHM   = SectionType.PROTOCOL_SIG_ALGORITHM;
 export const PROTOCOL_PUBLIC_KEY      = SectionType.PROTOCOL_PUBLIC_KEY;
 export const PROTOCOL_PROTOCOL_UPDATE = SectionType.PROTOCOL_PROTOCOL_UPDATE;
 export const PROTOCOL_NODE_UPDATE     = SectionType.PROTOCOL_NODE_UPDATE;
+export const PROTOCOL_SIGNATURE       = SectionType.PROTOCOL_SIGNATURE;
 
 const PROTOCOL: Schema[] = [] as const;
 
@@ -63,6 +64,13 @@ PROTOCOL[PROTOCOL_NODE_UPDATE] = {
     { name: 'maxProtocolVersion', type: DATA.TYPE_UINT16 },
     { name: 'changeLog',          type: DATA.TYPE_STRING },
     { name: 'url',                type: DATA.TYPE_STRING }
+  ]
+};
+
+PROTOCOL[PROTOCOL_SIGNATURE] = {
+  label: 'PROTOCOL_SIGNATURE',
+  definition: [
+    { name: 'signature', type: DATA.TYPE_BINARY }
   ]
 };
 
@@ -127,12 +135,12 @@ ACCOUNT[ACCOUNT_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Validator node                                                                                                              //
 // ============================================================================================================================ //
-export const VN_SIG_ALGORITHM       = 0;
-export const VN_DECLARATION         = 1;
-export const VN_DESCRIPTION         = 2;
-export const VN_RPC_ENDPOINT        = 3;
-export const VN_NETWORK_INTEGRATION = 4;
-export const VN_SIGNATURE           = 5;
+export const VN_SIG_ALGORITHM       = SectionType.VN_SIG_ALGORITHM;
+export const VN_DECLARATION         = SectionType.VN_DECLARATION;
+export const VN_DESCRIPTION         = SectionType.VN_DESCRIPTION;
+export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
+export const VN_NETWORK_INTEGRATION = SectionType.VN_NETWORK_INTEGRATION;
+export const VN_SIGNATURE           = SectionType.VN_SIGNATURE;
 
 const VALIDATOR_NODE: Schema[] = [] as const;
 

@@ -15,6 +15,8 @@ export * from "./blockchain/Microblock";
 export * from "./blockchain/MicroblockImporter";
 export * from "./blockchain/Organization";
 export * from "./blockchain/OrganizationVb";
+export * from "./blockchain/Protocol";
+export * from "./blockchain/ProtocolVb";
 export * from "./blockchain/RecordDescription";
 export * from "./blockchain/StructureChecker";
 export * from "./blockchain/types";

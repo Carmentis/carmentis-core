@@ -44,6 +44,11 @@ export interface MerkleProof {
     witnesses: string;
 }
 
+export interface ProtocolVBState {
+    signatureAlgorithmId: number;
+    publicKeyHeight: number;
+}
+
 export interface AccountVBState {
     signatureAlgorithmId: number;
     publicKeyHeight: number;

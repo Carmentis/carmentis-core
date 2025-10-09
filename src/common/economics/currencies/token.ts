@@ -88,6 +88,14 @@ export class CMTSToken implements Currency{
         return new CMTSToken(amount, TokenUnit.ATOMIC);
     }
 
+    /**
+     * Creates an instance of CMTSToken having zero-value.
+     *
+     * Example:
+     * ```ts
+     * const zero = CMTSToken.zero();
+     * ```
+     */
     static zero() {
         return this.createAtomic(0);
     }

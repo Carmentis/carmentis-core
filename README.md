@@ -13,15 +13,6 @@ npm install @cmts-dev/carmentis-sdk
 The project can be built using the following commands:
 
 ```bash
-# Clean the build directories
-npm run clean
-
-# Build the client version
-npm run build:client
-
-# Build the server version
-npm run build:server
-
 # Build everything (TypeScript compilation + client + server)
 npm run build
 ```
@@ -53,31 +44,18 @@ Tests are located in `.spec.ts` files throughout the source code.
 To generate documentation using JSDoc:
 
 ```bash
-npx jsdoc -r -c jsdoc.json -d docs src
+npm run docs
 ```
-
-This command will:
-- Recursively scan the `src` directory for JSDoc comments
-- Use the configuration in `jsdoc.json`
-- Output the documentation to the `docs` directory
-
-## Project Structure
-
-- `src/`: Source code
-  - `common/`: Common utilities and components
-  - `specs/`: Test specifications
-- `dist/`: Build output
-- `database/`: Database-related files
 
 ## Usage
 
 ### Client-side Usage
 
 ```javascript
-import { Blockchain } from '@cmts-dev/carmentis-sdk/client';
+import { BlockchainFacade } from '@cmts-dev/carmentis-sdk/client';
 
 // Initialize the blockchain client
-const blockchain = new Blockchain(provider);
+const blockchain = BlockchainFacade.createFromNodeURL("https://ares.testnet.carmentis.io");
 
 // Use the SDK functionality
 // ...
@@ -86,10 +64,10 @@ const blockchain = new Blockchain(provider);
 ### Server-side Usage
 
 ```javascript
-import { Blockchain } from '@cmts-dev/carmentis-sdk/server';
+import { BlockchainFacade } from '@cmts-dev/carmentis-sdk/server';
 
 // Initialize the blockchain server
-const blockchain = new Blockchain(provider);
+const blockchain = BlockchainFacade.createFromNodeURL("https://ares.testnet.carmentis.io");
 
 // Use the SDK functionality
 // ...

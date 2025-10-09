@@ -1,6 +1,7 @@
 import { DATA } from "../constants/constants";
 import { Utf8Encoder } from "./utf8Encoder";
-import {TypeCheckingFailureError} from "../errors/carmentis-error";
+
+import {TypeCheckingFailureError} from "../errors/type-checking-failure-error";
 
 const JSON_TYPES =
   1 << DATA.TYPE_ARRAY |

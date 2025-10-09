@@ -2,9 +2,10 @@ import {AbstractPrivateDecryptionKey} from "./PublicKeyEncryptionSchemeInterface
 import {EncoderFactory} from "../../../utils/encoder";
 import {ml_kem768} from "@noble/post-quantum/ml-kem";
 import {randomBytes} from "@noble/post-quantum/utils";
-import {AES256GCMSymmetricEncryptionKey} from "../encryption-interface";
+import {AES256GCMSymmetricEncryptionKey} from "../symmetric-encryption/encryption-interface";
 import {MlKemPublicEncryptionKey} from "./MlKemPublicEncryptionKey";
 import {MlKemPublicKeyEncryptionScheme} from "./MlKemPublicKeyEncryptionScheme";
+import {MlKemCiphertextEncoder} from "./MlKemCiphertextEncoder";
 
 export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
 
@@ -13,9 +14,8 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
      * @param seed
      */
     static genFromSeed(seed: Uint8Array) {
-        // ensure that length of the seed is 32 bytes
-        if (seed.length !== 32) {
-            throw new Error("Seed must be 32 bytes long");
+        if (seed.length !== 64) {
+            throw new Error(`Seed must be 64 bytes long: got length: ${seed?.length} bytes`);
         }
         return new MlKemPrivateDecryptionKey(seed);
     }
@@ -24,11 +24,10 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
      * Generates a random private decryption key.
      */
     static gen() {
-        const random = randomBytes(32);
+        const random = randomBytes(64);
         return new MlKemPrivateDecryptionKey(random);
     }
 
-    private static encoder = EncoderFactory.bytesToBase64Encoder();
     private readonly privateKey: Uint8Array;
     private readonly publicKey: Uint8Array;
 
@@ -41,7 +40,7 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
 
 
     getSupportedSeedLength(): number[] {
-        return [32]
+        return [64]
     }
 
 
@@ -59,10 +58,11 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
     }
 
     decrypt(ciphertext: Uint8Array): Uint8Array {
+        const encoder = new MlKemCiphertextEncoder();
         const {
             encryptedMessage,
             encryptedSharedSecret
-        } = JSON.parse(MlKemPrivateDecryptionKey.encoder.encode(ciphertext));
+        } = encoder.decode(ciphertext);
         const sharedSecret = ml_kem768.decapsulate(encryptedSharedSecret, this.privateKey);
         const cipher = AES256GCMSymmetricEncryptionKey.createFromBytes(sharedSecret);
         const plaintext = cipher.decrypt(encryptedMessage);

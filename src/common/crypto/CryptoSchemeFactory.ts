@@ -2,11 +2,10 @@ import {
     AES256GCMSymmetricEncryptionKey, AES256GCMSymmetricEncryptionScheme,
     DecapsulationKey,
     EncapsulationKey,
-    InsecureKeyExchangeScheme,
     KeyExchangeAlgorithmId,
     SymmetricEncryptionAlgorithmId,
     SymmetricEncryptionKey, SymmetricEncryptionKeyScheme,
-} from "./encryption/encryption-interface";
+} from "./encryption/symmetric-encryption/encryption-interface";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId,} from "./signature/signature-interface";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./signature/ml-dsa-65";
 import {CryptographicHash, CryptographicHashAlgorithmId, Sha256CryptographicHash} from "./hash/hash-interface";
@@ -17,6 +16,13 @@ import {PasswordBasedKeyDerivationFunction} from "./kdf/PasswordBasedKeyDerivati
 import {KeyDerivationFunction} from "./kdf/KeyDerivationFunction";
 import {HKDF} from "./kdf/HKDF";
 import {PasswordBasedKeyDerivationFunctionAlgorithmId} from "./kdf/PasswordBasedKeyDerivationFunctionAlgorithmId";
+import {
+    AbstractPrivateDecryptionKey,
+    AbstractPublicEncryptionKey
+} from "./encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+import {PublicKeyEncryptionAlgorithmId} from "./encryption/public-key-encryption/PublicKeyEncryptionAlgorithmId";
+import {MlKemPublicEncryptionKey} from "./encryption/public-key-encryption/MlKemPublicEncryptionKey";
+import {MlKemPrivateDecryptionKey} from "./encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 
 export class CryptoSchemeFactory {
 
@@ -88,14 +94,12 @@ export class CryptoSchemeFactory {
 
     createDecapsulationKey( schemeId: number, walletSeed: Uint8Array  ): DecapsulationKey {
         switch (schemeId) {
-            case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
             default: throw `Not supported encryption scheme ID: ${schemeId}`
         }
     }
 
     createVirtualBlockchainDecapsulationKey( schemeId: number, walletSeed: Uint8Array, vbSeed: Uint8Array ): DecapsulationKey {
         switch (schemeId) {
-            case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
             default: throw `Not supported encryption scheme ID: ${schemeId}`
         }
     }
@@ -109,14 +113,22 @@ export class CryptoSchemeFactory {
         switch (schemeId) {
             case SignatureAlgorithmId.SECP256K1: return new Secp256k1PublicSignatureKey(publicKey);
             case SignatureAlgorithmId.ML_DSA_65: return new MLDSA65PublicSignatureKey(publicKey);
-            default: throw `Not supported signature scheme ID: ${schemeId}`
+            default: throw new Error(`Not supported signature scheme ID: ${schemeId}`)
         }
     }
 
-    createEncapsulationKey( schemeId: number, encapsulationKey: Uint8Array  ): EncapsulationKey {
+    static createPublicEncryptionKey( schemeId: number, publicKey: Uint8Array ): AbstractPublicEncryptionKey {
         switch (schemeId) {
-            case KeyExchangeAlgorithmId.INSECURE: return new InsecureKeyExchangeScheme();
-            default: throw `Not supported encryption scheme ID: ${schemeId}`
+            case PublicKeyEncryptionAlgorithmId.ML_KEM_768_AES_256_GCM: return new MlKemPublicEncryptionKey(publicKey)
+            default: throw Error(`Not supported scheme ID: ${schemeId}`)
+        }
+    }
+
+
+    static createPrivateDecryptionKey(schemeId: number, privateKeyOrSeed: Uint8Array): AbstractPrivateDecryptionKey {
+        switch (schemeId) {
+            case PublicKeyEncryptionAlgorithmId.ML_KEM_768_AES_256_GCM: return MlKemPrivateDecryptionKey.genFromSeed(privateKeyOrSeed)
+            default: throw Error(`Not supported scheme ID: ${schemeId}`)
         }
     }
 

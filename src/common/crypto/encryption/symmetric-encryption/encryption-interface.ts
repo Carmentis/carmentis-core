@@ -252,23 +252,4 @@ export interface EncapsulationKeyEncoder<T> {
 
 export enum KeyExchangeAlgorithmId {
     ML_KEM,
-    INSECURE,
-}
-
-export class InsecureKeyExchangeScheme implements EncapsulationKey, DecapsulationKey {
-    getEncapsulationKey(): EncapsulationKey {
-        return this;
-    }
-
-    encapsulate(): { key: SymmetricEncryptionKey; ct: string } {
-       throw 'Not implemented';
-    }
-
-    getEncryptionAlgorithmId(): number {
-        throw 'Not implemented';
-    }
-
-    decapsulate(ct: string): SymmetricEncryptionKey {
-        throw 'Not implemented';
-    }
 }

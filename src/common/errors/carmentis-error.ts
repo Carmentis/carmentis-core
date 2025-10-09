@@ -69,11 +69,6 @@ export class EmptyBlockError extends CarmentisError {
 }
 
 export class InternalError extends CarmentisError {}
-export class TypeCheckingFailureError extends InternalError {
-    constructor(message: string) {
-        super(message, CarmentisErrorCode.TYPE_CHECKING_FAILURE_ERROR);
-    }
-}
 
 export class NodeError extends InternalError {}
 export class NodeConnectionRefusedError extends NodeError {
@@ -172,11 +167,9 @@ export class SectionNotFoundError extends SectionError {
 }
 
 export class AccountNotFoundForPublicKeyError extends BlockchainError {
-    private static encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
     constructor(publicKey: PublicSignatureKey) {
         super(
-            AccountNotFoundForPublicKeyError.encoder.encodePublicKey(publicKey),
-            CarmentisErrorCode.ACCOUNT_NOT_FOUND_FOR_PUBLIC_KEY
+            'Account not found for public key'
         );
     }
 }

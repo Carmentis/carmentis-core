@@ -57,12 +57,24 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
     }
 
     encodePrivateDecryptionKey(privateKey: AbstractPrivateDecryptionKey): string {
-       throw new Error("Not implemented");
+        // Note: we currently only support the ML-KEM scheme
+        return HCVCodec.encode(
+            HCVPkeEncoder.PKE_KEY,
+            "MLKEM768AES256GCM",
+            HCVPkeEncoder.SK_PKE_KEY,
+            this.stringEncoder.encode(privateKey.getRawPrivateKey())
+        )
     }
 
     encodePublicEncryptionKey(key: AbstractPublicEncryptionKey): string {
-        throw new Error("Not implemented");
+        return HCVCodec.encode(
+            HCVPkeEncoder.PKE_KEY,
+            "MLKEM768AES256GCM",
+            HCVPkeEncoder.PK_PKE_KEY,
+            this.stringEncoder.encode(key.getRawPublicKey())
+        )
     }
+
 
 
 

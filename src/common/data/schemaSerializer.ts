@@ -2,7 +2,8 @@ import { DATA, SCHEMAS } from "../constants/constants";
 import { WriteStream, ReadStream } from "./byteStreams";
 import { TypeManager, TypeChecker } from "./types";
 import { Utils } from "../utils/utils";
-import {CarmentisError, TypeCheckingFailureError} from "../errors/carmentis-error";
+import {CarmentisError} from "../errors/carmentis-error";
+import {TypeCheckingFailureError} from "../errors/type-checking-failure-error";
 
 export class SchemaSerializer<T = any> {
   schema: SCHEMAS.Schema;

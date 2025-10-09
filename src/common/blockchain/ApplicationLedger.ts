@@ -15,7 +15,8 @@ import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 
 export class ApplicationLedger {
     provider: any;
-    signatureAlgorithmId: any;
+    allowedSignatureAlgorithmIds: any;
+    allowedPkeAlgorithmIds: any;
     vb: ApplicationLedgerVb;
     gasPrice: CMTSToken;
 
@@ -28,7 +29,8 @@ export class ApplicationLedger {
 
         if (this.provider.isKeyed()) {
             const privateKey = this.provider.getPrivateSignatureKey();
-            this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
+            this.allowedSignatureAlgorithmIds = [ privateKey.getSignatureAlgorithmId() ];
+            this.allowedPkeAlgorithmIds = [];
         }
     }
 
@@ -47,8 +49,11 @@ export class ApplicationLedger {
 
     async _create(applicationId: string) {
         if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without a keyed provider.'
-        await this.vb.setSignatureAlgorithm({
-            algorithmId: this.signatureAlgorithmId
+        await this.vb.setAllowedSignatureAlgorithms({
+            algorithmIds: this.allowedSignatureAlgorithmIds
+        });
+        await this.vb.setAllowedPkeAlgorithms({
+            algorithmIds: this.allowedPkeAlgorithmIds
         });
     }
 
@@ -67,8 +72,8 @@ export class ApplicationLedger {
 
         if (this.vb.height == 0) {
             // genesis -> declare the signature algorithm and the application
-            await this.vb.setSignatureAlgorithm({
-                algorithmId: this.signatureAlgorithmId
+            await this.vb.setAllowedSignatureAlgorithms({
+                algorithmIds: this.allowedSignatureAlgorithmIds
             });
             await this.vb.addDeclaration({
                 applicationId: Utils.binaryFromHexa(object.applicationId)

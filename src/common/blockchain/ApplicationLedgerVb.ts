@@ -18,15 +18,18 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     constructor({provider}: { provider: Provider }) {
         super({ provider, type: CHAIN.VB_APP_LEDGER });
         this.state = {
-            signatureAlgorithmId: -1,
+            allowedSignatureAlgorithmIds: [],
+            allowedPkeAlgorithmIds: [],
             applicationId: new Uint8Array(0),
             actors: [],
             channels: []
         };
 
-        this.registerSectionCallback(SECTIONS.APP_LEDGER_SIG_ALGORITHM, this.signatureAlgorithmCallback);
+        this.registerSectionCallback(SECTIONS.APP_LEDGER_ALLOWED_SIG_ALGORITHMS, this.allowedSignatureAlgorithmsCallback);
+        this.registerSectionCallback(SECTIONS.APP_LEDGER_ALLOWED_PKE_ALGORITHMS, this.allowedPkeAlgorithmsCallback);
         this.registerSectionCallback(SECTIONS.APP_LEDGER_DECLARATION, this.declarationCallback);
         this.registerSectionCallback(SECTIONS.APP_LEDGER_ACTOR_CREATION, this.actorCreationCallback);
+        this.registerSectionCallback(SECTIONS.APP_LEDGER_ACTOR_SUBSCRIPTION, this.actorSubscriptionCallback);
         this.registerSectionCallback(SECTIONS.APP_LEDGER_CHANNEL_CREATION, this.channelCreationCallback);
         this.registerSectionCallback(SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA, this.publicChannelDataCallback);
         this.registerSectionCallback(SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA, this.privateChannelDataCallback);
@@ -37,8 +40,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     /**
      Update methods
      */
-    async setSignatureAlgorithm(object: any) {
-        await this.addSection(SECTIONS.APP_LEDGER_SIG_ALGORITHM, object);
+    async setAllowedSignatureAlgorithms(object: any) {
+        await this.addSection(SECTIONS.APP_LEDGER_ALLOWED_SIG_ALGORITHMS, object);
+    }
+
+    async setAllowedPkeAlgorithms(object: any) {
+        await this.addSection(SECTIONS.APP_LEDGER_ALLOWED_PKE_ALGORITHMS, object);
     }
 
     async addDeclaration(object: any) {
@@ -138,8 +145,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     /**
      Section callbacks
      */
-    async signatureAlgorithmCallback(microblock: any, section: any) {
-        this.getState().signatureAlgorithmId = section.object.algorithmId;
+    async allowedSignatureAlgorithmsCallback(microblock: any, section: any) {
+        this.getState().allowedSignatureAlgorithmIds = section.object.algorithmIds;
+    }
+
+    async allowedPkeAlgorithmsCallback(microblock: any, section: any) {
+        this.getState().allowedPkeAlgorithmIds = section.object.algorithmIds;
     }
 
     async declarationCallback(microblock: any, section: any) {
@@ -159,6 +170,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
             subscribed: false,
             invitations: []
         });
+    }
+
+    async actorSubscriptionCallback(microblock: any, section: any) {
     }
 
     async channelCreationCallback(microblock: any, section: any) {
@@ -242,11 +256,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         return this.getState().actors.length
     }
 
-    private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
     private static UNDEFINED_APPLICATION_ID = new Uint8Array(0);
+
     protected getInitialState(): ApplicationLedgerVBState {
         return {
-            signatureAlgorithmId: ApplicationLedgerVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
+            allowedSignatureAlgorithmIds: [],
+            allowedPkeAlgorithmIds: [],
             applicationId: ApplicationLedgerVb.UNDEFINED_APPLICATION_ID,
             actors: [],
             channels: []

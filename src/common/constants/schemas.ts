@@ -197,8 +197,9 @@ const APPLICATION_VB_STATE: Schema = {
 const APP_LEDGER_VB_STATE: Schema = {
   label: 'AppLedgerVbState',
   definition: [
-    { name: 'signatureAlgorithmId', type: DATA.TYPE_UINT8 },
-    { name: 'applicationId',        type: DATA.TYPE_BIN256 },
+    { name: 'allowedSignatureAlgorithmIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
+    { name: 'allowedPkeAlgorithmIds',       type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
+    { name: 'applicationId',                type: DATA.TYPE_BIN256 },
     {
       name: 'channels',
       type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
@@ -212,8 +213,10 @@ const APP_LEDGER_VB_STATE: Schema = {
       name: 'actors',
       type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
       definition: [
-        { name: 'name',       type: DATA.TYPE_STRING },
-        { name: 'subscribed', type: DATA.TYPE_BOOLEAN },
+        { name: 'name',               type: DATA.TYPE_STRING },
+        { name: 'subscribed',         type: DATA.TYPE_BOOLEAN },
+        { name: 'pkePublicKeyHeight', type: DATA.TYPE_UINT48 },
+        { name: 'sigPublicKeyHeight', type: DATA.TYPE_UINT48 },
         {
           name: 'invitations',
           type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,

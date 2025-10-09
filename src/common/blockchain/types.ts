@@ -120,7 +120,8 @@ export interface ApplicationLedgerActor {
 }
 
 export interface ApplicationLedgerVBState {
-    signatureAlgorithmId: number;
+    allowedSignatureAlgorithmIds: number[];
+    allowedPkeAlgorithmIds: number[];
     applicationId: Uint8Array;
     channels: ApplicationLedgeChannel[];
     actors: ApplicationLedgerActor[];

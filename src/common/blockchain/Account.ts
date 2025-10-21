@@ -38,8 +38,8 @@ export class Account {
 
         // we use in priority the default public key, if provided, or the keyed provider's public key
         const publicKey = genesisPublicKey || this.getPrivateSignatureKey().getPublicKey();
-        await this.vb.setSignatureAlgorithm({
-            algorithmId: this.getSignatureAlgorithmId()
+        await this.vb.setSignatureScheme({
+            schemeId: this.getSignatureSchemeId()
         });
         await this.vb.setPublicKey(publicKey);
         await this.vb.setTokenIssuance({
@@ -58,8 +58,8 @@ export class Account {
      */
     async _create(sellerAccount: Uint8Array, buyerPublicKey: PublicSignatureKey, amount: number) {
         if (!this.provider.isKeyed()) throw new IllegalStateError("Cannot create an account without a keyed provider.")
-        await this.vb.setSignatureAlgorithm({
-            algorithmId: this.getSignatureAlgorithmId()
+        await this.vb.setSignatureScheme({
+            schemeId: this.getSignatureSchemeId()
         });
 
         await this.vb.setPublicKey(buyerPublicKey);
@@ -77,16 +77,16 @@ export class Account {
     /**
      * Retrieves the public key for the current instance of the cryptographic context.
      *
-     * The method fetches the raw public key and the signature algorithm ID, then utilizes the CryptoSchemeFactory
+     * The method fetches the raw public key and the signature scheme ID, then utilizes the CryptoSchemeFactory
      * to create and return a public signature key object.
      *
      * @return {Promise<PublicSignatureKey>} A promise that resolves to a public signature key object.
      */
     async getPublicKey() {
         const rawPublicKey = await this.vb.getPublicKey();
-        const algorithmId = await this.vb.getSignatureAlgorithmId();
+        const schemeId = await this.vb.getSignatureSchemeId();
         const factory = new CryptoSchemeFactory();
-        return factory.createPublicSignatureKey(algorithmId, rawPublicKey);
+        return factory.createPublicSignatureKey(schemeId, rawPublicKey);
     }
 
     async transfer(object: AccountTransfer) {
@@ -113,11 +113,11 @@ export class Account {
 
     }
 
-    private getSignatureAlgorithmId() {
+    private getSignatureSchemeId() {
         if (this.provider.isKeyed()) {
-            return this.getPrivateSignatureKey().getSignatureAlgorithmId();
+            return this.getPrivateSignatureKey().getSignatureSchemeId();
         } else {
-            throw new IllegalStateError("Cannot get signature algorithm ID without a keyed provider.")
+            throw new IllegalStateError("Cannot get signature scheme ID without a keyed provider.")
         }
     }
 

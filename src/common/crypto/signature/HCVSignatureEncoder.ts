@@ -1,5 +1,5 @@
 import {SignatureEncoderInterface} from "./signature-encoder";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId, SignatureScheme} from "./signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId, SignatureScheme} from "./signature-interface";
 import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
 import {HCVCodec} from "../../utils/HCVCodec";
 import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
@@ -13,8 +13,8 @@ export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
     private static SECP256K1_SIGNATURE_KEY = "SECP256K1";
 
     private static readonly SIG_SCHEME_KEYS = [
-        { algoId: SignatureAlgorithmId.ML_DSA_65, label: HCVSignatureEncoder.ML_DSA65_SIGNATURE_KEY },
-        { algoId: SignatureAlgorithmId.SECP256K1, label: HCVSignatureEncoder.SECP256K1_SIGNATURE_KEY }
+        { algoId: SignatureSchemeId.ML_DSA_65, label: HCVSignatureEncoder.ML_DSA65_SIGNATURE_KEY },
+        { algoId: SignatureSchemeId.SECP256K1, label: HCVSignatureEncoder.SECP256K1_SIGNATURE_KEY }
     ];
 
     static createHexHCVSignatureEncoder() {
@@ -94,10 +94,10 @@ export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
     }
 
     private getSignatureSchemeKey(signatureScheme: SignatureScheme) {
-        const algoId = signatureScheme.getSignatureAlgorithmId();
+        const algoId = signatureScheme.getSignatureSchemeId();
         switch (algoId) {
-            case SignatureAlgorithmId.ML_DSA_65: return HCVSignatureEncoder.ML_DSA65_SIGNATURE_KEY;
-            case SignatureAlgorithmId.SECP256K1: return HCVSignatureEncoder.SECP256K1_SIGNATURE_KEY;
+            case SignatureSchemeId.ML_DSA_65: return HCVSignatureEncoder.ML_DSA65_SIGNATURE_KEY;
+            case SignatureSchemeId.SECP256K1: return HCVSignatureEncoder.SECP256K1_SIGNATURE_KEY;
             default: throw new Error("Unsupported signature scheme: " + algoId);
         }
     }

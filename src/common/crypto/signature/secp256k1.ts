@@ -3,7 +3,7 @@ import {
     BasePublicSignatureKey,
     PrivateSignatureKey,
     PublicSignatureKey,
-    SignatureAlgorithmId,
+    SignatureSchemeId,
     SignatureScheme
 } from "./signature-interface";
 import {getPublicKey, PrivKey, sign, utils, etc, verify} from '@noble/secp256k1';
@@ -18,8 +18,8 @@ export class Secp256k1SignatureScheme implements SignatureScheme {
     private static SIGNATURE_SIZE = 65;
 
 
-    getSignatureAlgorithmId(): number {
-        return SignatureAlgorithmId.SECP256K1;
+    getSignatureSchemeId(): number {
+        return SignatureSchemeId.SECP256K1;
     }
 
     getSignatureSize(): number {

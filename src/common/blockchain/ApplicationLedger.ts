@@ -15,8 +15,8 @@ import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 
 export class ApplicationLedger {
     provider: any;
-    allowedSignatureAlgorithmIds: any;
-    allowedPkeAlgorithmIds: any;
+    allowedSignatureSchemeIds: any;
+    allowedPkeSchemeIds: any;
     vb: ApplicationLedgerVb;
     gasPrice: CMTSToken;
 
@@ -29,8 +29,8 @@ export class ApplicationLedger {
 
         if (this.provider.isKeyed()) {
             const privateKey = this.provider.getPrivateSignatureKey();
-            this.allowedSignatureAlgorithmIds = [ privateKey.getSignatureAlgorithmId() ];
-            this.allowedPkeAlgorithmIds = [];
+            this.allowedSignatureSchemeIds = [ privateKey.getSignatureSchemeId() ];
+            this.allowedPkeSchemeIds = [];
         }
     }
 
@@ -49,11 +49,11 @@ export class ApplicationLedger {
 
     async _create(applicationId: string) {
         if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without a keyed provider.'
-        await this.vb.setAllowedSignatureAlgorithms({
-            algorithmIds: this.allowedSignatureAlgorithmIds
+        await this.vb.setAllowedSignatureSchemes({
+            schemeIds: this.allowedSignatureSchemeIds
         });
-        await this.vb.setAllowedPkeAlgorithms({
-            algorithmIds: this.allowedPkeAlgorithmIds
+        await this.vb.setAllowedPkeSchemes({
+            schemeIds: this.allowedPkeSchemeIds
         });
     }
 
@@ -71,9 +71,9 @@ export class ApplicationLedger {
         }
 
         if (this.vb.height == 0) {
-            // genesis -> declare the signature algorithm and the application
-            await this.vb.setAllowedSignatureAlgorithms({
-                algorithmIds: this.allowedSignatureAlgorithmIds
+            // genesis -> declare the signature scheme and the application
+            await this.vb.setAllowedSignatureSchemes({
+                schemeIds: this.allowedSignatureSchemeIds
             });
             await this.vb.addDeclaration({
                 applicationId: Utils.binaryFromHexa(object.applicationId)

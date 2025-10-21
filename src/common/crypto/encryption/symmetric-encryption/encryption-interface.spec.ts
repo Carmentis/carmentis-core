@@ -1,7 +1,7 @@
 import {
     AES256GCMSymmetricEncryptionKey,
     ExtendedSymmetricEncryptionKey,
-    SymmetricEncryptionAlgorithmId,
+    SymmetricEncryptionSchemeId,
     SymmetricEncryptionKey
 } from './encryption-interface';
 
@@ -10,7 +10,7 @@ describe('ExtendedSymmetricEncryptionKey', () => {
 
     beforeEach(() => {
         mockWrappedKey = {
-            getSymmetricEncryptionSchemeId: jest.fn(() => SymmetricEncryptionAlgorithmId.AES_256_GCM),
+            getSymmetricEncryptionSchemeId: jest.fn(() => SymmetricEncryptionSchemeId.AES_256_GCM),
             encrypt: jest.fn((plaintext: Uint8Array) => new Uint8Array([...plaintext, 1])),
             decrypt: jest.fn((ciphertext: Uint8Array) => new Uint8Array(ciphertext.slice(0, -1))),
             getRawSecretKey: jest.fn(() => new Uint8Array(32).fill(8))
@@ -36,7 +36,7 @@ describe('ExtendedSymmetricEncryptionKey', () => {
 
     it('should return the wrapped key\'s encryption algorithm ID', () => {
         const key = new ExtendedSymmetricEncryptionKey(mockWrappedKey);
-        expect(key.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionAlgorithmId.AES_256_GCM);
+        expect(key.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionSchemeId.AES_256_GCM);
     });
 
     it('should correctly encrypt data using the wrapped key', () => {
@@ -85,7 +85,7 @@ describe('AES256GCMSymmetricEncryptionKey', () => {
         const keyBytes = new Uint8Array(32);
         crypto.getRandomValues(keyBytes);
         const keyInstance = AES256GCMSymmetricEncryptionKey.createFromBytes(keyBytes);
-        expect(keyInstance.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionAlgorithmId.AES_256_GCM);
+        expect(keyInstance.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionSchemeId.AES_256_GCM);
     });
 
     it('should encrypt and decrypt data correctly', () => {

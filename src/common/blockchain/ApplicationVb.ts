@@ -11,7 +11,7 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   constructor(provider: Provider) {
     super({ provider, type: CHAIN.VB_APPLICATION });
 
-    this.registerSectionCallback(SECTIONS.APP_SIG_ALGORITHM, this.signatureAlgorithmCallback);
+    this.registerSectionCallback(SECTIONS.APP_SIG_SCHEME, this.signatureSchemeCallback);
     this.registerSectionCallback(SECTIONS.APP_DECLARATION, this.declarationCallback);
     this.registerSectionCallback(SECTIONS.APP_DESCRIPTION, this.descriptionCallback);
     this.registerSectionCallback(SECTIONS.APP_SIGNATURE, this.signatureCallback);
@@ -20,8 +20,8 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   /**
     Update methods
   */
-  async setSignatureAlgorithm(object: any) {
-    await this.addSection(SECTIONS.APP_SIG_ALGORITHM, object);
+  async setSignatureScheme(object: any) {
+    await this.addSection(SECTIONS.APP_SIG_SCHEME, object);
   }
 
   async setDeclaration(object: ApplicationDeclaration) {
@@ -49,8 +49,8 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   /**
     Section callbacks
   */
-  async signatureAlgorithmCallback(microblock: any, section: any) {
-    this.getState().signatureAlgorithmId = section.object.algorithmId;
+  async signatureSchemeCallback(microblock: any, section: any) {
+    this.getState().signatureSchemeId = section.object.schemeId;
   }
 
   async declarationCallback(microblock: any, section: any) {
@@ -75,13 +75,13 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
     return await organization.getPublicKey();
   }
 
-  private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
+  private static UNDEFINED_SIGNATURE_SCHEME_ID = -1;
   private static UNDEFINED_ORGANIZATION_ID = Utils.getNullHash();
   private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
 
   getInitialState(): ApplicationVBState {
     return {
-      signatureAlgorithmId: ApplicationVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
+      signatureSchemeId: ApplicationVb.UNDEFINED_SIGNATURE_SCHEME_ID,
       organizationId: ApplicationVb.UNDEFINED_ORGANIZATION_ID,
       descriptionHeight: ApplicationVb.UNDEFINED_DESCRIPTION_HEIGHT
     }
@@ -95,7 +95,7 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
 
     checker.expects(
       checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-      SECTIONS.APP_SIG_ALGORITHM
+      SECTIONS.APP_SIG_SCHEME
     );
     checker.expects(
       checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,

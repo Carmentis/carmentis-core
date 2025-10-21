@@ -3,7 +3,7 @@ import {VirtualBlockchain} from "./VirtualBlockchain";
 import {StructureChecker} from "./StructureChecker";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Crypto} from "../crypto/crypto";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/Provider";
 import {MicroblockSection, ProtocolVBState} from "./types";
@@ -17,9 +17,9 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolVBState> {
         super({ provider, type: CHAIN.VB_PROTOCOL });
     }
 
-    async setSignatureAlgorithm(signatureAlgorithmId: SignatureAlgorithmId) {
-        await this.addSection(SECTIONS.PROTOCOL_SIG_ALGORITHM, {
-            algorithmId: signatureAlgorithmId
+    async setSignatureScheme(signatureSchemeId: SignatureSchemeId) {
+        await this.addSection(SECTIONS.PROTOCOL_SIG_SCHEME, {
+            schemeId: signatureSchemeId
         });
     }
 
@@ -38,8 +38,8 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolVBState> {
         const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
         const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.PROTOCOL_PUBLIC_KEY).object.publicKey;
         const cryptoFactory = new CryptoSchemeFactory();
-        const signatureAlgorithmId = this.getState().signatureAlgorithmId;
-        const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
+        const signatureSchemeId = this.getState().signatureSchemeId;
+        const publicKey = cryptoFactory.createPublicSignatureKey(signatureSchemeId, rawPublicKey)
 
         return publicKey;
     }

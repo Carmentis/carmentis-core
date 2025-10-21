@@ -148,8 +148,8 @@ export const VIRTUAL_BLOCKCHAIN_STATE: Schema = {
 const ACCOUNT_VB_STATE: Schema = {
   label: 'AccountVbState',
   definition: [
-    { name: 'signatureAlgorithmId', type: DATA.TYPE_UINT8 },
-    { name: 'publicKeyHeight',      type: DATA.TYPE_UINT48 }
+    { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
+    { name: 'publicKeyHeight',   type: DATA.TYPE_UINT48 }
   ]
 };
 
@@ -159,7 +159,7 @@ const ACCOUNT_VB_STATE: Schema = {
 const VALIDATOR_NODE_VB_STATE: Schema = {
   label: 'ValidatorNodeVbState',
   definition: [
-    { name: 'signatureAlgorithmId',     type: DATA.TYPE_UINT8 },
+    { name: 'signatureSchemeId',        type: DATA.TYPE_UINT8 },
     { name: 'organizationId',           type: DATA.TYPE_BIN256 },
     { name: 'descriptionHeight',        type: DATA.TYPE_UINT48 },
     { name: 'rpcEndpointHeight',        type: DATA.TYPE_UINT48 },
@@ -173,9 +173,9 @@ const VALIDATOR_NODE_VB_STATE: Schema = {
 const ORGANIZATION_VB_STATE: Schema = {
   label: 'OrganizationVbState',
   definition: [
-    { name: 'signatureAlgorithmId', type: DATA.TYPE_UINT8 },
-    { name: 'publicKeyHeight',      type: DATA.TYPE_UINT48 },
-    { name: 'descriptionHeight',    type: DATA.TYPE_UINT48 }
+    { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
+    { name: 'publicKeyHeight',   type: DATA.TYPE_UINT48 },
+    { name: 'descriptionHeight', type: DATA.TYPE_UINT48 }
   ]
 };
 
@@ -185,9 +185,9 @@ const ORGANIZATION_VB_STATE: Schema = {
 const APPLICATION_VB_STATE: Schema = {
   label: 'ApplicationVbState',
   definition: [
-    { name: 'signatureAlgorithmId', type: DATA.TYPE_UINT8 },
-    { name: 'organizationId',       type: DATA.TYPE_BIN256 },
-    { name: 'descriptionHeight',    type: DATA.TYPE_UINT48 }
+    { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
+    { name: 'organizationId',    type: DATA.TYPE_BIN256 },
+    { name: 'descriptionHeight', type: DATA.TYPE_UINT48 }
   ]
 };
 
@@ -197,9 +197,9 @@ const APPLICATION_VB_STATE: Schema = {
 const APP_LEDGER_VB_STATE: Schema = {
   label: 'AppLedgerVbState',
   definition: [
-    { name: 'allowedSignatureAlgorithmIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
-    { name: 'allowedPkeAlgorithmIds',       type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
-    { name: 'applicationId',                type: DATA.TYPE_BIN256 },
+    { name: 'allowedSignatureSchemeIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
+    { name: 'allowedPkeSchemeIds',       type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
+    { name: 'applicationId',             type: DATA.TYPE_BIN256 },
     {
       name: 'channels',
       type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,

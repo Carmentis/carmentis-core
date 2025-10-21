@@ -2,7 +2,7 @@
 import {GenericSymmetricKeyEncoder} from './generic-symmetric-key-encoder';
 import {
     AES256GCMSymmetricEncryptionKey,
-    SymmetricEncryptionAlgorithmId,
+    SymmetricEncryptionSchemeId,
     SymmetricEncryptionKey
 } from "./encryption-interface";
 
@@ -18,8 +18,8 @@ describe('GenericSymmetricKeyEncoder', () => {
             const key = AES256GCMSymmetricEncryptionKey.generate();
             const encodedKey = encoder.encodeAsUint8Array(key);
             const decodedKey = encoder.decodeFromUint8Array(encodedKey);
-            expect(key.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionAlgorithmId.AES_256_GCM);
-            expect(decodedKey.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionAlgorithmId.AES_256_GCM);
+            expect(key.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionSchemeId.AES_256_GCM);
+            expect(decodedKey.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionSchemeId.AES_256_GCM);
             expect(key.getRawSecretKey()).toEqual(decodedKey.getRawSecretKey());
         });
     });

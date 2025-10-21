@@ -95,7 +95,7 @@ export class BytesSignatureEncoder implements SignatureEncoderInterface<Uint8Arr
 
     encodePublicKey(publicKey: PublicSignatureKey): Uint8Array {
         return utf8ToBytes(JSON.stringify({
-            signatureSchemeId: publicKey.getSignatureAlgorithmId(),
+            signatureSchemeId: publicKey.getSignatureSchemeId(),
             publicKey: bytesToHex(publicKey.getPublicKeyAsBytes())
         }));
     }
@@ -114,7 +114,7 @@ export class BytesSignatureEncoder implements SignatureEncoderInterface<Uint8Arr
 
     encodePrivateKey(privateKey: PrivateSignatureKey): Uint8Array {
         return utf8ToBytes(JSON.stringify({
-            signatureSchemeId: privateKey.getSignatureAlgorithmId(),
+            signatureSchemeId: privateKey.getSignatureSchemeId(),
             privateKey: bytesToHex(privateKey.getPrivateKeyAsBytes())
         }));
     }

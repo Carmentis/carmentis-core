@@ -1,12 +1,12 @@
 import {SECTIONS} from "../constants/constants";
 import {ProtocolVb} from "./ProtocolVb";
 import {Crypto} from "../crypto/crypto";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {CMTSToken} from "../economics/currencies/token";
 
 export class Protocol {
   provider: any;
-  signatureAlgorithmId?: SignatureAlgorithmId;
+  signatureSchemeId?: SignatureSchemeId;
   vb: ProtocolVb;
   gasPrice: CMTSToken;
 
@@ -19,13 +19,13 @@ export class Protocol {
 
     if (this.provider.isKeyed()) {
       const privateKey = this.provider.getPrivateSignatureKey();
-      this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
+      this.signatureSchemeId = privateKey.getSignatureSchemeId();
     }
   }
 
   async _create() {
-    if (typeof this.signatureAlgorithmId === 'undefined') throw 'Cannot create a protocol VB without a signature algorithm';
-    await this.vb.setSignatureAlgorithm(this.signatureAlgorithmId);
+    if (typeof this.signatureSchemeId === 'undefined') throw 'Cannot create a protocol VB without a signature scheme';
+    await this.vb.setSignatureScheme(this.signatureSchemeId);
 
     if (!this.provider.isKeyed()) throw 'Cannot create a protocol VB without a keyed provider';
     const privateKey: PrivateSignatureKey = this.provider.getPrivateSignatureKey();

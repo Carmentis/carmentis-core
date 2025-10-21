@@ -38,7 +38,7 @@ import {BlockInformationWrapper} from "../wrappers/BlockInformationWrapper";
 import {BlockContentWrapper} from "../wrappers/BlockContentWrapper";
 import {CometBFTPublicKey} from "../cometbft/CometBFTPublicKey";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
-import {CryptographicHashAlgorithmId} from "../crypto/hash/hash-interface";
+import {CryptographicHashSchemeId} from "../crypto/hash/hash-interface";
 import {EncoderFactory} from "../utils/encoder";
 import {MicroBlockWrapper} from "../wrappers/MicroBlockWrapper";
 
@@ -512,7 +512,7 @@ export class BlockchainFacade{
 
 
     async getValidatorNodeByCometBFTPublicKey(publicKey: CometBFTPublicKey) {
-        const sha256 = CryptoSchemeFactory.createCryptographicHash(CryptographicHashAlgorithmId.SHA256);
+        const sha256 = CryptoSchemeFactory.createCryptographicHash(CryptographicHashSchemeId.SHA256);
         const base64 = EncoderFactory.bytesToBase64Encoder();
         const key = base64.decode(publicKey.getPublicKey());
         const hashedKey = sha256.hash(key);

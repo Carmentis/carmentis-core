@@ -2,7 +2,7 @@ import {CHAIN, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Organization} from "./Organization";
 import {StructureChecker} from "./StructureChecker";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
 import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeRpcEndpoint, ValidatorNodeNetworkIntegration, ValidatorNodeVBState} from "./types";
@@ -11,7 +11,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
   constructor(provider: Provider) {
     super({ provider, type: CHAIN.VB_VALIDATOR_NODE });
 
-    this.registerSectionCallback(SECTIONS.VN_SIG_ALGORITHM, this.signatureAlgorithmCallback);
+    this.registerSectionCallback(SECTIONS.VN_SIG_SCHEME, this.signatureSchemeCallback);
     this.registerSectionCallback(SECTIONS.VN_DECLARATION, this.declarationCallback);
     this.registerSectionCallback(SECTIONS.VN_DESCRIPTION, this.descriptionCallback);
     this.registerSectionCallback(SECTIONS.VN_RPC_ENDPOINT, this.rpcEndpointCallback);
@@ -22,8 +22,8 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
   /**
     Update methods
    */
-  async setSignatureAlgorithm(object: any) {
-    await this.addSection(SECTIONS.VN_SIG_ALGORITHM, object);
+  async setSignatureScheme(object: any) {
+    await this.addSection(SECTIONS.VN_SIG_SCHEME, object);
   }
 
   async setDeclaration(object: ValidatorNodeDeclaration) {
@@ -62,8 +62,8 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
   /**
     Section callbacks
    */
-  async signatureAlgorithmCallback(microblock: any, section: any) {
-    this.getState().signatureAlgorithmId = section.object.algorithmId;
+  async signatureSchemeCallback(microblock: any, section: any) {
+    this.getState().signatureSchemeId = section.object.schemeId;
   }
 
   async declarationCallback(microblock: any, section: any) {
@@ -95,7 +95,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
     return await organization.getPublicKey();
   }
 
-  private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
+  private static UNDEFINED_SIGNATURE_SCHEME_ID = -1;
   private static UNDEFINED_ORGANIZATION_ID = Utils.getNullHash();
   private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
   private static UNDEFINED_RPC_ENDPOINT_HEIGHT = 0;
@@ -103,7 +103,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
 
   getInitialState(): ValidatorNodeVBState {
     return {
-      signatureAlgorithmId: ValidatorNodeVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
+      signatureSchemeId: ValidatorNodeVb.UNDEFINED_SIGNATURE_SCHEME_ID,
       organizationId: ValidatorNodeVb.UNDEFINED_ORGANIZATION_ID,
       descriptionHeight: ValidatorNodeVb.UNDEFINED_DESCRIPTION_HEIGHT,
       rpcEndpointHeight: ValidatorNodeVb.UNDEFINED_RPC_ENDPOINT_HEIGHT,
@@ -119,7 +119,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
 
     checker.expects(
       checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-      SECTIONS.VN_SIG_ALGORITHM
+      SECTIONS.VN_SIG_SCHEME
     );
     checker.expects(
       checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,

@@ -1,5 +1,5 @@
 import {
-    SignatureAlgorithmId
+    SignatureSchemeId
 } from "./signature-interface";
 import {toBytes} from "@noble/ciphers/utils";
 import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
@@ -35,7 +35,7 @@ describe('ML DSA 65 Signature', () => {
         const rawPublicKey = privateKey.getPublicKey().getPublicKeyAsBytes();
 
         const cryptoFactory = new CryptoSchemeFactory();
-        const publicKey = cryptoFactory.createPublicSignatureKey(SignatureAlgorithmId.ML_DSA_65, rawPublicKey);
+        const publicKey = cryptoFactory.createPublicSignatureKey(SignatureSchemeId.ML_DSA_65, rawPublicKey);
         const msg  = toBytes("Hello world");
         const signature = privateKey.sign(msg);
         expect(publicKey.verify(msg, signature)).toBe(true);
@@ -74,7 +74,7 @@ describe('Generic signature encoder', () => {
         const rawPublicKey = encoder.encodePublicKey(publicKey);
         const publicKey2 = encoder.decodePublicKey(rawPublicKey);
         expect(publicKey2.getPublicKeyAsBytes()).toEqual(publicKey.getPublicKeyAsBytes());
-        expect(publicKey2.getSignatureAlgorithmId()).toEqual(publicKey.getSignatureAlgorithmId());
+        expect(publicKey2.getSignatureSchemeId()).toEqual(publicKey.getSignatureSchemeId());
     })
 })
 
@@ -90,7 +90,7 @@ describe('HCV signature encoder', () => {
         const recoveredPrivateKey = encoder.decodePrivateKey(encoder.encodePrivateKey(privateKey));
         expect(publicKey.getPublicKeyAsBytes()).toEqual(recoveredPublicKey.getPublicKeyAsBytes());
         expect(privateKey.getPrivateKeyAsBytes()).toEqual(recoveredPrivateKey.getPrivateKeyAsBytes());
-        expect(privateKey.getSignatureAlgorithmId()).toEqual(recoveredPrivateKey.getSignatureAlgorithmId());
+        expect(privateKey.getSignatureSchemeId()).toEqual(recoveredPrivateKey.getSignatureSchemeId());
     })
 
     test("With Hex encoder", () => {
@@ -99,6 +99,6 @@ describe('HCV signature encoder', () => {
         const recoveredPrivateKey = encoder.decodePrivateKey(encoder.encodePrivateKey(privateKey));
         expect(publicKey.getPublicKeyAsBytes()).toEqual(recoveredPublicKey.getPublicKeyAsBytes());
         expect(privateKey.getPrivateKeyAsBytes()).toEqual(recoveredPrivateKey.getPrivateKeyAsBytes());
-        expect(privateKey.getSignatureAlgorithmId()).toEqual(recoveredPrivateKey.getSignatureAlgorithmId());
+        expect(privateKey.getSignatureSchemeId()).toEqual(recoveredPrivateKey.getSignatureSchemeId());
     })
 })

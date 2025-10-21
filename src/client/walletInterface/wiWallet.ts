@@ -82,11 +82,11 @@ export abstract class wiWallet<T> {
             if (genesisSeed === undefined) throw 'Invalid genesisSeed provided, expected string, got: ' + typeof genesisSeed;
 
             // derive the actor key from the private key and the genesis seed
-            const algorithmId = privateKey.getSignatureAlgorithmId();
+            const schemeId = privateKey.getSignatureSchemeId();
             const kdf = CryptoSchemeFactory.createDefaultKDF();
             const actorSignaturePrivateKey = CryptoSchemeFactory.createVirtualBlockchainPrivateSignature(
                 kdf,
-                algorithmId,
+                schemeId,
                 walletSeed,
                 genesisSeed
             );

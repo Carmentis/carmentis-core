@@ -54,7 +54,7 @@ export interface SymmetricEncryptionKey  {
  * The identifiers in this enum can be utilized to indicate the intended algorithm
  * within encryption workflows or cryptographic libraries requiring algorithm specification.
  */
-export enum SymmetricEncryptionAlgorithmId {
+export enum SymmetricEncryptionSchemeId {
     AES_256_GCM,
 }
 
@@ -63,7 +63,7 @@ export class AES256GCMSymmetricEncryptionScheme implements SymmetricEncryptionKe
     private static KEY_LENGTH_IN_BYTES = 32;
 
     getSymmetricEncryptionSchemeId(): number {
-        return SymmetricEncryptionAlgorithmId.AES_256_GCM;
+        return SymmetricEncryptionSchemeId.AES_256_GCM;
     }
 
     getSupportedKeyLengths(): number[] {
@@ -125,7 +125,7 @@ export class AES256GCMSymmetricEncryptionKey implements SymmetricEncryptionKey {
      * @return {number} The numerical ID corresponding to the encryption algorithm.
      */
     getSymmetricEncryptionSchemeId(): number {
-        return SymmetricEncryptionAlgorithmId.AES_256_GCM;
+        return SymmetricEncryptionSchemeId.AES_256_GCM;
     }
 
     /**
@@ -250,6 +250,6 @@ export interface EncapsulationKeyEncoder<T> {
     decode( key: string ): T;
 }
 
-export enum KeyExchangeAlgorithmId {
+export enum KeyExchangeSchemeId {
     ML_KEM,
 }

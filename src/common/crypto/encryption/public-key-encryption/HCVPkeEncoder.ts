@@ -3,7 +3,7 @@ import {AbstractPrivateDecryptionKey, AbstractPublicEncryptionKey} from "./Publi
 import {EncoderFactory, EncoderInterface} from "../../../utils/encoder";
 import {HCVCodec} from "../../../utils/HCVCodec";
 import {CryptoSchemeFactory} from "../../CryptoSchemeFactory";
-import {PublicKeyEncryptionAlgorithmId} from "./PublicKeyEncryptionAlgorithmId";
+import {PublicKeyEncryptionSchemeId} from "./PublicKeyEncryptionSchemeId";
 
 export class HCVPkeEncoder implements PkeEncoderInterface {
     private static PKE_KEY = "PKE";
@@ -11,7 +11,7 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
     private static PK_PKE_KEY = "PK";
 
     private static readonly PKE_SCHEMES = [
-        { algoId: PublicKeyEncryptionAlgorithmId.ML_KEM_768_AES_256_GCM, label: "MLKEM768AES256GCM" },
+        { algoId: PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM, label: "MLKEM768AES256GCM" },
     ];
 
     static createHexHCVPkeEncoder() {

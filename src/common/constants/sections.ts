@@ -24,7 +24,7 @@ export const CONSTRAINT_NAMES = [
 // ============================================================================================================================ //
 //  Protocol                                                                                                                    //
 // ============================================================================================================================ //
-export const PROTOCOL_SIG_ALGORITHM   = SectionType.PROTOCOL_SIG_ALGORITHM;
+export const PROTOCOL_SIG_SCHEME      = SectionType.PROTOCOL_SIG_SCHEME;
 export const PROTOCOL_PUBLIC_KEY      = SectionType.PROTOCOL_PUBLIC_KEY;
 export const PROTOCOL_PROTOCOL_UPDATE = SectionType.PROTOCOL_PROTOCOL_UPDATE;
 export const PROTOCOL_NODE_UPDATE     = SectionType.PROTOCOL_NODE_UPDATE;
@@ -32,10 +32,10 @@ export const PROTOCOL_SIGNATURE       = SectionType.PROTOCOL_SIGNATURE;
 
 const PROTOCOL: Schema[] = [] as const;
 
-PROTOCOL[PROTOCOL_SIG_ALGORITHM] = {
-  label: 'PROTOCOL_SIG_ALGORITHM',
+PROTOCOL[PROTOCOL_SIG_SCHEME] = {
+  label: 'PROTOCOL_SIG_SCHEME',
   definition: [
-    { name: 'algorithmId', type: DATA.TYPE_UINT8 }
+    { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
 
@@ -77,7 +77,7 @@ PROTOCOL[PROTOCOL_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
-export const ACCOUNT_SIG_ALGORITHM  = SectionType.ACCOUNT_SIG_ALGORITHM;
+export const ACCOUNT_SIG_SCHEME     = SectionType.ACCOUNT_SIG_SCHEME;
 export const ACCOUNT_PUBLIC_KEY     = SectionType.ACCOUNT_PUBLIC_KEY;
 export const ACCOUNT_TOKEN_ISSUANCE = SectionType.ACCOUNT_TOKEN_ISSUANCE;
 export const ACCOUNT_CREATION       = SectionType.ACCOUNT_CREATION;
@@ -86,10 +86,10 @@ export const ACCOUNT_SIGNATURE      = SectionType.ACCOUNT_SIGNATURE;
 
 const ACCOUNT: Schema[] = [] as const;
 
-ACCOUNT[ACCOUNT_SIG_ALGORITHM] = {
-  label: 'ACCOUNT_SIG_ALGORITHM',
+ACCOUNT[ACCOUNT_SIG_SCHEME] = {
+  label: 'ACCOUNT_SIG_SCHEME',
   definition: [
-    { name: 'algorithmId', type: DATA.TYPE_UINT8 }
+    { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
 
@@ -135,7 +135,7 @@ ACCOUNT[ACCOUNT_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Validator node                                                                                                              //
 // ============================================================================================================================ //
-export const VN_SIG_ALGORITHM       = SectionType.VN_SIG_ALGORITHM;
+export const VN_SIG_SCHEME          = SectionType.VN_SIG_SCHEME;
 export const VN_DECLARATION         = SectionType.VN_DECLARATION;
 export const VN_DESCRIPTION         = SectionType.VN_DESCRIPTION;
 export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
@@ -144,10 +144,10 @@ export const VN_SIGNATURE           = SectionType.VN_SIGNATURE;
 
 const VALIDATOR_NODE: Schema[] = [] as const;
 
-VALIDATOR_NODE[VN_SIG_ALGORITHM] = {
-  label: 'VN_SIG_ALGORITHM',
+VALIDATOR_NODE[VN_SIG_SCHEME] = {
+  label: 'VN_SIG_SCHEME',
   definition: [
-    { name: 'algorithmId', type: DATA.TYPE_UINT8 }
+    { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
 
@@ -190,7 +190,7 @@ VALIDATOR_NODE[VN_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Organization                                                                                                                //
 // ============================================================================================================================ //
-export const ORG_SIG_ALGORITHM = SectionType.ORG_SIG_ALGORITHM;
+export const ORG_SIG_SCHEME    = SectionType.ORG_SIG_SCHEME;
 export const ORG_PUBLIC_KEY    = SectionType.ORG_PUBLIC_KEY;
 export const ORG_DESCRIPTION   = SectionType.ORG_DESCRIPTION;
 export const ORG_SERVER        = SectionType.ORG_SERVER;
@@ -198,10 +198,10 @@ export const ORG_SIGNATURE     = SectionType.ORG_SIGNATURE;
 
 const ORGANIZATION: Schema[] = [] as const;
 
-ORGANIZATION[ORG_SIG_ALGORITHM] = {
-  label: 'ORG_SIG_ALGORITHM',
+ORGANIZATION[ORG_SIG_SCHEME] = {
+  label: 'ORG_SIG_SCHEME',
   definition: [
-    { name: 'algorithmId', type: DATA.TYPE_UINT8 }
+    { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
 
@@ -239,17 +239,17 @@ ORGANIZATION[ORG_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Application                                                                                                                 //
 // ============================================================================================================================ //
-export const APP_SIG_ALGORITHM = SectionType.APP_SIG_ALGORITHM;
-export const APP_DECLARATION   = SectionType.APP_DECLARATION;
-export const APP_DESCRIPTION   = SectionType.APP_DESCRIPTION;
-export const APP_SIGNATURE     = SectionType.APP_SIGNATURE;
+export const APP_SIG_SCHEME  = SectionType.APP_SIG_SCHEME;
+export const APP_DECLARATION = SectionType.APP_DECLARATION;
+export const APP_DESCRIPTION = SectionType.APP_DESCRIPTION;
+export const APP_SIGNATURE   = SectionType.APP_SIGNATURE;
 
 const APPLICATION: Schema[] = [] as const;
 
-APPLICATION[APP_SIG_ALGORITHM] = {
-  label: 'APP_SIG_ALGORITHM',
+APPLICATION[APP_SIG_SCHEME] = {
+  label: 'APP_SIG_SCHEME',
   definition: [
-    { name: 'algorithmId', type: DATA.TYPE_UINT8 }
+    { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
 
@@ -280,34 +280,34 @@ APPLICATION[APP_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Application ledger                                                                                                          //
 // ============================================================================================================================ //
-export const APP_LEDGER_ALLOWED_SIG_ALGORITHMS = SectionType.APP_LEDGER_ALLOWED_SIG_ALGORITHMS;
-export const APP_LEDGER_ALLOWED_PKE_ALGORITHMS = SectionType.APP_LEDGER_ALLOWED_PKE_ALGORITHMS;
-export const APP_LEDGER_DECLARATION            = SectionType.APP_LEDGER_DECLARATION;
-export const APP_LEDGER_ACTOR_CREATION         = SectionType.APP_LEDGER_ACTOR_CREATION;
-export const APP_LEDGER_CHANNEL_CREATION       = SectionType.APP_LEDGER_CHANNEL_CREATION;
-export const APP_LEDGER_SHARED_SECRET          = SectionType.APP_LEDGER_SHARED_SECRET;
-export const APP_LEDGER_CHANNEL_INVITATION     = SectionType.APP_LEDGER_CHANNEL_INVITATION;
-export const APP_LEDGER_ACTOR_SUBSCRIPTION     = SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION;
-export const APP_LEDGER_PUBLIC_CHANNEL_DATA    = SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA;
-export const APP_LEDGER_PRIVATE_CHANNEL_DATA   = SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA;
-export const APP_LEDGER_AUTHOR                 = SectionType.APP_LEDGER_AUTHOR;
-export const APP_LEDGER_ENDORSER               = SectionType.APP_LEDGER_ENDORSER;
-export const APP_LEDGER_ENDORSER_SIGNATURE     = SectionType.APP_LEDGER_ENDORSER_SIGNATURE;
-export const APP_LEDGER_AUTHOR_SIGNATURE       = SectionType.APP_LEDGER_AUTHOR_SIGNATURE;
+export const APP_LEDGER_ALLOWED_SIG_SCHEMES  = SectionType.APP_LEDGER_ALLOWED_SIG_SCHEMES;
+export const APP_LEDGER_ALLOWED_PKE_SCHEMES  = SectionType.APP_LEDGER_ALLOWED_PKE_SCHEMES;
+export const APP_LEDGER_DECLARATION          = SectionType.APP_LEDGER_DECLARATION;
+export const APP_LEDGER_ACTOR_CREATION       = SectionType.APP_LEDGER_ACTOR_CREATION;
+export const APP_LEDGER_CHANNEL_CREATION     = SectionType.APP_LEDGER_CHANNEL_CREATION;
+export const APP_LEDGER_SHARED_SECRET        = SectionType.APP_LEDGER_SHARED_SECRET;
+export const APP_LEDGER_CHANNEL_INVITATION   = SectionType.APP_LEDGER_CHANNEL_INVITATION;
+export const APP_LEDGER_ACTOR_SUBSCRIPTION   = SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION;
+export const APP_LEDGER_PUBLIC_CHANNEL_DATA  = SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA;
+export const APP_LEDGER_PRIVATE_CHANNEL_DATA = SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA;
+export const APP_LEDGER_AUTHOR               = SectionType.APP_LEDGER_AUTHOR;
+export const APP_LEDGER_ENDORSER             = SectionType.APP_LEDGER_ENDORSER;
+export const APP_LEDGER_ENDORSER_SIGNATURE   = SectionType.APP_LEDGER_ENDORSER_SIGNATURE;
+export const APP_LEDGER_AUTHOR_SIGNATURE     = SectionType.APP_LEDGER_AUTHOR_SIGNATURE;
 
 const APP_LEDGER: Schema[] = [] as const;
 
-APP_LEDGER[APP_LEDGER_ALLOWED_SIG_ALGORITHMS] = {
-  label: 'APP_LEDGER_ALLOWED_SIG_ALGORITHMS',
+APP_LEDGER[APP_LEDGER_ALLOWED_SIG_SCHEMES] = {
+  label: 'APP_LEDGER_ALLOWED_SIG_SCHEMES',
   definition: [
-    { name: 'algorithmIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 }
+    { name: 'schemeIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 }
   ]
 };
 
-APP_LEDGER[APP_LEDGER_ALLOWED_PKE_ALGORITHMS] = {
-  label: 'APP_LEDGER_ALLOWED_PKE_ALGORITHMS',
+APP_LEDGER[APP_LEDGER_ALLOWED_PKE_SCHEMES] = {
+  label: 'APP_LEDGER_ALLOWED_PKE_SCHEMES',
   definition: [
-    { name: 'algorithmIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 }
+    { name: 'schemeIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 }
   ]
 };
 
@@ -359,13 +359,13 @@ APP_LEDGER[APP_LEDGER_CHANNEL_INVITATION] = {
 APP_LEDGER[APP_LEDGER_ACTOR_SUBSCRIPTION] = {
   label: 'APP_LEDGER_ACTOR_SUBSCRIPTION',
   definition: [
-    { name: 'actorId',              type: DATA.TYPE_UINT8 },
-    { name: 'actorType',            type: DATA.TYPE_UINT8 },
-    { name: 'organizationId',       type: DATA.TYPE_BIN256 },
-    { name: 'signatureAlgorithmId', type: DATA.TYPE_UINT8 },
-    { name: 'signaturePublicKey',   type: DATA.TYPE_BINARY },
-    { name: 'pkeAlgorithmId',       type: DATA.TYPE_UINT8 },
-    { name: 'pkePublicKey',         type: DATA.TYPE_BINARY }
+    { name: 'actorId',            type: DATA.TYPE_UINT8 },
+    { name: 'actorType',          type: DATA.TYPE_UINT8 },
+    { name: 'organizationId',     type: DATA.TYPE_BIN256 },
+    { name: 'signatureSchemeId',  type: DATA.TYPE_UINT8 },
+    { name: 'signaturePublicKey', type: DATA.TYPE_BINARY },
+    { name: 'pkeSchemeId',        type: DATA.TYPE_UINT8 },
+    { name: 'pkePublicKey',       type: DATA.TYPE_BINARY }
   ]
 };
 

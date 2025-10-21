@@ -5,7 +5,7 @@ import {
     BasePublicSignatureKey,
     PrivateSignatureKey,
     PublicSignatureKey,
-    SignatureAlgorithmId,
+    SignatureSchemeId,
     SignatureScheme
 } from "./signature-interface";
 import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
@@ -13,8 +13,8 @@ import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
 export class MLDSA65SignatureScheme implements SignatureScheme {
     private static SIGNATURE_SIZE = 3311;
 
-    getSignatureAlgorithmId(): number {
-        return SignatureAlgorithmId.ML_DSA_65;
+    getSignatureSchemeId(): number {
+        return SignatureSchemeId.ML_DSA_65;
     }
 
     getSignatureSize(): number {

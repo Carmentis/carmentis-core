@@ -3,7 +3,7 @@ import {VirtualBlockchain} from "./VirtualBlockchain";
 import {StructureChecker} from "./StructureChecker";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Crypto} from "../crypto/crypto";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/Provider";
 import {MicroblockSection, OrganizationDescription, OrganizationVBState} from "./types";
@@ -16,7 +16,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         }: { provider: Provider }) {
         super({ provider, type: CHAIN.VB_ORGANIZATION });
 
-        this.registerSectionCallback(SECTIONS.ORG_SIG_ALGORITHM, this.signatureAlgorithmCallback);
+        this.registerSectionCallback(SECTIONS.ORG_SIG_SCHEME, this.signatureSchemeCallback);
         this.registerSectionCallback(SECTIONS.ORG_PUBLIC_KEY, this.publicKeyCallback);
         this.registerSectionCallback(SECTIONS.ORG_DESCRIPTION, this.descriptionCallback);
         this.registerSectionCallback(SECTIONS.ORG_SIGNATURE, this.signatureCallback);
@@ -25,9 +25,9 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     /**
      Update methods
      */
-    async setSignatureAlgorithm(signatureAlgorithmId: SignatureAlgorithmId) {
-        await this.addSection(SECTIONS.ORG_SIG_ALGORITHM, {
-            algorithmId: signatureAlgorithmId
+    async setSignatureScheme(signatureSchemeId: SignatureSchemeId) {
+        await this.addSection(SECTIONS.ORG_SIG_SCHEME, {
+            schemeId: signatureSchemeId
         });
     }
 
@@ -60,8 +60,8 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     /**
      Section callbacks
      */
-    async signatureAlgorithmCallback(microblock: any, section: any) {
-        this.getState().signatureAlgorithmId = section.object.algorithmId;
+    async signatureSchemeCallback(microblock: any, section: any) {
+        this.getState().signatureSchemeId = section.object.schemeId;
     }
 
     async publicKeyCallback(microblock: any, section: any) {
@@ -99,8 +99,8 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
         const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
         const cryptoFactory = new CryptoSchemeFactory();
-        const signatureAlgorithmId = this.getState().signatureAlgorithmId;
-        const publicKey = cryptoFactory.createPublicSignatureKey(signatureAlgorithmId, rawPublicKey)
+        const signatureSchemeId = this.getState().signatureSchemeId;
+        const publicKey = cryptoFactory.createPublicSignatureKey(signatureSchemeId, rawPublicKey)
 
         return publicKey;
     }
@@ -113,7 +113,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
 
         checker.expects(
             checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-            SECTIONS.ORG_SIG_ALGORITHM
+            SECTIONS.ORG_SIG_SCHEME
         );
         checker.expects(
             checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.AT_MOST_ONE,
@@ -130,13 +130,13 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         checker.endsHere();
     }
 
-    private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
+    private static UNDEFINED_SIGNATURE_SCHEME_ID = -1;
     private static UNDEFINED_PUBLIC_KEY_HEIGHT = 0;
     private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
 
     protected getInitialState(): OrganizationVBState {
         return {
-            signatureAlgorithmId: OrganizationVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
+            signatureSchemeId: OrganizationVb.UNDEFINED_SIGNATURE_SCHEME_ID,
             publicKeyHeight: OrganizationVb.UNDEFINED_PUBLIC_KEY_HEIGHT,
             descriptionHeight: OrganizationVb.UNDEFINED_DESCRIPTION_HEIGHT
         }

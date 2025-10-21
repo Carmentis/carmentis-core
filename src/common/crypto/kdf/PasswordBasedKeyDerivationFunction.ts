@@ -1,7 +1,7 @@
-import {PasswordBasedKeyDerivationFunctionAlgorithmId} from "./PasswordBasedKeyDerivationFunctionAlgorithmId";
+import {PasswordBasedKeyDerivationFunctionSchemeId} from "./PasswordBasedKeyDerivationFunctionSchemeId";
 
 export abstract class PasswordBasedKeyDerivationFunction {
-    abstract getKeyDerivationFunctionAlgorithmId(): PasswordBasedKeyDerivationFunctionAlgorithmId;
+    abstract getKeyDerivationFunctionSchemeId(): PasswordBasedKeyDerivationFunctionSchemeId;
     abstract deriveKey(password: string, salt: string, keyLength: number): Uint8Array;
     deriveKeyNoSalt(password: string, keyLength: number): Uint8Array {
         const emptySalt = '';

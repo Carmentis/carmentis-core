@@ -9,7 +9,7 @@ import {CMTSToken} from "../economics/currencies/token";
 
 export class Application {
     provider: any;
-    signatureAlgorithmId: any;
+    signatureSchemeId: any;
     vb: ApplicationVb;
     gasPrice: CMTSToken;
 
@@ -22,13 +22,13 @@ export class Application {
 
         if (this.provider.isKeyed()) {
             const privateKey = this.provider.getPrivateSignatureKey();
-            this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
+            this.signatureSchemeId = privateKey.getSignatureSchemeId();
         }
     }
 
     async _create(organizationId: any) {
-        await this.vb.setSignatureAlgorithm({
-            algorithmId: this.signatureAlgorithmId
+        await this.vb.setSignatureScheme({
+            schemeId: this.signatureSchemeId
         });
 
         await this.vb.setDeclaration({

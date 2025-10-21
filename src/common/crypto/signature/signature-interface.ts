@@ -5,7 +5,7 @@ import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
  * identifying information and utilities for encoding public keys.
  */
 export interface SignatureScheme  {
-    getSignatureAlgorithmId(): SignatureAlgorithmId;
+    getSignatureSchemeId(): SignatureSchemeId;
     getSignatureSize(): number;
 }
 
@@ -63,8 +63,8 @@ export abstract class BasePrivateSignatureKey implements PrivateSignatureKey {
 
     abstract getPublicKey(): PublicSignatureKey;
 
-    getSignatureAlgorithmId(): SignatureAlgorithmId {
-        return this.getScheme().getSignatureAlgorithmId();
+    getSignatureSchemeId(): SignatureSchemeId {
+        return this.getScheme().getSignatureSchemeId();
     }
 
     getSignatureSize(): number {
@@ -96,8 +96,8 @@ export abstract class BasePublicSignatureKey implements PublicSignatureKey {
         return this.getScheme().getSignatureSize();
     }
 
-    getSignatureAlgorithmId(): SignatureAlgorithmId {
-        return this.getScheme().getSignatureAlgorithmId();
+    getSignatureSchemeId(): SignatureSchemeId {
+        return this.getScheme().getSignatureSchemeId();
     }
 }
 
@@ -109,7 +109,7 @@ export abstract class BasePublicSignatureKey implements PublicSignatureKey {
  * - SECP256K1: Indicates the SECP256K1 signature algorithm, typically associated with elliptic-curve cryptography.
  * - ML_DSA_65: Represents the ML-DSA-65 signature algorithm.
  */
-export enum SignatureAlgorithmId {
+export enum SignatureSchemeId {
     SECP256K1 = 0,
     ML_DSA_65 = 1,
 }

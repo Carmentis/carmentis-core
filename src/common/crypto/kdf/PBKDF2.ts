@@ -1,11 +1,11 @@
 import {pbkdf2} from "@noble/hashes/pbkdf2.js";
 import {sha256} from "@noble/hashes/sha2.js";
-import {PasswordBasedKeyDerivationFunctionAlgorithmId} from "./PasswordBasedKeyDerivationFunctionAlgorithmId";
+import {PasswordBasedKeyDerivationFunctionSchemeId} from "./PasswordBasedKeyDerivationFunctionSchemeId";
 import {PasswordBasedKeyDerivationFunction} from "./PasswordBasedKeyDerivationFunction";
 
 export class PBKDF2 extends PasswordBasedKeyDerivationFunction {
-    getKeyDerivationFunctionAlgorithmId(): PasswordBasedKeyDerivationFunctionAlgorithmId {
-        return PasswordBasedKeyDerivationFunctionAlgorithmId.PBKDF2;
+    getKeyDerivationFunctionSchemeId(): PasswordBasedKeyDerivationFunctionSchemeId {
+        return PasswordBasedKeyDerivationFunctionSchemeId.PBKDF2;
     }
 
     deriveKey(password: string, salt: string, keyLength: number): Uint8Array {

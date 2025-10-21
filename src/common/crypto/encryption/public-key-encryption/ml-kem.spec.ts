@@ -1,6 +1,6 @@
 import { MlKemPrivateDecryptionKey } from "./MlKemPrivateDecryptionKey";
 import { MlKemPublicEncryptionKey } from "./MlKemPublicEncryptionKey";
-import { PublicKeyEncryptionAlgorithmId } from "./PublicKeyEncryptionAlgorithmId";
+import { PublicKeyEncryptionSchemeId } from "./PublicKeyEncryptionSchemeId";
 import { AES256GCMSymmetricEncryptionKey } from "../symmetric-encryption/encryption-interface";
 
 function u8(arr: number[] | number, len?: number): Uint8Array {
@@ -24,8 +24,8 @@ describe("ML-KEM Public/Private Key Encryption", () => {
     expect(pk.getRawPublicKey().length).toBeGreaterThan(0);
 
     // Scheme ID sanity check
-    expect(pk.getSchemeId()).toBe(PublicKeyEncryptionAlgorithmId.ML_KEM_768_AES_256_GCM);
-    expect(sk.getScheme().getSchemeId()).toBe(PublicKeyEncryptionAlgorithmId.ML_KEM_768_AES_256_GCM);
+    expect(pk.getSchemeId()).toBe(PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM);
+    expect(sk.getScheme().getSchemeId()).toBe(PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM);
   });
 
   it("should encrypt with the public key and decrypt with the private key (round-trip)", () => {

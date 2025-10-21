@@ -8,7 +8,7 @@ import {Provider} from "../providers/Provider";
 
 export class ValidatorNode {
   provider: any;
-  signatureAlgorithmId: any;
+  signatureSchemeId: any;
   vb: ValidatorNodeVb;
   gasPrice: CMTSToken;
 
@@ -21,13 +21,13 @@ export class ValidatorNode {
 
     if (this.provider.isKeyed()) {
       const privateKey = this.provider.getPrivateSignatureKey();
-      this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
+      this.signatureSchemeId = privateKey.getSignatureSchemeId();
     }
   }
 
   async _create(organizationId: any) {
-    await this.vb.setSignatureAlgorithm({
-      algorithmId: this.signatureAlgorithmId
+    await this.vb.setSignatureScheme({
+      schemeId: this.signatureSchemeId
     });
 
     await this.vb.setDeclaration({

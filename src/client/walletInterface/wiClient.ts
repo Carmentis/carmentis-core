@@ -7,7 +7,6 @@ import {SchemaSerializer, SchemaUnserializer} from "../../common/data/schemaSeri
 import {randomBytes} from "@noble/post-quantum/utils";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {CryptoSchemeFactory} from "../../common/crypto/CryptoSchemeFactory";
-import {SignatureAlgorithmId} from "../../common/crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
 import {WI_INVALID_SIGNATURE} from "../../common/constants/errors";
 import {EncoderFactory, EncoderInterface} from "../../common/utils/encoder";

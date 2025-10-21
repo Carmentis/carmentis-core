@@ -1,13 +1,13 @@
 import {SECTIONS} from "../constants/constants";
 import {OrganizationVb} from "./OrganizationVb";
 import {Crypto} from "../crypto/crypto";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {OrganizationDescription} from "./types";
 import {CMTSToken} from "../economics/currencies/token";
 
 export class Organization {
   provider: any;
-  signatureAlgorithmId?: SignatureAlgorithmId;
+  signatureSchemeId?: SignatureSchemeId;
   vb: OrganizationVb;
   gasPrice: CMTSToken;
 
@@ -20,13 +20,13 @@ export class Organization {
 
     if (this.provider.isKeyed()) {
       const privateKey = this.provider.getPrivateSignatureKey();
-      this.signatureAlgorithmId = privateKey.getSignatureAlgorithmId();
+      this.signatureSchemeId = privateKey.getSignatureSchemeId();
     }
   }
 
   async _create() {
-    if (typeof this.signatureAlgorithmId === 'undefined') throw 'Cannot create an organization without a signature algorithm';
-    await this.vb.setSignatureAlgorithm(this.signatureAlgorithmId);
+    if (typeof this.signatureSchemeId === 'undefined') throw 'Cannot create an organization without a signature scheme';
+    await this.vb.setSignatureScheme(this.signatureSchemeId);
 
     if (!this.provider.isKeyed()) throw 'Cannot create an organization without a keyed provider';
     const privateKey: PrivateSignatureKey = this.provider.getPrivateSignatureKey();

@@ -1,7 +1,7 @@
 import {CHAIN, ECO, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {StructureChecker} from "./StructureChecker";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {AccountTokenIssuance, AccountTransfer, AccountVBState} from "./types";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Provider} from "../providers/Provider";
@@ -10,7 +10,7 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   constructor({provider}: { provider: Provider }) {
     super({ provider, type: CHAIN.VB_ACCOUNT });
 
-    this.registerSectionCallback(SECTIONS.ACCOUNT_SIG_ALGORITHM, this.signatureAlgorithmCallback);
+    this.registerSectionCallback(SECTIONS.ACCOUNT_SIG_SCHEME, this.signatureSchemeCallback);
     this.registerSectionCallback(SECTIONS.ACCOUNT_PUBLIC_KEY, this.publicKeyCallback);
     this.registerSectionCallback(SECTIONS.ACCOUNT_TOKEN_ISSUANCE, this.tokenIssuanceCallback);
     this.registerSectionCallback(SECTIONS.ACCOUNT_CREATION, this.creationCallback);
@@ -21,8 +21,8 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   /**
     Update methods
   */
-  async setSignatureAlgorithm(object: { algorithmId: SignatureAlgorithmId }) {
-    await this.addSection(SECTIONS.ACCOUNT_SIG_ALGORITHM, object);
+  async setSignatureScheme(object: { schemeId: SignatureSchemeId }) {
+    await this.addSection(SECTIONS.ACCOUNT_SIG_SCHEME, object);
   }
 
   async setPublicKey(publicKey: PublicSignatureKey) {
@@ -58,14 +58,14 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   }
 
   /**
-   * Retrieves the signature algorithm ID from the relevant section of the microblock.
+   * Retrieves the signature scheme ID from the relevant section of the microblock.
    *
-   * @return {Promise<SignatureAlgorithmId>} A promise that resolves to the signature algorithm ID.
+   * @return {Promise<SignatureSchemeId>} A promise that resolves to the signature scheme ID.
    */
-  async getSignatureAlgorithmId(): Promise<SignatureAlgorithmId> {
+  async getSignatureSchemeId(): Promise<SignatureSchemeId> {
     const keyMicroblock = await this.getFirstMicroBlock();
-    const keySection = keyMicroblock.getSection<{algorithmId: number}>((section: any) => section.type == SECTIONS.ACCOUNT_SIG_ALGORITHM);
-    return keySection.object.algorithmId as SignatureAlgorithmId;
+    const keySection = keyMicroblock.getSection<{schemeId: number}>((section: any) => section.type == SECTIONS.ACCOUNT_SIG_SCHEME);
+    return keySection.object.schemeId as SignatureSchemeId;
   }
 
   /**
@@ -81,8 +81,8 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
   /**
     Section callbacks
   */
-  async signatureAlgorithmCallback(microblock: any, section: any) {
-    this.getState().signatureAlgorithmId = section.object.algorithmId;
+  async signatureSchemeCallback(microblock: any, section: any) {
+    this.getState().signatureSchemeId = section.object.schemeId;
   }
 
   async publicKeyCallback(microblock: any, section: any) {
@@ -116,7 +116,7 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
 
     checker.expects(
       checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-      SECTIONS.ACCOUNT_SIG_ALGORITHM
+      SECTIONS.ACCOUNT_SIG_SCHEME
     );
     checker.expects(
       checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.AT_MOST_ONE,
@@ -143,12 +143,12 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
     checker.endsHere();
   }
 
-  private static UNDEFINED_SIGNATURE_ALGORITHM_ID = -1;
+  private static UNDEFINED_SIGNATURE_SCHEME_ID = -1;
   private static UNDEFINED_PUBLIC_KEY_HEIGHT = 0;
 
   getInitialState(): AccountVBState {
     return {
-      signatureAlgorithmId: AccountVb.UNDEFINED_SIGNATURE_ALGORITHM_ID,
+      signatureSchemeId: AccountVb.UNDEFINED_SIGNATURE_SCHEME_ID,
       publicKeyHeight: AccountVb.UNDEFINED_PUBLIC_KEY_HEIGHT
     }
   }

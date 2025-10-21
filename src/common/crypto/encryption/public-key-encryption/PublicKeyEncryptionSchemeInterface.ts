@@ -1,11 +1,11 @@
-import {PublicKeyEncryptionAlgorithmId} from "./PublicKeyEncryptionAlgorithmId";
+import {PublicKeyEncryptionSchemeId} from "./PublicKeyEncryptionSchemeId";
 import {EncoderFactory, EncoderInterface} from "../../../utils/encoder";
 
 export abstract class AbstractPublicKeyEncryptionScheme {
     /**
      * Returns the identifier of the scheme.
      */
-    abstract getSchemeId(): PublicKeyEncryptionAlgorithmId;
+    abstract getSchemeId(): PublicKeyEncryptionSchemeId;
 
 }
 

@@ -171,15 +171,15 @@ export class AlreadySubscribedError extends IllegalUsageError {
     }
 }
 
-export class NotAllowedSignatureAlgorithmError extends IllegalUsageError {
-    constructor(signatureAlgorithmId: number) {
-        super(`signature algorithm of type ${signatureAlgorithmId} is not allowed on this application ledger`);
+export class NotAllowedSignatureSchemeError extends IllegalUsageError {
+    constructor(signatureSchemeId: number) {
+        super(`signature scheme of type ${signatureSchemeId} is not allowed on this application ledger`);
     }
 }
 
-export class NotAllowedPkeAlgorithmError extends IllegalUsageError {
-    constructor(pkeAlgorithmId: number) {
-        super(`PKE algorithm of type ${pkeAlgorithmId} is not allowed on this application ledger`);
+export class NotAllowedPkeSchemeError extends IllegalUsageError {
+    constructor(pkeSchemeId: number) {
+        super(`PKE scheme of type ${pkeSchemeId} is not allowed on this application ledger`);
     }
 }
 
@@ -281,7 +281,7 @@ export class VirtualBlockchainNotFoundError extends BlockchainError {
 
 export class ProtocolError extends CarmentisError {
     constructor(message: string, code: CarmentisErrorCode = CarmentisErrorCode.PROTOCOL_ERROR) {
-        super("/!\\ PANIC - " + message, code);
+        super("/!\\ " + message, code);
     }
 }
 

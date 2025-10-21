@@ -45,12 +45,12 @@ export interface MerkleProof {
 }
 
 export interface ProtocolVBState {
-    signatureAlgorithmId: number;
+    signatureSchemeId: number;
     publicKeyHeight: number;
 }
 
 export interface AccountVBState {
-    signatureAlgorithmId: number;
+    signatureSchemeId: number;
     publicKeyHeight: number;
 }
 
@@ -90,13 +90,13 @@ export interface ValidatorNodeDeclaration {
 }
 
 export interface OrganizationVBState {
-    signatureAlgorithmId: number;
+    signatureSchemeId: number;
     publicKeyHeight: number;
     descriptionHeight: number;
 }
 
 export interface ValidatorNodeVBState {
-    signatureAlgorithmId: number;
+    signatureSchemeId: number;
     organizationId: Uint8Array;
     descriptionHeight: number;
     rpcEndpointHeight: number;
@@ -104,7 +104,7 @@ export interface ValidatorNodeVBState {
 }
 
 export interface ApplicationVBState {
-    signatureAlgorithmId: number;
+    signatureSchemeId: number;
     organizationId: Uint8Array;
     descriptionHeight: number;
 }
@@ -131,8 +131,8 @@ export interface ApplicationLedgerActor {
 }
 
 export interface ApplicationLedgerVBState {
-    allowedSignatureAlgorithmIds: number[];
-    allowedPkeAlgorithmIds: number[];
+    allowedSignatureSchemeIds: number[];
+    allowedPkeSchemeIds: number[];
     applicationId: Uint8Array;
     channels: ApplicationLedgeChannel[];
     actors: ApplicationLedgerActor[];

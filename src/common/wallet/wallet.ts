@@ -1,6 +1,6 @@
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {randomBytes} from "@noble/post-quantum/utils";
-import {PrivateSignatureKey, SignatureAlgorithmId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {HKDF} from "../crypto/kdf/HKDF";
 
 /**
@@ -43,7 +43,7 @@ export class Wallet {
 
 
 
-    getAccountPrivateSignatureKey( schemeId: SignatureAlgorithmId,  nonce: number ) {
+    getAccountPrivateSignatureKey( schemeId: SignatureSchemeId,  nonce: number ) {
         const kdf = CryptoSchemeFactory.createDefaultKDF();
         const inputKeyMaterial = this.concatWalletSeedWith(this.numberToUint8Array(nonce));
         const info = this.encoderStringAsBytes("WALLET_ACCOUNT_PRIVATE_SIGNATURE_KEY");

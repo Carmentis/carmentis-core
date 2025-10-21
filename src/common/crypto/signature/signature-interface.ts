@@ -113,3 +113,11 @@ export enum SignatureSchemeId {
     SECP256K1 = 0,
     ML_DSA_65 = 1,
 }
+
+/**
+ * @deprecated Will be removed soon!
+ */
+export enum SignatureAlgorithmId {
+    SECP256K1 = 0,
+    ML_DSA_65 = 1,
+}

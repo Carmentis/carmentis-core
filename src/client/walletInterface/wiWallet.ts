@@ -1,10 +1,13 @@
 import * as SCHEMAS from "../../common/constants/schemas";
 import {SchemaUnserializer} from "../../common/data/schemaSerializer";
 import * as network from "../../common/network/network";
-import {PrivateSignatureKey} from "../../common/crypto/signature/signature-interface";
+import {PrivateSignatureKey, SignatureSchemeId} from "../../common/crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
-import {CryptoSchemeFactory} from "../../common/crypto/CryptoSchemeFactory";
-import {EncoderFactory} from "../../common/utils/encoder";
+import {AccountCrypto} from "../../common/wallet/AccountCrypto";
+import {HCVPkeEncoder} from "../../common/crypto/encryption/public-key-encryption/HCVPkeEncoder";
+import {
+    PublicKeyEncryptionSchemeId
+} from "../../common/crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 
 export abstract class wiWallet<T> {
 
@@ -57,11 +60,10 @@ export abstract class wiWallet<T> {
     /**
      * Gets the approval data identified by object.anchorRequestId, from the operator at object.serverUrl.*
      *
-     * @param {PrivateSignatureKey} privateKey
-     * @param object
      * @returns {Promise<*>}
      */
-    async getApprovalData(privateKey: PrivateSignatureKey, walletSeed: Uint8Array, object: { serverUrl: string, anchorRequestId: string }) {
+    async getApprovalData(accountCrypto: AccountCrypto, object: { serverUrl: string, anchorRequestId: string }) {
+        //async getApprovalData(privateKey: PrivateSignatureKey, walletSeed: Uint8Array, object: { serverUrl: string, anchorRequestId: string }) {
 
         // send an initial message approval handshake containing the anchorRequestId provided by the web client.
         let answer = await network.sendWalletToOperatorMessage<{ genesisSeed?: Uint8Array, data: Uint8Array }>(
@@ -82,6 +84,8 @@ export abstract class wiWallet<T> {
             if (genesisSeed === undefined) throw 'Invalid genesisSeed provided, expected string, got: ' + typeof genesisSeed;
 
             // derive the actor key from the private key and the genesis seed
+            const actorCrypto = accountCrypto.deriveActorFromVbSeed(genesisSeed);
+            /*
             const schemeId = privateKey.getSignatureSchemeId();
             const kdf = CryptoSchemeFactory.createDefaultKDF();
             const actorSignaturePrivateKey = CryptoSchemeFactory.createVirtualBlockchainPrivateSignature(
@@ -90,18 +94,28 @@ export abstract class wiWallet<T> {
                 walletSeed,
                 genesisSeed
             );
-            const actorSignaturePublicKey = actorSignaturePrivateKey.getPublicKey();
+             */
 
-//          const actorPkePrivateKey = CryptoSchemeFactory.createPrivateDecryptionKey()
+            // TODO: decide the signature and pke scheme id
+            // derive the actor public signature key
+            const signatureSchemeId = SignatureSchemeId.SECP256K1;
+            const actorSignaturePublicKey = actorCrypto.getPublicSignatureKey(signatureSchemeId);
+
+            // derive the actor public encryption key
+            const pkeSchemeId = PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM;
+            const actorPublicEncryptionKey = actorCrypto.getPublicEncryptionKey(pkeSchemeId);
+
 
             // send the actor key to the operator and awaits for the response
             const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+            const pkeEncoder = HCVPkeEncoder.createBase64HCVPkeEncoder();
             answer = await network.sendWalletToOperatorMessage<{data: Uint8Array}>(
                 object.serverUrl,
                 SCHEMAS.MSG_ACTOR_KEY,
                 {
                     anchorRequestId: object.anchorRequestId,
-                    actorSignaturePublicKey: signatureEncoder.encodePublicKey(actorSignaturePublicKey)
+                    actorSignaturePublicKey: signatureEncoder.encodePublicKey(actorSignaturePublicKey),
+                    actorPkePublicKey: pkeEncoder.encodePublicEncryptionKey(actorPublicEncryptionKey)
                 }
             );
         }

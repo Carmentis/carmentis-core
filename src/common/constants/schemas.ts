@@ -215,8 +215,16 @@ const APP_LEDGER_VB_STATE: Schema = {
       definition: [
         { name: 'name',               type: DATA.TYPE_STRING },
         { name: 'subscribed',         type: DATA.TYPE_BOOLEAN },
-        { name: 'pkePublicKeyHeight', type: DATA.TYPE_UINT48 },
-        { name: 'sigPublicKeyHeight', type: DATA.TYPE_UINT48 },
+        { name: 'signatureKeyHeight', type: DATA.TYPE_UINT48 },
+        { name: 'pkeKeyHeight',       type: DATA.TYPE_UINT48 },
+        {
+          name: 'sharedSecrets',
+          type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+          definition: [
+            { name: 'peerActorId', type: DATA.TYPE_UINT8 },
+            { name: 'height',      type: DATA.TYPE_UINT48 }
+          ]
+        },
         {
           name: 'invitations',
           type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
@@ -765,7 +773,8 @@ WALLET_OP_MESSAGES[MSG_ACTOR_KEY] = {
   label: 'MessageActorKey',
   definition: [
     { name: 'anchorRequestId',   type: DATA.TYPE_BINARY },
-    { name: 'actorKey', type: DATA.TYPE_STRING }
+    { name: 'actorSignaturePublicKey', type: DATA.TYPE_STRING },
+    { name: 'actorPkePublicKey', type: DATA.TYPE_STRING },
   ]
 };
 

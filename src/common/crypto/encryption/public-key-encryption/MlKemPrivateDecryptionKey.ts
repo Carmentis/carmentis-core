@@ -8,7 +8,6 @@ import {MlKemPublicKeyEncryptionScheme} from "./MlKemPublicKeyEncryptionScheme";
 import {MlKemCiphertextEncoder} from "./MlKemCiphertextEncoder";
 
 export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
-
     /**
      * Generates a private decryption key from a seed.
      * @param seed
@@ -38,12 +37,9 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
         this.publicKey = publicKey;
     }
 
-
     getSupportedSeedLength(): number[] {
         return [64]
     }
-
-
 
     getScheme(): MlKemPublicKeyEncryptionScheme {
         return new MlKemPublicKeyEncryptionScheme();

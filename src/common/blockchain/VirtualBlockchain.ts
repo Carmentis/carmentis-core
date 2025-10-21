@@ -106,23 +106,14 @@ export abstract class VirtualBlockchain<CustomState> {
      Imports a microblock defined by its header data and body data.
      */
     async importMicroblock(headerData: any, bodyData: any) {
-const ts0 = performance.now();
         this.currentMicroblock = new Microblock(this.type);
 
         this.currentMicroblock.load(headerData, bodyData);
-const ts1 = performance.now();
-console.log('load', ts1 - ts0);
         this.checkStructure(this.currentMicroblock);
-const ts2 = performance.now();
-console.log('checkStructure', ts2 - ts1);
 
         for(const section of this.currentMicroblock.sections) {
-const ts = performance.now();
             await this.processSectionCallback(this.currentMicroblock, section);
-console.log('processSectionCallback', section.type, performance.now() - ts);
         }
-const ts3 = performance.now();
-console.log('processSectionCallback', ts3 - ts2);
 
         this.height++;
 

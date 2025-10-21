@@ -141,9 +141,10 @@ export class ApplicationLedger {
 
         for (const channelData of channelDataList) {
             if (channelData.isPrivate) {
-                const channelKey = new Uint8Array(32); // FIXME
-                const iv = new Uint8Array(32);         //
-                const encryptedData = Crypto.Aes.encryptGcm(channelKey, channelData.data, iv);
+                const channelKey = await this.vb.getChannelKey(authorId, channelData.channelId);
+                const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, this.vb.height + 1, channelData.channelId);
+                const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, this.vb.height + 1, channelData.channelId);
+                const encryptedData = Crypto.Aes.encryptGcm(channelSectionKey, channelData.data, channelSectionIv);
 
                 await this.vb.addPrivateChannelData({
                     channelId: channelData.channelId,
@@ -248,31 +249,26 @@ export class ApplicationLedger {
         const privateChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA);
         const ir = this.vb.getIntermediateRepresentationInstance();
 
-
-        // @ts-expect-error TS(2339): Property 'merkleRootHash' does not exist on type '... Remove this comment to see the full error message'
-        const list: { channelId: number, data: object, merkleRootHash?: string } = [
-            ...publicChannelDataSections.map((section: Section<{ channelId: number, data: object }>) => {
+        const list: { channelId: number, data: object, merkleRootHash?: string }[] =
+            publicChannelDataSections.map((section: Section<{ channelId: number, data: object }>) => {
                 return {
                     channelId: section.object.channelId,
                     data: section.object.data
                 };
-            }),
-            ...privateChannelDataSections.map((section: Section<{
-                channelId: number,
-                data: object,
-                merkleRootHash: Uint8Array,
-                encryptedData: string
-            }>) => {
-                const channelKey = new Uint8Array(32);  // FIXME
-                const iv = new Uint8Array(32);          //
-                const data = Crypto.Aes.decryptGcm(channelKey, section.object.encryptedData, iv);
-                return {
-                    channelId: section.object.channelId,
-                    merkleRootHash: Utils.binaryToHexa(section.object.merkleRootHash),
-                    data: data as Uint8Array
-                };
-            })
-        ];
+            });
+
+        for(const section of privateChannelDataSections) {
+            const channelKey = await this.vb.getChannelKey(await this.vb.getCurrentActorId(), section.object.channelId);
+            const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, section.object.channelId);
+            const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, section.object.channelId);
+            const data = Crypto.Aes.decryptGcm(channelSectionKey, section.object.encryptedData, channelSectionIv);
+
+            list.push({
+                channelId: section.object.channelId,
+                merkleRootHash: Utils.binaryToHexa(section.object.merkleRootHash),
+                data: data as Uint8Array
+            });
+        }
 
         ir.importFromSectionFormat(list);
         return ir;

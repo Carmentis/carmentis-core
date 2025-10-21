@@ -25,7 +25,6 @@ export enum CarmentisErrorCode {
     ACCOUNT_ALREADY_EXISTS_FOR_PUBLIC_KEY,
     ACCOUNT_NOT_FOUND_FOR_ADDRESS,
 
-
     ORGANIZATION_NOT_FOUND,
     APPLICATION_NOT_FOUND,
     APPLICATION_LEDGER_NOT_FOUND,
@@ -34,18 +33,17 @@ export enum CarmentisErrorCode {
     VIRTUAL_BLOCKCHAIN_NOT_FOUND,
     VIRTUAL_BLOCKCHAIN_ALREADY_EXISTS,
 
-
     // economics errors
     ECONOMICS_ERROR = 200,
     INVALID_TOKEN_UNIT,
+
+    // protocol errors
+    PROTOCOL_ERROR = 400,
 }
-
-
 
 export class IllegalUsageError extends Error {}
 export class IllegalParameterError extends IllegalUsageError {}
 export class IllegalStateError extends IllegalUsageError {}
-
 
 export class CarmentisError extends Error {
     constructor(message: string, private code: CarmentisErrorCode = CarmentisErrorCode.CARMENTIS_ERROR) {
@@ -61,7 +59,6 @@ export class CarmentisError extends Error {
     }
 }
 
-
 export class EmptyBlockError extends CarmentisError {
     constructor(message: string) {
         super(message, CarmentisErrorCode.BLOCKCHAIN_ERROR);
@@ -71,11 +68,11 @@ export class EmptyBlockError extends CarmentisError {
 export class InternalError extends CarmentisError {}
 
 export class NodeError extends InternalError {}
+
 export class NodeConnectionRefusedError extends NodeError {
     constructor(nodeUrl: string) {
         super(`Connection with node at ${nodeUrl} refused`, CarmentisErrorCode.NODE_ERROR)
     }
-
 }
 
 export class NodeEndpointClosedWhileCatchingUpError extends NodeError {
@@ -102,13 +99,10 @@ export class BlockchainError extends CarmentisError {
     }
 }
 
-
 export class NotImplementedError extends Error {
     constructor() {
         super("No implemented");
-
     }
-
 }
 
 export class MicroBlockNotFoundInVirtualBlockchainAtHeightError extends BlockchainError {
@@ -132,6 +126,12 @@ export class MicroBlockNotFoundInBlockError extends BlockchainError {
 export class ActorAlreadyDefinedError extends IllegalUsageError {
     constructor(actorName: string) {
         super(`Actor '${actorName}' already defined`);
+    }
+}
+
+export class InvalidActorError extends IllegalUsageError {
+    constructor(actorId: number, expectedId: number) {
+        super(`invalid actor ID ${actorId} (expected ID: ${expectedId})`);
     }
 }
 
@@ -159,18 +159,59 @@ export class ProofVerificationFailedError extends CarmentisError {
     }
 }
 
+export class CannotSubscribeError extends IllegalUsageError {
+    constructor(actorId: number) {
+        super(`Cannot subscribe as undefined actor ${actorId}`);
+    }
+}
+
+export class AlreadySubscribedError extends IllegalUsageError {
+    constructor(actorId: number) {
+        super(`Actor ${actorId} is already subscribed`);
+    }
+}
+
+export class NotAllowedSignatureAlgorithmError extends IllegalUsageError {
+    constructor(signatureAlgorithmId: number) {
+        super(`signature algorithm of type ${signatureAlgorithmId} is not allowed on this application ledger`);
+    }
+}
+
+export class NotAllowedPkeAlgorithmError extends IllegalUsageError {
+    constructor(pkeAlgorithmId: number) {
+        super(`PKE algorithm of type ${pkeAlgorithmId} is not allowed on this application ledger`);
+    }
+}
+
+export class InvalidChannelError extends IllegalUsageError {
+    constructor(channelId: number) {
+        super(`Invalid channel ID ${channelId}`);
+    }
+}
+
+export class CurrentActorNotFoundError extends IllegalUsageError {
+    constructor() {
+        super(`Current actor not found`);
+    }
+}
+
 export class SectionError extends BlockchainError {}
+
 export class SectionNotFoundError extends SectionError {
     constructor(sectionType: SectionType) {
         super(`Section type ${sectionType} not found`);
     }
 }
 
+export class ActorNotInvitedError extends BlockchainError {
+    constructor(actorId: number, channelId: number) {
+        super(`Actor ${actorId} has not been invited to channel ${channelId}`);
+    }
+}
+
 export class AccountNotFoundForPublicKeyError extends BlockchainError {
     constructor(publicKey: PublicSignatureKey) {
-        super(
-            'Account not found for public key'
-        );
+        super(`Account not found for public key`);
     }
 }
 
@@ -235,5 +276,17 @@ export class VirtualBlockchainNotFoundError extends BlockchainError {
             `Virtual blockchain not found: ${virtualBlockchainId.encode()}`,
             CarmentisErrorCode.VIRTUAL_BLOCKCHAIN_ALREADY_EXISTS
         );
+    }
+}
+
+export class ProtocolError extends CarmentisError {
+    constructor(message: string, code: CarmentisErrorCode = CarmentisErrorCode.PROTOCOL_ERROR) {
+        super("/!\\ PANIC - " + message, code);
+    }
+}
+
+export class NoSharedSecretError extends ProtocolError {
+    constructor(guestId: number, hostId: number) {
+        super(`No shared secret between host ${hostId} and guest ${guestId}`);
     }
 }

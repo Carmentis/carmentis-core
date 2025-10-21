@@ -1,7 +1,7 @@
 import { MlKemPrivateDecryptionKey } from "./MlKemPrivateDecryptionKey";
 import { MlKemPublicEncryptionKey } from "./MlKemPublicEncryptionKey";
 import { PublicKeyEncryptionAlgorithmId } from "./PublicKeyEncryptionAlgorithmId";
-import {AES256GCMSymmetricEncryptionKey} from "../symmetric-encryption/encryption-interface";
+import { AES256GCMSymmetricEncryptionKey } from "../symmetric-encryption/encryption-interface";
 
 function u8(arr: number[] | number, len?: number): Uint8Array {
   if (typeof arr === 'number') {

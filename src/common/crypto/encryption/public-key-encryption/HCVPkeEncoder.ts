@@ -6,7 +6,6 @@ import {CryptoSchemeFactory} from "../../CryptoSchemeFactory";
 import {PublicKeyEncryptionAlgorithmId} from "./PublicKeyEncryptionAlgorithmId";
 
 export class HCVPkeEncoder implements PkeEncoderInterface {
-
     private static PKE_KEY = "PKE";
     private static SK_PKE_KEY = "SK";
     private static PK_PKE_KEY = "PK";
@@ -24,7 +23,6 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
     }
 
     constructor(private readonly  stringEncoder: EncoderInterface<Uint8Array, string>) {}
-
 
     decodePrivateDecryptionKey(privateKey: string): AbstractPrivateDecryptionKey {
         const result = HCVCodec.decode(privateKey);
@@ -74,8 +72,4 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
             this.stringEncoder.encode(key.getRawPublicKey())
         )
     }
-
-
-
-
 }

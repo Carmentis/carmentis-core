@@ -359,13 +359,13 @@ APP_LEDGER[APP_LEDGER_CHANNEL_INVITATION] = {
 APP_LEDGER[APP_LEDGER_ACTOR_SUBSCRIPTION] = {
   label: 'APP_LEDGER_ACTOR_SUBSCRIPTION',
   definition: [
-    { name: 'actorId',            type: DATA.TYPE_UINT8 },
-    { name: 'actorType',          type: DATA.TYPE_UINT8 },
-    { name: 'organizationId',     type: DATA.TYPE_BIN256 },
-    { name: 'pkeAlgorithmId',     type: DATA.TYPE_UINT8 },
-    { name: 'pkePublicKey',       type: DATA.TYPE_BINARY },
-    { name: 'sigAlgorithmId',     type: DATA.TYPE_UINT8 },
-    { name: 'signaturePublicKey', type: DATA.TYPE_BINARY }
+    { name: 'actorId',              type: DATA.TYPE_UINT8 },
+    { name: 'actorType',            type: DATA.TYPE_UINT8 },
+    { name: 'organizationId',       type: DATA.TYPE_BIN256 },
+    { name: 'signatureAlgorithmId', type: DATA.TYPE_UINT8 },
+    { name: 'signaturePublicKey',   type: DATA.TYPE_BINARY },
+    { name: 'pkeAlgorithmId',       type: DATA.TYPE_UINT8 },
+    { name: 'pkePublicKey',         type: DATA.TYPE_BINARY }
   ]
 };
 

@@ -7,7 +7,6 @@ import {MlKemPublicKeyEncryptionScheme} from "./MlKemPublicKeyEncryptionScheme";
 import {MlKemCiphertextEncoder} from "./MlKemCiphertextEncoder";
 
 export class MlKemPublicEncryptionKey extends AbstractPublicEncryptionKey {
-
     private static encoder = EncoderFactory.bytesToBase64Encoder();
 
     constructor(private readonly publicKey: Uint8Array) {

@@ -84,13 +84,15 @@ export abstract class wiWallet<T> {
             // derive the actor key from the private key and the genesis seed
             const algorithmId = privateKey.getSignatureAlgorithmId();
             const kdf = CryptoSchemeFactory.createDefaultKDF();
-            const actorPrivateKey = CryptoSchemeFactory.createVirtualBlockchainPrivateSignature(
+            const actorSignaturePrivateKey = CryptoSchemeFactory.createVirtualBlockchainPrivateSignature(
                 kdf,
                 algorithmId,
                 walletSeed,
                 genesisSeed
             );
-            const actorPublicKey = actorPrivateKey.getPublicKey();
+            const actorSignaturePublicKey = actorSignaturePrivateKey.getPublicKey();
+
+//          const actorPkePrivateKey = CryptoSchemeFactory.createPrivateDecryptionKey()
 
             // send the actor key to the operator and awaits for the response
             const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
@@ -99,7 +101,7 @@ export abstract class wiWallet<T> {
                 SCHEMAS.MSG_ACTOR_KEY,
                 {
                     anchorRequestId: object.anchorRequestId,
-                    actorKey: signatureEncoder.encodePublicKey(actorPublicKey)
+                    actorSignaturePublicKey: signatureEncoder.encodePublicKey(actorSignaturePublicKey)
                 }
             );
         }

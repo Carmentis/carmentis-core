@@ -118,6 +118,12 @@ export interface ApplicationLedgeChannel {
 export interface ApplicationLedgerActor {
     name: string;
     subscribed: boolean;
+    signatureKeyHeight: number;
+    pkeKeyHeight: number;
+    sharedSecrets: {
+        peerActorId: number;
+        height: number;
+    }[];
     invitations: {
         channelId: number;
         height: number;
@@ -299,4 +305,3 @@ export interface Proof {
         data: any
     }[]
 }
-

@@ -1,5 +1,6 @@
 import { DATA, SCHEMAS } from "../constants/constants";
 import { TypeManager, TypeChecker } from "./types";
+import {CarmentisError} from "../errors/carmentis-error";
 
 export class SchemaValidator {
   schema: SCHEMAS.Schema;
@@ -16,7 +17,12 @@ export class SchemaValidator {
     @param {object} object - The object to be tested.
   */
   validate(object: any) {
-    this.validateObject(this.schema.definition, object);
+      // we raise a technical exception if the schema is not defined, mostly due to a distinct, incompatible
+      // SDK version
+      if (this.schema === undefined) throw new CarmentisError("Provided schema is undefined: this should not happen")
+
+
+      this.validateObject(this.schema.definition, object);
   }
 
   /**
@@ -24,7 +30,7 @@ export class SchemaValidator {
     @param {Array} schemaDefinition - The (sub)schema of the object.
     @param {object} object - The object to be serialized.
   */
-  validateObject(schemaDefinition: SCHEMAS.SchemaItem[], object: any, path = "") {
+  private validateObject(schemaDefinition: SCHEMAS.SchemaItem[], object: any, path = "") {
     for(const schemaItem of schemaDefinition) {
       const fieldPath = path + (path && ".") + schemaItem.name,
             value = object[schemaItem.name];
@@ -57,7 +63,7 @@ export class SchemaValidator {
     @param {object} schemaItem - The definition of the item.
     @param {} value - The value of the item.
   */
-  validateItem(schemaItem: SCHEMAS.SchemaItem, value: any, fieldPath: string) {
+  private validateItem(schemaItem: SCHEMAS.SchemaItem, value: any, fieldPath: string) {
     const mainType = schemaItem.type & DATA.TYPE_MAIN;
 
     if(mainType == DATA.TYPE_OBJECT) {

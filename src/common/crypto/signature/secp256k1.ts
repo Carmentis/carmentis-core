@@ -25,6 +25,10 @@ export class Secp256k1SignatureScheme implements SignatureScheme {
     getSignatureSize(): number {
         return Secp256k1SignatureScheme.SIGNATURE_SIZE
     }
+
+    getSignatureAlgorithmId(): SignatureSchemeId {
+        return this.getSignatureSchemeId()
+    }
 }
 
 /**

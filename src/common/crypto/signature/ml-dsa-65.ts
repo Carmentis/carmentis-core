@@ -20,6 +20,10 @@ export class MLDSA65SignatureScheme implements SignatureScheme {
     getSignatureSize(): number {
         return MLDSA65SignatureScheme.SIGNATURE_SIZE;
     }
+
+    getSignatureAlgorithmId(): SignatureSchemeId {
+        return this.getSignatureSchemeId()
+    }
 }
 
 /**

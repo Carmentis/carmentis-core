@@ -12,7 +12,14 @@ import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encry
 export class AccountCrypto {
 
     static createFromWalletSeedAndNonce(walletSeed: Uint8Array, accountNonce: number) {
-        const accountSeed = Utils.binaryFrom(walletSeed, accountNonce);
+        const inputSeed = Utils.binaryFrom(walletSeed, accountNonce);
+        const kdf = CryptoSchemeFactory.createDefaultKDF();
+        const info = this.encoderStringAsBytes("ACCOUNT_SEED");
+        const accountSeed = kdf.deriveKeyNoSalt(
+            inputSeed,
+            info,
+            32
+        );
         return new AccountCrypto(accountSeed);
     }
 
@@ -24,7 +31,8 @@ export class AccountCrypto {
 
     getPrivateSignatureKey(schemeId: SignatureSchemeId) {
         const kdf = CryptoSchemeFactory.createDefaultKDF();
-        const info = this.encoderStringAsBytes("WALLET_ACCOUNT_PRIVATE_SIGNATURE_KEY");
+        const scheme = CryptoSchemeFactory.createSignatureScheme(schemeId);
+        const info = AccountCrypto.encoderStringAsBytes(`SIG_${schemeId}`);
         const seed = kdf.deriveKeyNoSalt(
             this.accountSeed,
             info,
@@ -40,7 +48,7 @@ export class AccountCrypto {
 
     getPrivateDecryptionKey(schemeId: PublicKeyEncryptionSchemeId) {
         const kdf = CryptoSchemeFactory.createDefaultKDF();
-        const info = this.encoderStringAsBytes("PKE");
+        const info = AccountCrypto.encoderStringAsBytes(`PKE_${schemeId}`);
         const seed = kdf.deriveKeyNoSalt(
             this.accountSeed,
             info,
@@ -54,12 +62,33 @@ export class AccountCrypto {
         return privateDecryptionKey.getPublicKey();
     }
 
-    private encoderStringAsBytes(data: string): Uint8Array {
+    private static encoderStringAsBytes(data: string): Uint8Array {
         const encoder = new TextEncoder();
         return encoder.encode(data);
     }
 
     getAccountSeed() {
         return this.accountSeed;
+    }
+
+    private static concatWalletSeedWith(walletSeed: Uint8Array, data: Uint8Array) {
+        return new Uint8Array([...walletSeed, ...data])
+    }
+
+    private static numberToUint8Array(num: number, byteLength: number = 4): Uint8Array {
+        const buffer = new ArrayBuffer(byteLength);
+        const view = new DataView(buffer);
+
+        if (byteLength === 1) {
+            view.setUint8(0, num);
+        } else if (byteLength === 2) {
+            view.setUint16(0, num, false); // false = big endian
+        } else if (byteLength === 4) {
+            view.setUint32(0, num, false); // false = big endian
+        } else if (byteLength === 8) {
+            view.setBigUint64(0, BigInt(num), false); // false = big endian
+        }
+
+        return new Uint8Array(buffer);
     }
 }

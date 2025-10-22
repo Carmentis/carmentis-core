@@ -1,7 +1,5 @@
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 
-// Node.js Buffer is used for base64 conversion
-import {Buffer} from 'buffer';
 
 /**
  * Interface representing a generic encoder capable of encoding and decoding data.

@@ -1,176 +1,176 @@
-import { DATA, SCHEMAS } from "../constants/constants";
-import { WriteStream, ReadStream } from "./byteStreams";
-import { TypeManager, TypeChecker } from "./types";
-import { Utils } from "../utils/utils";
+import {DATA, SCHEMAS} from "../constants/constants";
+import {WriteStream, ReadStream} from "./byteStreams";
+import {TypeManager, TypeChecker} from "./types";
+import {Utils} from "../utils/utils";
 import {CarmentisError} from "../errors/carmentis-error";
 import {TypeCheckingFailureError} from "../errors/type-checking-failure-error";
 
 export class SchemaSerializer<T = any> {
-  schema: SCHEMAS.Schema;
-  stream: any;
-  /**
-    Constructor
-  */
-  constructor(schema: SCHEMAS.Schema) {
-    this.schema = schema;
-  }
+    schema: SCHEMAS.Schema;
+    stream: any;
 
-  /**
-    Serializes the given object.
-  */
-  serialize(object: T): Uint8Array {
-    this.stream = new WriteStream;
-    this.serializeObject(this.schema.definition, object);
-
-    return this.stream.getByteStream();
-  }
-
-  /**
-    Serializes any sub-object of the full structure.
-  */
-  private serializeObject(schemaDefinition: SCHEMAS.SchemaItem[], object: any, path = "") {
-    for(const schemaItem of schemaDefinition) {
-      const fieldPath = path + (path && ".") + schemaItem.name;
-      const value = object[schemaItem.name];
-
-      if(value === undefined) {
-        //console.log(`Field ${fieldPath} missing for schema ${schema} in obtained object`, object)
-        throw `field '${fieldPath}' is missing`;
-      }
-
-      if(schemaItem.type & DATA.TYPE_ARRAY_OF) {
-        if(TypeManager.getType(value) != DATA.TYPE_ARRAY) {
-          throw `'${fieldPath}' is not an array`;
-        }
-
-        if(schemaItem.size !== undefined) {
-          if(value.length != schemaItem.size) {
-            throw `invalid size for '${fieldPath}' (expecting ${schemaItem.size} entries, got ${value.length})`;
-          }
-        }
-        else {
-          this.stream.writeVarUint(value.length);
-        }
-
-        for(const index in value) {
-          this.serializeItem(schemaItem, value[index], fieldPath + `[${index}]`);
-        }
-      }
-      else {
-        this.serializeItem(schemaItem, value, fieldPath);
-      }
+    /**
+     Constructor
+     */
+    constructor(schema: SCHEMAS.Schema) {
+        this.schema = schema;
     }
-  }
 
-  /**
-    Serializes an item.
-  */
-  serializeItem(schemaItem: SCHEMAS.SchemaItem, value: any, fieldPath: any) {
-    const mainType = schemaItem.type & DATA.TYPE_MAIN;
+    /**
+     Serializes the given object.
+     */
+    serialize(object: T): Uint8Array {
+        // we raise a technical exception if the schema is not defined, mostly due to a distinct, incompatible
+        // SDK version
+        if (this.schema === undefined) throw new CarmentisError("Provided schema is undefined: this should not happen")
 
-    if(mainType == DATA.TYPE_OBJECT) {
-      if(TypeManager.getType(value) != DATA.TYPE_OBJECT) {
-        throw `'${fieldPath}' is not an object`;
-      }
-      if(schemaItem.definition) {
-        this.serializeObject(schemaItem.definition, value, fieldPath);
-      }
-      else if(schemaItem.schema) {
-        this.serializeObject(schemaItem.schema.definition, value, fieldPath);
-      }
-      else {
-        throw `missing definition in schema`;
-      }
+
+        this.stream = new WriteStream;
+        this.serializeObject(this.schema.definition, object);
+
+        return this.stream.getByteStream();
     }
-    else {
-      const typeChecker = new TypeChecker(schemaItem, value);
 
-      try {
-        typeChecker.check();
-      }
-      catch(error) {
-        throw new TypeCheckingFailureError(`Error on field '${fieldPath}': ${error}`);
-      }
+    /**
+     Serializes any sub-object of the full structure.
+     */
+    private serializeObject(schemaDefinition: SCHEMAS.SchemaItem[], object: any, path = "") {
+        for (const schemaItem of schemaDefinition) {
+            const fieldPath = path + (path && ".") + schemaItem.name;
+            const value = object[schemaItem.name];
 
-      this.stream.writeSchemaValue(mainType, value, schemaItem.size);
+            if (value === undefined) {
+                //console.log(`Field ${fieldPath} missing for schema ${schema} in obtained object`, object)
+                throw `field '${fieldPath}' is missing`;
+            }
+
+            if (schemaItem.type & DATA.TYPE_ARRAY_OF) {
+                if (TypeManager.getType(value) != DATA.TYPE_ARRAY) {
+                    throw `'${fieldPath}' is not an array`;
+                }
+
+                if (schemaItem.size !== undefined) {
+                    if (value.length != schemaItem.size) {
+                        throw `invalid size for '${fieldPath}' (expecting ${schemaItem.size} entries, got ${value.length})`;
+                    }
+                } else {
+                    this.stream.writeVarUint(value.length);
+                }
+
+                for (const index in value) {
+                    this.serializeItem(schemaItem, value[index], fieldPath + `[${index}]`);
+                }
+            } else {
+                this.serializeItem(schemaItem, value, fieldPath);
+            }
+        }
     }
-  }
+
+    /**
+     Serializes an item.
+     */
+    serializeItem(schemaItem: SCHEMAS.SchemaItem, value: any, fieldPath: any) {
+        const mainType = schemaItem.type & DATA.TYPE_MAIN;
+
+        if (mainType == DATA.TYPE_OBJECT) {
+            if (TypeManager.getType(value) != DATA.TYPE_OBJECT) {
+                throw `'${fieldPath}' is not an object`;
+            }
+            if (schemaItem.definition) {
+                this.serializeObject(schemaItem.definition, value, fieldPath);
+            } else if (schemaItem.schema) {
+                this.serializeObject(schemaItem.schema.definition, value, fieldPath);
+            } else {
+                throw `missing definition in schema`;
+            }
+        } else {
+            const typeChecker = new TypeChecker(schemaItem, value);
+
+            try {
+                typeChecker.check();
+            } catch (error) {
+                throw new TypeCheckingFailureError(`Error on field '${fieldPath}': ${error}`);
+            }
+
+            this.stream.writeSchemaValue(mainType, value, schemaItem.size);
+        }
+    }
 }
 
 export class SchemaUnserializer<T = object> {
-  schema: any;
-  stream: any;
-  /**
-    Constructor
-    @param {Array} schema - Top-level schema
-  */
-  constructor(schema: SCHEMAS.Schema) {
-    this.schema = schema;
-  }
+    schema: any;
+    stream: any;
 
-  /**
-    Unserializes the given byte stream.
-  */
-  unserialize(stream: Uint8Array): T {
-    this.stream = new ReadStream(stream);
-
-    const object = this.unserializeObject(this.schema.definition);
-    const pointer = this.stream.getPointer();
-    const size = stream.length;
-
-    if(pointer != size) {
-      console.error(Utils.binaryToHexa(stream));
-      throw new CarmentisError(`Invalid stream length (decoded ${pointer} bytes, actual length is ${size} bytes)`);
+    /**
+     Constructor
+     @param {Array} schema - Top-level schema
+     */
+    constructor(schema: SCHEMAS.Schema) {
+        this.schema = schema;
     }
 
-    return object as T;
-  }
+    /**
+     Unserializes the given byte stream.
+     */
+    unserialize(stream: Uint8Array): T {
+        this.stream = new ReadStream(stream);
 
-  /**
-    Unserializes any sub-object of the full structure.
-  */
-  protected unserializeObject(schemaDefinition: SCHEMAS.SchemaItem[]): object {
-    const object = {};
+        const object = this.unserializeObject(this.schema.definition);
+        const pointer = this.stream.getPointer();
+        const size = stream.length;
 
-    for(const schemaItem of schemaDefinition) {
-      let item;
-
-      if(schemaItem.type & DATA.TYPE_ARRAY_OF) {
-        let size = schemaItem.size !== undefined ? schemaItem.size : this.stream.readVarUint();
-
-        item = [];
-
-        while(size--) {
-          item.push(this.unserializeItem(schemaItem));
+        if (pointer != size) {
+            console.error(Utils.binaryToHexa(stream));
+            throw new CarmentisError(`Invalid stream length (decoded ${pointer} bytes, actual length is ${size} bytes)`);
         }
-      }
-      else {
-        item = this.unserializeItem(schemaItem);
-      }
 
-      // @ts-ignore
-        object[schemaItem.name] = item;
-    }
-    return object;
-  }
-
-  /**
-    Unserializes an item.
-    @param {object} schemaItem
-  */
-  unserializeItem(schemaItem: SCHEMAS.SchemaItem) {
-    const mainType = schemaItem.type & DATA.TYPE_MAIN;
-
-    if(mainType == DATA.TYPE_OBJECT) {
-      if(schemaItem.definition) {
-        return this.unserializeObject(schemaItem.definition);
-      }
-      if(schemaItem.schema) {
-        return this.unserializeObject(schemaItem.schema.definition);
-      }
-      throw `missing definition in schema`;
+        return object as T;
     }
 
-    return this.stream.readSchemaValue(mainType, schemaItem.size)
-  }
+    /**
+     Unserializes any sub-object of the full structure.
+     */
+    protected unserializeObject(schemaDefinition: SCHEMAS.SchemaItem[]): object {
+        const object = {};
+
+        for (const schemaItem of schemaDefinition) {
+            let item;
+
+            if (schemaItem.type & DATA.TYPE_ARRAY_OF) {
+                let size = schemaItem.size !== undefined ? schemaItem.size : this.stream.readVarUint();
+
+                item = [];
+
+                while (size--) {
+                    item.push(this.unserializeItem(schemaItem));
+                }
+            } else {
+                item = this.unserializeItem(schemaItem);
+            }
+
+            // @ts-ignore
+            object[schemaItem.name] = item;
+        }
+        return object;
+    }
+
+    /**
+     Unserializes an item.
+     @param {object} schemaItem
+     */
+    unserializeItem(schemaItem: SCHEMAS.SchemaItem) {
+        const mainType = schemaItem.type & DATA.TYPE_MAIN;
+
+        if (mainType == DATA.TYPE_OBJECT) {
+            if (schemaItem.definition) {
+                return this.unserializeObject(schemaItem.definition);
+            }
+            if (schemaItem.schema) {
+                return this.unserializeObject(schemaItem.schema.definition);
+            }
+            throw `missing definition in schema`;
+        }
+
+        return this.stream.readSchemaValue(mainType, schemaItem.size)
+    }
 }

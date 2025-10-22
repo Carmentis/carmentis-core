@@ -6,6 +6,11 @@ import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
  */
 export interface SignatureScheme  {
     getSignatureSchemeId(): SignatureSchemeId;
+    
+    /**
+     * @deprecated Use getSignatureSchemeId instead.
+     */
+    getSignatureAlgorithmId(): SignatureSchemeId;
     getSignatureSize(): number;
 }
 
@@ -71,6 +76,15 @@ export abstract class BasePrivateSignatureKey implements PrivateSignatureKey {
         return this.getScheme().getSignatureSize();
     }
 
+     /**
+     * @deprecated Use getSignatureSchemeId instead.
+     * 
+     * @returns 
+     */
+    getSignatureAlgorithmId(): SignatureSchemeId {
+        return this.getSignatureSchemeId()
+    }
+
     abstract sign(data: Uint8Array): Uint8Array;
 
     abstract getScheme(): SignatureScheme;
@@ -98,6 +112,15 @@ export abstract class BasePublicSignatureKey implements PublicSignatureKey {
 
     getSignatureSchemeId(): SignatureSchemeId {
         return this.getScheme().getSignatureSchemeId();
+    }
+
+    /**
+     * @deprecated Use getSignatureSchemeId instead.
+     * 
+     * @returns 
+     */
+    getSignatureAlgorithmId(): SignatureSchemeId {
+        return this.getSignatureSchemeId()
     }
 }
 

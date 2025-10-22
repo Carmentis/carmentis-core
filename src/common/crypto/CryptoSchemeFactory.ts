@@ -6,10 +6,19 @@ import {
     SymmetricEncryptionSchemeId,
     SymmetricEncryptionKey, SymmetricEncryptionKeyScheme,
 } from "./encryption/symmetric-encryption/encryption-interface";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId,} from "./signature/signature-interface";
-import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./signature/ml-dsa-65";
+import {
+    PrivateSignatureKey,
+    PublicSignatureKey,
+    SignatureScheme,
+    SignatureSchemeId,
+} from "./signature/signature-interface";
+import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey, MLDSA65SignatureScheme} from "./signature/ml-dsa-65";
 import {CryptographicHash, CryptographicHashSchemeId, Sha256CryptographicHash} from "./hash/hash-interface";
-import {Secp256k1PrivateSignatureKey, Secp256k1PublicSignatureKey} from "./signature/secp256k1";
+import {
+    Secp256k1PrivateSignatureKey,
+    Secp256k1PublicSignatureKey,
+    Secp256k1SignatureScheme
+} from "./signature/secp256k1";
 
 import {PBKDF2} from "./kdf/PBKDF2";
 import {PasswordBasedKeyDerivationFunction} from "./kdf/PasswordBasedKeyDerivationFunction";
@@ -177,5 +186,13 @@ export class CryptoSchemeFactory {
 
     static createDefaultKDF() {
         return new HKDF();
+    }
+
+    static createSignatureScheme(schemeId: SignatureSchemeId): SignatureScheme {
+        switch (schemeId) {
+            case SignatureSchemeId.SECP256K1: return new Secp256k1SignatureScheme();
+            case SignatureSchemeId.ML_DSA_65: return new MLDSA65SignatureScheme();
+            default: throw new Error(`Not supported signature scheme ID: ${schemeId}`)
+        }
     }
 }

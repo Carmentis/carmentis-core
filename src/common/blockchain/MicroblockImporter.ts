@@ -1,5 +1,6 @@
 import {CHAIN, SCHEMAS} from "../constants/constants";
 import {SchemaUnserializer} from "../data/schemaSerializer";
+import {Protocol} from "./Protocol";
 import {Account} from "./Account";
 import {ValidatorNode} from "./ValidatorNode";
 import {Organization} from "./Organization";
@@ -14,6 +15,7 @@ import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Optional} from "../entities/Optional";
 
 const OBJECT_CLASSES = [
+    Protocol,
     Account,
     ValidatorNode,
     Organization,

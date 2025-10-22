@@ -49,10 +49,10 @@ PROTOCOL[PROTOCOL_PUBLIC_KEY] = {
 PROTOCOL[PROTOCOL_PROTOCOL_UPDATE] = {
   label: 'PROTOCOL_PROTOCOL_UPDATE',
   definition: [
-    { name: 'applicationUtcTimestamp', type: DATA.TYPE_UINT48 },
-    { name: 'version',                 type: DATA.TYPE_UINT16 },
-    { name: 'codeName',                type: DATA.TYPE_STRING },
-    { name: 'changeLog',               type: DATA.TYPE_STRING }
+    { name: 'effectiveUtcTimestamp', type: DATA.TYPE_UINT48 },
+    { name: 'version',               type: DATA.TYPE_UINT16 },
+    { name: 'codeName',              type: DATA.TYPE_STRING },
+    { name: 'changeLog',             type: DATA.TYPE_STRING }
   ]
 };
 

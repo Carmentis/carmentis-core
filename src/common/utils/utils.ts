@@ -1,239 +1,239 @@
-import { DATA } from "../constants/constants";
-import { TypeManager } from "../data/types";
-import { Utf8Encoder } from "../data/utf8Encoder";
+import {DATA} from "../constants/constants";
+import {TypeManager} from "../data/types";
+import {Utf8Encoder} from "../data/utf8Encoder";
 
 export const Utils = {
-  numberToHexa,
-  truncateString,
-  truncateStringMiddle,
-  getNullHash,
-  getTimestampInSeconds,
-  encodeDay,
-  decodeDay,
-  dateToDay,
-  dayToDate,
-  bufferToUint8Array,
-  binaryToHexa,
-  binaryFromHexa,
-  binaryFrom,
-  binaryIsEqual,
-  binaryCompare,
-  intToByteArray,
-  byteArrayToInt,
-  getGenesisEpochInTimestamp: getInitialTimestampInSeconds
+    numberToHexa,
+    truncateString,
+    truncateStringMiddle,
+    getNullHash,
+    getTimestampInSeconds,
+    encodeDay,
+    decodeDay,
+    dateToDay,
+    dayToDate,
+    bufferToUint8Array,
+    binaryToHexa,
+    binaryFromHexa,
+    binaryFrom,
+    binaryIsEqual,
+    binaryCompare,
+    intToByteArray,
+    byteArrayToInt,
+    getGenesisEpochInTimestamp: getInitialTimestampInSeconds
 };
 
 /**
-  Converts an integer to a hexadecimal string, padded with 0's to reach a given size
-*/
+ Converts an integer to a hexadecimal string, padded with 0's to reach a given size
+ */
 function numberToHexa(value: number, size?: number) {
-  return value.toString(16).toUpperCase().padStart(size || 1, "0");
+    return value.toString(16).toUpperCase().padStart(size || 1, "0");
 }
 
 /**
-  Truncates a string to a given size and appends "(...)" if it's longer
-*/
+ Truncates a string to a given size and appends "(...)" if it's longer
+ */
 function truncateString(str: string, size: number) {
-  return str.slice(0, size) + (str.length > size ? "(...)" : "");
+    return str.slice(0, size) + (str.length > size ? "(...)" : "");
 }
 
 /**
-  Truncates a string on both ends and appends "(...)" in the middle if it's longer
-*/
+ Truncates a string on both ends and appends "(...)" in the middle if it's longer
+ */
 function truncateStringMiddle(str: string, leadingSize: number, trailingSize: number) {
-  if(str.length <= leadingSize + trailingSize) {
-    return str;
-  }
-  return str.slice(0, leadingSize) + "(...)" + str.slice(str.length - trailingSize);
+    if (str.length <= leadingSize + trailingSize) {
+        return str;
+    }
+    return str.slice(0, leadingSize) + "(...)" + str.slice(str.length - trailingSize);
 }
 
 /**
-  Returns a null hash, i.e. an Uint8Array with 32 zero-bytes
-*/
+ Returns a null hash, i.e. an Uint8Array with 32 zero-bytes
+ */
 function getNullHash() {
-  return new Uint8Array(32);
+    return new Uint8Array(32);
 }
 
 /**
-  Returns a timestamp in seconds
-*/
+ Returns a timestamp in seconds
+ */
 function getTimestampInSeconds() {
-  return Math.floor(Date.now() / 1000);
+    return Math.floor(Date.now() / 1000);
 }
 
 /**
-  Returns an initial timestamp set to 0
-*/
+ Returns an initial timestamp set to 0
+ */
 function getInitialTimestampInSeconds() {
-  return 0;
+    return 0;
 }
 
 /**
-  Encodes a day given as (year, month, day) to a 32-bit value
-*/
+ Encodes a day given as (year, month, day) to a 32-bit value
+ */
 function encodeDay(year: number, month: number, day: number) {
-  return year << 9 | month << 5 | day;
+    return year << 9 | month << 5 | day;
 }
 
 /**
-  Converts a 32-bit encoded day to [ year, month, day ]
-*/
+ Converts a 32-bit encoded day to [ year, month, day ]
+ */
 function decodeDay(value: number) {
-  const day = value & 0x1F;
-  const month = value >> 5 & 0xF;
-  const year = value >>> 9;
+    const day = value & 0x1F;
+    const month = value >> 5 & 0xF;
+    const year = value >>> 9;
 
-  return [ year, month, day ];
+    return [year, month, day];
 }
 
 /**
-  Encodes a day given as a Date to a 32-bit value
-*/
+ Encodes a day given as a Date to a 32-bit value
+ */
 function dateToDay(date: Date) {
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
 
-  return encodeDay(year, month, day);
+    return encodeDay(year, month, day);
 }
 
 /**
-  Converts a 32-bit encoded day to an UTC Date
-*/
+ Converts a 32-bit encoded day to an UTC Date
+ */
 function dayToDate(value: number) {
-  const [ year, month, day ] = decodeDay(value);
+    const [year, month, day] = decodeDay(value);
 
-  return new Date(Date.UTC(year, month - 1, day));
+    return new Date(Date.UTC(year, month - 1, day));
 }
 
 /**
-  Converts a buffer to an Uint8Array
-*/
+ Converts a buffer to an Uint8Array
+ */
 function bufferToUint8Array(b: any) {
-  return new Uint8Array(b.buffer, b.byteOffset, b.byteLength / Uint8Array.BYTES_PER_ELEMENT);
+    return new Uint8Array(b.buffer, b.byteOffset, b.byteLength / Uint8Array.BYTES_PER_ELEMENT);
 }
 
 /**
-  converts an Uint8Array to a hexadecimal string
-*/
+ converts an Uint8Array to a hexadecimal string
+ */
 function binaryToHexa(array: any) {
-  if(!(array instanceof Uint8Array)) {
-    return "";
-  }
+    if (!(array instanceof Uint8Array)) {
+        return "";
+    }
 
-  return [...array].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("");
+    return [...array].map((n) => n.toString(16).toUpperCase().padStart(2, "0")).join("");
 }
 
 /**
-  Converts a hexadecimal string to an Uint8Array
-*/
+ Converts a hexadecimal string to an Uint8Array
+ */
 function binaryFromHexa(str: any) {
-  return new Uint8Array(
-    typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ?
-      // @ts-ignore
-      str.match(/../g).map((s) => parseInt(s, 16))
-    :
-      []
-  );
+    return new Uint8Array(
+        typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ?
+            // @ts-ignore
+            str.match(/../g).map((s) => parseInt(s, 16))
+            :
+            []
+    );
 }
 
 /**
-  Builds an Uint8Array from a list made of integers, strings and Uint8Array's
-*/
+ Builds an Uint8Array from a list made of integers, strings and Uint8Array's
+ */
 function binaryFrom(...arg: (number | Uint8Array | string)[]) {
-  const list: number[] = Array(arg.length);
+    const list: number[] = Array(arg.length);
   const parts: Uint8Array[] = Array(arg.length);
-  let ndx = 0;
+    let ndx = 0;
 
-  arg.forEach((data, i) => {
-    const t = TypeManager.getType(data);
+    arg.forEach((data, i) => {
+        const t = TypeManager.getType(data);
 
-    switch(t) {
-      case DATA.TYPE_NUMBER: {
-        parts[i] = new Uint8Array(intToByteArray(data as number));
-        break;
-      }
-      case DATA.TYPE_STRING: {
-        parts[i] = Utf8Encoder.encode(data as string);
-        break;
-      }
-      case DATA.TYPE_BINARY: {
-        parts[i] = data as Uint8Array;
-        break;
-      }
-      default: {
-        throw `unsupported type '${DATA.TYPE_NAMES[t]}' for Utils.binaryFrom()`;
-      }
-    }
-    list[i] = ndx;
-    ndx += parts[i].length;
-  });
+        switch (t) {
+            case DATA.TYPE_NUMBER: {
+                parts[i] = new Uint8Array(intToByteArray(data as number));
+                break;
+            }
+            case DATA.TYPE_STRING: {
+                parts[i] = Utf8Encoder.encode(data as string);
+                break;
+            }
+            case DATA.TYPE_BINARY: {
+                parts[i] = data as Uint8Array;break;
+            }
+            default: {
+                const numberOfArguments = arg.length;
+                const typeOfArguments = arg.map(a => DATA.TYPE_NAMES[TypeManager.getType(a)]).join(", ");
+                throw new Error(`unsupported type '${DATA.TYPE_NAMES[t]}' for Utils.binaryFrom(): got ${numberOfArguments} arguments of type ${typeOfArguments}`);
+            }
+        }
+        list[i] = ndx;
+        ndx += parts[i].length;
+    });
 
-  const arr = new Uint8Array(ndx);
+    const arr = new Uint8Array(ndx);
 
-  list.forEach((ndx, i) => {
-    arr.set(parts[i], ndx);
-  });
+    list.forEach((ndx, i) => {
+        arr.set(parts[i], ndx);
+    });
 
-  return arr;
+    return arr;
 }
 
 /**
-  Tests whether two Uint8Array's are equal
-*/
+ Tests whether two Uint8Array's are equal
+ */
 function binaryIsEqual(a: any, b: any) {
-  if(!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
-    return false;
-  }
-
-  for(const i in a) {
-    if(a[i] != b[i]) {
-      return false;
+    if (!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
+        return false;
     }
-  }
-  return true;
+
+    for (const i in a) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
-  Compares two Uint8Array's and returns 0 for 'equal', -1 for 'less than', 1 for 'greater than'
-*/
+ Compares two Uint8Array's and returns 0 for 'equal', -1 for 'less than', 1 for 'greater than'
+ */
 function binaryCompare(a: any, b: any) {
-  if(!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
-    throw "cannot compare";
-  }
+    if (!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
+        throw "cannot compare";
+    }
 
-  for(const i in a) {
-    if(a[i] < b[i]) {
-      return -1;
+    for (const i in a) {
+        if (a[i] < b[i]) {
+            return -1;
+        } else if (a[i] > b[i]) {
+            return 1;
+        }
     }
-    else if(a[i] > b[i]) {
-      return 1;
-    }
-  }
-  return 0;
+    return 0;
 }
 
 /**
-  Converts an integer to an array of bytes, with an optional minimum number of bytes
-*/
+ Converts an integer to an array of bytes, with an optional minimum number of bytes
+ */
 function intToByteArray(n: number, minSize: number = 1) {
-  const arr: number[] = [];
+    const arr: number[] = [];
 
-  let remaining = n;
-  let size = minSize;
+    let remaining = n;
+    let size = minSize;
 
-  while (remaining > 0 || size > 0) {
-    arr.push(remaining & 0xFF);
-    remaining = Math.floor(remaining / 0x100);
-    size--;
-  }
+    while (remaining > 0 || size > 0) {
+        arr.push(remaining & 0xFF);
+        remaining = Math.floor(remaining / 0x100);
+        size--;
+    }
 
-  return arr.reverse();
+    return arr.reverse();
 }
 
 /**
-  Converts an array of bytes to an integer
-*/
+ Converts an array of bytes to an integer
+ */
 function byteArrayToInt(array: number[]) {
-  return array.reduce((t, n) => t * 0x100 + n, 0);
+    return array.reduce((t, n) => t * 0x100 + n, 0);
 }

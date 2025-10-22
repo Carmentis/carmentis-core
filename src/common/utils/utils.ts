@@ -140,8 +140,9 @@ function binaryFromHexa(str: any) {
 /**
   Builds an Uint8Array from a list made of integers, strings and Uint8Array's
 */
-function binaryFrom(...arg: any[]) {
-  const list = Array(arg.length);
+function binaryFrom(...arg: (number | Uint8Array | string)[]) {
+  const list: number[] = Array(arg.length);
+  const parts: Uint8Array[] = Array(arg.length);
   let ndx = 0;
 
   arg.forEach((data, i) => {
@@ -149,14 +150,15 @@ function binaryFrom(...arg: any[]) {
 
     switch(t) {
       case DATA.TYPE_NUMBER: {
-        arg[i] = intToByteArray(data);
+        parts[i] = new Uint8Array(intToByteArray(data as number));
         break;
       }
       case DATA.TYPE_STRING: {
-        arg[i] = Utf8Encoder.encode(data);
+        parts[i] = Utf8Encoder.encode(data as string);
         break;
       }
       case DATA.TYPE_BINARY: {
+        parts[i] = data as Uint8Array;
         break;
       }
       default: {
@@ -164,13 +166,13 @@ function binaryFrom(...arg: any[]) {
       }
     }
     list[i] = ndx;
-    ndx += arg[i].length;
+    ndx += parts[i].length;
   });
 
   const arr = new Uint8Array(ndx);
 
   list.forEach((ndx, i) => {
-    arr.set(arg[i], ndx);
+    arr.set(parts[i], ndx);
   });
 
   return arr;

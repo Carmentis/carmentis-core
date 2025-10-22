@@ -246,7 +246,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         const info = Utils.binaryFrom(
             prefix,
             channelId,
-            Utils.intToByteArray(height, 6)
+            new Uint8Array(Utils.intToByteArray(height, 6))
         );
 
         const hkdf = new HKDF();

@@ -342,7 +342,7 @@ APP_LEDGER[APP_LEDGER_SHARED_SECRET] = {
   definition: [
     { name: 'hostId',        type: DATA.TYPE_UINT8 },
     { name: 'guestId',       type: DATA.TYPE_UINT8 },
-    { name: 'encapsulation', type: DATA.TYPE_BINARY }
+    { name: 'encryptedSharedKey', type: DATA.TYPE_BINARY }
   ]
 };
 

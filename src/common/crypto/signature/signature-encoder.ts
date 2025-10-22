@@ -155,7 +155,7 @@ export class StringSignatureEncoder implements SignatureEncoderInterface<string>
     /**
      * Provides the default encoder for string signatures by utilizing the default bytes-to-string encoder
      * from the EncoderFactory.
-     *
+     * @deprecated Use CryptoEncoderFactory.defaultStringSignatureEncoder() instead.
      * @return {StringSignatureEncoder} The default string signature encoder instance.
      */
     static defaultStringSignatureEncoder(): SignatureEncoderInterface<string> {

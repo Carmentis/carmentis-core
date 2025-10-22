@@ -12,6 +12,8 @@ import {RecordDescription} from "./RecordDescription";
 import {Height} from "../entities/Height";
 import {ProofVerificationFailedError} from "../errors/carmentis-error";
 import {PublicSignatureKey} from "../crypto/signature/signature-interface";
+import { AbstractPublicEncryptionKey } from "../common";
+import { ActorType } from "../constants/ActorType";
 
 export class ApplicationLedger {
     provider: any;
@@ -40,6 +42,54 @@ export class ApplicationLedger {
 
     async getGenesisSeed() {
         return this.vb.getGenesisSeed();
+    }
+
+    /**
+     * Returns the (unique) identifier associated with the name of the actor.
+     * 
+     * Note: Two actors cannot have the same name.
+     *  
+     * @param actorName The name of the actor from which we want to get the identifier.
+     * @returns 
+     */
+    getActorIdFromActorName(actorName: string) {
+        return this.vb.getActorId(actorName);
+    }
+
+    /**
+     * Subscribes an actor in the application ledger.
+     * 
+     * A subscription is used to associate public keys to an actor name (or identifier).
+     * 
+     * @param actorName The name of the actor subscribed on the application ledger.
+     * @param actorPublicSignatureKey  The public signature key of the actor.
+     * @param actorPublicEncryptionKey The public encryption key of the actor.
+     * 
+     * @returns 
+     */
+    subscribeActor(
+        actorName: string,
+        actorPublicSignatureKey: PublicSignatureKey,
+        actorPublicEncryptionKey: AbstractPublicEncryptionKey,
+    ) {
+        const actorId = this.getActorIdFromActorName(actorName);
+
+        // The actor type is currently not used in the protocol
+        const unknownActorType = ActorType.UNKNOWN; 
+        
+        // The organization id is currently not used in the protocol. 
+        // Initially, it has been designed to handle the case where a user from another organisation is added to an external vb.
+        const nullOrganizationId = Utils.getNullHash();
+        
+        return this.vb.subscribe({
+            actorId,
+            actorType: unknownActorType,
+            organizationId: nullOrganizationId,
+            signatureSchemeId: actorPublicSignatureKey.getSignatureSchemeId(),
+            signaturePublicKey: actorPublicSignatureKey.getPublicKeyAsBytes(),
+            pkeSchemeId: actorPublicEncryptionKey.getSchemeId(),
+            pkePublicKey: actorPublicEncryptionKey.getRawPublicKey(),
+        })
     }
 
     getVirtualBlockchain() {

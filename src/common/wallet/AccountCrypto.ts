@@ -5,6 +5,10 @@ import {ActorCrypto} from "./ActorCrypto";
 import {SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 
+/**
+ * Represents the cryptographic operations handled by an account.
+ * An account is derived from a wallet ('s seed) and a nonce unique for each account.
+ */
 export class AccountCrypto {
 
     static createFromWalletSeedAndNonce(walletSeed: Uint8Array, accountNonce: number) {

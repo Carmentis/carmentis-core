@@ -134,32 +134,9 @@ export class WalletCrypto {
         const factory = new CryptoSchemeFactory();
         return factory.createVirtualBlockchainDecapsulationKey( schemeId, this.walletSeed, vbSeed );
     }
-
-    private concatWalletSeedWith(data: Uint8Array) {
-        return new Uint8Array([...this.walletSeed, ...data])
-    }
-
-    private encoderStringAsBytes(data: string): Uint8Array {
-        const encoder = new TextEncoder();
-        return encoder.encode(data);
-    }
-
-    private numberToUint8Array(num: number, byteLength: number = 4): Uint8Array {
-        const buffer = new ArrayBuffer(byteLength);
-        const view = new DataView(buffer);
-
-        if (byteLength === 1) {
-            view.setUint8(0, num);
-        } else if (byteLength === 2) {
-            view.setUint16(0, num, false); // false = big endian
-        } else if (byteLength === 4) {
-            view.setUint32(0, num, false); // false = big endian
-        } else if (byteLength === 8) {
-            view.setBigUint64(0, BigInt(num), false); // false = big endian
-        }
-
-        return new Uint8Array(buffer);
-    }
-
-
 }
+
+/**
+ * @deprecated Will be removed soon!
+ */
+export type Wallet = WalletCrypto;

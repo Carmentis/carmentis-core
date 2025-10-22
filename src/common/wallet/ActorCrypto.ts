@@ -33,7 +33,7 @@ export class ActorCrypto {
         const seed = kdf.deriveKeyNoSalt(
             this.actorSeed,
             info,
-            32
+            64
         );
         return CryptoSchemeFactory.createPrivateDecryptionKey( schemeId, seed );
     }

@@ -43,7 +43,7 @@ export abstract class VirtualBlockchain<CustomState> {
         this.expirationDay = day;
     }
 
-    protected getState(): CustomState {
+    getState(): CustomState {
         if (!this.state) {
             this.state = this.getInitialState();
         }

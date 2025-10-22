@@ -5,7 +5,7 @@ import {Crypto} from "../crypto/crypto";
 import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {MicroblockHeader, MicroblockSection} from "./types";
 import {Hash} from "../entities/Hash";
-import {CarmentisError} from "../errors/carmentis-error";
+import {CarmentisError, SectionNotFoundError} from "../errors/carmentis-error";
 import {SectionType} from "../entities/SectionType";
 
 export interface Section<T = any> {
@@ -193,7 +193,7 @@ export class Microblock {
      */
     getSection<T = any>(callback: (section: Section) => boolean): Section<T> {
         const section = this.sections.find((section: Section) => callback(section));
-        if (section === undefined) throw new Error(`Section not found.`)
+        if (section === undefined) throw new SectionNotFoundError()
         return section;
     }
 

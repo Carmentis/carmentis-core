@@ -352,7 +352,7 @@ APP_LEDGER[APP_LEDGER_CHANNEL_INVITATION] = {
     { name: 'channelId',  type: DATA.TYPE_UINT8 },
     { name: 'hostId',     type: DATA.TYPE_UINT8 },
     { name: 'guestId',    type: DATA.TYPE_UINT8 },
-    { name: 'channelKey', type: DATA.TYPE_BINARY }
+    { name: 'encryptedChannelKey', type: DATA.TYPE_BINARY }
   ]
 };
 

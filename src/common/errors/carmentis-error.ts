@@ -197,11 +197,6 @@ export class CurrentActorNotFoundError extends IllegalUsageError {
 
 export class SectionError extends BlockchainError {}
 
-export class SectionNotFoundError extends SectionError {
-    constructor(sectionType: SectionType) {
-        super(`Section type ${sectionType} not found`);
-    }
-}
 
 export class ActorNotInvitedError extends BlockchainError {
     constructor(actorId: number, channelId: number) {
@@ -282,6 +277,12 @@ export class VirtualBlockchainNotFoundError extends BlockchainError {
 export class ProtocolError extends CarmentisError {
     constructor(message: string, code: CarmentisErrorCode = CarmentisErrorCode.PROTOCOL_ERROR) {
         super("/!\\ " + message, code);
+    }
+}
+
+export class SectionNotFoundError extends ProtocolError {
+    constructor() {
+        super(`Section not found`);
     }
 }
 

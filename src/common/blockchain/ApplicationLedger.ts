@@ -10,15 +10,20 @@ import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
 import {RecordDescription} from "./RecordDescription";
 import {Height} from "../entities/Height";
-import {ProofVerificationFailedError} from "../errors/carmentis-error";
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
-import { AbstractPublicEncryptionKey } from "../common";
+import {ProofVerificationFailedError, ProtocolError} from "../errors/carmentis-error";
+import {PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
+import {
+    AbstractPublicEncryptionKey,
+    AES256GCMSymmetricEncryptionKey,
+    CryptoSchemeFactory, MlKemPrivateDecryptionKey, MlKemPublicEncryptionKey,
+    PublicKeyEncryptionSchemeId
+} from "../common";
 import { ActorType } from "../constants/ActorType";
 
 export class ApplicationLedger {
     provider: any;
-    allowedSignatureSchemeIds: any;
-    allowedPkeSchemeIds: any;
+    private allowedSignatureSchemeIds: SignatureSchemeId[];
+    private allowedPkeSchemeIds: PublicKeyEncryptionSchemeId[];
     vb: ApplicationLedgerVb;
     gasPrice: CMTSToken;
 
@@ -29,12 +34,70 @@ export class ApplicationLedger {
         this.provider = provider
         this.gasPrice = CMTSToken.zero();
 
-        if (this.provider.isKeyed()) {
-            const privateKey = this.provider.getPrivateSignatureKey();
-            this.allowedSignatureSchemeIds = [ privateKey.getSignatureSchemeId() ];
-            this.allowedPkeSchemeIds = [];
-        }
+        // by default, we allow all signature schemes and all PKE schemes, modeled by an empty list
+        this.allowedSignatureSchemeIds = [];
+        this.allowedPkeSchemeIds = [];
     }
+
+    /**
+     * Sets the list of allowed signature schemes by assigning the provided scheme IDs.
+     *
+     * @param {SignatureSchemeId[]} schemeIds - An array of signature scheme IDs that are allowed.
+     * @return {void} This method does not return anything.
+     */
+    setAllowedSignatureSchemes(schemeIds: SignatureSchemeId[]) {
+        this.allowedSignatureSchemeIds = schemeIds;
+    }
+
+    /**
+     * Sets the allowed public key encryption schemes.
+     *
+     * @param {PublicKeyEncryptionSchemeId[]} schemeIds - An array of public key encryption scheme IDs to designate as allowed.
+     * @return {void}
+     */
+    setAllowedPkeSchemes(schemeIds: PublicKeyEncryptionSchemeId[]) {
+        this.allowedPkeSchemeIds = schemeIds;
+    }
+
+    /**
+     * Retrieves the list of allowed signature scheme identifiers.
+     *
+     * @return {Array} An array containing the identifiers of the allowed signature schemes.
+     */
+    getAllowedSignatureSchemes() {
+        return this.allowedSignatureSchemeIds;
+    }
+
+    /**
+     * Retrieves the list of allowed public key encryption schemes.
+     *
+     * @return {Array} An array containing the identifiers of allowed public key encryption schemes.
+     */
+    getAllowedPkeSchemes() {
+        return this.allowedPkeSchemeIds;
+    }
+
+    /**
+     * Determines if the provided signature scheme ID is allowed.
+     *
+     * @param {SignatureSchemeId} schemeId - The ID of the signature scheme to check.
+     * @return {boolean} True if the signature scheme ID is allowed, otherwise false.
+     */
+    isAllowedSignatureScheme(schemeId: SignatureSchemeId) {
+        return this.allowedSignatureSchemeIds.includes(schemeId);
+    }
+
+    /**
+     * Checks if a given public key encryption scheme is allowed.
+     *
+     * @param {PublicKeyEncryptionSchemeId} schemeId - The ID of the public key encryption scheme to check.
+     * @return {boolean} Returns true if the scheme is allowed, otherwise returns false.
+     */
+    isAllowedPkeScheme(schemeId: PublicKeyEncryptionSchemeId) {
+        return this.allowedPkeSchemeIds.includes(schemeId);
+    }
+
+
 
     getVirtualBlockchainId() {
         return Hash.from(this.vb.getId());
@@ -170,6 +233,40 @@ export class ApplicationLedger {
         for (const def of object.actorAssignations || []) {
             const channelId = this.vb.getChannelId(def.channelName);
             const actorId = this.vb.getActorId(def.actorName);
+
+            // WE ASSUME HERE NO SHARED KEY DEFINED YET
+
+            // to invite the actor in the channel, we first generate a symmetric encryption key used to establish
+            // secure communication between the actor id (being invited by the host). The key is then used to encrypt
+            // the channel key and put in a dedicated section of the microblock.
+            const guestId = actorId;
+            const hostId = authorId; // in the current version of the protocol, the author is the operator
+            const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.generate();
+
+            // we encrypt the shared key with the guest's public key'
+            const guestPublicEncryptionKey = await this.getPublicEncryptionKeyByActorId(guestId);
+            const encryptedSharedKey = guestPublicEncryptionKey.encrypt(hostGuestSharedKey.getRawSecretKey());
+
+            // we create the section containing the shared secret key
+            await this.vb.createSharedSecret({
+                hostId,
+                guestId,
+                encryptedSharedKey,
+            });
+
+            // we encrypt the channel key using the shared secret key
+            const channelKey = await this.vb.getChannelKey(hostId, channelId);
+            const encryptedChannelKey = hostGuestSharedKey.encrypt(channelKey);
+
+            // we create the section containing the encrypted channel key (that can only be decrypted by the host and the guest)
+            await this.vb.inviteToChannel({
+                channelId,
+                hostId,
+                guestId,
+                encryptedChannelKey,
+            })
+
+
         }
 
         // process hashable fields
@@ -292,6 +389,53 @@ export class ApplicationLedger {
         }
         return data;
     }
+
+    /**
+     * Retrieves the public encryption key of an actor by its identifier.
+     *
+     * @param actorId The identifier of the actor.
+     * @returns The public encryption key of the actor.
+     */
+    async getPublicEncryptionKeyByActorId(actorId: number) {
+        // recover the actor's public encryption key from the virtual blockchain state
+        // and ensure that the public encryption key is defined
+        const actor = this.getActorByIdOrFail(actorId);
+        const actorPublicKeyEncryptionHeightDefinition = actor.pkeKeyHeight;
+        if (actorPublicKeyEncryptionHeightDefinition === undefined)
+            throw new ProtocolError(`Actor ${actorId} has not subscribed to a public encryption key.`)
+
+        // search the microblock containing the actor subscription (and the public encryption key definition)
+        const microBlock = await this.vb.getMicroblock(actorPublicKeyEncryptionHeightDefinition);
+        const subscribeSection = microBlock.getSection((section: any) =>
+            section.type == SECTIONS.APP_LEDGER_ACTOR_SUBSCRIPTION &&
+            section.object.actorId == actorId
+        );
+
+        // reconstruct the public encryption key
+        const rawPkePublicKey = subscribeSection.object.pkePublicKey;
+        const pkeSchemeId = subscribeSection.object.pkeSchemeId;
+        return CryptoSchemeFactory.createPublicEncryptionKey(pkeSchemeId, rawPkePublicKey);
+    }
+
+    private getActorByIdOrFail(actorId: number) {
+        const state = this.vb.getState();
+        const allActors = state.actors;
+
+        // we first check if the actor identifier is valid
+        if (actorId < 0 || actorId >= allActors.length) {
+            throw new Error(`Actor with id ${actorId} does not exist.`);
+        }
+
+        // we then check if the actor is defined (in practice, this test should never fail, but we never know...)
+        const actor = state.actors[actorId];
+        if (actor === undefined || actor === null) {
+            throw new ProtocolError(`Actor with id ${actorId} is not defined.`);
+        }
+
+        return actor;
+    }
+
+
 
     async getMicroblockIntermediateRepresentation(height: number) {
         const microblock = await this.vb.getMicroblock(height);

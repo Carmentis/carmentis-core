@@ -340,10 +340,24 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         if(actor.subscribed) {
             throw new AlreadySubscribedError(section.object.actorId);
         }
-        if(!state.allowedSignatureSchemeIds.includes(section.object.signatureSchemeId)) {
+
+        // we check that the provided public signature scheme is allowed
+        const checkedSignatureSchemeId = section.object.signatureSchemeId;
+        const allowedSignatureSchemeIds = state.allowedSignatureSchemeIds;
+        const isAllowingAllSignatureSchemes = allowedSignatureSchemeIds.length == 0;
+        const isExplicitlyAllowedSignatureScheme = allowedSignatureSchemeIds.includes(checkedSignatureSchemeId);
+        const isNotAllowedSignatureScheme = !isAllowingAllSignatureSchemes && !isExplicitlyAllowedSignatureScheme;
+        if (isNotAllowedSignatureScheme) {
             throw new NotAllowedSignatureSchemeError(section.object.signatureSchemeId);
         }
-        if(!state.allowedPkeSchemeIds.includes(section.object.pkeSchemeId)) {
+
+        // we check that the provided public key encryption scheme is allowed
+        const checkedPkeSchemeId = section.object.pkeSchemeId;
+        const allowedPkeSchemeIds = state.allowedPkeSchemeIds;
+        const isAllowingAllPkeSchemes = allowedPkeSchemeIds.length == 0;
+        const isExplicitlyAllowedPkeScheme = allowedPkeSchemeIds.includes(checkedPkeSchemeId);
+        const isNotAllowedPkeScheme = !isAllowingAllPkeSchemes && !isExplicitlyAllowedPkeScheme;
+        if(isNotAllowedPkeScheme) {
             throw new NotAllowedPkeSchemeError(section.object.pkeSchemeId);
         }
 

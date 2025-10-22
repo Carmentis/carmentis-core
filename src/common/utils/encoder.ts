@@ -1,4 +1,5 @@
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
+import {Base64} from "../data/base64";
 
 
 /**
@@ -77,7 +78,7 @@ export class BytesToBase64Encoder implements EncoderInterface<Uint8Array, string
      * @return {Uint8Array} The Uint8Array representation of the decoded data.
      */
     decode(data: string): Uint8Array {
-        return Buffer.from(data, 'base64');
+        return Base64.decodeBinary(data, Base64.BASE64);
     }
 
     /**
@@ -87,7 +88,7 @@ export class BytesToBase64Encoder implements EncoderInterface<Uint8Array, string
      * @return {string} The base64 string representation of the input data.
      */
     encode(data: Uint8Array): string {
-        return Buffer.from(data).toString('base64');
+        return Base64.encodeBinary(data, Base64.BASE64, true);
     }
 }
 

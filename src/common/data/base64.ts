@@ -13,15 +13,15 @@ export const Base64 = {
   decodeBinary
 };
 
-function encodeString(str: any, alphabet = BASE64, padding = false) {
+function encodeString(str: string, alphabet = BASE64, padding = false) {
   return encodeBinary(Utf8Encoder.encode(str), alphabet, padding);
 }
 
-function decodeString(str: any, alphabet = BASE64) {
+function decodeString(str: string, alphabet = BASE64) {
   return Utf8Encoder.decode(decodeBinary(str, alphabet));
 }
 
-function encodeBinary(bin: any, alphabet = BASE64, padding = false) {
+function encodeBinary(bin: Uint8Array, alphabet = BASE64, padding = false) {
   let r = bin.length % 3,
       acc = 0,
       out = "";
@@ -39,7 +39,7 @@ function encodeBinary(bin: any, alphabet = BASE64, padding = false) {
   return r ? out.slice(0, r - 3) + alphabet[0x40].repeat(padding ? 3 - r : 0) : out;
 }
 
-function decodeBinary(str: any, alphabet = BASE64) {
+function decodeBinary(str: string, alphabet = BASE64) {
   let crop = 0,
       acc = 0,
       out = [];

@@ -16,7 +16,7 @@ import {
     ObjectList, GenesisSnapshotDTO
 } from "../blockchain/types";
 import axios, {AxiosError} from "axios";
-import {BlockchainReader} from "./BlockchainReader";
+import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
 import {
     NodeConnectionRefusedError,
     NodeEndpointClosedWhileCatchingUpError,

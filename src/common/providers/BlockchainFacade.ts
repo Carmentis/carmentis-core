@@ -1,5 +1,5 @@
-import {ABCINodeBlockchainReader} from "./ABCINodeBlockchainReader";
-import {ABCINodeBlockchainWriter} from "./ABCINodeBlockchainWriter";
+import {ABCINodeUnauthenticatedBlockchainClient} from "./ABCINodeUnauthenticatedBlockchainClient";
+import {ABCINodeAuthenticatedBlockchainClient} from "./ABCINodeAuthenticatedBlockchainClient";
 import {
     EmptyBlockError,
     IllegalUsageError, MicroBlockNotFoundError,
@@ -10,8 +10,8 @@ import {
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
 import {Hash} from "../entities/Hash";
-import {BlockchainReader} from "./BlockchainReader";
-import {BlockchainWriter} from "./BlockchainWriter";
+import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
+import {AuthenticatedBlockchainClient} from "./AuthenticatedBlockchainClient";
 import {PublicationExecutionContext} from "./publicationContexts/PublicationExecutionContext";
 import {OrganizationPublicationExecutionContext} from "./publicationContexts/OrganizationPublicationExecutionContext";
 import {AccountPublicationExecutionContext} from "./publicationContexts/AccountPublicationExecutionContext";
@@ -42,6 +42,9 @@ import {EncoderFactory} from "../utils/encoder";
 import {MicroBlockWrapper} from "../wrappers/MicroBlockWrapper";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {
+    AbstractPrivateDecryptionKey
+} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.
@@ -50,9 +53,9 @@ import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
  *
  * Implements the BlockchainFacadeInterface.
  */
-export class BlockchainFacade{
+export class BlockchainFacade {
 
-    constructor(private nodeUrl: string, private reader: BlockchainReader, private writer?: BlockchainWriter) {}
+    constructor(private nodeUrl: string, private reader: UnauthenticatedBlockchainClient, private writer?: AuthenticatedBlockchainClient) {}
 
     /**
      * Creates an instance of BlockchainFacade using the provided node URL.
@@ -61,7 +64,7 @@ export class BlockchainFacade{
      * @return {BlockchainFacade} An instance of BlockchainFacade configured with the specified node URL.
      */
     static createFromNodeUrl(nodeUrl: string): BlockchainFacade {
-        const reader = ABCINodeBlockchainReader.createFromNodeURL(nodeUrl);
+        const reader = ABCINodeUnauthenticatedBlockchainClient.createFromNodeURL(nodeUrl);
         return new BlockchainFacade(nodeUrl, reader);
     }
 
@@ -83,8 +86,8 @@ export class BlockchainFacade{
      * @return {BlockchainFacade} A new instance of BlockchainFacade configured with the given node URL and private key.
      */
     static createFromNodeUrlAndPrivateKey(nodeUrl: string, privateKey: PrivateSignatureKey): BlockchainFacade {
-        const reader = ABCINodeBlockchainReader.createFromNodeURL(nodeUrl);
-        const writer = ABCINodeBlockchainWriter.createWriter(reader, nodeUrl, privateKey);
+        const reader = ABCINodeUnauthenticatedBlockchainClient.createFromNodeURL(nodeUrl);
+        const writer = ABCINodeAuthenticatedBlockchainClient.createWriter(reader, nodeUrl, privateKey);
         return new BlockchainFacade(nodeUrl, reader, writer);
     }
 
@@ -411,9 +414,9 @@ export class BlockchainFacade{
      * @param {RecordPublicationExecutionContext<T>} context - The context containing the necessary data to build and publish the record.
      * @return {Promise<Hash>} A promise that resolves the hash of the published micro-block.
      */
-    async publishRecord<T = any>(context: RecordPublicationExecutionContext<T>, waitForAnchoring = true) {
+    async publishRecord<T = any>(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, context: RecordPublicationExecutionContext<T>, waitForAnchoring = true) {
         const writer = this.getWriter();
-        const applicationLedger = await writer.createApplicationLedgerFromJson(context.build(), context.getExpirationDay());
+        const applicationLedger = await writer.createApplicationLedgerFromJson(hostPrivateDecryptionKey, context.build(), context.getExpirationDay());
         applicationLedger.setGasPrice(context.getGasPrice());
         return await applicationLedger.publishUpdates(waitForAnchoring);
     }
@@ -523,7 +526,7 @@ export class BlockchainFacade{
         return this.reader.getValidatorNodeByAddress(truncatedHashedKey)
     }
 
-    private getWriter(): BlockchainWriter {
+    private getWriter(): AuthenticatedBlockchainClient {
         if (!this.writer) throw new IllegalUsageError("No blockchain writer configured. Call BlockchainFacade.createFromNodeUrlAndPrivateKey(...) instead.");
         return this.writer;
     }

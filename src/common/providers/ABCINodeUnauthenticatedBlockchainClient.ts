@@ -34,7 +34,7 @@ import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Application} from "../blockchain/Application";
 import {Organization} from "../blockchain/Organization";
 import {ValidatorNode} from "../blockchain/ValidatorNode";
-import {BlockchainReader} from "./BlockchainReader";
+import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
 import {Account} from "../blockchain/Account";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
@@ -52,16 +52,16 @@ import {MicroBlockHeaderWrapper} from "../wrappers/MicroBlockHeaderWrapper";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
-export class ABCINodeBlockchainReader implements BlockchainReader {
+export class ABCINodeUnauthenticatedBlockchainClient implements UnauthenticatedBlockchainClient {
     /**
      * Creates an instance of ABCINodeBlockchainReader from the provided node URL.
      *
      * @param {string} nodeUrl - The URL of the node to connect to.
-     * @return {ABCINodeBlockchainReader} A new instance of ABCINodeBlockchainReader initialized with the specified node URL.
+     * @return {ABCINodeUnauthenticatedBlockchainClient} A new instance of ABCINodeBlockchainReader initialized with the specified node URL.
      */
-    static createFromNodeURL(nodeUrl: string): ABCINodeBlockchainReader {
+    static createFromNodeURL(nodeUrl: string): ABCINodeUnauthenticatedBlockchainClient {
         const cacheProvider = MemoryProvider.getInstance();
-        return new ABCINodeBlockchainReader(nodeUrl, cacheProvider);
+        return new ABCINodeUnauthenticatedBlockchainClient(nodeUrl, cacheProvider);
     }
 
     private networkProvider: NetworkProvider;
@@ -157,7 +157,7 @@ export class ABCINodeBlockchainReader implements BlockchainReader {
     }
 
     private static DEFAULT_MAX_RECORDS_HISTORY = 100;
-    async getAccountHistory(accountHash: Hash, lastHistoryHash?: Hash, maxRecords: number= ABCINodeBlockchainReader.DEFAULT_MAX_RECORDS_HISTORY): Promise<AccountHistoryView> {
+    async getAccountHistory(accountHash: Hash, lastHistoryHash?: Hash, maxRecords: number= ABCINodeUnauthenticatedBlockchainClient.DEFAULT_MAX_RECORDS_HISTORY): Promise<AccountHistoryView> {
         // we first search for the account state
         const accountState = await this.getAccountState(accountHash);
         if (accountState.isEmpty()) throw new AccountNotFoundForAccountHashError(accountHash);

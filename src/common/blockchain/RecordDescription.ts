@@ -51,4 +51,5 @@ export interface RecordDescription<DataType = any> {
     maskableFields?: RecordMaskableField[];
     author: string;
     endorser?: string;
+    approvalMessage?: string;
 }

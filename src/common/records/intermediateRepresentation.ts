@@ -111,7 +111,12 @@ export class IntermediateRepresentation {
   /**
     Exports the IR object to the serialized section format used for on-chain storage.
   */
-  exportToSectionFormat() {
+  exportToSectionFormat() :
+      (
+      { channelId: number, isPrivate: false, data: Uint8Array } |
+      { channelId: number, isPrivate: true, data: Uint8Array, merkleRootHash: Uint8Array }
+      )[]
+  {
     const list = [];
 
     for(const channelId of this.usedChannels) {

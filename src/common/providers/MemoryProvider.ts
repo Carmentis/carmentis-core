@@ -1,7 +1,7 @@
 import {Utils} from "../utils/utils";
 import {MicroblockInformationSchema} from "../blockchain/types";
 
-import {BlockchainReader} from "./BlockchainReader";
+import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
 
 export class MemoryProvider  {
 

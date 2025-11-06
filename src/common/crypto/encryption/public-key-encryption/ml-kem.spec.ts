@@ -2,6 +2,7 @@ import { MlKemPrivateDecryptionKey } from "./MlKemPrivateDecryptionKey";
 import { MlKemPublicEncryptionKey } from "./MlKemPublicEncryptionKey";
 import { PublicKeyEncryptionSchemeId } from "./PublicKeyEncryptionSchemeId";
 import { AES256GCMSymmetricEncryptionKey } from "../symmetric-encryption/encryption-interface";
+import {DecryptionError} from "../../../errors/carmentis-error";
 
 function u8(arr: number[] | number, len?: number): Uint8Array {
   if (typeof arr === 'number') {
@@ -71,7 +72,7 @@ describe("ML-KEM Public/Private Key Encryption", () => {
       tampered[0] = tampered[0] ^ 0xff;
     }
 
-    expect(() => sk.decrypt(tampered)).toThrow();
+    expect(() => sk.decrypt(tampered)).toThrow(DecryptionError);
   });
 
 

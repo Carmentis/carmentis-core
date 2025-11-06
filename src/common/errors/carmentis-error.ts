@@ -71,6 +71,19 @@ export class EmptyBlockError extends CarmentisError {
     }
 }
 
+export class CryptoError extends CarmentisError {}
+export class DecryptionError extends CryptoError {
+    constructor(message?: string) {
+        super(message ?? "Decryption failure");
+    }
+}
+
+export class SharedKeyDecryptionError extends DecryptionError {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
 export class InternalError extends CarmentisError {}
 
 export class NodeError extends InternalError {}

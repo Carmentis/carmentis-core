@@ -31,6 +31,7 @@ import {
     OrganizationNotFoundError
 } from "../common/errors/carmentis-error";
 import {RecordDescription} from "../common/blockchain/RecordDescription";
+import {MlKemPrivateDecryptionKey} from "../common/crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 
 const NODE_URL = "http://localhost:26657";
 
@@ -53,9 +54,12 @@ describe('Chain test', () => {
         expect(await genesisAccount.isIssuer()).toBeTruthy();
         console.log("Genesis account created with id ", genesisAccountId.encode());
 
+        const firstAccountPrivateDecryptionKey = MlKemPrivateDecryptionKey.gen();
+
         {
             // create a first account
             const firstAccountPrivateKey = MLDSA65PrivateSignatureKey.gen();
+
             const firstAccountCreationContext = new AccountPublicationExecutionContext()
                 .withBuyerPublicKey(firstAccountPrivateKey.getPublicKey())
                 .withSellerAccount(genesisAccountId)
@@ -217,7 +221,7 @@ describe('Chain test', () => {
                 .withGasPrice(CMTSToken.createCMTS(2))
                 .withExpirationIn(365)
                 .withRecord(object);
-            const appLedgerId = await blockchain.publishRecord(recordPublicationContext);
+            const appLedgerId = await blockchain.publishRecord(firstAccountPrivateDecryptionKey, recordPublicationContext);
             const appLedger = await blockchain.loadApplicationLedger(appLedgerId);
             const recoveredData = await appLedger.getRecordAtHeight(1);
             expect(recoveredData).toEqual(data);
@@ -243,7 +247,7 @@ describe('Chain test', () => {
             const secondRecordPublicationContext = new RecordPublicationExecutionContext()
                 .withGasPrice(CMTSToken.createCMTS(2))
                 .withRecord(otherObject);
-            await blockchain.publishRecord(secondRecordPublicationContext);
+            await blockchain.publishRecord(firstAccountPrivateDecryptionKey, secondRecordPublicationContext);
             const secondAppLedger = await blockchain.loadApplicationLedger(appLedgerId);
             expect(await secondAppLedger.getRecordAtHeight(2)).toEqual(secondData);
 

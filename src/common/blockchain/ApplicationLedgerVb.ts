@@ -3,10 +3,14 @@ import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Application} from "./Application";
 import {StructureChecker} from "./StructureChecker";
 import {HKDF} from "../crypto/kdf/HKDF";
-import {ApplicationLedgerVBState} from "./types";
+import {
+    ApplicationLedgerChannelInvitationSection,
+    ApplicationLedgerEndorsementRequestSection, ApplicationLedgerSharedKeySection,
+    ApplicationLedgerVBState
+} from "./types";
 import {IntermediateRepresentation} from "../records/intermediateRepresentation";
 import {Provider} from "../providers/Provider";
-import {BlockchainReader} from "../providers/BlockchainReader";
+import {UnauthenticatedBlockchainClient} from "../providers/UnauthenticatedBlockchainClient";
 import {Utils} from "../utils/utils";
 
 import {
@@ -25,6 +29,11 @@ import {
     CurrentActorNotFoundError,
 } from "../errors/carmentis-error";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {Microblock, Section} from "./Microblock";
+import {
+    AbstractPrivateDecryptionKey
+} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+import {AES256GCMSymmetricEncryptionKey} from "../crypto/encryption/symmetric-encryption/encryption-interface";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
     constructor({provider}: { provider: Provider }) {
@@ -83,8 +92,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         await this.addSection(SECTIONS.APP_LEDGER_SHARED_SECRET, object);
     }
 
-    async inviteToChannel(object: any) {
-        await this.addSection(SECTIONS.APP_LEDGER_CHANNEL_INVITATION, object);
+    async inviteToChannel(section: ApplicationLedgerChannelInvitationSection) {
+        await this.addSection(SECTIONS.APP_LEDGER_CHANNEL_INVITATION, section);
     }
 
     async addPublicChannelData(object: any) {
@@ -114,6 +123,22 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     async addEndorserSignature(signature: Uint8Array) {
         return this.addSection(SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, {signature})
+    }
+
+    /**
+     * This method adds a section containing the endorsement request that containing
+     * the identifier of the endorser and the message that should be displayed on the endorse device
+     * during approval.
+     *
+     * @param endorserId Identifier of the endorser.
+     * @param messageToDisplay
+     */
+    async addEndorsementRequest(endorserId: number, messageToDisplay: string) {
+        const section: ApplicationLedgerEndorsementRequestSection = {
+            endorserId,
+            message: messageToDisplay
+        };
+        return this.addSection(SECTIONS.APP_LEDGER_ENDORSEMENT_REQUEST, section)
     }
 
     /**
@@ -153,29 +178,36 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         return channel;
     }
 
-    async getChannelKey(actorId: number, channelId: number) {
+    async getChannelKey(actorId: number, channelId: number, actorPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+        // if the actor id is the creator of the channel, then we have to derive the channel key locally...
         const state = this.getState();
         const creatorId = state.channels[channelId].creatorId;
-
         if(creatorId == actorId) {
             return await this.deriveChannelKey(channelId);
         }
 
-        return await this.getChannelKeyFromInvitation(actorId, channelId);
+        // ... otherwise we have to obtain the (encryption of the) channel key from an invitation section.
+        return await this.getChannelKeyFromInvitation(actorId, channelId, actorPrivateDecryptionKey);
     }
 
-    async getChannelKeyFromInvitation(actorId: number, channelId: number) {
-        const state = this.getState();
-
+    private async getChannelKeyFromInvitation(
+        actorId: number,
+        channelId: number,
+        actorPrivateDecryptionKey: AbstractPrivateDecryptionKey
+    ) {
         // look for an invitation of actorId to channelId and extract the encrypted channel key
-        const invitation = state.actors[actorId].invitations.find((invitation) => invitation.channelId == channelId);
+        const state = this.getState();
+        const invitation = state.actors[actorId].invitations.find(
+            (invitation) => invitation.channelId == channelId
+        );
 
-        if(!invitation) {
+        // if there is no invitation, then the actor is not allowed, easy
+        if (!invitation) {
             throw new ActorNotInvitedError(actorId, channelId);
         }
 
+        // we search for the channel invitation
         const invitationMicroblock = await this.getMicroblock(invitation.height);
-
         const invitationSection: any = invitationMicroblock.getSection((section: any) =>
             section.type == SECTIONS.APP_LEDGER_CHANNEL_INVITATION &&
             section.object.channelId == channelId &&
@@ -186,25 +218,25 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         const encryptedChannelKey = invitationSection.channelKey;
 
         // look for the shared secret between actorId and hostId
-        const sharedSecret = state.actors[actorId].sharedSecrets.find((sharedSecret) => sharedSecret.peerActorId == hostId);
-
-        if(!sharedSecret) {
+        const sharedSecret = state.actors[actorId].sharedSecrets.find(
+            (sharedSecret) => sharedSecret.peerActorId == hostId
+        );
+        if (!sharedSecret) {
             throw new NoSharedSecretError(actorId, hostId);
         }
 
         const sharedSecretMicroblock = await this.getMicroblock(sharedSecret.height);
-
-        const sharedSecretSection: any = invitationMicroblock.getSection((section: any) =>
+        const sharedSecretSection = sharedSecretMicroblock.getSection<ApplicationLedgerSharedKeySection>((section: any) =>
             section.type == SECTIONS.APP_LEDGER_SHARED_SECRET &&
             section.object.hostId == hostId &&
             section.object.guestId == actorId
         );
-
-        const encryptedSharedKey = sharedSecretSection.encryptedSharedKey;
-
-        // TODO: decrypt the channel key, using the unified operator/wallet interface
-
-        return new Uint8Array(32);
+        const encryptedSharedKey = sharedSecretSection.object.encryptedSharedKey;
+        const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
+            actorPrivateDecryptionKey.decrypt(encryptedSharedKey)
+        );
+        const channelKey = hostGuestSharedKey.decrypt(encryptedChannelKey);
+        return channelKey;
     }
 
     async deriveChannelKey(channelId: number) {
@@ -373,25 +405,28 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         });
     }
 
-    async sharedSecretCallback(microblock: any, section: any) {
+    async sharedSecretCallback(microblock: Microblock, section: Section<ApplicationLedgerSharedKeySection>) {
+        // TODO: check that there is no shared secret yet
+        // TODO: check that there host and guest already exists
     }
 
-    async invitationCallback(microblock: any, section: any) {
+    async invitationCallback(microblock: Microblock, section: Section<ApplicationLedgerChannelInvitationSection>) {
+        // TODO: check that the actor is not already in the channel
     }
 
-    async publicChannelDataCallback(microblock: any, section: any) {
+    async publicChannelDataCallback(microblock: Microblock, section: any) {
         if(!this.getState().channels[section.object.channelId]) {
             throw `invalid channel ID ${section.object.channelId}`;
         }
     }
 
-    async privateChannelDataCallback(microblock: any, section: any) {
+    async privateChannelDataCallback(microblock: Microblock, section: any) {
         if(!this.getState().channels[section.object.channelId]) {
             throw `invalid channel ID ${section.object.channelId}`;
         }
     }
 
-    async endorserSignatureCallback(microblock: any, section: any) {
+    async endorserSignatureCallback(microblock: Microblock, section: any) {
     }
 
     async authorSignatureCallback(microblock: any, section: any) {
@@ -399,7 +434,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         await application._load(this.getState().applicationId);
         const publicKey = await application.getOrganizationPublicKey();
         const feesPayerAccount = await this.provider.getAccountByPublicKey(publicKey);
-        microblock.setFeesPayerAccount(feesPayerAccount);
+        microblock.setFeesPayerAccount(feesPayerAccount); // TODO: investigate why with Microblock, it type-check fails
     }
 
     /**

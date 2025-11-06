@@ -23,7 +23,7 @@ export abstract class AbstractPublicEncryptionKey {
     }
 }
 
-export abstract class AbstractPrivateDecryptionKey {
+export abstract class AbstractPrivateDecryptionKey  {
     abstract getScheme(): AbstractPublicKeyEncryptionScheme;
     abstract decrypt(ciphertext: Uint8Array): Uint8Array;
     abstract getRawPrivateKey(): Uint8Array;

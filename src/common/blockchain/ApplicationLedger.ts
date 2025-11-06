@@ -4,13 +4,23 @@ import {SchemaValidator} from "../data/schemaValidator";
 import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
-import {ImportedProof, Proof} from "./types";
+import {
+    ApplicationLedgerPrivateChannelDataSection,
+    ApplicationLedgerPublicChannelDataSection,
+    ImportedProof,
+    Proof
+} from "./types";
 import {Section} from "./Microblock";
 import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
 import {RecordDescription} from "./RecordDescription";
 import {Height} from "../entities/Height";
-import {ProofVerificationFailedError, ProtocolError} from "../errors/carmentis-error";
+import {
+    DecryptionError, IllegalParameterError,
+    NoSharedSecretError,
+    ProofVerificationFailedError,
+    ProtocolError, SharedKeyDecryptionError
+} from "../errors/carmentis-error";
 
 
 import {HKDF} from "../crypto/kdf/HKDF";
@@ -22,7 +32,10 @@ import {
     AbstractPrivateDecryptionKey,
     AbstractPublicEncryptionKey
 } from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
-import {AES256GCMSymmetricEncryptionKey} from "../crypto/encryption/symmetric-encryption/encryption-interface";
+import {
+    AES256GCMSymmetricEncryptionKey,
+    SymmetricEncryptionKey
+} from "../crypto/encryption/symmetric-encryption/encryption-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {MlKemPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 
@@ -33,9 +46,7 @@ export class ApplicationLedger {
     vb: ApplicationLedgerVb;
     gasPrice: CMTSToken;
 
-    constructor({
-                    provider
-                }: { provider: Provider }) {
+    constructor({provider}: { provider: Provider }) {
         this.vb = new ApplicationLedgerVb({provider});
         this.provider = provider
         this.gasPrice = CMTSToken.zero();
@@ -182,7 +193,7 @@ export class ApplicationLedger {
         await this.vb.load(identifier);
     }
 
-    async _processJson(object: RecordDescription) {
+    async _processJson(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription) {
         const validator = new SchemaValidator(SCHEMAS.RECORD_DESCRIPTION);
         validator.validate(object);
 
@@ -213,9 +224,6 @@ export class ApplicationLedger {
         // get the author ID
         const authorId = this.vb.getActorId(object.author);
 
-        // get the endorser ID
-        const endorserId = object.endorser && this.vb.getActorId(object.endorser);
-
         // add the new channels
         for (const def of object.channels || []) {
             await this.vb.createChannel({
@@ -228,7 +236,6 @@ export class ApplicationLedger {
 
         // initialize an IR object, set the channels and load the data
         const ir = this.vb.getIntermediateRepresentationInstance();
-
         ir.buildFromJson(object.data);
 
         // process field assignations
@@ -238,6 +245,8 @@ export class ApplicationLedger {
         }
 
         // process actor assignations
+        // Note: we do not verify that the guest is already in the channel, this is verified in the callback during
+        // section verifications.
         for (const def of object.actorAssignations || []) {
             const channelId = this.vb.getChannelId(def.channelName);
             const actorId = this.vb.getActorId(def.actorName);
@@ -245,19 +254,36 @@ export class ApplicationLedger {
             const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
             const guestId = actorId; // the guest is the actor assigned to the channel
 
-            // FIXME: get the private key, using the unified operator/wallet interface
-            const hostPrivateDecryptionKey = MlKemPrivateDecryptionKey.genFromSeed(new Uint8Array(64));
-
             // To invite the actor in the channel, we first retrieve or generate a symmetric encryption key used to establish
             // secure communication between both peers. The key is then used to encrypt the channel key and put in a dedicated
             // section of the microblock.
-            const hostGuestSharedKey =
+            const hostGuestEncryptedSharedKey =
                 await this.getExistingSharedKey(hostId, guestId) ||
-                await this.getExistingSharedKey(guestId, hostId) ||
-                await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
+                await this.getExistingSharedKey(guestId, hostId);
+
+
+            // if we have found the (encrypted) shared secret key, then we *attempt* to decrypt it, otherwise
+            // there is no shared secret key and then we create a new one
+            let hostGuestSharedKey: AES256GCMSymmetricEncryptionKey;
+            if (hostGuestEncryptedSharedKey !== undefined) {
+                try {
+                    hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
+                        hostPrivateDecryptionKey.decrypt(hostGuestEncryptedSharedKey)
+                    );
+                } catch (e) {
+                    if (e instanceof DecryptionError) {
+                        throw new SharedKeyDecryptionError("Cannot decrypt the shared key with the provided decryption key: Have you provided the valid one?")
+                    } else {
+                        throw e;
+                    }
+                }
+            } else {
+                hostGuestSharedKey = await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
+            }
+
 
             // we encrypt the channel key using the shared secret key
-            const channelKey = await this.vb.getChannelKey(hostId, channelId);
+            const channelKey = await this.vb.getChannelKey(hostId, channelId, hostPrivateDecryptionKey);
             const encryptedChannelKey = hostGuestSharedKey.encrypt(channelKey);
 
             // we create the section containing the encrypted channel key (that can only be decrypted by the host and the guest)
@@ -285,17 +311,15 @@ export class ApplicationLedger {
         ir.populateChannels();
 
         const channelDataList = ir.exportToSectionFormat();
-
         for (const channelData of channelDataList) {
             if (channelData.isPrivate) {
-                const channelKey = await this.vb.getChannelKey(authorId, channelData.channelId);
+                const channelKey = await this.vb.getChannelKey(authorId, channelData.channelId, hostPrivateDecryptionKey);
                 const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, this.vb.height + 1, channelData.channelId);
                 const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, this.vb.height + 1, channelData.channelId);
                 const encryptedData = Crypto.Aes.encryptGcm(channelSectionKey, channelData.data, channelSectionIv);
 
                 await this.vb.addPrivateChannelData({
                     channelId: channelData.channelId,
-                    // @ts-expect-error TS(2339): Property 'merkleRootHash' does not exist on type '... Remove this comment to see the full error message
                     merkleRootHash: Utils.binaryFromHexa(channelData.merkleRootHash),
                     encryptedData: encryptedData
                 });
@@ -306,32 +330,52 @@ export class ApplicationLedger {
                 });
             }
         }
-        console.log(this.vb);
+
+        // the endorser (the user approving the transaction) is optional, for instance during direct anchoring
+        // request coming from the operator. In this case, the endorser is missing. Otherwise, when included,
+        // we have to add a section declaring the message to show on the wallet.
+        if (typeof object.endorser === 'string') {
+            // we reject the request if the endorser is empty
+            const endorserName = object.endorser;
+            if (endorserName.trim().length === 0) throw new IllegalParameterError("Empty endorser provided: should be a non-empty string or undefined");
+
+            // sometimes, there is no message to show (not provided by the application server). In this case,
+            // we replace the message with an empty string.
+            const endorserId = this.vb.getActorId(object.endorser);
+            const messageToShow = object.approvalMessage ?? "";
+            await this.vb.addEndorsementRequest(endorserId, messageToShow)
+        }
     }
 
     /**
      * Retrieves an existing shared key between two peers, or undefined.
      */
-    async getExistingSharedKey(hostId: number, guestId: number) {
+    private async getExistingSharedKey(hostId: number, guestId: number): Promise<Uint8Array|undefined> {
+        // search the guest actor associated with the provided guest id
         const guestActor = this.getActorByIdOrFail(guestId);
-        const sharedSecretFromState = guestActor.sharedSecrets.find((object) =>
-            object.peerActorId == hostId
+
+        // we search in the state the height of the microblock where the (encrypted) shared key is declared
+        const sharedSecretFromState = guestActor.sharedSecrets.find(
+            (object) => object.peerActorId == hostId
         );
 
-        if(sharedSecretFromState === undefined) {
+        // if no shared secret is defined, then return undefined
+        if (sharedSecretFromState === undefined) {
             return undefined;
         }
 
+        // search the section declaring the (encrypted) shared key in the microblock specified in the state.
         const microBlock = await this.vb.getMicroblock(sharedSecretFromState.height);
-
         const sharedSecretSection = microBlock.getSection((section: any) =>
             section.type == SECTIONS.APP_LEDGER_SHARED_SECRET &&
             section.object.hostId == hostId &&
             section.object.guestId == guestId
         );
 
-        if(sharedSecretSection === undefined) {
-            throw new ProtocolError(`unable to find shared secret section`);
+        // if the condition is verified, then there is a shared secret section in the vb declaring
+        // a shared secret between guest and host but no shared key is included in the section: very very bad!
+        if (sharedSecretSection === undefined) {
+            throw new NoSharedSecretError(guestId, hostId);
         }
 
         return sharedSecretSection.object.encryptedChannelKey;
@@ -340,15 +384,14 @@ export class ApplicationLedger {
     /**
      * Creates a shared key between two peers.
      */
-    async createSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, hostId: number, guestId: number) {
+    private async createSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, hostId: number, guestId: number) {
         const hostPrivateDecryptionKeyBytes = hostPrivateDecryptionKey.getRawPrivateKey();
 
-        const salt = new Uint8Array();
         const vbGenesisSeed = await this.vb.getGenesisSeed();
         const encoder = new TextEncoder;
         const info = Utils.binaryFrom(encoder.encode("SHARED_SECRET"), vbGenesisSeed, guestId);
         const hkdf = new HKDF();
-        const hostGuestSharedKeyBytes = hkdf.deriveKey(hostPrivateDecryptionKeyBytes, salt, info, 32);
+        const hostGuestSharedKeyBytes = hkdf.deriveKeyNoSalt(hostPrivateDecryptionKeyBytes, info, 32);
         const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(hostGuestSharedKeyBytes);
 
         // we encrypt the shared key with the guest's public key
@@ -370,13 +413,13 @@ export class ApplicationLedger {
         return actor.subscribed;
     }
 
-    async getRecord<T = any>(height: Height) {
-        const ir = await this.getMicroblockIntermediateRepresentation(height);
+    async getRecord<T = any>(height: Height, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+        const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateDecryptionKey);
         return ir.exportToJson() as T;
     }
 
-    async getRecordAtFirstBlock() {
-        return this.getRecord(1);
+    async getRecordAtFirstBlock(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+        return this.getRecord(1, hostPrivateDecryptionKey);
     }
 
     /**
@@ -394,11 +437,11 @@ export class ApplicationLedger {
      * @return {number} return.proofs[].height - The height of the microblock.
      * @return {Object} return.proofs[].data - The proof data for the corresponding microblock.
      */
-    async exportProof(customInfo: { author: string }): Promise<Proof> {
+    async exportProof(customInfo: { author: string }, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<Proof> {
         const proofs = [];
 
         for (let height = 1; height <= this.vb.height; height++) {
-            const ir = await this.getMicroblockIntermediateRepresentation(height);
+            const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateDecryptionKey);
 
             proofs.push({
                 height: height,
@@ -424,12 +467,12 @@ export class ApplicationLedger {
      * @param proofObject
      * @throws ProofVerificationFailedError
      */
-    async importProof(proofObject: Proof): Promise<ImportedProof[]> {
+    async importProof(proofObject: Proof, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<ImportedProof[]> {
         const data = [];
 
         for (let height = 1; height <= this.vb.height; height++) {
             const proof = proofObject.proofs.find((proof: any) => proof.height == height);
-            const ir = await this.getMicroblockIntermediateRepresentation(height);
+            const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateDecryptionKey);
             const merkleData = ir.importFromProof(proof?.data);
 
             // TODO: check Merkle root hash
@@ -492,10 +535,14 @@ export class ApplicationLedger {
         return actor;
     }
 
-    async getMicroblockIntermediateRepresentation(height: number) {
+    async getMicroblockIntermediateRepresentation(height: number, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
         const microblock = await this.vb.getMicroblock(height);
-        const publicChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA);
-        const privateChannelDataSections = microblock.getSections((section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA);
+        const publicChannelDataSections = microblock.getSections<ApplicationLedgerPublicChannelDataSection>(
+            (section: any) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA
+        );
+        const privateChannelDataSections = microblock.getSections<ApplicationLedgerPrivateChannelDataSection>(
+            (section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA
+        );
         const ir = this.vb.getIntermediateRepresentationInstance();
 
         const list: { channelId: number, data: object, merkleRootHash?: string }[] =
@@ -507,7 +554,7 @@ export class ApplicationLedger {
             });
 
         for(const section of privateChannelDataSections) {
-            const channelKey = await this.vb.getChannelKey(await this.vb.getCurrentActorId(), section.object.channelId);
+            const channelKey = await this.vb.getChannelKey(await this.vb.getCurrentActorId(), section.object.channelId, hostPrivateDecryptionKey);
             const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, section.object.channelId);
             const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, section.object.channelId);
             const data = Crypto.Aes.decryptGcm(channelSectionKey, section.object.encryptedData, channelSectionIv);

@@ -1,4 +1,5 @@
 import { gcm } from "@noble/ciphers/aes";
+import {CarmentisError, DecryptionError} from "../../../errors/carmentis-error";
 
 
 export interface SymmetricEncryptionKeyScheme {
@@ -154,10 +155,18 @@ export class AES256GCMSymmetricEncryptionKey implements SymmetricEncryptionKey {
      * @return {Uint8Array} The decrypted plaintext as a Uint8Array.
      */
     decrypt(ciphertext: Uint8Array): Uint8Array {
-        const iv = ciphertext.slice(0, 12);
-        const encrypted = ciphertext.slice(12);
-        const stream = gcm(this.key, iv);
-        return stream.decrypt(encrypted);
+        try {
+            const iv = ciphertext.slice(0, 12);
+            const encrypted = ciphertext.slice(12);
+            const stream = gcm(this.key, iv);
+            return stream.decrypt(encrypted);
+        } catch (e) {
+            if (CarmentisError.isCarmentisError(e)) {
+                throw new DecryptionError();
+            } else {
+                throw e;
+            }
+        }
     }
 }
 

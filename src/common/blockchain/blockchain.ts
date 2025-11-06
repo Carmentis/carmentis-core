@@ -12,9 +12,12 @@ import {ImportedProof, Proof} from "./types";
 import {Hash} from "../entities/Hash";
 import {RecordDescription} from "./RecordDescription";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {
+    AbstractPrivateDecryptionKey
+} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 
 
-export type OperatorAnchorRequest = Omit<RecordDescription, 'applicationId'> & { approvalMessage: string }
+export type OperatorAnchorRequest = Omit<RecordDescription, 'applicationId'>;
 
 /**
  * @deprecated Use BlockchainFacade.
@@ -158,9 +161,9 @@ export class Blockchain {
    * @param object {RecordDescription}
    * @returns {Promise<ApplicationLedger>}
    */
-  async getApplicationLedgerFromJson(object: RecordDescription) {
+  async getApplicationLedgerFromJson(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
-    await applicationLedger._processJson(object);
+    await applicationLedger._processJson(hostPrivateDecryptionKey, object);
     return applicationLedger;
   }
 

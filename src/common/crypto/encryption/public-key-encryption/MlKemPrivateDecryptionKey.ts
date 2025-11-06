@@ -6,6 +6,7 @@ import {AES256GCMSymmetricEncryptionKey} from "../symmetric-encryption/encryptio
 import {MlKemPublicEncryptionKey} from "./MlKemPublicEncryptionKey";
 import {MlKemPublicKeyEncryptionScheme} from "./MlKemPublicKeyEncryptionScheme";
 import {MlKemCiphertextEncoder} from "./MlKemCiphertextEncoder";
+import {CarmentisError, DecryptionError} from "../../../errors/carmentis-error";
 
 export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
     /**
@@ -54,14 +55,22 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
     }
 
     decrypt(ciphertext: Uint8Array): Uint8Array {
-        const encoder = new MlKemCiphertextEncoder();
-        const {
-            encryptedMessage,
-            encryptedSharedSecret
-        } = encoder.decode(ciphertext);
-        const sharedSecret = ml_kem768.decapsulate(encryptedSharedSecret, this.privateKey);
-        const cipher = AES256GCMSymmetricEncryptionKey.createFromBytes(sharedSecret);
-        const plaintext = cipher.decrypt(encryptedMessage);
-        return plaintext;
+        try {
+            const encoder = new MlKemCiphertextEncoder();
+            const {
+                encryptedMessage,
+                encryptedSharedSecret
+            } = encoder.decode(ciphertext);
+            const sharedSecret = ml_kem768.decapsulate(encryptedSharedSecret, this.privateKey);
+            const cipher = AES256GCMSymmetricEncryptionKey.createFromBytes(sharedSecret);
+            const plaintext = cipher.decrypt(encryptedMessage);
+            return plaintext;
+        } catch (e) {
+            if (CarmentisError.isCarmentisError(e)) {
+                throw new DecryptionError();
+            } else {
+                throw e;
+            }
+        }
     }
 }

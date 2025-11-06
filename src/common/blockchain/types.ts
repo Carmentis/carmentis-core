@@ -138,6 +138,41 @@ export interface ApplicationLedgerVBState {
     actors: ApplicationLedgerActor[];
 }
 
+
+export interface ApplicationLedgerEndorsementRequestSection {
+    endorserId: number,
+    message: string,
+}
+
+export interface ApplicationLedgerChannelInvitationSection {
+    channelId: number;
+    hostId: number;
+    guestId: number;
+    encryptedChannelKey: Uint8Array;
+}
+
+export interface ApplicationLedgerSharedKeySection {
+    hostId: number;
+    guestId: number;
+    encryptedSharedKey: Uint8Array
+}
+/*
+ { name: 'channelId',      type: DATA.TYPE_UINT8 },
+    { name: 'merkleRootHash', type: DATA.TYPE_BIN256 },
+    { name: 'encryptedData',  type: DATA.TYPE_BINARY }
+ */
+export interface ApplicationLedgerPrivateChannelDataSection {
+    channelId: number,
+    merkleRootHash: Uint8Array,
+    encryptedData: Uint8Array,
+}
+
+export interface ApplicationLedgerPublicChannelDataSection {
+    channelId: number,
+    data: Uint8Array,
+}
+
+
 /**
  * Describes the genesis snapshot which contains base64-encoded chunks.
  */

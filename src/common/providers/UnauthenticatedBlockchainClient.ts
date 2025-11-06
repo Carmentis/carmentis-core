@@ -28,7 +28,7 @@ import {VirtualBlockchainWrapper} from "../wrappers/VirtualBlockchainWrapper";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
-export interface BlockchainReader {
+export interface UnauthenticatedBlockchainClient {
     //getMicroBlockHeader(vbId: Hash, height: number): Promise<AbstractMicroBlockHeader>;
     getManyMicroBlock(type: VirtualBlockchainType, hashes: Hash[]): Promise<Microblock[]>;
 

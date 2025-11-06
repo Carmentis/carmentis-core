@@ -8,25 +8,24 @@ import {Organization} from "../blockchain/Organization";
 import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Application} from "../blockchain/Application";
-import {BlockchainWriter} from "./BlockchainWriter";
+import {AuthenticatedBlockchainClient} from "./AuthenticatedBlockchainClient";
 import {CMTSToken} from "../economics/currencies/token";
 
 import {RecordDescription} from "../blockchain/RecordDescription";
-import {BlockchainReader} from "./BlockchainReader";
+import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {
+    AbstractPrivateDecryptionKey
+} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+import {AccountCrypto} from "../wallet/AccountCrypto";
 
-export class ABCINodeBlockchainWriter implements BlockchainWriter {
-
-    private reader: BlockchainReader;
+export class ABCINodeAuthenticatedBlockchainClient implements AuthenticatedBlockchainClient {
     private nodeUrl: string;
-    private defaultPrivateKey: PrivateSignatureKey;
     private defaultKeyedProvider: Provider;
 
-    private constructor(reader: BlockchainReader, nodeUrl: string, defaultPrivateKey: PrivateSignatureKey) {
-        this.reader = reader;
+    private constructor(reader: UnauthenticatedBlockchainClient, nodeUrl: string, defaultPrivateKey: PrivateSignatureKey) {
         this.nodeUrl = nodeUrl;
-        this.defaultPrivateKey = defaultPrivateKey;
         this.defaultKeyedProvider = ProviderFactory.createKeyedProviderExternalProvider(defaultPrivateKey, nodeUrl);
     }
 
@@ -47,8 +46,8 @@ export class ABCINodeBlockchainWriter implements BlockchainWriter {
         await sellerAccount.publishUpdates();
     }
 
-    static createWriter( reader: BlockchainReader, nodeUrl: string, privateKey: PrivateSignatureKey ) {
-        return new ABCINodeBlockchainWriter(reader, nodeUrl, privateKey)
+    static createWriter(reader: UnauthenticatedBlockchainClient, nodeUrl: string, privateKey: PrivateSignatureKey ) {
+        return new ABCINodeAuthenticatedBlockchainClient(reader, nodeUrl, privateKey)
     }
 
     async createGenesisAccount() {
@@ -88,12 +87,12 @@ export class ABCINodeBlockchainWriter implements BlockchainWriter {
         return applicationLedger;
     }
 
-    async createApplicationLedgerFromJson<T = any>(object: RecordDescription<T>, expirationDay: number) {
+    async createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription<T>, expirationDay: number) {
         const applicationLedger = new ApplicationLedger({ provider: this.defaultKeyedProvider });
         if(applicationLedger.vb.getHeight() == 0) {
             applicationLedger.vb.setExpirationDay(expirationDay);
         }
-        await applicationLedger._processJson(object);
+        await applicationLedger._processJson(privateDecryptionKey, object);
         return applicationLedger;
     }
 

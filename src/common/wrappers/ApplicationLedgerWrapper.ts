@@ -2,6 +2,9 @@ import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Height} from "../entities/Height";
 import {ProofBuilder} from "../entities/ProofBuilder";
 import {Hash} from "../entities/Hash";
+import {
+    AbstractPrivateDecryptionKey
+} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 
 export class ApplicationLedgerWrapper {
     static async wrap(appLedger: ApplicationLedger) {
@@ -12,12 +15,12 @@ export class ApplicationLedgerWrapper {
         private readonly appLedger: ApplicationLedger
     ) {}
 
-    async getRecordAtHeight<T = any>(height: Height): Promise<T> {
-        return await this.appLedger.getRecord(height) as T;
+    async getRecordAtHeight<T = any>(height: Height, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<T> {
+        return await this.appLedger.getRecord(height, hostPrivateDecryptionKey) as T;
     }
 
-    async getRecordAtFirstBlock<T = any>(): Promise<T> {
-        return this.getRecordAtHeight(1);
+    async getRecordAtFirstBlock<T = any>(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<T> {
+        return this.getRecordAtHeight(1, hostPrivateDecryptionKey);
     }
 
     getId() {

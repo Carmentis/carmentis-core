@@ -120,7 +120,8 @@ export const RECORD_DESCRIPTION: Schema = {
     { name: 'hashableFields',      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_HASHABLE_FIELD },
     { name: 'maskableFields',      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_MASKABLE_FIELD },
     { name: 'author',              type: DATA.TYPE_STRING },
-    { name: 'endorser',            type: DATA.TYPE_STRING, optional: true }
+    { name: 'endorser',            type: DATA.TYPE_STRING, optional: true },
+      { name: 'approvalMessage',            type: DATA.TYPE_STRING, optional: true },
   ]
 };
 

@@ -104,4 +104,8 @@ export class AccountCrypto {
 
         return new Uint8Array(buffer);
     }
+
+    getActor(vbSeed: Uint8Array) {
+        return ActorCrypto.createFromAccountSeedAndVbSeed(this.accountSeed, vbSeed)
+    }
 }

@@ -64,30 +64,29 @@
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3",
     "@types/eslint-plugin-security": "^3.0.0",
     "@types/jest": "^30.0.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
+    "barrelsby": "^2.8.1",
+    "conventional-changelog-eslint": "^6.0.0",
     "eslint-plugin-security": "^3.0.1",
     "jest": "^30.0.1",
     "rimraf": "^6.0.1",
     "rollup": "^4.30.1",
     "rollup-plugin-dts": "^6.1.1",
     "ts-jest": "^29.4.0",
-    "ts-migrate": "^0.1.35",
     "ts-morph": "^26.0.0",
     "ts-node": "^10.9.2",
     "tsdoc-markdown": "^1.4.1",
     "tslib": "^2.8.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
-    "underscore": "^1.13.7",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/release-notes-generator": "^14.0.3",
-    "barrelsby": "^2.8.1",
-    "conventional-changelog-eslint": "^6.0.0"
+    "underscore": "^1.13.7"
   },
   "dependencies": {
     "@noble/ciphers": "^1.2.1",
@@ -98,6 +97,6 @@
     "clipanion": "^3.2.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "zod": "^3.25.76"
+    "zod": "^4.1.0"
   }
 }

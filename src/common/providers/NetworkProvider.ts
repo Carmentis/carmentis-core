@@ -196,40 +196,44 @@ export class NetworkProvider {
      */
 
     private static async query(urlObject: any): Promise<{data: string}> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const response = await axios.post(urlObject, {}, {
-                    headers: {
-                        'Content-Type': 'application/json; charset=UTF-8',
-                        'Accept': 'application/json',
-                    }
-                });
-                const data = response.data
-                resolve(data);
-            } catch (e) {
-                if (e instanceof AxiosError) {
-                    // connection refused
-                    if (e.code === 'ECONNREFUSED') {
-                        throw new NodeConnectionRefusedError(urlObject)
-                    }
-
-                    // internal server error
-                    if (e.status === 500) {
-                        const cometError = e?.response?.data?.error?.code;
-                        if (cometError) {
-                            switch (cometError) {
-                                case CometBFTErrorCode.ENDPOINT_CLOSED_WHILE_NODE_IS_CATCHING_UP:
-                                    throw new NodeEndpointClosedWhileCatchingUpError()
-                            }
-                        }
-                        //if (e.response.data.error.code === CometBFTErrorCode.ENDPOINT_CLOSED_WHILE_NODE_IS_CATCHING_UP)
-                        throw new NodeError("Internal error in the node")
-                    }
-
+        try {
+            const response = await axios.post(urlObject, {}, {
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'Accept': 'application/json',
                 }
-                reject(e);
+            });
+            const data = response.data
+            return data;
+        } catch (e) {
+            if (e instanceof AxiosError) {
+                // connection refused
+                if (e.code === 'ECONNREFUSED') {
+                    throw new NodeConnectionRefusedError(urlObject)
+                }
+
+                // internal server error
+                if (e.status === 500) {
+                    const cometError = e?.response?.data?.error?.code;
+                    if (cometError) {
+                        switch (cometError) {
+                            case CometBFTErrorCode.ENDPOINT_CLOSED_WHILE_NODE_IS_CATCHING_UP:
+                                throw new NodeEndpointClosedWhileCatchingUpError()
+                        }
+                    }
+                    //if (e.response.data.error.code === CometBFTErrorCode.ENDPOINT_CLOSED_WHILE_NODE_IS_CATCHING_UP)
+                    throw new NodeError("Internal error in the node")
+                }
+
             }
+            throw e
+        }
+        /*
+        return new Promise(async (resolve, reject) => {
+
         })
+
+         */
     }
 
     async broadcastTx(data: any) {

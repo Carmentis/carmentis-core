@@ -1,7 +1,6 @@
 import * as DATA from './data';
 import * as CHAIN from './chain';
-import {Schema} from './schemas';
-import {z} from 'zod';
+import {Schema, CONTRACT_SCHEMA} from './schemas';
 import {SectionType} from '../entities/SectionType';
 
 // ============================================================================================================================ //
@@ -52,14 +51,15 @@ PROTOCOL[PROTOCOL_PROTOCOL_UPDATE] = {
     { name: 'effectiveUtcTimestamp', type: DATA.TYPE_UINT48 },
     { name: 'version',               type: DATA.TYPE_UINT16 },
     { name: 'codeName',              type: DATA.TYPE_STRING },
-    { name: 'changeLog',             type: DATA.TYPE_STRING }
+    { name: 'changeLog',             type: DATA.TYPE_STRING },
+    { name: 'contracts',             type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: CONTRACT_SCHEMA }
   ]
 };
 
 PROTOCOL[PROTOCOL_NODE_UPDATE] = {
   label: 'PROTOCOL_NODE_UPDATE',
   definition: [
-    { name: 'organizationId',     type: DATA.TYPE_UINT48 },
+    { name: 'organizationId',     type: DATA.TYPE_BIN256 },
     { name: 'version',            type: DATA.TYPE_STRING },
     { name: 'maxProtocolVersion', type: DATA.TYPE_UINT16 },
     { name: 'changeLog',          type: DATA.TYPE_STRING },
@@ -77,12 +77,15 @@ PROTOCOL[PROTOCOL_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
-export const ACCOUNT_SIG_SCHEME     = SectionType.ACCOUNT_SIG_SCHEME;
-export const ACCOUNT_PUBLIC_KEY     = SectionType.ACCOUNT_PUBLIC_KEY;
-export const ACCOUNT_TOKEN_ISSUANCE = SectionType.ACCOUNT_TOKEN_ISSUANCE;
-export const ACCOUNT_CREATION       = SectionType.ACCOUNT_CREATION;
-export const ACCOUNT_TRANSFER       = SectionType.ACCOUNT_TRANSFER;
-export const ACCOUNT_SIGNATURE      = SectionType.ACCOUNT_SIGNATURE;
+export const ACCOUNT_SIG_SCHEME       = SectionType.ACCOUNT_SIG_SCHEME;
+export const ACCOUNT_PUBLIC_KEY       = SectionType.ACCOUNT_PUBLIC_KEY;
+export const ACCOUNT_TOKEN_ISSUANCE   = SectionType.ACCOUNT_TOKEN_ISSUANCE;
+export const ACCOUNT_CREATION         = SectionType.ACCOUNT_CREATION;
+export const ACCOUNT_TRANSFER         = SectionType.ACCOUNT_TRANSFER;
+export const ACCOUNT_VESTING_TRANSFER = SectionType.ACCOUNT_VESTING_TRANSFER;
+export const ACCOUNT_ESCROW_TRANSFER  = SectionType.ACCOUNT_ESCROW_TRANSFER;
+export const ACCOUNT_STAKE            = SectionType.ACCOUNT_STAKE;
+export const ACCOUNT_SIGNATURE        = SectionType.ACCOUNT_SIGNATURE;
 
 const ACCOUNT: Schema[] = [] as const;
 
@@ -122,6 +125,37 @@ ACCOUNT[ACCOUNT_TRANSFER] = {
     { name: 'amount',           type: DATA.TYPE_UINT48 },
     { name: 'publicReference',  type: DATA.TYPE_STRING },
     { name: 'privateReference', type: DATA.TYPE_STRING }
+  ]
+};
+
+ACCOUNT[ACCOUNT_VESTING_TRANSFER] = {
+  label: 'ACCOUNT_VESTING_TRANSFER',
+  definition: [
+    { name: 'account',          type: DATA.TYPE_BIN256 },
+    { name: 'amount',           type: DATA.TYPE_UINT48 },
+    { name: 'publicReference',  type: DATA.TYPE_STRING },
+    { name: 'privateReference', type: DATA.TYPE_STRING },
+    { name: 'cliffPeriod',      type: DATA.TYPE_UINT16 },
+    { name: 'vestingPeriod',    type: DATA.TYPE_UINT16 }
+  ]
+};
+
+ACCOUNT[ACCOUNT_ESCROW_TRANSFER] = {
+  label: 'ACCOUNT_ESCROW_TRANSFER',
+  definition: [
+    { name: 'account',          type: DATA.TYPE_BIN256 },
+    { name: 'amount',           type: DATA.TYPE_UINT48 },
+    { name: 'publicReference',  type: DATA.TYPE_STRING },
+    { name: 'privateReference', type: DATA.TYPE_STRING },
+    { name: 'agentPublicKey',   type: DATA.TYPE_BINARY }
+  ]
+};
+
+ACCOUNT[ACCOUNT_STAKE] = {
+  label: 'ACCOUNT_STAKE',
+  definition: [
+    { name: 'amount',         type: DATA.TYPE_UINT48 },
+    { name: 'nodeIdentifier', type: DATA.TYPE_BIN256 }
   ]
 };
 
@@ -340,8 +374,8 @@ APP_LEDGER[APP_LEDGER_CHANNEL_CREATION] = {
 APP_LEDGER[APP_LEDGER_SHARED_SECRET] = {
   label: 'APP_LEDGER_SHARED_SECRET',
   definition: [
-    { name: 'hostId',        type: DATA.TYPE_UINT8 },
-    { name: 'guestId',       type: DATA.TYPE_UINT8 },
+    { name: 'hostId',             type: DATA.TYPE_UINT8 },
+    { name: 'guestId',            type: DATA.TYPE_UINT8 },
     { name: 'encryptedSharedKey', type: DATA.TYPE_BINARY }
   ]
 };

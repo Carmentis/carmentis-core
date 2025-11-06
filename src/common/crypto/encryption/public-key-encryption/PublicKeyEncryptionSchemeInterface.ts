@@ -38,4 +38,3 @@ export abstract class AbstractPrivateDecryptionKey {
      */
     abstract getSupportedSeedLength(): number[];
 }
-

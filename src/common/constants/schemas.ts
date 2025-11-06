@@ -29,6 +29,27 @@ export const ERROR: Schema = {
 };
 
 // ============================================================================================================================ //
+//  Contract                                                                                                                    //
+// ============================================================================================================================ //
+export const CONTRACT_PARAMETER_SCHEMA: Schema = {
+  label: 'contractParameter',
+  definition: [
+    { name: 'name',         type: DATA.TYPE_STRING },
+    { name: 'type',         type: DATA.TYPE_STRING },
+    { name: 'defaultValue', type: DATA.TYPE_STRING },
+    { name: 'modifiable',   type: DATA.TYPE_BOOLEAN }
+  ]
+};
+
+export const CONTRACT_SCHEMA: Schema = {
+  label: 'contract',
+  definition: [
+    { name: 'name',                 type: DATA.TYPE_STRING },
+    { name: 'parametersDefinition', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: CONTRACT_PARAMETER_SCHEMA }
+  ]
+};
+
+// ============================================================================================================================ //
 //  Record description                                                                                                          //
 // ============================================================================================================================ //
 const RECORD_ACTOR: Schema = {

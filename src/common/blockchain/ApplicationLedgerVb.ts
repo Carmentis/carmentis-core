@@ -10,10 +10,6 @@ import {Provider} from "../providers/Provider";
 import {BlockchainReader} from "../providers/BlockchainReader";
 import {Utils} from "../utils/utils";
 
-const KDF_CHANNEL_KEY_PREFIX = 0x00;
-const KDF_CHANNEL_SECTION_KEY_PREFIX = 0x01;
-const KDF_CHANNEL_SECTION_IV_PREFIX = 0x02;
-
 import {
     ActorAlreadyDefinedError,
     ChannelAlreadyDefinedError,
@@ -204,9 +200,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
             section.object.guestId == actorId
         );
 
-        const encapsulation = sharedSecretSection.encapsulation;
+        const encryptedSharedKey = sharedSecretSection.encryptedSharedKey;
 
-        // TODO: decrypt the channel key
+        // TODO: decrypt the channel key, using the unified operator/wallet interface
 
         return new Uint8Array(32);
     }
@@ -218,14 +214,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
         const myPrivateSignatureKey = this.provider.getPrivateSignatureKey();
         const myPrivateSignatureKeyBytes = myPrivateSignatureKey.getPrivateKeyAsBytes();
-
         const salt = new Uint8Array();
-
-        const info = Utils.binaryFrom(
-            KDF_CHANNEL_KEY_PREFIX,
-            channelId,
-            await this.getGenesisSeed()
-        );
+        const encoder = new TextEncoder;
+        const info = Utils.binaryFrom(encoder.encode("CHANNEL_KEY"), await this.getGenesisSeed(), channelId);
 
         const hkdf = new HKDF();
 
@@ -233,18 +224,19 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     }
 
     deriveChannelSectionKey(channelKey: Uint8Array, height: number, channelId: number) {
-        return this.deriveChannelSectionMaterial(channelKey, KDF_CHANNEL_SECTION_KEY_PREFIX, height, channelId, 32);
+        return this.deriveChannelSectionMaterial(channelKey, "CHANNEL_SECTION_KEY", height, channelId, 32);
     }
 
     deriveChannelSectionIv(channelKey: Uint8Array, height: number, channelId: number) {
-        return this.deriveChannelSectionMaterial(channelKey, KDF_CHANNEL_SECTION_IV_PREFIX, height, channelId, 12);
+        return this.deriveChannelSectionMaterial(channelKey, "CHANNEL_SECTION_IV", height, channelId, 12);
     }
 
-    deriveChannelSectionMaterial(channelKey: Uint8Array, prefix: number, height: number, channelId: number, keyLength: number) {
+    deriveChannelSectionMaterial(channelKey: Uint8Array, prefix: string, height: number, channelId: number, keyLength: number) {
         const salt = new Uint8Array();
+        const encoder = new TextEncoder;
 
         const info = Utils.binaryFrom(
-            prefix,
+            encoder.encode(prefix),
             channelId,
             new Uint8Array(Utils.intToByteArray(height, 6))
         );

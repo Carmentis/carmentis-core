@@ -324,6 +324,7 @@ export class BlockchainFacade{
         const data = context.build();
         const isUpdatingApplication = data.applicationId.isSome();
         let application;
+
         if (isUpdatingApplication) {
             application = await writer.loadApplication(data.applicationId.unwrap());
             const description = await application.getDescription();

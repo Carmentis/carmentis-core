@@ -20,7 +20,7 @@ export const VB_NAME = [
 ];
 
 export const MAX_MICROBLOCK_PAST_DELAY = 300;
-export const MAX_MICROBLOCK_FUTURE_DELAY = 60;
+export const MAX_MICROBLOCK_FUTURE_DELAY = 120;
 
 // The MB is invalid and cannot be made valid under any circumstances.
 export const MB_STATUS_UNRECOVERABLE_ERROR = 1;

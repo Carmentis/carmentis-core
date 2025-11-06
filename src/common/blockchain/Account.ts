@@ -3,7 +3,7 @@ import {AccountVb} from "./AccountVb";
 import {Utils} from "../utils/utils";
 import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
-import {AccountTransfer} from "./types";
+import {AccountTransfer, AccountVestingTransfer, AccountEscrowTransfer, AccountStake} from "./types";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Provider} from "../providers/Provider";
 import {CMTSToken} from "../economics/currencies/token";
@@ -90,12 +90,19 @@ export class Account {
     }
 
     async transfer(object: AccountTransfer) {
-        await this.vb.setTransfer({
-            account: object.account,
-            amount: object.amount,
-            publicReference: object.publicReference,
-            privateReference: object.privateReference
-        });
+        await this.vb.setTransfer(object);
+    }
+
+    async vestingTransfer(object: AccountVestingTransfer) {
+        await this.vb.setVestingTransfer(object);
+    }
+
+    async escrowTransfer(object: AccountEscrowTransfer) {
+        await this.vb.setEscrowTransfer(object);
+    }
+
+    async stake(object: AccountStake) {
+        await this.vb.setStake(object);
     }
 
     setGasPrice(gasPrice: CMTSToken) {

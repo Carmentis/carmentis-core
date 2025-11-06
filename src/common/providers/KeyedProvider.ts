@@ -12,7 +12,6 @@ export class KeyedProvider extends Provider {
         return true;
     }
 
-
     getPrivateSignatureKey(): PrivateSignatureKey {
         return this.signatureKey;
     }
@@ -20,6 +19,4 @@ export class KeyedProvider extends Provider {
     getPublicSignatureKey(): PublicSignatureKey {
         return this.signatureKey.getPublicKey();
     }
-
-
 }

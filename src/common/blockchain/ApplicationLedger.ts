@@ -11,9 +11,12 @@ import {CMTSToken} from "../economics/currencies/token";
 import {RecordDescription} from "./RecordDescription";
 import {Height} from "../entities/Height";
 import {ProofVerificationFailedError, ProtocolError} from "../errors/carmentis-error";
-import {PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
+import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
+
+import {HKDF} from "../crypto/kdf/HKDF";
 import {
     AbstractPublicEncryptionKey,
+    AbstractPrivateDecryptionKey,
     AES256GCMSymmetricEncryptionKey,
     CryptoSchemeFactory, MlKemPrivateDecryptionKey, MlKemPublicEncryptionKey,
     PublicKeyEncryptionSchemeId
@@ -97,8 +100,6 @@ export class ApplicationLedger {
         return this.allowedPkeSchemeIds.includes(schemeId);
     }
 
-
-
     getVirtualBlockchainId() {
         return Hash.from(this.vb.getId());
     }
@@ -141,7 +142,7 @@ export class ApplicationLedger {
         const unknownActorType = ActorType.UNKNOWN; 
         
         // The organization id is currently not used in the protocol. 
-        // Initially, it has been designed to handle the case where a user from another organisation is added to an external vb.
+        // Initially, it has been designed to handle the case where a user from another organization is added to an external vb.
         const nullOrganizationId = Utils.getNullHash();
         
         return this.vb.subscribe({
@@ -156,12 +157,16 @@ export class ApplicationLedger {
     }
 
     getVirtualBlockchain() {
-        if (!this.vb) throw new Error("Cannot return application ledger virtual blockchain: undefined virtual blockchain. ")
+        if (!this.vb) {
+            throw new Error("Cannot return application ledger virtual blockchain: undefined virtual blockchain. ")
+        }
         return this.vb;
     }
 
     async _create(applicationId: string) {
-        if (!this.provider.isKeyed()) throw 'Cannot create an application ledger without a keyed provider.'
+        if (!this.provider.isKeyed()) {
+            throw 'Cannot create an application ledger without a keyed provider.'
+        }
         await this.vb.setAllowedSignatureSchemes({
             schemeIds: this.allowedSignatureSchemeIds
         });
@@ -211,7 +216,7 @@ export class ApplicationLedger {
         // add the new channels
         for (const def of object.channels || []) {
             await this.vb.createChannel({
-                id: this.vb.getNumberOfChannels(),// this.vb.state.channels.length,
+                id: this.vb.getNumberOfChannels(),
                 isPrivate: !def.public,
                 creatorId: authorId,
                 name: def.name
@@ -234,25 +239,19 @@ export class ApplicationLedger {
             const channelId = this.vb.getChannelId(def.channelName);
             const actorId = this.vb.getActorId(def.actorName);
 
-            // WE ASSUME HERE NO SHARED KEY DEFINED YET
+            const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
+            const guestId = actorId; // the guest is the actor assigned to the channel
 
-            // to invite the actor in the channel, we first generate a symmetric encryption key used to establish
-            // secure communication between the actor id (being invited by the host). The key is then used to encrypt
-            // the channel key and put in a dedicated section of the microblock.
-            const guestId = actorId;
-            const hostId = authorId; // in the current version of the protocol, the author is the operator
-            const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.generate();
+            // FIXME: get the private key, using the unified operator/wallet interface
+            const hostPrivateDecryptionKey = MlKemPrivateDecryptionKey.genFromSeed(new Uint8Array(64));
 
-            // we encrypt the shared key with the guest's public key'
-            const guestPublicEncryptionKey = await this.getPublicEncryptionKeyByActorId(guestId);
-            const encryptedSharedKey = guestPublicEncryptionKey.encrypt(hostGuestSharedKey.getRawSecretKey());
-
-            // we create the section containing the shared secret key
-            await this.vb.createSharedSecret({
-                hostId,
-                guestId,
-                encryptedSharedKey,
-            });
+            // To invite the actor in the channel, we first retrieve or generate a symmetric encryption key used to establish
+            // secure communication between both peers. The key is then used to encrypt the channel key and put in a dedicated
+            // section of the microblock.
+            const hostGuestSharedKey =
+                await this.getExistingSharedKey(hostId, guestId) ||
+                await this.getExistingSharedKey(guestId, hostId) ||
+                await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
 
             // we encrypt the channel key using the shared secret key
             const channelKey = await this.vb.getChannelKey(hostId, channelId);
@@ -265,8 +264,6 @@ export class ApplicationLedger {
                 guestId,
                 encryptedChannelKey,
             })
-
-
         }
 
         // process hashable fields
@@ -307,6 +304,63 @@ export class ApplicationLedger {
             }
         }
         console.log(this.vb);
+    }
+
+    /**
+     * Retrieves an existing shared key between two peers, or undefined.
+     */
+    async getExistingSharedKey(hostId: number, guestId: number) {
+        const guestActor = this.getActorByIdOrFail(guestId);
+        const sharedSecretFromState = guestActor.sharedSecrets.find((object) =>
+            object.peerActorId == hostId
+        );
+
+        if(sharedSecretFromState === undefined) {
+            return undefined;
+        }
+
+        const microBlock = await this.vb.getMicroblock(sharedSecretFromState.height);
+
+        const sharedSecretSection = microBlock.getSection((section: any) =>
+            section.type == SECTIONS.APP_LEDGER_SHARED_SECRET &&
+            section.object.hostId == hostId &&
+            section.object.guestId == guestId
+        );
+
+        if(sharedSecretSection === undefined) {
+            throw new ProtocolError(`unable to find shared secret section`);
+        }
+
+        return sharedSecretSection.object.encryptedChannelKey;
+    }
+
+    /**
+     * Creates a shared key between two peers.
+     */
+
+    async createSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, hostId: number, guestId: number) {
+        const hostPrivateDecryptionKeyBytes = hostPrivateDecryptionKey.getRawPrivateKey();
+
+        const salt = new Uint8Array();
+        const vbGenesisSeed = await this.vb.getGenesisSeed();
+        const encoder = new TextEncoder;
+        const info = Utils.binaryFrom(encoder.encode("SHARED_SECRET"), vbGenesisSeed, guestId);
+        const hkdf = new HKDF();
+        const hostGuestSharedKeyBytes = hkdf.deriveKey(hostPrivateDecryptionKeyBytes, salt, info, 32);
+        const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(hostGuestSharedKeyBytes);
+
+        // we encrypt the shared key with the guest's public key
+        const guestPublicEncryptionKey = await this.getPublicEncryptionKeyByActorId(guestId);
+        const encryptedSharedKey = guestPublicEncryptionKey.encrypt(hostGuestSharedKey.getRawSecretKey());
+
+        // we create the section containing the shared secret key
+        await this.vb.createSharedSecret({
+            hostId,
+            guestId,
+            encryptedSharedKey,
+        });
+
+        return hostGuestSharedKey;
     }
 
     actorIsSubscribed(name: string) {
@@ -401,8 +455,9 @@ export class ApplicationLedger {
         // and ensure that the public encryption key is defined
         const actor = this.getActorByIdOrFail(actorId);
         const actorPublicKeyEncryptionHeightDefinition = actor.pkeKeyHeight;
-        if (actorPublicKeyEncryptionHeightDefinition === undefined)
+        if (actorPublicKeyEncryptionHeightDefinition === undefined) {
             throw new ProtocolError(`Actor ${actorId} has not subscribed to a public encryption key.`)
+        }
 
         // search the microblock containing the actor subscription (and the public encryption key definition)
         const microBlock = await this.vb.getMicroblock(actorPublicKeyEncryptionHeightDefinition);
@@ -434,8 +489,6 @@ export class ApplicationLedger {
 
         return actor;
     }
-
-
 
     async getMicroblockIntermediateRepresentation(height: number) {
         const microblock = await this.vb.getMicroblock(height);
@@ -490,7 +543,9 @@ export class ApplicationLedger {
     }
 
     async publishUpdates(waitForAnchoring : boolean = true) {
-        if (!this.provider.isKeyed()) throw 'Cannot publish updates without keyed provider.'
+        if (!this.provider.isKeyed()) {
+            throw 'Cannot publish updates without keyed provider.'
+        }
         const privateKey = this.provider.getPrivateSignatureKey();
         this.vb.setGasPrice(this.gasPrice);
         await this.vb.signAsAuthor(privateKey);

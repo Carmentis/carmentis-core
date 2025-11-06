@@ -152,7 +152,7 @@ describe('Chain test', () => {
             {
                 const CometPublicKeyType = "tendermint/PubKeyEd25519";
                 const CometPublicKey = "a5XTiHqlMwWLDpiBCcSk019gEPx9HAuICx0eouEVpaE=";
-                const RpcEndpoint = "http://localhost:26667";
+                const RpcEndpoint = "http://this-goes-nowhere.com:26667";
 
                 const validatorNodeCreationContext = new ValidatorNodePublicationExecutionContext()
                     .withOrganizationId(organizationId)
@@ -167,12 +167,12 @@ describe('Chain test', () => {
 
                 const validatorNodeNetworkIntegrationPublicationContext = new ValidatorNodeNetworkIntegrationPublicationExecutionContext()
                     .withExistingValidatorNodeId(validatorNodeId)
-                    .withVotingPower(10);
+                    .withVotingPower(0);
                 await blockchain.publishValidatorNodeNetworkIntegration(validatorNodeNetworkIntegrationPublicationContext);
                 const reloadedValidatorNode = await blockchain.loadValidatorNode(validatorNodeId);
-                expect(reloadedValidatorNode.getVotingPower()).toEqual(10);
+                expect(reloadedValidatorNode.getVotingPower()).toEqual(0);
             }
-/*
+
             // Testing application
             const applicationCreationContext = new ApplicationPublicationExecutionContext()
                 .withOrganizationId(organizationId)
@@ -252,7 +252,6 @@ describe('Chain test', () => {
             const proof = await proofBuilder.exportProofForEntireVirtualBlockchain("Gael Marcadet");
             const proofVerificationResult = await blockchain.verifyProofFromJson(proof);
             expect(proofVerificationResult.isVerified()).toBeTruthy();
-*/
         }
 
         {
@@ -261,6 +260,7 @@ describe('Chain test', () => {
             const organizations = await blockchain.getAllOrganizations();
             const applications = await blockchain.getAllApplications();
             const nodes = await blockchain.getAllValidatorNodes();
+
             expect(accounts).toBeInstanceOf(Array);
             expect(accounts.length).toBeGreaterThanOrEqual(2);
             expect(organizations).toBeInstanceOf(Array);

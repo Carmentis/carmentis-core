@@ -49,8 +49,9 @@ function decodeBinary(str: string, alphabet = BASE64) {
   for(let i = 0; i < str.length;) {
     let n = alphabet.indexOf(str[i++]);
 
-    // @ts-expect-error TS(2365): Operator '+=' cannot be applied to types 'number' ... Remove this comment to see the full error message
-    crop += n == 0x40;
+    if(n == 0x40) {
+      crop++;
+    }
     acc = acc << 6 | n;
 
     if(!(i & 3)) {

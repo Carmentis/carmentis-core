@@ -2,7 +2,7 @@ import {CHAIN, ECO, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {StructureChecker} from "./StructureChecker";
 import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
-import {AccountTokenIssuance, AccountTransfer, AccountVBState} from "./types";
+import {AccountTokenIssuance, AccountTransfer, AccountVestingTransfer, AccountEscrowTransfer, AccountStake, AccountVBState} from "./types";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Provider} from "../providers/Provider";
 
@@ -15,6 +15,9 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
     this.registerSectionCallback(SECTIONS.ACCOUNT_TOKEN_ISSUANCE, this.tokenIssuanceCallback);
     this.registerSectionCallback(SECTIONS.ACCOUNT_CREATION, this.creationCallback);
     this.registerSectionCallback(SECTIONS.ACCOUNT_TRANSFER, this.transferCallback);
+    this.registerSectionCallback(SECTIONS.ACCOUNT_VESTING_TRANSFER, this.vestingTransferCallback);
+    this.registerSectionCallback(SECTIONS.ACCOUNT_ESCROW_TRANSFER, this.escrowTransferCallback);
+    this.registerSectionCallback(SECTIONS.ACCOUNT_STAKE, this.stakeCallback);
     this.registerSectionCallback(SECTIONS.ACCOUNT_SIGNATURE, this.signatureCallback);
   }
 
@@ -41,6 +44,18 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
 
   async setTransfer(object: AccountTransfer) {
     await this.addSection(SECTIONS.ACCOUNT_TRANSFER, object);
+  }
+
+  async setVestingTransfer(object: AccountVestingTransfer) {
+    await this.addSection(SECTIONS.ACCOUNT_VESTING_TRANSFER, object);
+  }
+
+  async setEscrowTransfer(object: AccountEscrowTransfer) {
+    await this.addSection(SECTIONS.ACCOUNT_ESCROW_TRANSFER, object);
+  }
+
+  async setStake(object: AccountStake) {
+    await this.addSection(SECTIONS.ACCOUNT_STAKE, object);
   }
 
   /**
@@ -105,7 +120,26 @@ export class AccountVb extends VirtualBlockchain<AccountVBState> {
     microblock.setFeesPayerAccount(this.identifier);
   }
 
+  async vestingTransferCallback(microblock: any, section: any) {
+    // FIXME: to be completed
+    const payeeVb = new AccountVb({ provider: this.provider });
+    await payeeVb.load(section.object.account);
+    microblock.setFeesPayerAccount(this.identifier);
+  }
+
+  async escrowTransferCallback(microblock: any, section: any) {
+    // FIXME: to be completed
+    const payeeVb = new AccountVb({ provider: this.provider });
+    await payeeVb.load(section.object.account);
+    microblock.setFeesPayerAccount(this.identifier);
+  }
+
+  async stakeCallback(microblock: any, section: any) {
+    // TODO
+  }
+
   async signatureCallback(microblock: any, section: any) {
+    // TODO
   }
 
   /**

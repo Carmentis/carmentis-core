@@ -64,12 +64,14 @@ export const ACCOUNT_BURNT_TOKENS  = 0x00;
 export const ACCOUNT_STANDARD      = 0x01;
 export const ACCOUNT_BLOCK_FEES    = 0x02;
 export const ACCOUNT_LOCKED_TOKENS = 0x03;
+export const ACCOUNT_ESCROW        = 0x04;
 
 export const ACCOUNT_NAMES = [
   "Burnt tokens account",
   "Standard account",
   "Block fees account",
-  "Locked tokens account"
+  "Locked tokens account",
+  "Escrow account"
 ];
 
 export const ACCOUNT_ALLOWED_TRANSFERS = [
@@ -95,5 +97,12 @@ export const ACCOUNT_ALLOWED_TRANSFERS = [
   ),
 
   // ACCOUNT_LOCKED_TOKENS
-  0
+  (
+    0
+  ),
+
+  // ACCOUNT_ESCROW
+  (
+    1 << BK_RECEIVED_PAYMENT
+  )
 ];

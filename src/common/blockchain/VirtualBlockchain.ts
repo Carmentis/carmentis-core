@@ -242,10 +242,13 @@ export abstract class VirtualBlockchain<CustomState> {
             this.identifier = microblockHash;
         }
 
+console.log('sendMicroblock');
         await this.provider.sendMicroblock(headerData, bodyData);
 
         if(waitForAnchoring) {
+console.log('waiting');
             await this.provider.awaitMicroblockAnchoring(microblockHash);
+console.log('done');
         }
 
         return Hash.from(microblockHash);

@@ -290,6 +290,28 @@ export interface AccountTransfer {
     privateReference: string;
 }
 
+export interface AccountVestingTransfer {
+    account: Uint8Array;
+    amount: number;
+    publicReference: string;
+    privateReference: string;
+    cliffPeriod: number;
+    vestingPeriod: number;
+}
+
+export interface AccountEscrowTransfer {
+    account: Uint8Array;
+    amount: number;
+    publicReference: string;
+    privateReference: string;
+    agentPublicKey: Uint8Array;
+}
+
+export interface AccountStake {
+    amount: number;
+    nodeIdentifier: Uint8Array;
+}
+
 export interface ObjectList {
     list: Uint8Array[];
 }

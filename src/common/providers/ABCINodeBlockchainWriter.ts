@@ -1,6 +1,5 @@
 import {Provider} from "./Provider";
 import {NotImplementedError} from "../errors/carmentis-error";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {KeyedProvider} from "./KeyedProvider";
 import {ProviderFactory} from "./ProviderFactory";
 import {Hash} from "../entities/Hash";
@@ -14,6 +13,8 @@ import {CMTSToken} from "../economics/currencies/token";
 
 import {RecordDescription} from "../blockchain/RecordDescription";
 import {BlockchainReader} from "./BlockchainReader";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export class ABCINodeBlockchainWriter implements BlockchainWriter {
 

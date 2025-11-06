@@ -1,6 +1,7 @@
 import {Organization} from "../blockchain/Organization";
 import {OrganizationDescription} from "../blockchain/types";
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
+
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 
 export class OrganizationWrapper {
 

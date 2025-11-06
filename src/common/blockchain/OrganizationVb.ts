@@ -3,11 +3,13 @@ import {VirtualBlockchain} from "./VirtualBlockchain";
 import {StructureChecker} from "./StructureChecker";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Crypto} from "../crypto/crypto";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/Provider";
 import {MicroblockSection, OrganizationDescription, OrganizationVBState} from "./types";
 import {Section} from "./Microblock";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
     private signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();

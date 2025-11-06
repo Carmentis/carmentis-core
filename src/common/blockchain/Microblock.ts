@@ -2,11 +2,11 @@ import {CHAIN, ECO, SCHEMAS, SECTIONS} from "../constants/constants";
 import {SchemaSerializer, SchemaUnserializer} from "../data/schemaSerializer";
 import {Utils} from "../utils/utils";
 import {Crypto} from "../crypto/crypto";
-import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {MicroblockHeader, MicroblockSection} from "./types";
 import {Hash} from "../entities/Hash";
 import {CarmentisError, SectionNotFoundError} from "../errors/carmentis-error";
 import {SectionType} from "../entities/SectionType";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export interface Section<T = any> {
     type: number,

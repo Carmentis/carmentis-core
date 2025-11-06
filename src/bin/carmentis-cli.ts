@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import {Cli, Command, Option, runExit} from "clipanion";
-import { PrivateSignatureKey } from "../common/crypto/signature/signature-interface";
 import { MLDSA65PrivateSignatureKey } from "../common/crypto/signature/ml-dsa-65";
 import { Secp256k1PrivateSignatureKey } from "../common/crypto/signature/secp256k1";
+import {PrivateSignatureKey} from "../common/crypto/signature/PrivateSignatureKey";
 
 interface ExportStrategy {
     export(privateKey: PrivateSignatureKey, filePath: string): void;

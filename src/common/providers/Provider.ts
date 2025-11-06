@@ -1,6 +1,5 @@
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
 import {Utils} from "../utils/utils";
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {
@@ -17,6 +16,7 @@ import {NetworkProvider} from "./NetworkProvider";
 import {VirtualBlockchainStateWrapper} from "../wrappers/VirtualBlockchainStateWrapper";
 import {KeyedProvider} from "./KeyedProvider";
 import {Hash} from "../entities/Hash";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.

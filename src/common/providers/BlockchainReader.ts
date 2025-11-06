@@ -3,7 +3,6 @@ import {VirtualBlockchainStateWrapper} from "../wrappers/VirtualBlockchainStateW
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountState} from "../entities/AccountState";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {MicroBlockInformation} from "../entities/MicroBlockInformation";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
@@ -26,6 +25,8 @@ import {ProofVerificationResult} from "../entities/ProofVerificationResult";
 import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseType";
 import {ChainInformationWrapper} from "../wrappers/ChainInformationWrapper";
 import {VirtualBlockchainWrapper} from "../wrappers/VirtualBlockchainWrapper";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export interface BlockchainReader {
     //getMicroBlockHeader(vbId: Hash, height: number): Promise<AbstractMicroBlockHeader>;

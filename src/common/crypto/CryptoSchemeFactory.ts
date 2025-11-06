@@ -6,12 +6,6 @@ import {
     SymmetricEncryptionSchemeId,
     SymmetricEncryptionKey, SymmetricEncryptionKeyScheme,
 } from "./encryption/symmetric-encryption/encryption-interface";
-import {
-    PrivateSignatureKey,
-    PublicSignatureKey,
-    SignatureScheme,
-    SignatureSchemeId,
-} from "./signature/signature-interface";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey, MLDSA65SignatureScheme} from "./signature/ml-dsa-65";
 import {CryptographicHash, CryptographicHashSchemeId, Sha256CryptographicHash} from "./hash/hash-interface";
 import {
@@ -32,6 +26,10 @@ import {
 import {PublicKeyEncryptionSchemeId} from "./encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {MlKemPublicEncryptionKey} from "./encryption/public-key-encryption/MlKemPublicEncryptionKey";
 import {MlKemPrivateDecryptionKey} from "./encryption/public-key-encryption/MlKemPrivateDecryptionKey";
+import {PublicSignatureKey} from "./signature/PublicSignatureKey";
+import {SignatureScheme} from "./signature/SignatureScheme";
+import {PrivateSignatureKey} from "./signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "./signature/SignatureSchemeId";
 
 export class CryptoSchemeFactory {
 

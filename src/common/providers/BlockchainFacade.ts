@@ -1,5 +1,4 @@
 import {ABCINodeBlockchainReader} from "./ABCINodeBlockchainReader";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ABCINodeBlockchainWriter} from "./ABCINodeBlockchainWriter";
 import {
     EmptyBlockError,
@@ -41,6 +40,8 @@ import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {CryptographicHashSchemeId} from "../crypto/hash/hash-interface";
 import {EncoderFactory} from "../utils/encoder";
 import {MicroBlockWrapper} from "../wrappers/MicroBlockWrapper";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.

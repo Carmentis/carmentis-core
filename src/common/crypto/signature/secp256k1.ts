@@ -1,14 +1,12 @@
-import {
-    BasePrivateSignatureKey,
-    BasePublicSignatureKey,
-    PrivateSignatureKey,
-    PublicSignatureKey,
-    SignatureSchemeId,
-    SignatureScheme
-} from "./signature-interface";
 import {getPublicKey, PrivKey, sign, utils, etc, verify} from '@noble/secp256k1';
 import {sha256} from "@noble/hashes/sha2";
 import {EncoderInterface} from "../../utils/encoder";
+import {PublicSignatureKey} from "./PublicSignatureKey";
+import {SignatureScheme} from "./SignatureScheme";
+import {PrivateSignatureKey} from "./PrivateSignatureKey";
+import {BasePrivateSignatureKey} from "./BasePrivateSignatureKey";
+import {BasePublicSignatureKey} from "./BasePublicSignatureKey";
+import {SignatureSchemeId} from "./SignatureSchemeId";
 
 /**
  * The `Secp256k1SignatureScheme` class implements the `SignatureScheme` interface and provides
@@ -28,6 +26,10 @@ export class Secp256k1SignatureScheme implements SignatureScheme {
 
     getSignatureAlgorithmId(): SignatureSchemeId {
         return this.getSignatureSchemeId()
+    }
+
+    expectedSeedSize() {
+        return 32;
     }
 }
 

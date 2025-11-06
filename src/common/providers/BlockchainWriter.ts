@@ -1,6 +1,5 @@
 import {Account} from "../blockchain/Account";
 import {Hash} from "../entities/Hash";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {Organization} from "../blockchain/Organization";
 import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {Application} from "../blockchain/Application";
@@ -8,6 +7,8 @@ import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {CMTSToken} from "../economics/currencies/token";
 import {RecordDescription} from "../blockchain/RecordDescription";
 import {OrganizationDescription} from "../blockchain/types";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export interface BlockchainWriter {
     createGenesisAccount(): Promise<Account>;

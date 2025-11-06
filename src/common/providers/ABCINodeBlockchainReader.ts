@@ -22,7 +22,6 @@ import {
     VirtualBlockchainNotFoundError
 } from "../errors/carmentis-error";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {CryptographicHash} from "../crypto/hash/hash-interface";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
@@ -50,6 +49,8 @@ import {BlockInformationWrapper} from "../wrappers/BlockInformationWrapper";
 import {BlockContentWrapper} from "../wrappers/BlockContentWrapper";
 import {VirtualBlockchainWrapper} from "../wrappers/VirtualBlockchainWrapper";
 import {MicroBlockHeaderWrapper} from "../wrappers/MicroBlockHeaderWrapper";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export class ABCINodeBlockchainReader implements BlockchainReader {
     /**

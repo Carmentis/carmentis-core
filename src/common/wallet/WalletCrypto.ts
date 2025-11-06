@@ -1,11 +1,11 @@
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {randomBytes} from "@noble/post-quantum/utils";
-import {PrivateSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
-import {HKDF} from "../crypto/kdf/HKDF";
-import {MLDSA65PrivateSignatureKey} from "../crypto/signature/ml-dsa-65";
-import {Secp256k1PrivateSignatureKey} from "../crypto/signature/secp256k1";
 import {AccountCrypto} from "./AccountCrypto";
 import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+import {WalletSeedEncoder} from "../utils/WalletSeedEncoder";
+import {BinaryToStringEncoderInterface} from "../utils/BinaryToStringEncoderInterface";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 /**
  * The Wallet class is responsible for generating and managing cryptographic keys
@@ -29,8 +29,23 @@ export class WalletCrypto {
         return new WalletCrypto(seed);
     }
 
+    static parseFromString(seed: string,  encoder: BinaryToStringEncoderInterface = new WalletSeedEncoder()): WalletCrypto {
+        return new WalletCrypto(encoder.decode(seed));
+    }
+
+    encode( encoder: BinaryToStringEncoderInterface = new WalletSeedEncoder()): string {
+        return encoder.encode(this.walletSeed);
+    }
+
     private constructor( private walletSeed: Uint8Array ) {}
 
+    /**
+     * Generates the default account (i.e., the account associated with nonce zero).
+     */
+    getDefaultAccountCrypto(): AccountCrypto {
+        const defaultAccountNonce = 0;
+        return AccountCrypto.createFromWalletSeedAndNonce(this.walletSeed, defaultAccountNonce);
+    }
 
     async generateActorPrivateSignatureKey(algoId: SignatureSchemeId, vbSeed: Uint8Array) {
         // TODO: implement
@@ -52,6 +67,24 @@ export class WalletCrypto {
         const encoder = new TextEncoder();
         const seed = kdf.deriveKeyNoSalt(actorSeed, encoder.encode("PKE"), 32);
         return CryptoSchemeFactory.createPrivateDecryptionKey(algoId, seed);
+    }
+
+    /**
+     * Generate the private signature key associated to the wallet.
+     *
+     * @param schemeId Type of signature scheme to generate.
+     */
+    getPrivateSignatureKey(schemeId: SignatureSchemeId = SignatureSchemeId.SECP256K1): PrivateSignatureKey {
+        const kdf = CryptoSchemeFactory.createDefaultKDF();
+        const scheme = CryptoSchemeFactory.createSignatureScheme(schemeId);
+        const seedLength = scheme.expectedSeedSize();
+        const info = AccountCrypto.encoderStringAsBytes(`SIG_${schemeId}`);
+        const seed = kdf.deriveKeyNoSalt(
+            this.walletSeed,
+            info,
+            seedLength
+        );
+        return CryptoSchemeFactory.createPrivateSignatureKey( schemeId, seed );
     }
 
 
@@ -133,6 +166,10 @@ export class WalletCrypto {
     getVirtualBlockchainDecapsulationKey( schemeId: number, vbSeed: Uint8Array ) {
         const factory = new CryptoSchemeFactory();
         return factory.createVirtualBlockchainDecapsulationKey( schemeId, this.walletSeed, vbSeed );
+    }
+
+    getSeedAsBytes() {
+        return this.walletSeed;
     }
 }
 

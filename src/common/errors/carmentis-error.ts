@@ -1,7 +1,7 @@
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Hash} from "../entities/Hash";
 import {SectionType} from "../entities/SectionType";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 
 export enum CarmentisErrorCode {
     // unspecified error
@@ -56,6 +56,12 @@ export class CarmentisError extends Error {
 
     static isCarmentisError(error: any): error is CarmentisError {
         return error instanceof CarmentisError;
+    }
+}
+
+export class ParsingError extends CarmentisError {
+    constructor(message: string = 'Parsing failure') {
+        super(message);
     }
 }
 

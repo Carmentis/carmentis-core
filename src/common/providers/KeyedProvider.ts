@@ -1,5 +1,6 @@
 import {Provider} from "./Provider";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export class KeyedProvider extends Provider {
     private signatureKey: PrivateSignatureKey;

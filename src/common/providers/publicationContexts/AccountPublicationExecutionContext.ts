@@ -1,7 +1,7 @@
 import {PublicationExecutionContext} from "./PublicationExecutionContext";
 import {Hash} from "../../entities/Hash";
-import {PublicSignatureKey} from "../../crypto/signature/signature-interface";
 import {CMTSToken} from "../../economics/currencies/token";
+import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 
 /**
  * Represents the execution context tailored for account publication-related operations.

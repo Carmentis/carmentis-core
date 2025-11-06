@@ -2,10 +2,12 @@ import {CHAIN, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Organization} from "./Organization";
 import {StructureChecker} from "./StructureChecker";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
 import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeRpcEndpoint, ValidatorNodeNetworkIntegration, ValidatorNodeVBState} from "./types";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeVBState> {
   constructor(provider: Provider) {

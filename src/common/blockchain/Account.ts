@@ -1,7 +1,6 @@
 import {ECO} from "../constants/constants";
 import {AccountVb} from "./AccountVb";
 import {Utils} from "../utils/utils";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {EncoderFactory} from "../utils/encoder";
 import {AccountTransfer, AccountVestingTransfer, AccountEscrowTransfer, AccountStake} from "./types";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
@@ -10,6 +9,8 @@ import {CMTSToken} from "../economics/currencies/token";
 import {IllegalParameterError, IllegalStateError} from "../errors/carmentis-error";
 import {Hash} from "../entities/Hash";
 import {SectionType} from "../entities/SectionType";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 /**
  * Represents an Account that interacts with a provider for managing cryptographic operations

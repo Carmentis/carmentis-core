@@ -1,14 +1,12 @@
 import {ml_dsa65} from "@noble/post-quantum/ml-dsa";
 import {randomBytes} from "@noble/post-quantum/utils";
-import {
-    BasePrivateSignatureKey,
-    BasePublicSignatureKey,
-    PrivateSignatureKey,
-    PublicSignatureKey,
-    SignatureSchemeId,
-    SignatureScheme
-} from "./signature-interface";
 import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
+import {PublicSignatureKey} from "./PublicSignatureKey";
+import {SignatureScheme} from "./SignatureScheme";
+import {PrivateSignatureKey} from "./PrivateSignatureKey";
+import {BasePrivateSignatureKey} from "./BasePrivateSignatureKey";
+import {BasePublicSignatureKey} from "./BasePublicSignatureKey";
+import {SignatureSchemeId} from "./SignatureSchemeId";
 
 export class MLDSA65SignatureScheme implements SignatureScheme {
     private static SIGNATURE_SIZE = 3311;
@@ -23,6 +21,10 @@ export class MLDSA65SignatureScheme implements SignatureScheme {
 
     getSignatureAlgorithmId(): SignatureSchemeId {
         return this.getSignatureSchemeId()
+    }
+
+    expectedSeedSize() {
+        return 32;
     }
 }
 

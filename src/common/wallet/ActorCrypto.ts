@@ -1,7 +1,10 @@
 import {Utils} from "../utils/utils";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
-import {SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+import {WalletSeedEncoder} from "../utils/WalletSeedEncoder";
+import {ActorSeedEncoder} from "../utils/ActorSeedEncoder";
+import {BinaryToStringEncoderInterface} from "../utils/BinaryToStringEncoderInterface";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 export class ActorCrypto {
     constructor(private readonly actorSeed: Uint8Array) {}
@@ -9,6 +12,14 @@ export class ActorCrypto {
     static createFromAccountSeedAndVbSeed(accountSeed: Uint8Array, vbSeed: Uint8Array) {
         const actorSeed = Utils.binaryFrom(accountSeed, vbSeed);
         return new ActorCrypto(actorSeed);
+    }
+
+    static parseFromString(seed: string,  encoder: BinaryToStringEncoderInterface = new ActorSeedEncoder()): ActorCrypto {
+        return new ActorCrypto(encoder.decode(seed));
+    }
+
+    encode( encoder: BinaryToStringEncoderInterface = new ActorSeedEncoder()): string {
+        return encoder.encode(this.actorSeed);
     }
 
     getPrivateSignatureKey(schemeId: SignatureSchemeId) {

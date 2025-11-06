@@ -2,7 +2,6 @@ import {CHAIN, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Application} from "./Application";
 import {StructureChecker} from "./StructureChecker";
-import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {HKDF} from "../crypto/kdf/HKDF";
 import {ApplicationLedgerVBState} from "./types";
 import {IntermediateRepresentation} from "../records/intermediateRepresentation";
@@ -25,6 +24,7 @@ import {
     NoSharedSecretError,
     CurrentActorNotFoundError,
 } from "../errors/carmentis-error";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
     constructor({provider}: { provider: Provider }) {

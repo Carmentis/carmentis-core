@@ -1,7 +1,6 @@
 import {CHAIN} from "../constants/constants";
 import {Microblock, Section} from "./Microblock";
 import {Utils} from "../utils/utils";
-import {PrivateSignatureKey} from "../crypto/signature/signature-interface";
 import {Provider} from "../providers/Provider";
 import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
@@ -11,6 +10,7 @@ import {
     VirtualBlockchainNotFoundError
 } from "../errors/carmentis-error";
 import {SectionType} from "../entities/SectionType";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export abstract class VirtualBlockchain<CustomState> {
     currentMicroblock: Microblock | null;

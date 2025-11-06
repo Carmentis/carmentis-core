@@ -1,5 +1,6 @@
 import {Account} from "../blockchain/Account";
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
+
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 
 export class AccountWrapper {
     static async wrap(account: Account) {

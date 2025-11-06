@@ -1,11 +1,11 @@
 import {SECTIONS} from "../constants/constants";
 import {ApplicationVb} from "./ApplicationVb";
 import {Crypto} from "../crypto/crypto";
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ApplicationDeclaration, ApplicationDescription} from "./types";
 import {Provider} from "../providers/Provider";
 import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 
 export class Application {
     provider: any;

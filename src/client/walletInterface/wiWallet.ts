@@ -1,13 +1,14 @@
 import * as SCHEMAS from "../../common/constants/schemas";
 import {SchemaUnserializer} from "../../common/data/schemaSerializer";
 import * as network from "../../common/network/network";
-import {PrivateSignatureKey, SignatureSchemeId} from "../../common/crypto/signature/signature-interface";
 import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
 import {AccountCrypto} from "../../common/wallet/AccountCrypto";
 import {HCVPkeEncoder} from "../../common/crypto/encryption/public-key-encryption/HCVPkeEncoder";
 import {
     PublicKeyEncryptionSchemeId
 } from "../../common/crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+import {PrivateSignatureKey} from "../../common/crypto/signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "../../common/crypto/signature/SignatureSchemeId";
 
 export abstract class wiWallet<T> {
 

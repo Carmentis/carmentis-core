@@ -1,8 +1,11 @@
-import {SignatureEncoderInterface} from "./signature-encoder";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId, SignatureScheme} from "./signature-interface";
 import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
 import {HCVCodec} from "../../utils/HCVCodec";
 import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
+import {SignatureEncoderInterface} from "./SignatureEncoderInterface";
+import {PublicSignatureKey} from "./PublicSignatureKey";
+import {SignatureScheme} from "./SignatureScheme";
+import {PrivateSignatureKey} from "./PrivateSignatureKey";
+import {SignatureSchemeId} from "./SignatureSchemeId";
 
 export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
 

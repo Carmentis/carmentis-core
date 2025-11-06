@@ -1,10 +1,12 @@
 import {CHAIN, ECO, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {StructureChecker} from "./StructureChecker";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {AccountTokenIssuance, AccountTransfer, AccountVestingTransfer, AccountEscrowTransfer, AccountStake, AccountVBState} from "./types";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Provider} from "../providers/Provider";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 export class AccountVb extends VirtualBlockchain<AccountVBState> {
   constructor({provider}: { provider: Provider }) {

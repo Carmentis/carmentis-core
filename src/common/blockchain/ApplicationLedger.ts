@@ -11,17 +11,20 @@ import {CMTSToken} from "../economics/currencies/token";
 import {RecordDescription} from "./RecordDescription";
 import {Height} from "../entities/Height";
 import {ProofVerificationFailedError, ProtocolError} from "../errors/carmentis-error";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
+
 
 import {HKDF} from "../crypto/kdf/HKDF";
-import {
-    AbstractPublicEncryptionKey,
-    AbstractPrivateDecryptionKey,
-    AES256GCMSymmetricEncryptionKey,
-    CryptoSchemeFactory, MlKemPrivateDecryptionKey, MlKemPublicEncryptionKey,
-    PublicKeyEncryptionSchemeId
-} from "../common";
 import { ActorType } from "../constants/ActorType";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+import {
+    AbstractPrivateDecryptionKey,
+    AbstractPublicEncryptionKey
+} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+import {AES256GCMSymmetricEncryptionKey} from "../crypto/encryption/symmetric-encryption/encryption-interface";
+import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
+import {MlKemPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 
 export class ApplicationLedger {
     provider: any;
@@ -337,7 +340,6 @@ export class ApplicationLedger {
     /**
      * Creates a shared key between two peers.
      */
-
     async createSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, hostId: number, guestId: number) {
         const hostPrivateDecryptionKeyBytes = hostPrivateDecryptionKey.getRawPrivateKey();
 

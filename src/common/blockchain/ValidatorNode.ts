@@ -1,10 +1,10 @@
 import {SECTIONS} from "../constants/constants";
 import {ValidatorNodeVb} from "./ValidatorNodeVb";
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeRpcEndpoint, ValidatorNodeNetworkIntegration} from "./types";
 import {CMTSToken} from "../economics/currencies/token";
 import {Hash} from "../entities/Hash";
 import {Provider} from "../providers/Provider";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 
 export class ValidatorNode {
   provider: any;

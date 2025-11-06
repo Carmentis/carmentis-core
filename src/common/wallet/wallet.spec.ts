@@ -18,3 +18,12 @@ describe('Wallet.generateWallet', () => {
         expect((wallet as any).walletSeed).toEqual(mockSeed);
     });
 });
+
+describe('WalletCrypto', () => {
+    it('should correctly encode and parse a WalletCrypto', () => {
+        const wallet = WalletCrypto.generateWallet();
+        const encodedWallet = wallet.encode();
+        const decodedWallet = WalletCrypto.parseFromString(encodedWallet);
+        expect(wallet.getSeedAsBytes()).toEqual(decodedWallet.getSeedAsBytes());
+    });
+});

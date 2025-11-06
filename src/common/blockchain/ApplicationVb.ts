@@ -2,10 +2,11 @@ import {CHAIN, SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Organization} from "./Organization";
 import {StructureChecker} from "./StructureChecker";
-import {PrivateSignatureKey, PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
 import {ApplicationDeclaration, ApplicationDescription, ApplicationVBState} from "./types";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   constructor(provider: Provider) {

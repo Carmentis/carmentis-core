@@ -1,9 +1,11 @@
 import {SECTIONS} from "../constants/constants";
 import {OrganizationVb} from "./OrganizationVb";
 import {Crypto} from "../crypto/crypto";
-import {PrivateSignatureKey, PublicSignatureKey, SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {OrganizationDescription} from "./types";
 import {CMTSToken} from "../economics/currencies/token";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 export class Organization {
   provider: any;

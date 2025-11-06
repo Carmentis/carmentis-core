@@ -2,8 +2,13 @@ import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 
 import {Utils} from "../utils/utils";
 import {ActorCrypto} from "./ActorCrypto";
-import {SignatureSchemeId} from "../crypto/signature/signature-interface";
 import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+import {ActorSeedEncoder} from "../utils/ActorSeedEncoder";
+import {AccountSeedEncoder} from "../utils/AccountSeedEncoder";
+import {SeedEncoder} from "../utils/SeedEncoder";
+import {EncoderInterface} from "../utils/encoder";
+import {BinaryToStringEncoderInterface} from "../utils/BinaryToStringEncoderInterface";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 /**
  * Represents the cryptographic operations handled by an account.
@@ -21,6 +26,14 @@ export class AccountCrypto {
             32
         );
         return new AccountCrypto(accountSeed);
+    }
+
+    static parseFromString(seed: string, encoder: BinaryToStringEncoderInterface = new AccountSeedEncoder()): AccountCrypto {
+        return new AccountCrypto(encoder.decode(seed));
+    }
+
+    encode( encoder: BinaryToStringEncoderInterface = new AccountSeedEncoder()): string {
+        return encoder.encode(this.accountSeed);
     }
 
     constructor(private readonly accountSeed: Uint8Array) {}
@@ -62,7 +75,7 @@ export class AccountCrypto {
         return privateDecryptionKey.getPublicKey();
     }
 
-    private static encoderStringAsBytes(data: string): Uint8Array {
+    static encoderStringAsBytes(data: string): Uint8Array {
         const encoder = new TextEncoder();
         return encoder.encode(data);
     }

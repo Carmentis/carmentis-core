@@ -8,10 +8,10 @@ import {Application} from "./Application";
 import {ApplicationLedger} from "./ApplicationLedger";
 import {Utils} from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
-import {PublicSignatureKey} from "../crypto/signature/signature-interface";
 import {ImportedProof, Proof} from "./types";
 import {Hash} from "../entities/Hash";
 import {RecordDescription} from "./RecordDescription";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 
 
 export type OperatorAnchorRequest = Omit<RecordDescription, 'applicationId'> & { approvalMessage: string }

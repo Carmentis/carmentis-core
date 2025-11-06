@@ -5,6 +5,7 @@ import {WalletSeedEncoder} from "../utils/WalletSeedEncoder";
 import {ActorSeedEncoder} from "../utils/ActorSeedEncoder";
 import {BinaryToStringEncoderInterface} from "../utils/BinaryToStringEncoderInterface";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {SeedEncoder} from "../utils/SeedEncoder";
 
 export class ActorCrypto {
     constructor(private readonly actorSeed: Uint8Array) {}
@@ -14,11 +15,11 @@ export class ActorCrypto {
         return new ActorCrypto(actorSeed);
     }
 
-    static parseFromString(seed: string,  encoder: BinaryToStringEncoderInterface = new ActorSeedEncoder()): ActorCrypto {
+    static parseFromString(seed: string,  encoder: BinaryToStringEncoderInterface = new SeedEncoder()): ActorCrypto {
         return new ActorCrypto(encoder.decode(seed));
     }
 
-    encode( encoder: BinaryToStringEncoderInterface = new ActorSeedEncoder()): string {
+    encode( encoder: BinaryToStringEncoderInterface = new SeedEncoder()): string {
         return encoder.encode(this.actorSeed);
     }
 

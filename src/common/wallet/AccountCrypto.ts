@@ -28,11 +28,11 @@ export class AccountCrypto {
         return new AccountCrypto(accountSeed);
     }
 
-    static parseFromString(seed: string, encoder: BinaryToStringEncoderInterface = new AccountSeedEncoder()): AccountCrypto {
+    static parseFromString(seed: string, encoder: BinaryToStringEncoderInterface = new SeedEncoder()): AccountCrypto {
         return new AccountCrypto(encoder.decode(seed));
     }
 
-    encode( encoder: BinaryToStringEncoderInterface = new AccountSeedEncoder()): string {
+    encode( encoder: BinaryToStringEncoderInterface = new SeedEncoder()): string {
         return encoder.encode(this.accountSeed);
     }
 

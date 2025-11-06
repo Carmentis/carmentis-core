@@ -6,6 +6,8 @@ import {WalletSeedEncoder} from "../utils/WalletSeedEncoder";
 import {BinaryToStringEncoderInterface} from "../utils/BinaryToStringEncoderInterface";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {SeedEncoder} from "../utils/SeedEncoder";
+import {IllegalParameterError} from "../errors/carmentis-error";
 
 /**
  * The Wallet class is responsible for generating and managing cryptographic keys
@@ -26,14 +28,16 @@ export class WalletCrypto {
     }
 
     static fromSeed(seed: Uint8Array): WalletCrypto {
+        if (!(seed instanceof Uint8Array)) throw new IllegalParameterError(`Seed must be a Uint8Array, got ${typeof seed}`);
         return new WalletCrypto(seed);
     }
 
-    static parseFromString(seed: string,  encoder: BinaryToStringEncoderInterface = new WalletSeedEncoder()): WalletCrypto {
+    static parseFromString(seed: string,  encoder: BinaryToStringEncoderInterface = new SeedEncoder()): WalletCrypto {
+        if (typeof seed !== 'string') throw new IllegalParameterError(`Seed must be a string, got ${typeof seed}`);
         return new WalletCrypto(encoder.decode(seed));
     }
 
-    encode( encoder: BinaryToStringEncoderInterface = new WalletSeedEncoder()): string {
+    encode( encoder: BinaryToStringEncoderInterface = new SeedEncoder()): string {
         return encoder.encode(this.walletSeed);
     }
 
@@ -120,18 +124,6 @@ export class WalletCrypto {
 
 
     getAccountPrivateSignatureKey( schemeId: SignatureSchemeId,  accountNonce: number ) {
-        /*
-        const kdf = CryptoSchemeFactory.createDefaultKDF();
-        const inputKeyMaterial = this.concatWalletSeedWith(this.numberToUint8Array(nonce));
-        const info = this.encoderStringAsBytes("WALLET_ACCOUNT_PRIVATE_SIGNATURE_KEY");
-        const seed = kdf.deriveKeyNoSalt(
-            inputKeyMaterial,
-            info,
-            32
-        );
-        return CryptoSchemeFactory.createPrivateSignatureKey( schemeId, seed );
-
-         */
         const account = AccountCrypto.createFromWalletSeedAndNonce(this.walletSeed, accountNonce);
         return account.getPrivateSignatureKey(schemeId);
     }
@@ -140,18 +132,6 @@ export class WalletCrypto {
         const account = AccountCrypto.createFromWalletSeedAndNonce(this.walletSeed, accountNonce);
         const actor = account.deriveActorFromVbSeed(vbSeed);
         return actor.getPrivateSignatureKey(schemeId);
-        /*
-        const kdf = CryptoSchemeFactory.createDefaultKDF();
-        const inputKeyMaterial = this.concatWalletSeedWith(this.numberToUint8Array(nonce));
-        const info = this.encoderStringAsBytes("WALLET_ACCOUNT_PRIVATE_SIGNATURE_KEY");
-        const seed = kdf.deriveKeyNoSalt(
-            inputKeyMaterial,
-            info,
-            32
-        );
-        return CryptoSchemeFactory.createPrivateSignatureKey( schemeId, seed );
-
-         */
     }
 
 

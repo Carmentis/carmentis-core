@@ -163,3 +163,4 @@ export * from "./wrappers/SectionWrapper";
 export * from "./wrappers/ValidatorNodeWrapper";
 export * from "./wrappers/VirtualBlockchainStateWrapper";
 export * from "./wrappers/VirtualBlockchainWrapper";
+export * from "./zod/NetworksSchema";

@@ -413,7 +413,7 @@ export class ApplicationLedger {
         return actor.subscribed;
     }
 
-    async getRecord<T = any>(height: Height, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+    async getRecord<T = any>(height: Height, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey) {
         const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateDecryptionKey);
         return ir.exportToJson() as T;
     }
@@ -467,8 +467,8 @@ export class ApplicationLedger {
      * @param proofObject
      * @throws ProofVerificationFailedError
      */
-    async importProof(proofObject: Proof, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<ImportedProof[]> {
-        const data = [];
+    async importProof(proofObject: Proof, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey): Promise<ImportedProof[]> {
+        const data: ImportedProof[] = [];
 
         for (let height = 1; height <= this.vb.height; height++) {
             const proof = proofObject.proofs.find((proof: any) => proof.height == height);
@@ -477,6 +477,7 @@ export class ApplicationLedger {
 
             // TODO: check Merkle root hash
             const verified = true;
+
             if (!verified) {
                 throw new ProofVerificationFailedError();
             }
@@ -486,6 +487,7 @@ export class ApplicationLedger {
                 data: ir.exportToJson()
             });
         }
+
         return data;
     }
 
@@ -535,7 +537,7 @@ export class ApplicationLedger {
         return actor;
     }
 
-    async getMicroblockIntermediateRepresentation(height: number, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+    async getMicroblockIntermediateRepresentation(height: number, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey) {
         const microblock = await this.vb.getMicroblock(height);
         const publicChannelDataSections = microblock.getSections<ApplicationLedgerPublicChannelDataSection>(
             (section: any) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA
@@ -553,17 +555,19 @@ export class ApplicationLedger {
                 };
             });
 
-        for(const section of privateChannelDataSections) {
-            const channelKey = await this.vb.getChannelKey(await this.vb.getCurrentActorId(), section.object.channelId, hostPrivateDecryptionKey);
-            const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, section.object.channelId);
-            const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, section.object.channelId);
-            const data = Crypto.Aes.decryptGcm(channelSectionKey, section.object.encryptedData, channelSectionIv);
+        if(hostPrivateDecryptionKey !== undefined) {
+            for(const section of privateChannelDataSections) {
+                const channelKey = await this.vb.getChannelKey(await this.vb.getCurrentActorId(), section.object.channelId, hostPrivateDecryptionKey);
+                const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, section.object.channelId);
+                const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, section.object.channelId);
+                const data = Crypto.Aes.decryptGcm(channelSectionKey, section.object.encryptedData, channelSectionIv);
 
-            list.push({
-                channelId: section.object.channelId,
-                merkleRootHash: Utils.binaryToHexa(section.object.merkleRootHash),
-                data: data as Uint8Array
-            });
+                list.push({
+                    channelId: section.object.channelId,
+                    merkleRootHash: Utils.binaryToHexa(section.object.merkleRootHash),
+                    data: data as Uint8Array
+                });
+            }
         }
 
         ir.importFromSectionFormat(list);

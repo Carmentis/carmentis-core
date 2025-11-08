@@ -267,7 +267,6 @@ export class ABCINodeUnauthenticatedBlockchainClient implements UnauthenticatedB
                 throw e
             }
         }
-
     }
 
     async loadAccount(identifier: Hash) {
@@ -284,15 +283,14 @@ export class ABCINodeUnauthenticatedBlockchainClient implements UnauthenticatedB
         }
     }
 
-    async getRecord<T = any>(vbId: Hash, height: number, privateKey?: PrivateSignatureKey): Promise<T> {
+    async getRecord<T = any>(vbId: Hash, height: number, privateSignatureKey?: PrivateSignatureKey): Promise<T> {
         // decide if we use keyed provider or public provider
-        const provider = privateKey !== undefined ? new KeyedProvider(privateKey, this.cacheProvider, this.networkProvider) : this.publicProvider;
+        const provider = privateSignatureKey !== undefined ? new KeyedProvider(privateSignatureKey, this.cacheProvider, this.networkProvider) : this.publicProvider;
         const appLedger = await this.loadApplicationLedger(vbId, provider);
         return appLedger.getRecord(height);
     }
 
     async verifyProofFromJson(proof: Proof) {
-
         // import the app ledger
         const appLedger = new ApplicationLedger({ provider: this.publicProvider });
         await appLedger._load(Utils.binaryFromHexa(proof.info.virtualBlockchainIdentifier));

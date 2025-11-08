@@ -15,11 +15,11 @@ export class ApplicationLedgerWrapper {
         private readonly appLedger: ApplicationLedger
     ) {}
 
-    async getRecordAtHeight<T = any>(height: Height, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<T> {
+    async getRecordAtHeight<T = any>(height: Height, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey): Promise<T> {
         return await this.appLedger.getRecord(height, hostPrivateDecryptionKey) as T;
     }
 
-    async getRecordAtFirstBlock<T = any>(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<T> {
+    async getRecordAtFirstBlock<T = any>(hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey): Promise<T> {
         return this.getRecordAtHeight(1, hostPrivateDecryptionKey);
     }
 
@@ -35,7 +35,6 @@ export class ApplicationLedgerWrapper {
         return this.appLedger.getApplicationId()
     }
 
-
     async getGenesisSeed() {
         return this.appLedger.getGenesisSeed();
     }
@@ -48,6 +47,4 @@ export class ApplicationLedgerWrapper {
         const applicationLedgerId = await this.getId();
         return ProofBuilder.createProofBuilder(applicationLedgerId, this.appLedger);
     }
-    
-
 }

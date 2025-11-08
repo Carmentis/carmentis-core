@@ -223,7 +223,7 @@ describe('Chain test', () => {
                 .withRecord(object);
             const appLedgerId = await blockchain.publishRecord(firstAccountPrivateDecryptionKey, recordPublicationContext);
             const appLedger = await blockchain.loadApplicationLedger(appLedgerId);
-            const recoveredData = await appLedger.getRecordAtHeight(1);
+            const recoveredData = await appLedger.getRecordAtHeight(1, firstAccountPrivateDecryptionKey);
             expect(recoveredData).toEqual(data);
 
             const secondData = {
@@ -249,11 +249,11 @@ describe('Chain test', () => {
                 .withRecord(otherObject);
             await blockchain.publishRecord(firstAccountPrivateDecryptionKey, secondRecordPublicationContext);
             const secondAppLedger = await blockchain.loadApplicationLedger(appLedgerId);
-            expect(await secondAppLedger.getRecordAtHeight(2)).toEqual(secondData);
+            expect(await secondAppLedger.getRecordAtHeight(2, firstAccountPrivateDecryptionKey)).toEqual(secondData);
 
             // we export the proof
             const proofBuilder = await blockchain.createProofBuilderForApplicationLedger(appLedgerId);
-            const proof = await proofBuilder.exportProofForEntireVirtualBlockchain("Gael Marcadet");
+            const proof = await proofBuilder.exportProofForEntireVirtualBlockchain("Gael Marcadet", firstAccountPrivateDecryptionKey);
             const proofVerificationResult = await blockchain.verifyProofFromJson(proof);
             expect(proofVerificationResult.isVerified()).toBeTruthy();
         }

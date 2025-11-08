@@ -5,6 +5,7 @@ import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Optional} from "./Optional";
 import {Height} from "./Height";
 import {Hash} from "./Hash";
+import {AbstractPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 
 /**
  * Represents the result of a proof verification process, encapsulating the verified data and
@@ -69,7 +70,7 @@ export class ProofVerificationResult {
      * @return {T} The record contained within the block at the given height.
      * @throws {IllegalParameterError} If a block at the specified height is not found.
      */
-    async getRecordContainedInBlockAtHeight<T>(blockHeight: Height): Promise<T> {
-       return await this.appLedger.getRecord(blockHeight) as T
+    async getRecordContainedInBlockAtHeight<T>(blockHeight: Height, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<T> {
+       return await this.appLedger.getRecord(blockHeight, hostPrivateDecryptionKey) as T
     }
 }

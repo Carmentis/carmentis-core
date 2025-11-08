@@ -7,10 +7,37 @@ import { DATA } from "../constants/constants";
 
 const MAX_UINT8_ARRAY_DUMP_SIZE = 24;
 
+type Item = {
+  type: number,
+  index: number,
+  name: string,
+  properties: Item[],
+  entries: Item[],
+  value: [] | object | string | number | boolean | null,
+  attributes: number,
+  channelId: number | null,
+  channels: Set<number>,
+  visibleParts: string[],
+  visiblePartsBinary: Uint8Array,
+  hiddenParts: string[],
+  hiddenPartsBinary: Uint8Array,
+  valueBinary: Uint8Array,
+  leafIndex: number,
+  salt: Uint8Array,
+  visibleSalt: Uint8Array,
+  hiddenSalt: Uint8Array,
+  hash: Uint8Array,
+  hiddenHash: Uint8Array
+}
+
+type SectionEntry =
+  | { isPrivate: false, channelId: number, data: Uint8Array }
+  | { isPrivate: true, channelId: number, data: Uint8Array, merkleRootHash: Uint8Array };
+
 export class IntermediateRepresentation {
   importedFromProof: boolean;
   channelDefinitions: any;
-  irObject: any;
+  irObject: Item[];
   object: any;
   usedChannels: any;
 
@@ -23,14 +50,39 @@ export class IntermediateRepresentation {
     };
   }
 
-  addPublicChannel(id: any) {
+  static getItemInstance(type: number) {
+    return {
+      type,
+      index: -1,
+      name: "",
+      properties: [],
+      entries: [],
+      value: null,
+      attributes: 0,
+      channelId: null,
+      channels: new Set<number>,
+      visibleParts: [],
+      visiblePartsBinary: new Uint8Array(),
+      hiddenParts: [],
+      hiddenPartsBinary: new Uint8Array(),
+      valueBinary: new Uint8Array(),
+      leafIndex: -1,
+      salt: new Uint8Array(),
+      visibleSalt: new Uint8Array(),
+      hiddenSalt: new Uint8Array(),
+      hash: new Uint8Array(),
+      hiddenHash: new Uint8Array()
+    };
+  }
+
+  addPublicChannel(id: number) {
     if(this.channelDefinitions.has(id)) {
       throw `channel ${id} was already added`;
     }
     this.channelDefinitions.set(id, { id, isPrivate: false });
   }
 
-  addPrivateChannel(id: any) {
+  addPrivateChannel(id: number) {
     if(this.channelDefinitions.has(id)) {
       throw `channel ${id} was already added`;
     }
@@ -41,12 +93,12 @@ export class IntermediateRepresentation {
     Initializes the IR object from a JSON-compatible object.
     @param {object} input
   */
-  buildFromJson(input: any) {
-    const output: any = [];
+  buildFromJson(input: object) {
+    const output: Item[] = [];
 
     this.importedFromProof = false;
 
-    processStructure(
+    processJsonStructure(
       {
         root: input
       },
@@ -56,54 +108,43 @@ export class IntermediateRepresentation {
 
     this.irObject = output;
 
-    function processNode(object: any, propertyName: any, container: any, insideArray: any) {
-      const item = object[propertyName],
-            type = TypeManager.getType(item);
+    function processJsonNode(object: any, propertyName: string, container: Item[], insideArray: boolean) {
+      const jsonItem = object[propertyName],
+            type = TypeManager.getType(jsonItem);
 
       if(!TypeManager.isJsonType(type)) {
         throw `Invalid JSON type`;
       }
 
-      const outputNode = {
-        type: type
-      };
+      const outputItem = IntermediateRepresentation.getItemInstance(type);
 
       if(insideArray) {
-        // @ts-expect-error TS(2339): Property 'index' does not exist on type '{ type: n... Remove this comment to see the full error message
-        outputNode.index = +propertyName;
+        outputItem.index = +propertyName;
       }
       else {
-        // @ts-expect-error TS(2339): Property 'name' does not exist on type '{ type: nu... Remove this comment to see the full error message
-        outputNode.name = propertyName;
+        outputItem.name = propertyName;
       }
 
       if(type == DATA.TYPE_OBJECT) {
-        // @ts-expect-error TS(2339): Property 'properties' does not exist on type '{ ty... Remove this comment to see the full error message
-        outputNode.properties = [];
-        // @ts-expect-error TS(2339): Property 'properties' does not exist on type '{ ty... Remove this comment to see the full error message
-        processStructure(item, outputNode.properties, false);
+        outputItem.properties = [];
+        processJsonStructure(jsonItem, outputItem.properties, false);
       }
       else if(type == DATA.TYPE_ARRAY) {
-        // @ts-expect-error TS(2339): Property 'entries' does not exist on type '{ type:... Remove this comment to see the full error message
-        outputNode.entries = [];
-        // @ts-expect-error TS(2339): Property 'entries' does not exist on type '{ type:... Remove this comment to see the full error message
-        processStructure(item, outputNode.entries, true);
+        outputItem.entries = [];
+        processJsonStructure(jsonItem, outputItem.entries, true);
       }
       else {
-        // @ts-expect-error TS(2339): Property 'value' does not exist on type '{ type: n... Remove this comment to see the full error message
-        outputNode.value = item;
-        // @ts-expect-error TS(2339): Property 'attributes' does not exist on type '{ ty... Remove this comment to see the full error message
-        outputNode.attributes = 0;
-        // @ts-expect-error TS(2339): Property 'channelId' does not exist on type '{ typ... Remove this comment to see the full error message
-        outputNode.channelId = null;
+        outputItem.value = jsonItem;
+        outputItem.attributes = 0;
+        outputItem.channelId = null;
       }
 
-      container.push(outputNode);
+      container.push(outputItem);
     }
 
-    function processStructure(object: any, output: any, insideArray: any) {
+    function processJsonStructure(object: any, output: any, insideArray: boolean) {
       for(const propertyName in object) {
-        processNode(object, propertyName, output, insideArray);
+        processJsonNode(object, propertyName, output, insideArray);
       }
     }
   }
@@ -111,22 +152,19 @@ export class IntermediateRepresentation {
   /**
     Exports the IR object to the serialized section format used for on-chain storage.
   */
-  exportToSectionFormat() :
-      (
-      { channelId: number, isPrivate: false, data: Uint8Array } |
-      { channelId: number, isPrivate: true, data: Uint8Array, merkleRootHash: Uint8Array }
-      )[]
-  {
+  exportToSectionFormat(): SectionEntry[] {
     const list = [];
 
     for(const channelId of this.usedChannels) {
       const channelInfo = this.channelDefinitions.get(channelId);
       const data = this.exportChannelToSectionFormat(channelInfo);
-      const object = { channelId, data, isPrivate: channelInfo.isPrivate };
+      let object: SectionEntry;
 
       if(channelInfo.isPrivate) {
-        // @ts-expect-error TS(2339): Property 'merkleRootHash' does not exist on type '... Remove this comment to see the full error message
-        object.merkleRootHash = this.getMerkleRootHash(channelId);
+        object = { isPrivate: true, channelId, data, merkleRootHash: this.getMerkleRootHash(channelId) };
+      }
+      else {
+        object = { isPrivate: false, channelId, data };
       }
       list.push(object);
     }
@@ -148,27 +186,26 @@ export class IntermediateRepresentation {
     stream.writeVarUint(dictionary.length);
 
     for(const name of dictionary) {
-      // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
       stream.writeString(name);
     }
 
     this.traverseIrObject({
       channelId: channelInfo.id,
-      onObject: (item: any, context: any, insideArray: any, parents: any) => {
+      onObject: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         if(parents.length > 1) {
           writeIdentifier(item, insideArray);
         }
         stream.writeByte(item.type);
         stream.writeVarUint(countChildren(item.properties));
       },
-      onArray: (item: any, context: any, insideArray: any, parents: any) => {
+      onArray: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         if(parents.length > 1) {
           writeIdentifier(item, insideArray);
         }
         stream.writeByte(item.type);
         stream.writeVarUint(countChildren(item.entries));
       },
-      onPrimitive: (item: any, context: any, insideArray: any, parents: any) => {
+      onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         writeIdentifier(item, insideArray);
         stream.writeByte(item.type | item.attributes << 3);
 
@@ -184,7 +221,7 @@ export class IntermediateRepresentation {
 
     return stream.getByteStream();
 
-    function writeIdentifier(item: any, insideArray: any) {
+    function writeIdentifier(item: Item, insideArray: boolean) {
       stream.writeVarUint(
         insideArray ?
           item.index
@@ -193,13 +230,13 @@ export class IntermediateRepresentation {
       );
     }
 
-    function countChildren(list: any) {
-      return list.reduce((cnt: any, item: any) =>
+    function countChildren(list: Item[]) {
+      return list.reduce((cnt: number, item: Item) =>
         cnt +=
           item.type == DATA.TYPE_ARRAY || item.type == DATA.TYPE_OBJECT ?
-            item.channels.has(channelInfo.id)
+            item.channels.has(channelInfo.id) ? 1 : 0
           :
-            item.channelId === channelInfo.id,
+            item.channelId === channelInfo.id ? 1 : 0,
         0
       );
     }
@@ -236,8 +273,8 @@ export class IntermediateRepresentation {
       channelInfo.pepper = stream.readByteArray(32);
     }
 
-    const dictionarySize = stream.readVarUint(),
-          dictionary: any = [];
+    const dictionarySize = stream.readVarUint();
+    const dictionary: string[] = [];
 
     for(let n = 0; n < dictionarySize; n++) {
       dictionary.push(stream.readString());
@@ -245,43 +282,46 @@ export class IntermediateRepresentation {
 
     readNode(this.irObject, false, true);
 
-    function readNode(container: any, insideArray: any, isRoot = false) {
-      const id = isRoot ? null : stream.readVarUint();
-            // @ts-expect-error TS(2538): Type 'null' cannot be used as an index type.
-      const name = insideArray ? null : isRoot ? "root" : dictionary[id];
+    function readNode(container: Item[], insideArray: boolean, isRoot = false) {
+      const id = isRoot ? -1 : stream.readVarUint();
+      const name = insideArray ? "" : isRoot ? "root" : dictionary[<number>id];
       const param = stream.readByte();
       const type = param & 0x7;
       const attributes = param >> 3;
 
-      let newItem = true,
-          item;
+      let existingItem: Item | undefined;
 
       if(type == DATA.TYPE_OBJECT || type == DATA.TYPE_ARRAY) {
         // if this item is an object or an array, it may have been already created while processing another channel,
         // in which case we must re-use the existing instance
-        item = container.find((item: any) => insideArray ? item.index == id : item.name == name);
-        newItem = item === undefined;
+        existingItem = container.find((item: Item) => insideArray ? item.index == id : item.name == name);
       }
 
-      if(newItem) {
-        item = { type };
+      let newItem;
+      let item: Item;
+
+      if(existingItem === undefined) {
+        item = IntermediateRepresentation.getItemInstance(type);
+        newItem = true;
 
         if(insideArray) {
-          // @ts-expect-error TS(2339): Property 'index' does not exist on type '{ type: n... Remove this comment to see the full error message
           item.index = id;
         }
         else {
-          // @ts-expect-error TS(2339): Property 'name' does not exist on type '{ type: nu... Remove this comment to see the full error message
           item.name = name;
         }
       }
+      else {
+        item = existingItem;
+        newItem = false;
+      }
 
       if(type == DATA.TYPE_OBJECT) {
-        (item.channels = item.channels || new Set).add(channelInfo.id);
+        item.channels.add(channelInfo.id);
         readObject(item);
       }
       else if(type == DATA.TYPE_ARRAY) {
-        (item.channels = item.channels || new Set).add(channelInfo.id);
+        item.channels.add(channelInfo.id);
         readArray(item, !newItem);
       }
       else {
@@ -319,7 +359,7 @@ export class IntermediateRepresentation {
       }
     }
 
-    function readObject(parent: any) {
+    function readObject(parent: Item) {
       const nProperties = stream.readVarUint();
 
       parent.properties = parent.properties || [];
@@ -329,7 +369,7 @@ export class IntermediateRepresentation {
       }
     }
 
-    function readArray(parent: any, sortRequired: any) {
+    function readArray(parent: Item, sortRequired: boolean) {
       const nEntries = stream.readVarUint();
 
       parent.entries = parent.entries || [];
@@ -339,7 +379,7 @@ export class IntermediateRepresentation {
       }
 
       if(sortRequired) {
-        parent.entries.sort((a: any, b: any) => a.index - b.index);
+        parent.entries.sort((a: Item, b: Item) => a.index - b.index);
       }
     }
   }
@@ -358,59 +398,46 @@ export class IntermediateRepresentation {
         continue;
       }
 
-      const merklizer = this.getMerklizer(channelId),
-            merkleObject = merklizer.generateTree(),
-            knownPositions = new Set;
+      const merklizer = this.getMerklizer(channelId);
+      const merkleObject = merklizer.generateTree();
+      const knownPositions = new Set;
 
       this.traverseIrObject({
-        channelId: channelId,
-        onPrimitive: (item: any, context: any, insideArray: any, parents: any) => {
+        channelId,
+        onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
           if(!(item.attributes & DATA.REDACTED)) {
             knownPositions.add(item.leafIndex);
 
             const proofItem = proofIr.createBranch(parents);
 
-            // @ts-expect-error TS(2532): Object is possibly 'undefined'.
             proofItem.attributes = item.attributes;
-            // @ts-expect-error TS(2532): Object is possibly 'undefined'.
             proofItem.channelId = item.channelId;
-            // @ts-expect-error TS(2532): Object is possibly 'undefined'.
             proofItem.leafIndex = item.leafIndex;
 
             if(item.attributes & DATA.MASKABLE) {
-              // @ts-expect-error TS(2532): Object is possibly 'undefined'.
               proofItem.visibleSalt = item.visibleSalt;
-              // @ts-expect-error TS(2532): Object is possibly 'undefined'.
               proofItem.visibleParts = item.visibleParts;
 
               if(item.attributes & DATA.MASKED) {
-                // @ts-expect-error TS(2532): Object is possibly 'undefined'.
                 proofItem.hiddenHash = item.hiddenHash;
               }
               else {
-                // @ts-expect-error TS(2532): Object is possibly 'undefined'.
                 proofItem.hiddenSalt = item.hiddenSalt;
-                // @ts-expect-error TS(2532): Object is possibly 'undefined'.
                 proofItem.hiddenParts = item.hiddenParts;
               }
             }
             else if(item.attributes & DATA.HASHABLE) {
-              // @ts-expect-error TS(2532): Object is possibly 'undefined'.
               proofItem.salt = item.salt;
 
               if(item.attributes & DATA.HASHED) {
-                // @ts-expect-error TS(2532): Object is possibly 'undefined'.
                 proofItem.hash = item.hash;
               }
               else {
-                // @ts-expect-error TS(2532): Object is possibly 'undefined'.
                 proofItem.value = item.value;
               }
             }
             else {
-              // @ts-expect-error TS(2532): Object is possibly 'undefined'.
               proofItem.salt = item.salt;
-              // @ts-expect-error TS(2532): Object is possibly 'undefined'.
               proofItem.value = item.value;
             }
           }
@@ -462,18 +489,18 @@ export class IntermediateRepresentation {
 
   /**
     Internal method to create a branch in the object tree, including a primitive type and all its parents.
-    Only a minimal set of properties is included for each node: 'type', 'name'/'index', 'properties'/'entries'.
     @param {array} itemList - An array containing the primitive item, preceded by all its parents.
   */
-  createBranch(itemList: any) {
+  createBranch(itemList: Item[]): Item {
     let container = this.irObject;
     let insideArray = false;
+    let primitiveItem;
 
     for(const currentItem of itemList) {
       if(currentItem.type == DATA.TYPE_OBJECT || currentItem.type == DATA.TYPE_ARRAY) {
-        let refItem = container.find((item: any) => insideArray ? item.index == currentItem.index : item.name == currentItem.name);
+        let refItem: Item | undefined = container.find((item: Item) => insideArray ? item.index == currentItem.index : item.name == currentItem.name);
 
-        if(!refItem) {
+        if(refItem === undefined) {
           refItem = createNewItem(currentItem);
 
           if(currentItem.type == DATA.TYPE_OBJECT) {
@@ -488,32 +515,32 @@ export class IntermediateRepresentation {
         container = insideArray ? refItem.entries : refItem.properties;
       }
       else {
-        const refItem = createNewItem(currentItem);
-
-        container.push(refItem);
-
-        return refItem;
+        primitiveItem = createNewItem(currentItem);
+        container.push(primitiveItem);
+        break;
       }
     }
 
-    function createNewItem(item: any) {
-      const newItem = {
-        type: item.type
-      };
+    if(primitiveItem === undefined) {
+      throw new Error('internal error: failed to create a branch');
+    }
+
+    return primitiveItem;
+
+    function createNewItem(item: Item) {
+      const newItem = IntermediateRepresentation.getItemInstance(item.type);
 
       if(insideArray) {
-        // @ts-expect-error TS(2339): Property 'index' does not exist on type '{ type: a... Remove this comment to see the full error message
         newItem.index = item.index;
       }
       else {
-        // @ts-expect-error TS(2339): Property 'name' does not exist on type '{ type: an... Remove this comment to see the full error message
         newItem.name = item.name;
       }
       return newItem;
     }
   }
 
-  getMerkleRootHash(channelId: any) {
+  getMerkleRootHash(channelId: number) {
     const merklizer = this.getMerklizer(channelId);
     const merkleObject = merklizer.generateTree();
 
@@ -524,8 +551,8 @@ export class IntermediateRepresentation {
     Internal method to create a merklizer for a given channel, using either the channel pepper or the salts.
     @param {number} channel - The identifier of the channel.
   */
-  getMerklizer(channelId: any) {
-    let merklizer: any;
+  getMerklizer(channelId: number) {
+    let merklizer: SaltMerklizer | PepperMerklizer;
 
     if(this.importedFromProof) {
       const merkleData = this.object.merkleData.find((obj: any) => obj.channelId == channelId);
@@ -538,7 +565,7 @@ export class IntermediateRepresentation {
 
     this.traverseIrObject({
       channelId: channelId,
-      onPrimitive: (item: any, context: any, insideArray: any, parents: any) => {
+      onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         merklizer.addItem(item, parents);
       }
     });
@@ -583,14 +610,14 @@ export class IntermediateRepresentation {
     @param {string} pathStringList - A string describing the set of fields.
     @param {number} channel - The channel identifier.
   */
-  setChannel(pathStringList: any, channelId: any) {
+  setChannel(pathStringList: any, channelId: number) {
     if(!this.channelDefinitions.has(channelId)) {
       throw `channel ${channelId} is undefined`;
     }
 
     this.processPath(
       pathStringList,
-      (item: any) => {
+      (item: Item) => {
         item.channelId = channelId;
       }
     );
@@ -604,7 +631,7 @@ export class IntermediateRepresentation {
   setAsMaskable(pathStringList: any, maskedParts: any) {
     this.processPath(
       pathStringList,
-      (item: any) => {
+      (item: Item) => {
         const obj = MaskManager.applyMask(item.value, maskedParts);
 
         item.visibleParts = obj.visible;
@@ -623,7 +650,7 @@ export class IntermediateRepresentation {
   setAsMaskableByRegex(pathStringList: any, regex: any, substitution: any) {
     this.processPath(
       pathStringList,
-      (item: any) => {
+      (item: Item) => {
         const list = MaskManager.getListFromRegex(item.value, regex, substitution),
               obj = MaskManager.applyMask(item.value, list);
 
@@ -641,7 +668,7 @@ export class IntermediateRepresentation {
   setAsHashable(pathStringList: any) {
     this.processPath(
       pathStringList,
-      (item: any) => {
+      (item: Item) => {
         item.attributes = (item.attributes & ~DATA.PROPERTIES) | DATA.HASHABLE;
       }
     );
@@ -654,7 +681,7 @@ export class IntermediateRepresentation {
   setAsRedacted(pathStringList: any) {
     this.processPath(
       pathStringList,
-      (item: any) => {
+      (item: Item) => {
         item.attributes = (item.attributes & ~DATA.FORMAT) | DATA.REDACTED;
       }
     );
@@ -667,7 +694,7 @@ export class IntermediateRepresentation {
   setAsMasked(pathStringList: any) {
     this.processPath(
       pathStringList,
-      (item: any) => {
+      (item: Item) => {
         if(!(item.attributes & DATA.MASKABLE)) {
           throw "this item is not maskable";
         }
@@ -686,7 +713,7 @@ export class IntermediateRepresentation {
   setAsHashed(pathStringList: any) {
     this.processPath(
       pathStringList,
-      (item: any) => {
+      (item: Item) => {
         if(!(item.attributes & DATA.HASHABLE)) {
           throw "this item is not hashable";
         }
@@ -723,7 +750,7 @@ export class IntermediateRepresentation {
   */
   populateChannels() {
     this.traverseIrObject({
-      onPrimitive: (item: any, context: any, insideArray: any, parents: any) => {
+      onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         for(let i = 0; i < parents.length - 1; i++) {
           if(item.channelId === null) {
             throw `field '${PathManager.fromParents(parents)}' is not assigned to any channel`;
@@ -746,42 +773,41 @@ export class IntermediateRepresentation {
     Internal method to build a dictionary of field names for a given channel.
     @param {number} channel - The channel identifier.
   */
-  buildDictionary(channelId: any) {
+  buildDictionary(channelId: number): string[] {
     const dictionary = new Map;
 
     // collect all names and count how many times they appear
     this.traverseIrObject({
       channelId: channelId,
-      onObject: (item: any, context: any, insideArray: any, parents: any) => {
+      onObject: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         if(parents.length > 1 && !insideArray) {
-          processItem(item);
+          storeItem(item);
         }
       },
-      onArray: (item: any, context: any, insideArray: any, parents: any) => {
+      onArray: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         if(!insideArray) {
-          processItem(item);
+          storeItem(item);
         }
       },
-      onPrimitive: (item: any, context: any, insideArray: any, parents: any) => {
+      onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         if(!insideArray) {
-          processItem(item);
+          storeItem(item);
         }
       }
     });
 
-    function processItem(item: any) {
+    function storeItem(item: Item) {
       dictionary.set(item.name, dictionary.has(item.name) ? dictionary.get(item.name) + 1 : 1)
     }
 
     // turn that into a lookup sorted by use frequency in descending order
-    const arr = [];
+    const arr:[ number, string ][] = [];
 
     for(const [ key, count ] of dictionary) {
       arr.push([ count, key ]);
     }
 
-    // @ts-expect-error TS(2769): No overload matches this call.
-    const lookup = new Map([...arr.sort((a, b) => b[0] - a[0]).map((a, i) => [ a[1], i ])]);
+    const lookup = new Map([...arr.sort((a, b) => b[0] - a[0]).map((a, i): [ string, number ] => [ a[1] as string, i ])]);
 
     return [...lookup.keys()];
   }
@@ -791,7 +817,7 @@ export class IntermediateRepresentation {
   */
   serializeFields() {
     this.traverseIrObject({
-      onPrimitive: (item: any, context: any, insideArray: any, parents: any) => {
+      onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         const stream = new WriteStream();
 
         if(item.attributes & DATA.MASKABLE) {
@@ -820,18 +846,6 @@ export class IntermediateRepresentation {
     });
   }
 
-  // !! not used
-  unserializeFields() {
-    this.traverseIrObject({
-      onPrimitive: (item: any) => {
-        const stream = new ReadStream(item.valueBinary);
-
-        // @ts-expect-error TS(2339): Property 'read' does not exist on type 'ReadStream... Remove this comment to see the full error message
-        item.value = stream.read(item.type);
-      }
-    });
-  }
-
   /**
     Internal method to traverse the IR object and calling optional callbacks on each node.
     @param {object} options - An object containing the traversal options.
@@ -839,7 +853,7 @@ export class IntermediateRepresentation {
   traverseIrObject(options: any) {
     processStructure(this.irObject, options.initialContext, false, []);
 
-    function hasChannel(item: any, isPrimitive: any) {
+    function hasChannel(item: Item, isPrimitive: boolean) {
       return (
         options.channelId === undefined || (
           isPrimitive?
@@ -850,7 +864,7 @@ export class IntermediateRepresentation {
       );
     }
 
-    function processNode(item: any, context: any, insideArray: any, parents: any) {
+    function processItem(item: Item, context: any, insideArray: boolean, parents: Item[]) {
       const newParents = [ ...parents, item ];
 
       if(item.type == DATA.TYPE_ARRAY) {
@@ -874,9 +888,9 @@ export class IntermediateRepresentation {
       }
     }
 
-    function processStructure(list: any, context: any, insideArray: any, parents: any) {
+    function processStructure(list: Item[], context: any, insideArray: boolean, parents: Item[]) {
       for(const item of list) {
-        processNode(item, context, insideArray, parents);
+        processItem(item, context, insideArray, parents);
       }
     }
   }
@@ -885,22 +899,25 @@ export class IntermediateRepresentation {
     Exports the IR object back to the core JSON-compatible object it describes.
   */
   exportToJson() {
-    const object = {};
+    const object = { root: null };
 
     this.traverseIrObject({
-      initialContext: object,
-      onArray: (item: any, context: any, insideArray: any) => {
+      initialcontext: object,
+      onArray: (item: Item, context: any, insideArray: boolean) => {
         return context[insideArray ? item.index : item.name] = [];
       },
-      onObject: (item: any, context: any, insideArray: any) => {
+      onObject: (item: Item, context: any, insideArray: boolean) => {
         return context[insideArray ? item.index : item.name] = {};
       },
-      onPrimitive: (item: any, context: any, insideArray: any, parents: any) => {
+      onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
         context[insideArray ? item.index : item.name] = item.value;
       }
     });
 
-    // @ts-expect-error TS(2339): Property 'root' does not exist on type '{}'.
+    if(object.root === null) {
+      throw new Error('internal error: null root after exporting to JSON');
+    }
+
     return object.root;
   }
 }

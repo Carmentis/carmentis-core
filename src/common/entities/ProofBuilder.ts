@@ -1,5 +1,6 @@
 import {Hash} from "./Hash";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
+import {AbstractPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 
 export class ProofBuilder {
     private constructor(
@@ -11,7 +12,7 @@ export class ProofBuilder {
         return new ProofBuilder(virtualBlockchainId, appLedger);
     }
 
-    exportProofForEntireVirtualBlockchain( proofAuthor: string ) {
-        return this.appLedger.exportProof({ author: proofAuthor })
+    exportProofForEntireVirtualBlockchain( proofAuthor: string, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+        return this.appLedger.exportProof({ author: proofAuthor }, hostPrivateDecryptionKey);
     }
 }

@@ -189,7 +189,10 @@ export class Microblock {
     }
 
     /**
-     Returns the first section for which the given callback function returns true.
+     *
+     * Returns the first section for which the given callback function returns true.
+     * @param callback
+     * @throws SectionNotFoundError When no section matches.
      */
     getSection<T = any>(callback: (section: Section) => boolean): Section<T> {
         const section = this.sections.find((section: Section) => callback(section));

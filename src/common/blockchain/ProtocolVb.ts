@@ -38,7 +38,7 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolVBState> {
 
     async getPublicKey(): Promise<PublicSignatureKey> {
         const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
-        const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.PROTOCOL_PUBLIC_KEY).object.publicKey;
+        const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.PROTOCOL_PUBLIC_KEY).object.publicKey;
         const cryptoFactory = new CryptoSchemeFactory();
         const signatureSchemeId = this.getState().signatureSchemeId;
         const publicKey = cryptoFactory.createPublicSignatureKey(signatureSchemeId, rawPublicKey)

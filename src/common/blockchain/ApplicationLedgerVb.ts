@@ -37,7 +37,7 @@ import {AES256GCMSymmetricEncryptionKey} from "../crypto/encryption/symmetric-en
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
     constructor({provider}: { provider: Provider }) {
-        super({ provider, type: CHAIN.VB_APP_LEDGER });
+        super({provider, type: CHAIN.VB_APP_LEDGER});
 
         this.state = {
             allowedSignatureSchemeIds: [],
@@ -149,13 +149,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
         const numberOfChannels = this.getNumberOfChannels();
 
-        for(let channelId = 0; channelId < numberOfChannels; channelId++) {
+        for (let channelId = 0; channelId < numberOfChannels; channelId++) {
             const channel = this.getChannelById(channelId);
 
-            if(channel.isPrivate) {
+            if (channel.isPrivate) {
                 ir.addPrivateChannel(channelId);
-            }
-            else {
+            } else {
                 ir.addPublicChannel(channelId);
             }
         }
@@ -164,7 +163,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     getChannelIdByChannelName(channelName: string) {
         const id = this.getState().channels.findIndex((obj: any) => obj.name == channelName);
-        if(id == -1) {
+        if (id == -1) {
             throw new ChannelNotDefinedError(channelName)
         }
         return id;
@@ -172,7 +171,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     getChannelByChannelName(name: string) {
         const channel = this.getState().channels.find((obj: any) => obj.name == name);
-        if(channel === undefined) {
+        if (channel === undefined) {
             throw new ChannelNotDefinedError(name)
         }
         return channel;
@@ -182,7 +181,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         // if the actor id is the creator of the channel, then we have to derive the channel key locally...
         const state = this.getState();
         const creatorId = state.channels[channelId].creatorId;
-        if(creatorId == actorId) {
+        if (creatorId == actorId) {
             return await this.deriveChannelKey(channelId);
         }
 
@@ -280,7 +279,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     getActorId(name: string) {
         const id = this.getState().actors.findIndex((obj: any) => obj.name == name);
-        if(id == -1) {
+        if (id == -1) {
             throw new ActorNotDefinedError(name);
         }
         return id;
@@ -288,7 +287,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     getActor(name: string) {
         const actor = this.getState().actors.find((obj: any) => obj.name == name);
-        if(actor === undefined) {
+        if (actor === undefined) {
             throw new ActorNotDefinedError(name);
         }
         return actor;
@@ -304,7 +303,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
         const state = this.getState();
 
-        for(const id in state.actors) {
+        for (const id in state.actors) {
             const actorId = Number(id);
             const actor = state.actors[actorId];
             const keyMicroblock = await this.getMicroblock(actor.signatureKeyHeight);
@@ -312,7 +311,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
                 section.type == SECTIONS.APP_LEDGER_ACTOR_SUBSCRIPTION &&
                 Utils.binaryIsEqual(section.object.signaturePublicKey, myPublicSignatureKeyBytes)
             );
-            if(keySection) {
+            if (keySection) {
                 return actorId;
             }
         }
@@ -338,10 +337,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     async actorCreationCallback(microblock: any, section: any) {
         const state = this.getState();
 
-        if(section.object.id != state.actors.length) {
+        if (section.object.id != state.actors.length) {
             throw new InvalidActorError(section.object.id, state.actors.length);
         }
-        if(state.actors.some((obj: any) => obj.name == section.object.name)) {
+        if (state.actors.some((obj: any) => obj.name == section.object.name)) {
             throw new ActorAlreadyDefinedError(section.object.name);
         }
         state.actors.push({
@@ -358,10 +357,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         const state = this.getState();
         const actor = state.actors[section.object.actorId - 1];
 
-        if(actor === undefined) {
+        if (actor === undefined) {
             throw new CannotSubscribeError(section.object.actorId);
         }
-        if(actor.subscribed) {
+        if (actor.subscribed) {
             throw new AlreadySubscribedError(section.object.actorId);
         }
 
@@ -381,7 +380,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         const isAllowingAllPkeSchemes = allowedPkeSchemeIds.length == 0;
         const isExplicitlyAllowedPkeScheme = allowedPkeSchemeIds.includes(checkedPkeSchemeId);
         const isNotAllowedPkeScheme = !isAllowingAllPkeSchemes && !isExplicitlyAllowedPkeScheme;
-        if(isNotAllowedPkeScheme) {
+        if (isNotAllowedPkeScheme) {
             throw new NotAllowedPkeSchemeError(section.object.pkeSchemeId);
         }
 
@@ -392,10 +391,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     async channelCreationCallback(microblock: any, section: any) {
         const state = this.getState();
-        if(section.object.id != state.channels.length) {
+        if (section.object.id != state.channels.length) {
             throw new InvalidChannelError(section.object.id);
         }
-        if(state.channels.some((obj: any) => obj.name == section.object.name)) {
+        if (state.channels.some((obj: any) => obj.name == section.object.name)) {
             throw new ChannelAlreadyDefinedError(section.object.name);
         }
         state.channels.push({
@@ -415,13 +414,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     }
 
     async publicChannelDataCallback(microblock: Microblock, section: any) {
-        if(!this.getState().channels[section.object.channelId]) {
+        if (!this.getState().channels[section.object.channelId]) {
             throw `invalid channel ID ${section.object.channelId}`;
         }
     }
 
     async privateChannelDataCallback(microblock: Microblock, section: any) {
-        if(!this.getState().channels[section.object.channelId]) {
+        if (!this.getState().channels[section.object.channelId]) {
             throw `invalid channel ID ${section.object.channelId}`;
         }
     }
@@ -430,7 +429,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     }
 
     async authorSignatureCallback(microblock: any, section: any) {
-        const application = new Application({ provider: this.provider });
+        const application = new Application({provider: this.provider});
         await application._load(this.getState().applicationId);
         const publicKey = await application.getOrganizationPublicKey();
         const feesPayerAccount = await this.provider.getAccountByPublicKey(publicKey);
@@ -458,7 +457,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
      *
      * @return {number} The number of channels.
      */
-    getNumberOfChannels() : number {
+    getNumberOfChannels(): number {
         return this.getState().channels.length;
     }
 

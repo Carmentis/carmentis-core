@@ -32,14 +32,19 @@ type Item = {
 
 type SectionEntry =
     | { isPrivate: false, channelId: number, data: Uint8Array }
-    | { isPrivate: true, channelId: number, data: Uint8Array, merkleRootHash: Uint8Array };
+    | { isPrivate: true, channelId: number, data: Uint8Array, merkleRootHash: string };
+
+
+type Channel =
+    | {id: number, isPrivate: false }
+    | {id: number, isPrivate: true, pepper:  Uint8Array}
 
 export class IntermediateRepresentation {
     importedFromProof: boolean;
-    channelDefinitions: any;
+    channelDefinitions: Map<number, Channel>;
     irObject: Item[];
     object: any;
-    usedChannels: any;
+    usedChannels: number[] = [];
 
     constructor() {
         this.irObject = [];
@@ -113,7 +118,7 @@ export class IntermediateRepresentation {
                 type = TypeManager.getType(jsonItem);
 
             if (!TypeManager.isJsonType(type)) {
-                throw `Invalid JSON type`;
+                throw new Error(`Invalid JSON type`);
             }
 
             const outputItem = IntermediateRepresentation.getItemInstance(type);
@@ -154,15 +159,20 @@ export class IntermediateRepresentation {
 
         for (const channelId of this.usedChannels) {
             const channelInfo = this.channelDefinitions.get(channelId);
-            const data = this.exportChannelToSectionFormat(channelInfo);
-            let object: SectionEntry;
+            if (channelInfo) {
+                const data = this.exportChannelToSectionFormat(channelInfo);
+                let object: SectionEntry;
 
-            if (channelInfo.isPrivate) {
-                object = {isPrivate: true, channelId, data, merkleRootHash: this.getMerkleRootHash(channelId)};
+                if (channelInfo.isPrivate) {
+                    object = {isPrivate: true, channelId, data, merkleRootHash: this.getMerkleRootHash(channelId)};
+                } else {
+                    object = {isPrivate: false, channelId, data};
+                }
+                list.push(object);
             } else {
-                object = {isPrivate: false, channelId, data};
+                // TODO: what we do when the channel is not defined in channelDefinitions but in usedChannels
             }
-            list.push(object);
+
         }
         return list;
     }
@@ -245,15 +255,18 @@ export class IntermediateRepresentation {
 
         for (const object of list) {
             const channelInfo = this.channelDefinitions.get(object.channelId);
-            this.importChannelFromSectionFormat(channelInfo, object.data);
+            if (channelInfo) {
+                this.importChannelFromSectionFormat(channelInfo, object.data);
 
-            if (channelInfo.isPrivate) {
-                const merkleRootHash = this.getMerkleRootHash(object.channelId);
+                if (channelInfo.isPrivate) {
+                    const merkleRootHash = this.getMerkleRootHash(object.channelId);
 
-                if (merkleRootHash != object.merkleRootHash) {
-                    throw `inconsistent Merkle root hash (expected: ${object.merkleRootHash}, computed: ${merkleRootHash})`;
+                    if (merkleRootHash != object.merkleRootHash) {
+                        throw new Error(`inconsistent Merkle root hash (expected: ${object.merkleRootHash}, computed: ${merkleRootHash})`);
+                    }
                 }
             }
+
         }
         this.populateChannels();
     }
@@ -383,6 +396,7 @@ export class IntermediateRepresentation {
 
         for (const channelId of this.usedChannels) {
             const channelInfo = this.channelDefinitions.get(channelId);
+            if (channelInfo === undefined) continue
 
             if (!channelInfo.isPrivate) {
                 continue;
@@ -457,18 +471,19 @@ export class IntermediateRepresentation {
 
         for (const channelId of this.usedChannels) {
             const channelInfo = this.channelDefinitions.get(channelId);
+            if (channelInfo) {
+                if (!channelInfo.isPrivate) {
+                    continue;
+                }
 
-            if (!channelInfo.isPrivate) {
-                continue;
+                const merklizer = this.getMerklizer(channelId);
+                const merkleObject = merklizer.generateTree();
+
+                merkleData.push({
+                    channelId: channelId,
+                    rootHash: merkleObject.rootHash
+                });
             }
-
-            const merklizer = this.getMerklizer(channelId);
-            const merkleObject = merklizer.generateTree();
-
-            merkleData.push({
-                channelId: channelId,
-                rootHash: merkleObject.rootHash
-            });
         }
         return merkleData;
     }
@@ -542,7 +557,11 @@ export class IntermediateRepresentation {
             merklizer = new SaltMerklizer(merkleData.nLeaves, merkleData.witnesses);
         } else {
             const channelInfo = this.channelDefinitions.get(channelId);
-            merklizer = new PepperMerklizer(channelInfo.pepper);
+            if (channelInfo && channelInfo.isPrivate) {
+                merklizer = new PepperMerklizer(channelInfo.pepper);
+            } else {
+                throw new Error("internal error: cannot compute the merklizer for either undefined channel or public channel");
+            }
         }
 
         this.traverseIrObject({

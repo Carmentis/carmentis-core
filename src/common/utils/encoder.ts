@@ -122,6 +122,7 @@ export class BytesToHexEncoder implements EncoderInterface<Uint8Array, string> {
      * @return {string} The hexadecimal string representation of the input data.
      */
     encode(data: Uint8Array): string {
+        if (!(data instanceof Uint8Array)) throw new TypeError(`Encoding data must be a Uint8Array, got ${typeof data}`);
         return bytesToHex(data);
     }
 }

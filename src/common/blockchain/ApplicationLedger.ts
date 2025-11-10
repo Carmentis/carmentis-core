@@ -254,6 +254,10 @@ export class ApplicationLedger {
             const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
             const guestId = actorId; // the guest is the actor assigned to the channel
 
+            // if the guestId equals the hostId, it is likely a misuse of the record. In this case, we do not do anything
+            // because the author is already in the channel by definition (no need to create a shared key, ...).
+            if (hostId === guestId) continue;
+
             // To invite the actor in the channel, we first retrieve or generate a symmetric encryption key used to establish
             // secure communication between both peers. The key is then used to encrypt the channel key and put in a dedicated
             // section of the microblock.
@@ -307,8 +311,6 @@ export class ApplicationLedger {
         }
 
         // process channel data
-        //ir.serializeFields();
-        //ir.populateChannels();
         ir.finalizeChannelData();
 
         const channelDataList = ir.exportToSectionFormat();
@@ -505,7 +507,10 @@ export class ApplicationLedger {
         // and ensure that the public encryption key is defined
         const actor = this.getActorByIdOrFail(actorId);
         const actorPublicKeyEncryptionHeightDefinition = actor.pkeKeyHeight;
-        if (actorPublicKeyEncryptionHeightDefinition === undefined) {
+        const isPkeDefined =
+            typeof actorPublicKeyEncryptionHeightDefinition === 'number' &&
+            actorPublicKeyEncryptionHeightDefinition !== 0;
+        if (!isPkeDefined) {
             throw new ProtocolError(`Actor ${actorId} has not subscribed to a public encryption key.`)
         }
 

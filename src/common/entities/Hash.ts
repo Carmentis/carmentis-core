@@ -26,6 +26,9 @@ export class Hash {
      *
      */
     static from(hash: string | Uint8Array) {
+        const isString = typeof hash === "string";
+        const isBinary = hash instanceof Uint8Array;
+        if (!isString && !isBinary) throw new TypeError(`Expected hash of type string or Uint8Array: got ${typeof hash}`);
         const hexEncoder = EncoderFactory.bytesToHexEncoder();
         return new Hash(
             typeof hash == 'string' ? hexEncoder.decode(hash) : hash

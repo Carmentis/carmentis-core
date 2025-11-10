@@ -12,6 +12,7 @@ import {
 } from "../errors/carmentis-error";
 import {SectionType} from "../entities/SectionType";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {MicroBlockBuilder} from "./MicroBlockBuilder";
 
 export abstract class VirtualBlockchain<CustomState> {
     public static INITIAL_HEIGHT = 1;
@@ -169,7 +170,19 @@ export abstract class VirtualBlockchain<CustomState> {
         return Hash.from(this.identifier);
     }
 
+    createMicroBlockBuilder() {
+        return MicroBlockBuilder.createBuilder(this);
+    }
 
+
+    async appendMicroBlock(microblock: Microblock) {
+        // we increase the height of the vb
+        this.height += 1;
+        // we call all callbacks to update the vb state with respect to the appended mb
+        for (const section of microblock.getAllSections()) {
+            await this.processSectionCallback(microblock, section);
+        }
+    }
 
     /**
      Adds a section to the current microblock.

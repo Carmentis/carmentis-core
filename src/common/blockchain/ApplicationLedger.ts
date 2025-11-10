@@ -5,8 +5,8 @@ import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
 import {
-    ApplicationLedgerPrivateChannelDataSection,
-    ApplicationLedgerPublicChannelDataSection,
+    ApplicationLedgerPrivateChannelSection,
+    ApplicationLedgerPublicChannelSection,
     ImportedProof,
     Proof
 } from "./types";
@@ -38,9 +38,10 @@ import {
 } from "../crypto/encryption/symmetric-encryption/encryption-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {MlKemPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
+import {VirtualBlockchain} from "./VirtualBlockchain";
 
 export class ApplicationLedger {
-    provider: any;
+    private provider: Provider;
     private allowedSignatureSchemeIds: SignatureSchemeId[];
     private allowedPkeSchemeIds: PublicKeyEncryptionSchemeId[];
     vb: ApplicationLedgerVb;
@@ -50,6 +51,7 @@ export class ApplicationLedger {
         this.vb = new ApplicationLedgerVb({provider});
         this.provider = provider
         this.gasPrice = CMTSToken.zero();
+        this.provider = provider
 
         // by default, we allow all signature schemes and all PKE schemes, modeled by an empty list
         this.allowedSignatureSchemeIds = [];
@@ -158,8 +160,7 @@ export class ApplicationLedger {
         // The organization id is currently not used in the protocol. 
         // Initially, it has been designed to handle the case where a user from another organization is added to an external vb.
         const nullOrganizationId = Utils.getNullHash();
-
-        return this.vb.subscribe({
+        return this.vb.subscribeActor({
             actorId,
             actorType: unknownActorType,
             organizationId: nullOrganizationId,
@@ -202,7 +203,7 @@ export class ApplicationLedger {
             await this.vb.load(Utils.binaryFromHexa(object.virtualBlockchainId));
         }
 
-        if (this.vb.height == 0) {
+        if (this.vb.height === VirtualBlockchain.INITIAL_HEIGHT) {
             // genesis -> declare the signature scheme and the application
             await this.vb.setAllowedSignatureSchemes({
                 schemeIds: this.allowedSignatureSchemeIds
@@ -216,14 +217,27 @@ export class ApplicationLedger {
         for (const def of object.actors || []) {
             await this.vb.createActor({
                 id: this.vb.getNumberOfActors(),
-                type: 0,
+                type: ActorType.UNKNOWN,
                 name: def.name
             });
         }
 
-        // get the author ID
-        const authorId = this.vb.getActorId(object.author);
+        // when creating the virtual blockchain application ledger, the author is automatically
+        // subscribed (it should also be created above so it must be specified in the actors section).
+        const authorName = object.author;
+        const authorId = this.vb.getActorId(authorName);
+        if (this.vb.height === VirtualBlockchain.INITIAL_HEIGHT) {
+            const authorPublicSignatureKey = this.provider.getPrivateSignatureKey().getPublicKey();
+            const authorPublicEncryptionKey = hostPrivateDecryptionKey.getPublicKey();
+            await this.subscribeActor(
+                authorName,
+                authorPublicSignatureKey,
+                authorPublicEncryptionKey
+            );
+        }
+        throw new Error("test")
 
+        /*
         // add the new channels
         for (const def of object.channels || []) {
             await this.vb.createChannel({
@@ -348,6 +362,8 @@ export class ApplicationLedger {
             const messageToShow = object.approvalMessage ?? "";
             await this.vb.addEndorsementRequest(endorserId, messageToShow)
         }
+
+         */
     }
 
     /**
@@ -550,7 +566,7 @@ export class ApplicationLedger {
         const listOfChannels: { channelId: number, data: object, merkleRootHash?: string }[] = [];
 
         // we load the public channels that should be always accessible
-        const publicChannelDataSections = microblock.getSections<ApplicationLedgerPublicChannelDataSection>(
+        const publicChannelDataSections = microblock.getSections<ApplicationLedgerPublicChannelSection>(
             (section: any) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA
         );
         publicChannelDataSections.map((section) => {
@@ -562,14 +578,15 @@ export class ApplicationLedger {
 
         // we now load private channels that might be protected (encrypted)
         if (hostPrivateDecryptionKey !== undefined) {
-            const privateChannelDataSections = microblock.getSections<ApplicationLedgerPrivateChannelDataSection>(
+            const currentActorId = await this.vb.getCurrentActorId();
+            const privateChannelDataSections = microblock.getSections<ApplicationLedgerPrivateChannelSection>(
                 (section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA
             );
 
             for (const section of privateChannelDataSections) {
                 const { channelId, encryptedData, merkleRootHash } = section.object;
                 try {
-                    const channelKey = await this.vb.getChannelKey(await this.vb.getCurrentActorId(), channelId, hostPrivateDecryptionKey);
+                    const channelKey = await this.vb.getChannelKey(currentActorId, channelId, hostPrivateDecryptionKey);
                     const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, channelId);
                     const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, channelId);
                     const data = Crypto.Aes.decryptGcm(channelSectionKey, encryptedData, channelSectionIv);

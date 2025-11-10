@@ -1,7 +1,4 @@
 import {Utils} from "../utils/utils";
-import {MicroblockInformationSchema} from "../blockchain/types";
-
-import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
 
 export class MemoryProvider  {
 

@@ -27,9 +27,11 @@ import {ChainInformationWrapper} from "../wrappers/ChainInformationWrapper";
 import {VirtualBlockchainWrapper} from "../wrappers/VirtualBlockchainWrapper";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {
+    AbstractPrivateDecryptionKey
+} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 
-export interface UnauthenticatedBlockchainClient {
-    //getMicroBlockHeader(vbId: Hash, height: number): Promise<AbstractMicroBlockHeader>;
+export interface BlockchainClient {
     getManyMicroBlock(type: VirtualBlockchainType, hashes: Hash[]): Promise<Microblock[]>;
 
     getMicroBlock(type: VirtualBlockchainType, hashes: Hash): Promise<Microblock | null>
@@ -41,6 +43,7 @@ export interface UnauthenticatedBlockchainClient {
     getAccountState(accountHash: Hash): Promise<AccountState>;
 
     getAccountHistory(accountHash: Hash, lastHistoryHash?: Hash, maxRecords?: number): Promise<AccountHistoryView>;
+
 
     getAccountByPublicKey(publicKey: PublicSignatureKey, hashScheme?: CryptographicHash): Promise<Hash>;
 
@@ -81,6 +84,16 @@ export interface UnauthenticatedBlockchainClient {
     getBlockInformation(height: number): Promise<BlockInformationDTO>;
 
     getBlockContent(height: number): Promise<BlockContentDTO>;
-
     getValidatorNodeByAddress(address: Uint8Array): Promise<Hash>;
+    createGenesisAccount(): Promise<Account>;
+    createAccount(sellerAccount: Hash, buyerPublicKey: PublicSignatureKey, amount: CMTSToken): Promise<Account>;
+    createOrganization(): Promise<Organization>;
+    createValidatorNode(organizationIdentifierString: Hash): Promise<ValidatorNode>;
+    createApplication(organizationIdentifierString: Hash): Promise<Application>;
+    createApplicationLedger(applicationId: Hash, expirationDay: number): Promise<ApplicationLedger>;
+    createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription<T>, expirationDay: number): Promise<ApplicationLedger>;
+    createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string, gasPrice: CMTSToken): Promise<any>;
+
+
+
 }

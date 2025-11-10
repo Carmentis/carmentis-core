@@ -17,6 +17,8 @@ import {VirtualBlockchainStateWrapper} from "../wrappers/VirtualBlockchainStateW
 import {KeyedProvider} from "./KeyedProvider";
 import {Hash} from "../entities/Hash";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {NotAuthenticatedError} from "../errors/carmentis-error";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -30,6 +32,14 @@ export class Provider {
     }
 
     isKeyed(): this is KeyedProvider { return false; }
+
+    getPrivateSignatureKey(): PrivateSignatureKey {
+        throw new NotAuthenticatedError();
+    }
+
+    getPublicSignatureKey(): PublicSignatureKey {
+        throw new NotAuthenticatedError();
+    }
 
     async sendMicroblock(headerData: any, bodyData: any) {
         return await this.externalProvider.sendMicroblock(headerData, bodyData);

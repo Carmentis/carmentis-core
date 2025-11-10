@@ -1,3 +1,6 @@
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+
 export interface ImportedProof {
     height: number;
     data: {
@@ -151,6 +154,13 @@ export interface ApplicationLedgerChannelInvitationSection {
     encryptedChannelKey: Uint8Array;
 }
 
+
+export interface ApplicationLedgerActorCreationSection {
+    id: number,
+    type: number,
+    name: string,
+}
+
 export interface ApplicationLedgerSharedKeySection {
     hostId: number;
     guestId: number;
@@ -161,15 +171,25 @@ export interface ApplicationLedgerSharedKeySection {
     { name: 'merkleRootHash', type: DATA.TYPE_BIN256 },
     { name: 'encryptedData',  type: DATA.TYPE_BINARY }
  */
-export interface ApplicationLedgerPrivateChannelDataSection {
+export interface ApplicationLedgerPrivateChannelSection {
     channelId: number,
     merkleRootHash: Uint8Array,
     encryptedData: Uint8Array,
 }
 
-export interface ApplicationLedgerPublicChannelDataSection {
+export interface ApplicationLedgerPublicChannelSection {
     channelId: number,
     data: Uint8Array,
+}
+
+export interface ApplicationLedgerActorSubscriptionSection {
+    actorId: number,
+    actorType: number,
+    organizationId: Uint8Array,
+    signatureSchemeId: SignatureSchemeId,
+    signaturePublicKey: Uint8Array,
+    pkeSchemeId: PublicKeyEncryptionSchemeId,
+    pkePublicKey: Uint8Array
 }
 
 

@@ -138,7 +138,7 @@ export class Account {
     }
 
     getVirtualBlockchainId() {
-        return Hash.from(this.vb.identifier);
+        return Hash.from(this.vb.getId());
     }
 
     async isIssuer() {

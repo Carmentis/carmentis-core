@@ -5,6 +5,7 @@ import {Provider} from "../providers/Provider";
 import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
 import {
+    IllegalStateError,
     InternalError,
     MicroBlockNotFoundInVirtualBlockchainAtHeightError,
     VirtualBlockchainNotFoundError
@@ -13,10 +14,12 @@ import {SectionType} from "../entities/SectionType";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 export abstract class VirtualBlockchain<CustomState> {
+    public static INITIAL_HEIGHT = 1;
+
     currentMicroblock: Microblock | null;
     height: number;
-    identifier: any;
-    microblockHashes: any;
+    identifier: Uint8Array | undefined;
+    microblockHashes: Uint8Array[];
     provider: Provider;
     sectionCallbacks: any;
     state?: CustomState;
@@ -64,7 +67,7 @@ export abstract class VirtualBlockchain<CustomState> {
     }
 
     getId(): Uint8Array {
-        return this.identifier
+        return this.identifier!
     }
 
     isVirtualBlockchainIdDefined(): boolean {
@@ -76,7 +79,10 @@ export abstract class VirtualBlockchain<CustomState> {
     /**
      Registers a callback for a given section type.
      */
-    registerSectionCallback(sectionType: any, callback: any) {
+    registerSectionCallback<T = any>(
+        sectionType: SectionType,
+        callback: (mb: Microblock, section: Section<T>) => void | Promise<void>
+    ) {
         this.sectionCallbacks.set(sectionType, callback.bind(this));
     }
 
@@ -159,8 +165,11 @@ export abstract class VirtualBlockchain<CustomState> {
     }
 
     getIdentifier(): Hash {
+        if (this.identifier === undefined) throw new TypeError(`Got undefined virtual blockchain identifier`)
         return Hash.from(this.identifier);
     }
+
+
 
     /**
      Adds a section to the current microblock.
@@ -249,5 +258,9 @@ export abstract class VirtualBlockchain<CustomState> {
         }
 
         return Hash.from(microblockHash);
+    }
+
+    getType() {
+        return this.type;
     }
 }

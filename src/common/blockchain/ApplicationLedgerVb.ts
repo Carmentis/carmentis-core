@@ -4,13 +4,14 @@ import {Application} from "./Application";
 import {StructureChecker} from "./StructureChecker";
 import {HKDF} from "../crypto/kdf/HKDF";
 import {
+    ApplicationLedgerActorCreationSection,
+    ApplicationLedgerActorSubscriptionSection,
     ApplicationLedgerChannelInvitationSection,
     ApplicationLedgerEndorsementRequestSection, ApplicationLedgerSharedKeySection,
     ApplicationLedgerVBState
 } from "./types";
 import {IntermediateRepresentation} from "../records/intermediateRepresentation";
 import {Provider} from "../providers/Provider";
-import {UnauthenticatedBlockchainClient} from "../providers/UnauthenticatedBlockchainClient";
 import {Utils} from "../utils/utils";
 
 import {
@@ -80,7 +81,14 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         await this.addSection(SECTIONS.APP_LEDGER_ACTOR_CREATION, object);
     }
 
-    async subscribe(object: any) {
+    /**
+     * In contrast with the actor creation declaring a new actor without associating a signature and encryption public
+     * key, the actor subscription associates the signature and the encryption public keys an actor.
+     * Be aware that the subscribed actor should be already defined!
+     *
+     * @param object
+     */
+    async subscribeActor(object: ApplicationLedgerActorSubscriptionSection) {
         await this.addSection(SECTIONS.APP_LEDGER_ACTOR_SUBSCRIPTION, object);
     }
 
@@ -270,9 +278,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
      * @param channelId
      */
     async deriveChannelKey(channelId: number) {
+        /* Now, if the provider does not contain a signature key, then it raises an error
         if (!this.provider.isKeyed()) {
             throw new Error(`a keyed provider is required`);
         }
+
+         */
 
         const myPrivateSignatureKey = this.provider.getPrivateSignatureKey();
         const myPrivateSignatureKeyBytes = myPrivateSignatureKey.getPrivateKeyAsBytes();
@@ -326,9 +337,11 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
     }
 
     async getCurrentActorId() {
+        /* Now, the provider raises an error if it does not contain a signature key
         if (!this.provider.isKeyed()) {
             throw new Error(`a keyed provider is required`);
         }
+         */
 
         const myPublicSignatureKey = this.provider.getPublicSignatureKey();
         const myPublicSignatureKeyBytes = myPublicSignatureKey.getPublicKeyAsBytes();
@@ -366,7 +379,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         this.getState().applicationId = section.object.applicationId;
     }
 
-    async actorCreationCallback(microblock: any, section: any) {
+    async actorCreationCallback(microblock: Microblock, section: Section<ApplicationLedgerActorCreationSection>) {
         const state = this.getState();
 
         if (section.object.id != state.actors.length) {
@@ -375,6 +388,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         if (state.actors.some((obj: any) => obj.name == section.object.name)) {
             throw new ActorAlreadyDefinedError(section.object.name);
         }
+        console.log(`Callback: Creating actor ${section.object.name}`)
         state.actors.push({
             name: section.object.name,
             subscribed: false,
@@ -473,6 +487,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
      */
     checkStructure(microblock: any) {
         const checker = new StructureChecker(microblock);
+        // TODO(mb structure check): check
     }
 
     /**

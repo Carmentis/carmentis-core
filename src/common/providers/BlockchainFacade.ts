@@ -10,8 +10,6 @@ import {
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountHistoryView} from "../entities/AccountHistoryView";
 import {Hash} from "../entities/Hash";
-import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
-import {AuthenticatedBlockchainClient} from "./AuthenticatedBlockchainClient";
 import {PublicationExecutionContext} from "./publicationContexts/PublicationExecutionContext";
 import {OrganizationPublicationExecutionContext} from "./publicationContexts/OrganizationPublicationExecutionContext";
 import {AccountPublicationExecutionContext} from "./publicationContexts/AccountPublicationExecutionContext";
@@ -45,6 +43,7 @@ import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {
     AbstractPrivateDecryptionKey
 } from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+import {BlockchainClient} from "./BlockchainClient";
 
 /**
  * The BlockchainFacade class provides a high-level interface for interacting with a blockchain.
@@ -55,7 +54,9 @@ import {
  */
 export class BlockchainFacade {
 
-    constructor(private nodeUrl: string, private unauthenticatedClient: UnauthenticatedBlockchainClient, private writer?: AuthenticatedBlockchainClient) {}
+    // constructor(private nodeUrl: string, private unauthenticatedClient: UnauthenticatedBlockchainClient, private writer?: AuthenticatedBlockchainClient) {}
+    
+    constructor(private nodeUrl: string, private client: BlockchainClient) {}
 
     /**
      * Creates an instance of BlockchainFacade using the provided node URL.
@@ -86,17 +87,16 @@ export class BlockchainFacade {
      * @return {BlockchainFacade} A new instance of BlockchainFacade configured with the given node URL and private key.
      */
     static createFromNodeUrlAndPrivateKey(nodeUrl: string, privateKey: PrivateSignatureKey): BlockchainFacade {
-        const reader = ABCINodeUnauthenticatedBlockchainClient.createFromNodeURL(nodeUrl);
-        const writer = ABCINodeAuthenticatedBlockchainClient.createWriter(reader, nodeUrl, privateKey);
-        return new BlockchainFacade(nodeUrl, reader, writer);
+        const writer = ABCINodeAuthenticatedBlockchainClient.createWriter(nodeUrl, privateKey);
+        return new BlockchainFacade(nodeUrl, writer);
     }
 
     async getNodeStatus() {
-        return NodeStatusWrapper.fromStatus(await this.unauthenticatedClient.getNodeStatus());
+        return NodeStatusWrapper.fromStatus(await this.client.getNodeStatus());
     }
 
     getAccountBalance(accountHash: Hash): Promise<CMTSToken> {
-        return this.unauthenticatedClient.getBalanceOfAccount(accountHash)
+        return this.client.getBalanceOfAccount(accountHash)
     }
 
     async getAccountBalanceFromPublicKey(publicKey: PublicSignatureKey): Promise<CMTSToken> {
@@ -105,7 +105,7 @@ export class BlockchainFacade {
     }
 
     getAccountHistory(accountHash: Hash): Promise<AccountHistoryView> {
-        return this.unauthenticatedClient.getAccountHistory(accountHash);
+        return this.client.getAccountHistory(accountHash);
     }
 
     async getAccountHistoryFromPublicKey(publicKey: PublicSignatureKey) {
@@ -114,17 +114,17 @@ export class BlockchainFacade {
     }
 
     async getIdOfOrganizationOwningApplication(applicationId: Hash): Promise<Hash> {
-        const application = await this.unauthenticatedClient.loadApplication(applicationId);
+        const application = await this.client.loadApplication(applicationId);
         return await application.getOrganizationId();
     }
 
     async getMicroblockInformation(hash: Hash) {
-        return await this.unauthenticatedClient.getMicroblockInformation(hash);
+        return await this.client.getMicroblockInformation(hash);
     }
 
     async getMicroBlock(hash: Hash) {
-        const info = await this.unauthenticatedClient.getMicroblockInformation(hash);
-        const mb = await this.unauthenticatedClient.getMicroBlock(
+        const info = await this.client.getMicroblockInformation(hash);
+        const mb = await this.client.getMicroBlock(
             info.getVirtualBlockchainState().getType(),
             hash
         )
@@ -140,7 +140,7 @@ export class BlockchainFacade {
      *
      */
     async getVirtualBlockchainInformation(vbId: Hash) {
-        return await this.unauthenticatedClient.getVirtualBlockchainState(vbId);
+        return await this.client.getVirtualBlockchainState(vbId);
     }
 
     /**
@@ -149,7 +149,7 @@ export class BlockchainFacade {
      * @param vbId Identifier of the virtual blockchain.
      */
     async getVirtualBlockchain(vbId: Hash) {
-       return this.unauthenticatedClient.getVirtualBlockchain(vbId)
+       return this.client.getVirtualBlockchain(vbId)
     }
 
     /**
@@ -161,7 +161,7 @@ export class BlockchainFacade {
      * @return {Promise<PublicSignatureKey>} A promise that resolves to the public key of the given account.
      */
     async getPublicKeyOfAccount(accountHash: Hash): Promise<PublicSignatureKey> {
-        const account = await this.unauthenticatedClient.loadAccount(accountHash);
+        const account = await this.client.loadAccount(accountHash);
         return account.getPublicKey();
     }
 
@@ -175,7 +175,7 @@ export class BlockchainFacade {
     }
 
     async getPublicKeyOfOrganization(organizationId: Hash): Promise<PublicSignatureKey> {
-        const org = await this.unauthenticatedClient.loadOrganization(organizationId);
+        const org = await this.client.loadOrganization(organizationId);
         return org.getPublicKey();
     }
 
@@ -186,7 +186,7 @@ export class BlockchainFacade {
      * @return {Promise<Hash>} A promise that resolves to the hash of the account associated with the given public key.
      */
     async getAccountHashFromPublicKey(publicKey: PublicSignatureKey): Promise<Hash> {
-        return this.unauthenticatedClient.getAccountByPublicKey(publicKey)
+        return this.client.getAccountByPublicKey(publicKey)
     }
 
     /**
@@ -196,7 +196,7 @@ export class BlockchainFacade {
      * @return {Promise<ValidatorNodeWrapper>} A promise that resolves to the loaded validator node.
      */
     async loadValidatorNode(identifier: Hash): Promise<ValidatorNodeWrapper> {
-        const validatorNode = await this.unauthenticatedClient.loadValidatorNode(identifier);
+        const validatorNode = await this.client.loadValidatorNode(identifier);
         return await ValidatorNodeWrapper.wrap(validatorNode);
     }
 
@@ -207,7 +207,7 @@ export class BlockchainFacade {
      * @return {Promise<ApplicationLedgerWrapper>} A promise that resolves to the application ledger associated with the provided vbId.
      */
     async loadApplicationLedger(vbId: Hash): Promise<ApplicationLedgerWrapper> {
-        const appLedger = await this.unauthenticatedClient.loadApplicationLedger(vbId);
+        const appLedger = await this.client.loadApplicationLedger(vbId);
         return ApplicationLedgerWrapper.wrap(appLedger)
     }
 
@@ -218,7 +218,7 @@ export class BlockchainFacade {
      * @return {Promise<ApplicationWrapper>} A promise that resolves to the loaded application.
      */
     async loadApplication(identifier: Hash): Promise<ApplicationWrapper> {
-        const application = await this.unauthenticatedClient.loadApplication(identifier);
+        const application = await this.client.loadApplication(identifier);
         return await ApplicationWrapper.wrap(application);
     }
 
@@ -229,7 +229,7 @@ export class BlockchainFacade {
      * @return {Promise<OrganizationWrapper>} A promise that resolves to the loaded organization.
      */
     async loadOrganization(organizationId: Hash): Promise<OrganizationWrapper> {
-       const organization = await this.unauthenticatedClient.loadOrganization(organizationId);
+       const organization = await this.client.loadOrganization(organizationId);
        return await OrganizationWrapper.wrap(organization);
     }
 
@@ -240,7 +240,7 @@ export class BlockchainFacade {
      * @return {Promise<AccountWrapper>} A promise that resolves to the loaded account object.
      */
     async loadAccount(identifier: Hash): Promise<AccountWrapper> {
-        const account = await this.unauthenticatedClient.loadAccount(identifier);
+        const account = await this.client.loadAccount(identifier);
         return AccountWrapper.wrap(account);
     }
 
@@ -249,12 +249,11 @@ export class BlockchainFacade {
      *
      * Note: This method is only reserved to create genesis account. Once created, next calls throw an exception.
      *
+     * @deprecated
      * @return {Promise<Hash>} A promise that resolves to the location of the created genesis account.
      */
     async publishGenesisAccount(context: PublicationExecutionContext) {
-        const genesisAccount = await this.getAuthenticatedClient().createGenesisAccount();
-        genesisAccount.setGasPrice(context.getGasPrice())
-        return await genesisAccount.publishUpdates();
+        throw new NotImplementedError();
     }
 
     /**
@@ -265,8 +264,7 @@ export class BlockchainFacade {
      * @return {Promise<Account>} A promise that resolves to the created and published account.
      */
     async publishAccount(context: AccountPublicationExecutionContext) {
-        const writer = this.getAuthenticatedClient();
-        const account = await writer.createAccount(
+        const account = await this.client.createAccount(
             context.getSellerAccount(),
             context.getBuyerPublicKey(),
             context.getInitialBuyerAccountAmount()
@@ -292,9 +290,8 @@ export class BlockchainFacade {
     }
 
     async publishOrganizationCreation(context: OrganizationPublicationExecutionContext) {
-        const writer = this.getAuthenticatedClient();
         const build = context.build();
-        const organization = await writer.createOrganization();
+        const organization = await this.client.createOrganization();
         await organization.setDescription(build);
         organization.setGasPrice(context.getGasPrice());
         return await organization.publishUpdates()
@@ -304,8 +301,7 @@ export class BlockchainFacade {
         const build = context.build();
         const existingOrganizationId = build.existingOrganizationId
             .unwrapOrThrow(new IllegalUsageError("Cannot update organization: no organization id provided "));
-        const writer = this.getAuthenticatedClient();
-        const organization = await writer.loadOrganization(existingOrganizationId);
+        const organization = await this.client.loadOrganization(existingOrganizationId);
         const description = await organization.getDescription();
         await organization.setDescription({
             name: build.name || description.name,
@@ -324,13 +320,12 @@ export class BlockchainFacade {
      * @return {Promise<Hash>} A promise that resolves to the location of the created application.
      */
     async publishApplication(context: ApplicationPublicationExecutionContext) {
-        const writer = this.getAuthenticatedClient();
         const data = context.build();
         const isUpdatingApplication = data.applicationId.isSome();
         let application;
 
         if (isUpdatingApplication) {
-            application = await writer.loadApplication(data.applicationId.unwrap());
+            application = await this.client.loadApplication(data.applicationId.unwrap());
             const description = await application.getDescription();
             await application.setDescription({
                 name: data.applicationName || description.name,
@@ -342,7 +337,7 @@ export class BlockchainFacade {
             const organizationId = data.organizationId.unwrapOrThrow(
                 new IllegalUsageError("Organization ID is required for application publication.")
             );
-            application = await writer.createApplication(organizationId);
+            application = await this.client.createApplication(organizationId);
             await application.setDescription({
                 name: data.applicationName,
                 logoUrl: data.logoUrl,
@@ -361,13 +356,12 @@ export class BlockchainFacade {
      * @return {Promise<Hash>} A promise that resolves to the location of the created application.
      */
     async publishValidatorNode(context: ValidatorNodePublicationExecutionContext) {
-        const writer = this.getAuthenticatedClient();
         const data = context.build();
         const isUpdatingValidatorNode = data.validatorNodeId.isSome();
         let validatorNode;
 
         if (isUpdatingValidatorNode) {
-            validatorNode = await writer.loadValidatorNode(data.validatorNodeId.unwrap());
+            validatorNode = await this.client.loadValidatorNode(data.validatorNodeId.unwrap());
             const description = await validatorNode.getDescription();
             await validatorNode.setDescription({
                 cometPublicKeyType: data.cometPublicKeyType || description.cometPublicKeyType,
@@ -381,7 +375,7 @@ export class BlockchainFacade {
             const organizationId = data.organizationId.unwrapOrThrow(
                 new IllegalUsageError("Organization ID is required for validator node publication.")
             );
-            validatorNode = await writer.createValidatorNode(organizationId);
+            validatorNode = await this.client.createValidatorNode(organizationId);
             await validatorNode.setDescription({
                 cometPublicKeyType: data.cometPublicKeyType,
                 cometPublicKey: data.cometPublicKey
@@ -395,12 +389,11 @@ export class BlockchainFacade {
     }
 
     async publishValidatorNodeNetworkIntegration(context: ValidatorNodeNetworkIntegrationPublicationExecutionContext) {
-        const writer = this.getAuthenticatedClient();
         const data = context.build();
         const validatorNodeId = data.validatorNodeId.unwrapOrThrow(
             new IllegalUsageError("Validator node ID is required for network integration publication.")
         );
-        const validatorNode = await writer.loadValidatorNode(validatorNodeId);
+        const validatorNode = await this.client.loadValidatorNode(validatorNodeId);
         await validatorNode.setNetworkIntegration({
             votingPower: data.votingPower,
         });
@@ -417,19 +410,17 @@ export class BlockchainFacade {
      * @return {Promise<Hash>} A promise that resolves the hash of the published micro-block.
      */
     async publishRecord<T = any>(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, context: RecordPublicationExecutionContext<T>, waitForAnchoring = true) {
-        const authClient = this.getAuthenticatedClient();
-        const applicationLedger = await authClient.createApplicationLedgerFromJson(hostPrivateDecryptionKey, context.build(), context.getExpirationDay());
+        const applicationLedger = await this.client.createApplicationLedgerFromJson(hostPrivateDecryptionKey, context.build(), context.getExpirationDay());
         applicationLedger.setGasPrice(context.getGasPrice());
         return await applicationLedger.publishUpdates(waitForAnchoring);
     }
 
     async publishTokenTransfer(context: AccountTransferPublicationExecutionContext) {
-        const writer = this.getAuthenticatedClient();
         const data = context.build();
         const buyerAccount = data.buyerAccount;
-        const buyerAccountHash = buyerAccount instanceof Hash ? buyerAccount : await this.unauthenticatedClient.getAccountByPublicKey(buyerAccount)
+        const buyerAccountHash = buyerAccount instanceof Hash ? buyerAccount : await this.client.getAccountByPublicKey(buyerAccount)
         const gasPrice = context.getGasPrice();
-        return writer.createTokenTransfer(
+        return this.client.createTokenTransfer(
             data.sellerPrivateKey,
             buyerAccountHash,
             data.amount,
@@ -440,12 +431,12 @@ export class BlockchainFacade {
     }
 
     async createProofBuilderForApplicationLedger(applicationLedgerId: Hash) {
-        const appLedger = await this.unauthenticatedClient.loadApplicationLedger(applicationLedgerId);
+        const appLedger = await this.client.loadApplicationLedger(applicationLedgerId);
         return ProofBuilder.createProofBuilder(applicationLedgerId, appLedger);
     }
 
     async verifyProofFromJson(proof: Proof) {
-        return this.unauthenticatedClient.verifyProofFromJson(proof);
+        return this.client.verifyProofFromJson(proof);
     }
 
     /**
@@ -454,7 +445,7 @@ export class BlockchainFacade {
      * @return {Promise<Hash[]>} A promise that resolves to an array of account hashes.
      */
     async getAllAccounts(): Promise<Hash[]> {
-        return this.unauthenticatedClient.getAllAccounts();
+        return this.client.getAllAccounts();
     }
 
     /**
@@ -463,7 +454,7 @@ export class BlockchainFacade {
      * @return {Promise<Hash[]>} A promise that resolves to an array of organization data represented as hashes.
      */
     async getAllOrganizations(): Promise<Hash[]> {
-        return this.unauthenticatedClient.getAllOrganizations();
+        return this.client.getAllOrganizations();
     }
 
     /**
@@ -472,7 +463,7 @@ export class BlockchainFacade {
      * @return {Promise<Hash[]>} A promise that resolves to an array of validator node hashes.
      */
     async getAllValidatorNodes(): Promise<Hash[]> {
-        return this.unauthenticatedClient.getAllValidatorNodes();
+        return this.client.getAllValidatorNodes();
     }
 
     /**
@@ -481,7 +472,7 @@ export class BlockchainFacade {
      * @return {Promise<Hash[]>} A promise that resolves with an array of Hash objects representing all applications.
      */
     async getAllApplications(): Promise<Hash[]> {
-        return this.unauthenticatedClient.getAllApplications();
+        return this.client.getAllApplications();
     }
 
     /**
@@ -491,23 +482,23 @@ export class BlockchainFacade {
      * @return {Promise<AccountState>} A promise that resolves to the state of the account associated with the given hash.
      */
     async getAccountState(accountHash: Hash): Promise<AccountState> {
-        return this.unauthenticatedClient.getAccountState(accountHash);
+        return this.client.getAccountState(accountHash);
     }
 
 
     async getChainInformation() {
-        const chainInformationDTO = await this.unauthenticatedClient.getChainInformation();
+        const chainInformationDTO = await this.client.getChainInformation();
         return ChainInformationWrapper.createFromDTO(chainInformationDTO);
     }
 
     async getBlockInformation(height: number) {
-        const answer = await this.unauthenticatedClient.getBlockInformation(height);
+        const answer = await this.client.getBlockInformation(height);
         return new BlockInformationWrapper(height, answer);
     }
 
     async getBlockContent(height: number) {
         try {
-            const blockContentDTO = await this.unauthenticatedClient.getBlockContent(height);
+            const blockContentDTO = await this.client.getBlockContent(height);
             return BlockContentWrapper.createFromDTO(blockContentDTO);
         } catch (error) {
             if (NodeError.isCarmentisError(error)) {
@@ -525,11 +516,6 @@ export class BlockchainFacade {
         const hashedKey = sha256.hash(key);
         const truncatedHashedKey = hashedKey.slice(0, 20);
         console.assert(truncatedHashedKey.length === 20);
-        return this.unauthenticatedClient.getValidatorNodeByAddress(truncatedHashedKey)
-    }
-
-    private getAuthenticatedClient(): AuthenticatedBlockchainClient {
-        if (!this.writer) throw new IllegalUsageError("No blockchain writer configured. Call BlockchainFacade.createFromNodeUrlAndPrivateKey(...) instead.");
-        return this.writer;
+        return this.client.getValidatorNodeByAddress(truncatedHashedKey)
     }
 }

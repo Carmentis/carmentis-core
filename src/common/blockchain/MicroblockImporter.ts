@@ -277,7 +277,8 @@ export class MicroblockImporter {
      * stores the microblock and update the VB state in the internal provider.
      */
     async store() {
-        await this.provider.storeMicroblock(this.hash, this.vb.identifier, this.vb.type, this.vb.height, this.headerData, this.bodyData);
-        await this.provider.updateVirtualBlockchainState(this.vb.identifier, this.vb.type, this.vb.expirationDay, this.vb.height, this.hash, this.vb.state);
+        const vbId = this.vb.getId();
+        await this.provider.storeMicroblock(this.hash, vbId, this.vb.type, this.vb.height, this.headerData, this.bodyData);
+        await this.provider.updateVirtualBlockchainState(vbId, this.vb.type, this.vb.expirationDay, this.vb.height, this.hash, this.vb.state);
     }
 }

@@ -8,25 +8,28 @@ import {Organization} from "../blockchain/Organization";
 import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Application} from "../blockchain/Application";
-import {AuthenticatedBlockchainClient} from "./AuthenticatedBlockchainClient";
 import {CMTSToken} from "../economics/currencies/token";
 
 import {RecordDescription} from "../blockchain/RecordDescription";
-import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {
     AbstractPrivateDecryptionKey
 } from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 import {AccountCrypto} from "../wallet/AccountCrypto";
+import {BlockchainClient} from "./BlockchainClient";
+import {ABCINodeUnauthenticatedBlockchainClient} from "./ABCINodeUnauthenticatedBlockchainClient";
+import {MemoryProvider} from "./MemoryProvider";
 
-export class ABCINodeAuthenticatedBlockchainClient implements AuthenticatedBlockchainClient {
-    private nodeUrl: string;
+export class ABCINodeAuthenticatedBlockchainClient extends ABCINodeUnauthenticatedBlockchainClient {
     private defaultKeyedProvider: Provider;
+    private defaultPrivateKey;
 
-    private constructor(reader: UnauthenticatedBlockchainClient, nodeUrl: string, defaultPrivateKey: PrivateSignatureKey) {
-        this.nodeUrl = nodeUrl;
-        this.defaultKeyedProvider = ProviderFactory.createKeyedProviderExternalProvider(defaultPrivateKey, nodeUrl);
+    private constructor(nodeUrl: string, defaultPrivateKey: PrivateSignatureKey) {
+        const provider = ProviderFactory.createKeyedProviderExternalProvider(defaultPrivateKey, nodeUrl);
+        super(nodeUrl, MemoryProvider.getInstance(), provider)
+        this.defaultPrivateKey = defaultPrivateKey;
+        this.defaultKeyedProvider = provider
     }
 
     async createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string, gasPrice: CMTSToken): Promise<any> {
@@ -46,8 +49,8 @@ export class ABCINodeAuthenticatedBlockchainClient implements AuthenticatedBlock
         await sellerAccount.publishUpdates();
     }
 
-    static createWriter(reader: UnauthenticatedBlockchainClient, nodeUrl: string, privateKey: PrivateSignatureKey) {
-        return new ABCINodeAuthenticatedBlockchainClient(reader, nodeUrl, privateKey)
+    static createWriter(nodeUrl: string, privateKey: PrivateSignatureKey) {
+        return new ABCINodeAuthenticatedBlockchainClient(nodeUrl, privateKey)
     }
 
     async createGenesisAccount() {

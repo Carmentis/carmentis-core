@@ -59,6 +59,12 @@ export class CarmentisError extends Error {
     }
 }
 
+export class NotAuthenticatedError extends CarmentisError {
+    constructor() {
+        super("You are not authenticated");
+    }
+}
+
 export class ParsingError extends CarmentisError {
     constructor(message: string = 'Parsing failure') {
         super(message);

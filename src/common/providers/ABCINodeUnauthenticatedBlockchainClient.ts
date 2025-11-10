@@ -17,7 +17,7 @@ import {
     AccountNotFoundForAccountHashError,
     ApplicationLedgerNotFoundError,
     ApplicationNotFoundError, NodeConnectionRefusedError,
-    NodeError,
+    NodeError, NotAuthenticatedError,
     OrganizationNotFoundError,
     VirtualBlockchainNotFoundError
 } from "../errors/carmentis-error";
@@ -34,7 +34,6 @@ import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Application} from "../blockchain/Application";
 import {Organization} from "../blockchain/Organization";
 import {ValidatorNode} from "../blockchain/ValidatorNode";
-import {UnauthenticatedBlockchainClient} from "./UnauthenticatedBlockchainClient";
 import {Account} from "../blockchain/Account";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
@@ -51,8 +50,10 @@ import {VirtualBlockchainWrapper} from "../wrappers/VirtualBlockchainWrapper";
 import {MicroBlockHeaderWrapper} from "../wrappers/MicroBlockHeaderWrapper";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {BlockchainClient} from "./BlockchainClient";
+import { AbstractPrivateDecryptionKey, RecordDescription } from "../common";
 
-export class ABCINodeUnauthenticatedBlockchainClient implements UnauthenticatedBlockchainClient {
+export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient {
     /**
      * Creates an instance of ABCINodeBlockchainReader from the provided node URL.
      *
@@ -60,19 +61,44 @@ export class ABCINodeUnauthenticatedBlockchainClient implements UnauthenticatedB
      * @return {ABCINodeUnauthenticatedBlockchainClient} A new instance of ABCINodeBlockchainReader initialized with the specified node URL.
      */
     static createFromNodeURL(nodeUrl: string): ABCINodeUnauthenticatedBlockchainClient {
-        const cacheProvider = MemoryProvider.getInstance();
-        return new ABCINodeUnauthenticatedBlockchainClient(nodeUrl, cacheProvider);
+        return new ABCINodeUnauthenticatedBlockchainClient(nodeUrl);
     }
 
     private networkProvider: NetworkProvider;
     private publicProvider: Provider;
 
     protected constructor(
-        private nodeUrl: string,
-        private cacheProvider: MemoryProvider
+        protected nodeUrl: string,
+        private cacheProvider: MemoryProvider = MemoryProvider.getInstance(),
+        provider?: Provider
     ) {
         this.networkProvider = new NetworkProvider(nodeUrl);
-        this.publicProvider = new Provider(cacheProvider, this.networkProvider);
+        this.publicProvider = provider instanceof Provider ? provider : new Provider(cacheProvider, this.networkProvider);
+    }
+
+    createGenesisAccount(): Promise<Account> {
+        throw new NotAuthenticatedError();
+    }
+    createAccount(sellerAccount: Hash, buyerPublicKey: PublicSignatureKey, amount: CMTSToken): Promise<Account> {
+        throw new NotAuthenticatedError();
+    }
+    createOrganization(): Promise<Organization> {
+        throw new NotAuthenticatedError();
+    }
+    createValidatorNode(organizationIdentifierString: Hash): Promise<ValidatorNode> {
+        throw new NotAuthenticatedError();
+    }
+    createApplication(organizationIdentifierString: Hash): Promise<Application> {
+        throw new NotAuthenticatedError();
+    }
+    createApplicationLedger(applicationId: Hash, expirationDay: number): Promise<ApplicationLedger> {
+        throw new NotAuthenticatedError();
+    }
+    createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription<T>, expirationDay: number): Promise<ApplicationLedger> {
+        throw new NotAuthenticatedError();
+    }
+    createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string, gasPrice: CMTSToken): Promise<any> {
+        throw new NotAuthenticatedError();
     }
 
     async getChainInformation() {

@@ -24,7 +24,7 @@ import {
 
 
 import {HKDF} from "../crypto/kdf/HKDF";
-import { ActorType } from "../constants/ActorType";
+import {ActorType} from "../constants/ActorType";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
@@ -124,11 +124,11 @@ export class ApplicationLedger {
 
     /**
      * Returns the (unique) identifier associated with the name of the actor.
-     * 
+     *
      * Note: Two actors cannot have the same name.
-     *  
+     *
      * @param actorName The name of the actor from which we want to get the identifier.
-     * @returns 
+     * @returns
      */
     getActorIdFromActorName(actorName: string) {
         return this.vb.getActorId(actorName);
@@ -136,14 +136,14 @@ export class ApplicationLedger {
 
     /**
      * Subscribes an actor in the application ledger.
-     * 
+     *
      * A subscription is used to associate public keys to an actor name (or identifier).
-     * 
+     *
      * @param actorName The name of the actor subscribed on the application ledger.
      * @param actorPublicSignatureKey  The public signature key of the actor.
      * @param actorPublicEncryptionKey The public encryption key of the actor.
-     * 
-     * @returns 
+     *
+     * @returns
      */
     subscribeActor(
         actorName: string,
@@ -153,12 +153,12 @@ export class ApplicationLedger {
         const actorId = this.getActorIdFromActorName(actorName);
 
         // The actor type is currently not used in the protocol
-        const unknownActorType = ActorType.UNKNOWN; 
-        
+        const unknownActorType = ActorType.UNKNOWN;
+
         // The organization id is currently not used in the protocol. 
         // Initially, it has been designed to handle the case where a user from another organization is added to an external vb.
         const nullOrganizationId = Utils.getNullHash();
-        
+
         return this.vb.subscribe({
             actorId,
             actorType: unknownActorType,
@@ -235,7 +235,7 @@ export class ApplicationLedger {
         }
 
         // initialize an IR object, set the channels and load the data
-        const ir = this.vb.getIntermediateRepresentationInstance();
+        const ir = this.vb.getChannelSpecializedIntermediateRepresentationInstance();
         ir.buildFromJson(object.data);
 
         // process field assignations
@@ -307,8 +307,9 @@ export class ApplicationLedger {
         }
 
         // process channel data
-        ir.serializeFields();
-        ir.populateChannels();
+        //ir.serializeFields();
+        //ir.populateChannels();
+        ir.finalizeChannelData();
 
         const channelDataList = ir.exportToSectionFormat();
         for (const channelData of channelDataList) {
@@ -350,7 +351,7 @@ export class ApplicationLedger {
     /**
      * Retrieves an existing shared key between two peers, or undefined.
      */
-    private async getExistingSharedKey(hostId: number, guestId: number): Promise<Uint8Array|undefined> {
+    private async getExistingSharedKey(hostId: number, guestId: number): Promise<Uint8Array | undefined> {
         // search the guest actor associated with the provided guest id
         const guestActor = this.getActorByIdOrFail(guestId);
 
@@ -437,7 +438,9 @@ export class ApplicationLedger {
      * @return {number} return.proofs[].height - The height of the microblock.
      * @return {Object} return.proofs[].data - The proof data for the corresponding microblock.
      */
-    async exportProof(customInfo: { author: string }, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<Proof> {
+    async exportProof(customInfo: {
+        author: string
+    }, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<Proof> {
         const proofs = [];
 
         for (let height = 1; height <= this.vb.height; height++) {
@@ -465,7 +468,8 @@ export class ApplicationLedger {
     /**
      *
      * @param proofObject
-     * @throws ProofVerificationFailedError
+     * @param hostPrivateDecryptionKey
+     * @throws ProofVerificationFailedError Occurs when the provided proof is not verified.
      */
     async importProof(proofObject: Proof, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey): Promise<ImportedProof[]> {
         const data: ImportedProof[] = [];
@@ -477,7 +481,6 @@ export class ApplicationLedger {
 
             // TODO: check Merkle root hash
             const verified = true;
-
             if (!verified) {
                 throw new ProofVerificationFailedError();
             }
@@ -539,38 +542,53 @@ export class ApplicationLedger {
 
     async getMicroblockIntermediateRepresentation(height: number, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey) {
         const microblock = await this.vb.getMicroblock(height);
+        const listOfChannels: { channelId: number, data: object, merkleRootHash?: string }[] = [];
+
+        // we load the public channels that should be always accessible
         const publicChannelDataSections = microblock.getSections<ApplicationLedgerPublicChannelDataSection>(
             (section: any) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA
         );
-        const privateChannelDataSections = microblock.getSections<ApplicationLedgerPrivateChannelDataSection>(
-            (section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA
-        );
-        const ir = this.vb.getIntermediateRepresentationInstance();
+        publicChannelDataSections.map((section) => {
+            return {
+                channelId: section.object.channelId,
+                data: section.object.data
+            };
+        });
 
-        const list: { channelId: number, data: object, merkleRootHash?: string }[] =
-            publicChannelDataSections.map((section: Section<{ channelId: number, data: object }>) => {
-                return {
-                    channelId: section.object.channelId,
-                    data: section.object.data
-                };
-            });
+        // we now load private channels that might be protected (encrypted)
+        if (hostPrivateDecryptionKey !== undefined) {
+            const privateChannelDataSections = microblock.getSections<ApplicationLedgerPrivateChannelDataSection>(
+                (section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA
+            );
 
-        if(hostPrivateDecryptionKey !== undefined) {
-            for(const section of privateChannelDataSections) {
-                const channelKey = await this.vb.getChannelKey(await this.vb.getCurrentActorId(), section.object.channelId, hostPrivateDecryptionKey);
-                const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, section.object.channelId);
-                const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, section.object.channelId);
-                const data = Crypto.Aes.decryptGcm(channelSectionKey, section.object.encryptedData, channelSectionIv);
+            for (const section of privateChannelDataSections) {
+                const { channelId, encryptedData, merkleRootHash } = section.object;
+                try {
+                    const channelKey = await this.vb.getChannelKey(await this.vb.getCurrentActorId(), channelId, hostPrivateDecryptionKey);
+                    const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, channelId);
+                    const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, channelId);
+                    const data = Crypto.Aes.decryptGcm(channelSectionKey, encryptedData, channelSectionIv);
 
-                list.push({
-                    channelId: section.object.channelId,
-                    merkleRootHash: Utils.binaryToHexa(section.object.merkleRootHash),
-                    data: data as Uint8Array
-                });
+                    listOfChannels.push({
+                        channelId: channelId,
+                        merkleRootHash: Utils.binaryToHexa(merkleRootHash),
+                        data: data as Uint8Array
+                    });
+                } catch (e) {
+                    if (e instanceof DecryptionError) {
+                        console.warn(`Not allowed to access channel ${channelId}`)
+                    } else {
+                        throw e;
+                    }
+                }
             }
+        } else {
+            console.warn("No private channel loaded: no private decryption key provided.")
         }
 
-        ir.importFromSectionFormat(list);
+        // import the channels to the intermediate representation
+        const ir = this.vb.getChannelSpecializedIntermediateRepresentationInstance();
+        ir.importFromSectionFormat(listOfChannels);
         return ir;
     }
 
@@ -595,7 +613,7 @@ export class ApplicationLedger {
         return this.vb.height;
     }
 
-    async publishUpdates(waitForAnchoring : boolean = true) {
+    async publishUpdates(waitForAnchoring: boolean = true) {
         if (!this.provider.isKeyed()) {
             throw 'Cannot publish updates without keyed provider.'
         }

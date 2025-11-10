@@ -57,8 +57,7 @@ describe('Chain test', () => {
         ir.setChannel("this.*", 0);
         ir.setChannel("this.someObject.someStringProp, this.someObject.someNullProp", 1);
         ir.setAsMaskableByRegex("this.email", /^(.)(.*?)(@.)(.*?)(\..*)$/, "$1***$3***$5");
-        ir.serializeFields();
-        ir.populateChannels();
+        ir.finalizeChannelData();
 
         sectionData = ir.exportToSectionFormat();
         console.log("sectionData", sectionData);

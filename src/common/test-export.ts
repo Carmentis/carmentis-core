@@ -9,8 +9,9 @@ const ir = new IntermediateRepresentation;
 
 ir.buildFromJson(testObject);
 ir.setChannel("this[*]", 0);
-ir.serializeFields();
-ir.populateChannels();
+//ir.serializeFields();
+//ir.populateChannels();
+ir.finalizeChannelData();
 
 const sectionData = ir.exportToSectionFormat();
 

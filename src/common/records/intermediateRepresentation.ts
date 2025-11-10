@@ -4,6 +4,7 @@ import {MaskManager} from "./maskManager";
 import {TypeManager} from "../data/types";
 import {PepperMerklizer, SaltMerklizer} from "./merklizer";
 import {DATA} from "../constants/constants";
+import {Proof} from "../blockchain/types";
 
 const MAX_UINT8_ARRAY_DUMP_SIZE = 24;
 
@@ -44,6 +45,7 @@ export class IntermediateRepresentation {
     channelDefinitions: Map<number, Channel>;
     irObject: Item[];
     object: any;
+
     usedChannels: number[] = [];
 
     constructor() {
@@ -152,7 +154,7 @@ export class IntermediateRepresentation {
     }
 
     /**
-     Exports the IR object to the serialized section format used for on-chain storage.
+     * Exports the IR object to the serialized section format used for on-chain storage.
      */
     exportToSectionFormat(): SectionEntry[] {
         const list = [];
@@ -180,7 +182,7 @@ export class IntermediateRepresentation {
     /**
      Exports a given channel to the serialized section format used for on-chain storage.
      */
-    exportChannelToSectionFormat(channelInfo: any) {
+    exportChannelToSectionFormat(channelInfo: Channel) {
         const stream = new WriteStream();
 
         if (channelInfo.isPrivate) {
@@ -274,8 +276,8 @@ export class IntermediateRepresentation {
     /**
      Imports a given channel from the serialized section format.
      */
-    importChannelFromSectionFormat(channelInfo: any, data: any) {
-        const stream = new ReadStream(data);
+    private importChannelFromSectionFormat(channelInfo: Channel, serializedSection: Uint8Array) {
+        const stream = new ReadStream(serializedSection);
 
         if (channelInfo.isPrivate) {
             channelInfo.pepper = stream.readByteArray(32);
@@ -745,16 +747,21 @@ export class IntermediateRepresentation {
         }
     }
 
+    finalizeChannelData() {
+        this.serializeFields();
+        this.populateChannels();
+    }
+
     /**
      Internal method to populate the channel identifiers from the primitive fields to their parents.
      Also loads the sorted list of all channels in the array this.usedChannels.
      */
-    populateChannels() {
+    private populateChannels() {
         this.traverseIrObject({
             onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
                 for (let i = 0; i < parents.length - 1; i++) {
                     if (item.channelId === null) {
-                        throw `field '${PathManager.fromParents(parents)}' is not assigned to any channel`;
+                        throw new Error(`field '${PathManager.fromParents(parents)}' is not assigned to any channel`);
                     }
                     (parents[i].channels = parents[i].channels || new Set).add(item.channelId);
                 }
@@ -765,7 +772,7 @@ export class IntermediateRepresentation {
 
         for (const channelId of this.usedChannels) {
             if (!this.channelDefinitions.has(channelId)) {
-                throw `channel ${channelId} is undefined`;
+                throw new Error(`channel ${channelId} is undefined`);
             }
         }
     }
@@ -774,7 +781,7 @@ export class IntermediateRepresentation {
      Internal method to build a dictionary of field names for a given channel.
      @param {number} channel - The channel identifier.
      */
-    buildDictionary(channelId: number): string[] {
+    private buildDictionary(channelId: number): string[] {
         const dictionary = new Map;
 
         // collect all names and count how many times they appear
@@ -816,7 +823,7 @@ export class IntermediateRepresentation {
     /**
      Internal method to serialize the primitive fields.
      */
-    serializeFields() {
+    private serializeFields() {
         this.traverseIrObject({
             onPrimitive: (item: Item, context: any, insideArray: boolean, parents: Item[]) => {
                 const stream = new WriteStream();
@@ -850,7 +857,7 @@ export class IntermediateRepresentation {
      Internal method to traverse the IR object and calling optional callbacks on each node.
      @param {object} options - An object containing the traversal options.
      */
-    traverseIrObject(options: any) {
+    private traverseIrObject(options: any) {
         processStructure(this.irObject, options.initialContext, false, []);
 
         function hasChannel(item: Item, isPrimitive: boolean) {
@@ -900,7 +907,7 @@ export class IntermediateRepresentation {
         const object = {root: null};
 
         this.traverseIrObject({
-            initialcontext: object,
+            initialContext: object,
             onArray: (item: Item, context: any, insideArray: boolean) => {
                 return context[insideArray ? item.index : item.name] = [];
             },

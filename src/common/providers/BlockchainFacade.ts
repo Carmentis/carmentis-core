@@ -411,7 +411,9 @@ export class BlockchainFacade {
     /**
      * Publishes a record using the provided execution context.
      *
+     * @param hostPrivateDecryptionKey
      * @param {RecordPublicationExecutionContext<T>} context - The context containing the necessary data to build and publish the record.
+     * @param waitForAnchoring
      * @return {Promise<Hash>} A promise that resolves the hash of the published micro-block.
      */
     async publishRecord<T = any>(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, context: RecordPublicationExecutionContext<T>, waitForAnchoring = true) {

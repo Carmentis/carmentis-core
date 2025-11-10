@@ -141,10 +141,11 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         return this.addSection(SECTIONS.APP_LEDGER_ENDORSEMENT_REQUEST, section)
     }
 
+
     /**
-     Helper methods
+     * Returns an instance of an intermediate representation defining only the channels.
      */
-    getIntermediateRepresentationInstance() {
+    getChannelSpecializedIntermediateRepresentationInstance() {
         const ir = new IntermediateRepresentation;
 
         const numberOfChannels = this.getNumberOfChannels();
@@ -177,6 +178,16 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         return channel;
     }
 
+    /**
+     *
+     * @param actorId
+     * @param channelId
+     * @param actorPrivateDecryptionKey
+     *
+     * @throws ActorNotInvitedError Occurs when no invitation of the actor has been found.
+     * @throws NoSharedSecretError Occurs when no shared secret key has been found.
+     * @throws DecryptionError Occurs when one of the encrypted channel key or encrypted shared key cannot be decrypted.
+     */
     async getChannelKey(actorId: number, channelId: number, actorPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
         // if the actor id is the creator of the channel, then we have to derive the channel key locally...
         const state = this.getState();
@@ -189,6 +200,22 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         return await this.getChannelKeyFromInvitation(actorId, channelId, actorPrivateDecryptionKey);
     }
 
+
+    /**
+     * Returns a channel key from an invitation obtained directly from a microblock.
+     *
+     * An invitation contains, in particular, contains the encryption of a channel key that should be decrypted
+     * by a shared key, encrypted using the public key of the actor id.
+     *
+     * @param actorId
+     * @param channelId
+     * @param actorPrivateDecryptionKey The (asymmetric) decryption key used to decrypt the shared key, later used to decrypt the channel key.
+     * @private
+     *
+     * @throws ActorNotInvitedError Occurs when no invitation of the actor has been found.
+     * @throws NoSharedSecretError Occurs when no shared secret key has been found.
+     * @throws DecryptionError Occurs when one of the encrypted channel key or encrypted shared key cannot be decrypted.
+     */
     private async getChannelKeyFromInvitation(
         actorId: number,
         channelId: number,
@@ -238,6 +265,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         return channelKey;
     }
 
+    /**
+     * Returns a channel key derived directly from the private key of the current actor.
+     * @param channelId
+     */
     async deriveChannelKey(channelId: number) {
         if (!this.provider.isKeyed()) {
             throw new Error(`a keyed provider is required`);
@@ -251,6 +282,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
         const hkdf = new HKDF();
 
+        // TODO(crypto): replace the HKDF call taken as inputs the private key with a call to a seed
         return hkdf.deriveKey(myPrivateSignatureKeyBytes, salt, info, 32);
     }
 

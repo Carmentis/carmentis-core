@@ -240,7 +240,7 @@ export class ApplicationLedger {
 
         // process field assignations
         for (const def of object.channelAssignations || []) {
-            const channelId = this.vb.getChannelId(def.channelName);
+            const channelId = this.vb.getChannelIdByChannelName(def.channelName);
             ir.setChannel(def.fieldPath, channelId);
         }
 
@@ -248,7 +248,7 @@ export class ApplicationLedger {
         // Note: we do not verify that the guest is already in the channel, this is verified in the callback during
         // section verifications.
         for (const def of object.actorAssignations || []) {
-            const channelId = this.vb.getChannelId(def.channelName);
+            const channelId = this.vb.getChannelIdByChannelName(def.channelName);
             const actorId = this.vb.getActorId(def.actorName);
 
             const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)

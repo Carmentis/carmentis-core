@@ -162,15 +162,15 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         return ir;
     }
 
-    getChannelId(name: string) {
-        const id = this.getState().channels.findIndex((obj: any) => obj.name == name);
+    getChannelIdByChannelName(channelName: string) {
+        const id = this.getState().channels.findIndex((obj: any) => obj.name == channelName);
         if(id == -1) {
-            throw new ChannelNotDefinedError(name)
+            throw new ChannelNotDefinedError(channelName)
         }
         return id;
     }
 
-    getChannel(name: string) {
+    getChannelByChannelName(name: string) {
         const channel = this.getState().channels.find((obj: any) => obj.name == name);
         if(channel === undefined) {
             throw new ChannelNotDefinedError(name)

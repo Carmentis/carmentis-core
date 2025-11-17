@@ -36,7 +36,7 @@ export class Blockchain {
     return new Explorer({ provider: this.provider });
   }
 
-  getMicroblockImporter(data: any) {
+  getMicroblockImporter(data: Uint8Array) {
     return new MicroblockImporter({ data, provider: this.provider });
   }
 

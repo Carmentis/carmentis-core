@@ -198,7 +198,7 @@ export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient
 
         // search the account
         const answer = await this.networkProvider.getAccountHistory(accountHash.toBytes(), usedLastHistoryHash.toBytes(), maxRecords);
-        console.log(`Here is the transactions history for account ${accountHash.encode()}:`, answer)
+        //console.log(`Here is the transactions history for account ${accountHash.encode()}:`, answer)
 
         // convert the response into transactions
         const transactions = new AccountHistoryView();

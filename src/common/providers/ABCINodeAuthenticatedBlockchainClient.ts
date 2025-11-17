@@ -35,9 +35,9 @@ export class ABCINodeAuthenticatedBlockchainClient extends ABCINodeUnauthenticat
     async createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string, gasPrice: CMTSToken): Promise<any> {
         const provider = ProviderFactory.createKeyedProviderExternalProvider(sellerPrivateKey, this.nodeUrl);
         const sellerPublicKey = sellerPrivateKey.getPublicKey();
-        const sellerAccountId = await provider.getAccountByPublicKey(sellerPublicKey);
+        const sellerAccountId = await provider.getAccountHashByPublicKey(sellerPublicKey);
         const sellerAccount = new Account({provider: provider});
-        await sellerAccount._load(sellerAccountId.accountHash);
+        await sellerAccount._load(sellerAccountId);
         sellerAccount.setGasPrice(gasPrice);
         await sellerAccount.transfer({
             account: buyerAccount.toBytes(),

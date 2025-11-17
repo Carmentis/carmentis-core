@@ -13,7 +13,7 @@ import {
     MicroBlockBodys,
     MicroblockInformationSchema, MsgVirtualBlockchainState, VirtualBlockchainStateInterface,
     VirtualBlockchainUpdateInterface,
-    ObjectList, GenesisSnapshotDTO
+    ObjectList, GenesisSnapshotDTO, AccountHashSchema
 } from "../blockchain/types";
 import axios, {AxiosError} from "axios";
 import {
@@ -23,6 +23,8 @@ import {
 } from "../errors/carmentis-error";
 import {CometBFTErrorCode} from "../errors/CometBFTErrorCode";
 import {RPCNodeStatusResponseSchema} from "./nodeRpc/RPCNodeStatusResponseSchema";
+import {getLogger} from "@logtape/logtape";
+import {Logger} from "../utils/Logger";
 
 export class NetworkProvider {
     nodeUrl: any;
@@ -118,7 +120,7 @@ export class NetworkProvider {
                 publicKeyHash
             }
         );
-        return answer;
+        return AccountHashSchema.parse(answer);
     }
 
     async getObjectList(type: number) {
@@ -238,7 +240,8 @@ export class NetworkProvider {
     async broadcastTx(data: any) {
         const urlObject = new URL(this.nodeUrl);
 
-        console.log(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
+        const logger = Logger.getLogger([NetworkProvider.name])
+        logger.debug(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
 
         urlObject.pathname = "broadcast_tx_sync";
         urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));

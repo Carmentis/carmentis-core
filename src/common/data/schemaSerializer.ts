@@ -89,7 +89,7 @@ export class SchemaSerializer<T = any> {
             try {
                 typeChecker.check();
             } catch (error) {
-                throw new TypeCheckingFailureError(`Error on field '${fieldPath}': ${error}`);
+                throw new SerializationError(`Error on field '${fieldPath}': ${error}`);
             }
 
             this.stream.writeSchemaValue(mainType, value, schemaItem.size);

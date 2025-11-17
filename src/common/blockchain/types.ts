@@ -151,7 +151,11 @@ export interface ApplicationLedgerActor {
     invitations: ApplicationLedgerActorInvitationState[];
 }
 
-export interface ApplicationLedgerVBState {
+
+/**
+ * Describes the local state of the application ledger.
+ */
+export interface ApplicationLedgerLocalStateObject {
     allowedSignatureSchemeIds: number[];
     allowedPkeSchemeIds: number[];
     applicationId: Uint8Array;

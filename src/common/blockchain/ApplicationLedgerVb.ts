@@ -8,7 +8,7 @@ import {
     ApplicationLedgerActorSubscriptionSection,
     ApplicationLedgerChannelInvitationSection, ApplicationLedgerDeclarationSection,
     ApplicationLedgerEndorsementRequestSection, ApplicationLedgerSharedKeySection,
-    ApplicationLedgerVBState
+    ApplicationLedgerLocalStateObject
 } from "./types";
 import {IntermediateRepresentation} from "../records/intermediateRepresentation";
 import {Provider} from "../providers/Provider";
@@ -40,7 +40,7 @@ import {Crypto} from "../crypto/crypto";
 import {Assertion} from "../utils/Assertion";
 import {CryptoEncoderFactory} from "../crypto/CryptoEncoderFactory";
 
-export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
+export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLocalStateObject> {
     constructor({provider}: { provider: Provider }) {
         super({provider, type: CHAIN.VB_APP_LEDGER});
 
@@ -635,7 +635,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     private static UNDEFINED_APPLICATION_ID = new Uint8Array(0);
 
-    protected getInitialState(): ApplicationLedgerVBState {
+    protected getInitialState(): ApplicationLedgerLocalStateObject {
         return {
             allowedSignatureSchemeIds: [],
             allowedPkeSchemeIds: [],

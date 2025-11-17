@@ -81,7 +81,7 @@ export class SchemaSerializer<T = any> {
             } else if (schemaItem.schema) {
                 this.serializeObject(schemaItem.schema.definition, value, fieldPath);
             } else {
-                throw `missing definition in schema`;
+                throw new SerializationError(`missing definition in schema`);
             }
         } else {
             const typeChecker = new TypeChecker(schemaItem, value);

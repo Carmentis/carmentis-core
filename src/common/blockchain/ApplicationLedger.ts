@@ -16,6 +16,8 @@ import {CMTSToken} from "../economics/currencies/token";
 import {RecordDescription} from "./RecordDescription";
 import {Height} from "../entities/Height";
 import {
+    ActorNotInvitedError,
+    CurrentActorNotFoundError,
     DecryptionError, IllegalParameterError,
     NoSharedSecretError,
     ProofVerificationFailedError,
@@ -39,6 +41,11 @@ import {
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {MlKemPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 import {VirtualBlockchain} from "./VirtualBlockchain";
+import {ExpirationDate} from "../providers/ExpirationDate";
+import {CryptoEncoderFactory} from "../crypto/CryptoEncoderFactory";
+import {EncoderFactory} from "../utils/encoder";
+import {Logger} from "../utils/Logger";
+import {Assertion} from "../utils/Assertion";
 
 export class ApplicationLedger {
     private provider: Provider;
@@ -203,7 +210,12 @@ export class ApplicationLedger {
             await this.vb.load(Utils.binaryFromHexa(object.virtualBlockchainId));
         }
 
-        if (this.vb.height === VirtualBlockchain.INITIAL_HEIGHT) {
+
+        // TODO: remove this method which is a pretty bad fix....
+        // I did it this way because of the "height" field in this.vb which is increased when the first section is added
+        // creating a side effect. Since this is conditional branch based on this.vb.height, it never happen
+        const { isBuildingGenesisMicroBlock } = this.vb.startMicroBlockConstruction();
+        if (isBuildingGenesisMicroBlock) {
             // genesis -> declare the signature scheme and the application
             await this.vb.setAllowedSignatureSchemes({
                 schemeIds: this.allowedSignatureSchemeIds
@@ -226,7 +238,7 @@ export class ApplicationLedger {
         // subscribed (it should also be created above so it must be specified in the actors section).
         const authorName = object.author;
         const authorId = this.vb.getActorId(authorName);
-        if (this.vb.height === VirtualBlockchain.INITIAL_HEIGHT) {
+        if (isBuildingGenesisMicroBlock) {
             const authorPublicSignatureKey = this.provider.getPrivateSignatureKey().getPublicKey();
             const authorPublicEncryptionKey = hostPrivateDecryptionKey.getPublicKey();
             await this.subscribeActor(
@@ -235,9 +247,7 @@ export class ApplicationLedger {
                 authorPublicEncryptionKey
             );
         }
-        throw new Error("test")
 
-        /*
         // add the new channels
         for (const def of object.channels || []) {
             await this.vb.createChannel({
@@ -262,55 +272,9 @@ export class ApplicationLedger {
         // Note: we do not verify that the guest is already in the channel, this is verified in the callback during
         // section verifications.
         for (const def of object.actorAssignations || []) {
-            const channelId = this.vb.getChannelIdByChannelName(def.channelName);
-            const actorId = this.vb.getActorId(def.actorName);
-
-            const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
-            const guestId = actorId; // the guest is the actor assigned to the channel
-
-            // if the guestId equals the hostId, it is likely a misuse of the record. In this case, we do not do anything
-            // because the author is already in the channel by definition (no need to create a shared key, ...).
-            if (hostId === guestId) continue;
-
-            // To invite the actor in the channel, we first retrieve or generate a symmetric encryption key used to establish
-            // secure communication between both peers. The key is then used to encrypt the channel key and put in a dedicated
-            // section of the microblock.
-            const hostGuestEncryptedSharedKey =
-                await this.getExistingSharedKey(hostId, guestId) ||
-                await this.getExistingSharedKey(guestId, hostId);
-
-
-            // if we have found the (encrypted) shared secret key, then we *attempt* to decrypt it, otherwise
-            // there is no shared secret key and then we create a new one
-            let hostGuestSharedKey: AES256GCMSymmetricEncryptionKey;
-            if (hostGuestEncryptedSharedKey !== undefined) {
-                try {
-                    hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
-                        hostPrivateDecryptionKey.decrypt(hostGuestEncryptedSharedKey)
-                    );
-                } catch (e) {
-                    if (e instanceof DecryptionError) {
-                        throw new SharedKeyDecryptionError("Cannot decrypt the shared key with the provided decryption key: Have you provided the valid one?")
-                    } else {
-                        throw e;
-                    }
-                }
-            } else {
-                hostGuestSharedKey = await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
-            }
-
-
-            // we encrypt the channel key using the shared secret key
-            const channelKey = await this.vb.getChannelKey(hostId, channelId, hostPrivateDecryptionKey);
-            const encryptedChannelKey = hostGuestSharedKey.encrypt(channelKey);
-
-            // we create the section containing the encrypted channel key (that can only be decrypted by the host and the guest)
-            await this.vb.inviteToChannel({
-                channelId,
-                hostId,
-                guestId,
-                encryptedChannelKey,
-            })
+            const channelName = def.channelName;
+            const actorName = def.actorName;
+            await this.inviteActorOnChannel(actorName, channelName, hostPrivateDecryptionKey)
         }
 
         // process hashable fields
@@ -329,20 +293,20 @@ export class ApplicationLedger {
 
         const channelDataList = ir.exportToSectionFormat();
         for (const channelData of channelDataList) {
-            if (channelData.isPrivate) {
-                const channelKey = await this.vb.getChannelKey(authorId, channelData.channelId, hostPrivateDecryptionKey);
-                const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, this.vb.height + 1, channelData.channelId);
-                const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, this.vb.height + 1, channelData.channelId);
+            const {isPrivate: isPrivateChannel, channelId} = channelData;
+            if (isPrivateChannel) {
+                const channelKey = await this.vb.getChannelKey(authorId, channelId, hostPrivateDecryptionKey);
+                const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, this.vb.height, channelId);
+                const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, this.vb.height, channelId);
                 const encryptedData = Crypto.Aes.encryptGcm(channelSectionKey, channelData.data, channelSectionIv);
-
                 await this.vb.addPrivateChannelData({
-                    channelId: channelData.channelId,
+                    channelId: channelId,
                     merkleRootHash: Utils.binaryFromHexa(channelData.merkleRootHash),
                     encryptedData: encryptedData
                 });
             } else {
                 await this.vb.addPublicChannelData({
-                    channelId: channelData.channelId,
+                    channelId,
                     data: channelData.data
                 });
             }
@@ -362,8 +326,6 @@ export class ApplicationLedger {
             const messageToShow = object.approvalMessage ?? "";
             await this.vb.addEndorsementRequest(endorserId, messageToShow)
         }
-
-         */
     }
 
     /**
@@ -505,6 +467,8 @@ export class ApplicationLedger {
 
             data.push({
                 height,
+                // TODO(fix): need attention
+                // @ts-ignore
                 data: ir.exportToJson()
             });
         }
@@ -567,43 +531,71 @@ export class ApplicationLedger {
 
         // we load the public channels that should be always accessible
         const publicChannelDataSections = microblock.getSections<ApplicationLedgerPublicChannelSection>(
-            (section: any) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA
+            (section) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA
         );
-        publicChannelDataSections.map((section) => {
-            return {
-                channelId: section.object.channelId,
-                data: section.object.data
-            };
-        });
+        for (const publicChannelSection of publicChannelDataSections) {
+            const { channelId, data } = publicChannelSection.object;
+            listOfChannels.push({
+                channelId: channelId,
+                data: data
+            });
+        }
+
 
         // we now load private channels that might be protected (encrypted)
-        if (hostPrivateDecryptionKey !== undefined) {
-            const currentActorId = await this.vb.getCurrentActorId();
-            const privateChannelDataSections = microblock.getSections<ApplicationLedgerPrivateChannelSection>(
-                (section: any) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA
-            );
+        const logger = Logger.getLogger([ApplicationLedger.name]);
+        if (hostPrivateDecryptionKey instanceof AbstractPrivateDecryptionKey) {
+            try {
+                // we attempt to identify the current actor
+                const currentActorId = await this.vb.getCurrentActorId();
+                const privateChannelDataSections = microblock.getSections<ApplicationLedgerPrivateChannelSection>(
+                    (section) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA
+                );
 
-            for (const section of privateChannelDataSections) {
-                const { channelId, encryptedData, merkleRootHash } = section.object;
-                try {
-                    const channelKey = await this.vb.getChannelKey(currentActorId, channelId, hostPrivateDecryptionKey);
-                    const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, channelId);
-                    const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, channelId);
-                    const data = Crypto.Aes.decryptGcm(channelSectionKey, encryptedData, channelSectionIv);
+                for (const section of privateChannelDataSections) {
+                    const { channelId, encryptedData, merkleRootHash } = section.object;
+                    try {
+                        const channelKey = await this.vb.getChannelKey(currentActorId, channelId, hostPrivateDecryptionKey);
+                        const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, channelId);
+                        const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, channelId);
+                        const data = Crypto.Aes.decryptGcm(channelSectionKey, encryptedData, channelSectionIv);
+                        // TODO: might need to move on the decryptGcm method
+                        if (data === false) throw new DecryptionError("Failed to decrypt encrypted section data");
 
-                    listOfChannels.push({
-                        channelId: channelId,
-                        merkleRootHash: Utils.binaryToHexa(merkleRootHash),
-                        data: data as Uint8Array
-                    });
-                } catch (e) {
-                    if (e instanceof DecryptionError) {
-                        console.warn(`Not allowed to access channel ${channelId}`)
-                    } else {
-                        throw e;
+                        logger.debug(`Allowed to access private channel {channelName} (channel id={channelId})`, () => ({
+                            channelName: this.vb.getChannelNameById(channelId),
+                            channelId
+                        }))
+
+                        listOfChannels.push({
+                            channelId: channelId,
+                            merkleRootHash: Utils.binaryToHexa(merkleRootHash),
+                            data: data as Uint8Array
+                        });
+                    } catch (e) {
+                        if (e instanceof DecryptionError || e instanceof ActorNotInvitedError) {
+                            //console.warn(`Not allowed to access channel ${channelId}`)
+                            logger.debug(`Access to private channel {channelName} forbidden (channel id={channelId}): {e}`, () => ({
+                                e,
+                                channelName: this.vb.getChannelNameById(channelId),
+                                channelId
+                            }))
+                        } else {
+                            throw e;
+                        }
                     }
                 }
+            } catch (e) {
+                if (e instanceof CurrentActorNotFoundError) {
+                    // This case occurs when the current actor is not found in the application ledger
+                    // which happen when an external actor attempts to read the content of the application ledger.
+                    const logger = Logger.getLogger([ApplicationLedger.name]);
+                    logger.debug("Unabled to recover private channels: {e}", {e})
+                } else {
+                    throw e;
+                }
             }
+
         } else {
             console.warn("No private channel loaded: no private decryption key provided.")
         }
@@ -612,6 +604,68 @@ export class ApplicationLedger {
         const ir = this.vb.getChannelSpecializedIntermediateRepresentationInstance();
         ir.importFromSectionFormat(listOfChannels);
         return ir;
+    }
+
+    async inviteActorOnChannel(actorName: string, channelName: string, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+        const channelId = this.vb.getChannelIdByChannelName(channelName);
+        const actorId = this.vb.getActorId(actorName);
+        Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId} for channel ${channelName}`)
+
+
+        const authorId = await this.vb.getCurrentActorId();
+        const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
+        const guestId = actorId; // the guest is the actor assigned to the channel
+
+        // if the guestId equals the hostId, it is likely a misuse of the record. In this case, we do not do anything
+        // because the author is already in the channel by definition (no need to create a shared key, ...).
+        if (hostId === guestId) return;
+
+        // To invite the actor in the channel, we first retrieve or generate a symmetric encryption key used to establish
+        // secure communication between both peers. The key is then used to encrypt the channel key and put in a dedicated
+        // section of the microblock.
+        const hostGuestEncryptedSharedKey =
+            await this.getExistingSharedKey(hostId, guestId) ||
+            await this.getExistingSharedKey(guestId, hostId);
+
+
+        // if we have found the (encrypted) shared secret key, then we *attempt* to decrypt it, otherwise
+        // there is no shared secret key and then we create a new one
+        let hostGuestSharedKey: AES256GCMSymmetricEncryptionKey;
+        if (hostGuestEncryptedSharedKey !== undefined) {
+            try {
+                hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
+                    hostPrivateDecryptionKey.decrypt(hostGuestEncryptedSharedKey)
+                );
+            } catch (e) {
+                if (e instanceof DecryptionError) {
+                    throw new SharedKeyDecryptionError("Cannot decrypt the shared key with the provided decryption key: Have you provided the valid one?")
+                } else {
+                    throw e;
+                }
+            }
+        } else {
+            hostGuestSharedKey = await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
+        }
+
+
+        // we encrypt the channel key using the shared secret key
+        const channelKey = await this.vb.getChannelKey(hostId, channelId, hostPrivateDecryptionKey);
+        const encryptedChannelKey = hostGuestSharedKey.encrypt(channelKey);
+
+        // we log the result
+        const logger = Logger.getLogger([ApplicationLedger.name]);
+        logger.info(`Actor {guestName} invited to channel ${channelName}`, () => ({
+            guestName: actorName,
+        }))
+        logger.debug(`Channel key for channel ${channelName}: ${channelKey}`)
+
+        // we create the section containing the encrypted channel key (that can only be decrypted by the host and the guest)
+        await this.vb.inviteToChannel({
+            channelId,
+            hostId,
+            guestId,
+            encryptedChannelKey,
+        })
     }
 
     setGasPrice(gasPrice: CMTSToken) {
@@ -675,6 +729,11 @@ export class ApplicationLedger {
     }
 
     async getActorNameByPublicKey(publicKey: PublicSignatureKey) {
-
     }
+
+    setExpirationDurationInDays(durationInDays: number) {
+        this.vb.setExpirationDay(durationInDays);
+    }
+
+
 }

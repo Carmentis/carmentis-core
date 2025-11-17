@@ -6,13 +6,12 @@ import {Crypto} from "../crypto/crypto";
 import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/Provider";
 import {MicroblockSection, OrganizationDescription, OrganizationVBState} from "./types";
-import {Section} from "./Microblock";
+import {Microblock, Section} from "./Microblock";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
-    private signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
     constructor({
             provider
         }: { provider: Provider }) {
@@ -74,7 +73,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         this.getState().descriptionHeight = microblock.header.height;
     }
 
-    async signatureCallback(microblock: any, section: any) {
+    async signatureCallback(microblock: Microblock, section: any) {
         const publicKey = await this.getPublicKey();
 
         const isMicroBlockSignatureValid = microblock.verifySignature(

@@ -22,7 +22,7 @@ export abstract class VirtualBlockchain<CustomState> {
     identifier: Uint8Array | undefined;
     microblockHashes: Uint8Array[];
     provider: Provider;
-    sectionCallbacks: any;
+    sectionCallbacks: Map<SectionType, (microblock: Microblock, section: Section) => void | Promise<void>>;
     state?: CustomState;
     type: number;
     expirationDay: number;
@@ -112,9 +112,8 @@ export abstract class VirtualBlockchain<CustomState> {
     /**
      Imports a microblock defined by its header data and body data.
      */
-    async importMicroblock(headerData: any, bodyData: any) {
+    async importMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
         this.currentMicroblock = new Microblock(this.type);
-
         this.currentMicroblock.load(headerData, bodyData);
         this.checkStructure(this.currentMicroblock);
 
@@ -170,10 +169,6 @@ export abstract class VirtualBlockchain<CustomState> {
         return Hash.from(this.identifier);
     }
 
-    createMicroBlockBuilder() {
-        return MicroBlockBuilder.createBuilder(this);
-    }
-
 
     async appendMicroBlock(microblock: Microblock) {
         // we increase the height of the vb
@@ -184,17 +179,23 @@ export abstract class VirtualBlockchain<CustomState> {
         }
     }
 
+    startMicroBlockConstruction() {
+        const isBuildingGenesisMicroBlock = this.height === 0;
+        this.currentMicroblock = new Microblock(this.type);
+        const previousHash = this.height ? this.microblockHashes[this.height - 1] : null;
+        this.height++;
+        this.currentMicroblock.create(this.height, previousHash, this.expirationDay);
+        return { isBuildingGenesisMicroBlock }
+    }
+
     /**
      Adds a section to the current microblock.
      */
     async addSection(type: SectionType, object: any) {
-        if(!this.currentMicroblock) {
-            this.currentMicroblock = new Microblock(this.type);
-            const previousHash = this.height ? this.microblockHashes[this.height - 1] : null;
-            this.height++;
-            this.currentMicroblock.create(this.height, previousHash, this.expirationDay);
+        if (!this.currentMicroblock) {
+            this.startMicroBlockConstruction();
         }
-
+        if (!this.currentMicroblock) throw new Error("Current micro-block has not been created")
         const section = this.currentMicroblock.addSection(type, object);
         await this.processSectionCallback(this.currentMicroblock, section);
     }
@@ -203,8 +204,8 @@ export abstract class VirtualBlockchain<CustomState> {
      Processes a section callback (if defined).
      */
     async processSectionCallback(microblock: Microblock, section: Section) {
-        if(this.sectionCallbacks.has(section.type)) {
-            const callback = this.sectionCallbacks.get(section.type);
+        const callback = this.sectionCallbacks.get(section.type);
+        if(callback) {
             await callback(microblock, section);
         }
     }
@@ -252,11 +253,11 @@ export abstract class VirtualBlockchain<CustomState> {
      Publishes the current microblock.
      */
     async publish(waitForAnchoring: boolean) {
-        if(!this.currentMicroblock) throw new InternalError("Cannot publish a microblock that has not been created yet.");
+        if (!this.currentMicroblock) throw new InternalError("Cannot publish a microblock that has not been created yet.");
 
         this.checkStructure(this.currentMicroblock);
 
-        const { microblockHash, headerData, bodyHash, bodyData } = this.currentMicroblock.serialize();
+        const { microblockHash, headerData, bodyData } = this.currentMicroblock.serialize();
 
         this.microblockHashes[this.height - 1] = microblockHash;
 

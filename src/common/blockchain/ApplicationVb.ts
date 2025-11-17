@@ -7,6 +7,7 @@ import {Provider} from "../providers/Provider";
 import {ApplicationDeclaration, ApplicationDescription, ApplicationVBState} from "./types";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {Microblock} from "./Microblock";
 
 export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
   constructor(provider: Provider) {
@@ -63,10 +64,10 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
     this.getState().descriptionHeight = microblock.header.height;
   }
 
-  async signatureCallback(microblock: any, section: any) {
+  async signatureCallback(microblock: Microblock, section: any) {
     const publicKey = await this.getOrganizationPublicKey();
-    const feesPayerAccount = await this.provider.getAccountByPublicKey(publicKey);
-    microblock.setFeesPayerAccount(feesPayerAccount);
+    const feesPayerAccount = await this.provider.getAccountHashByPublicKey(publicKey);
+      microblock.setFeesPayerAccount(feesPayerAccount);
   }
 
   async getOrganizationPublicKey(): Promise<PublicSignatureKey> {

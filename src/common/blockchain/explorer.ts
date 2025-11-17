@@ -77,16 +77,6 @@ export class Explorer {
     );
   }
 
-  /**
-   * Retrieves an account hash associated with the given public key hash.
-   *
-   * @param {Hash} publicKeyHash - The hash of the public key to look up the account for.
-   * @return {Promise<Hash>} A promise that resolves to the account hash corresponding to the given public key hash.
-   */
-  async getAccountByPublicKeyHash(publicKeyHash: Hash ): Promise<Hash> {
-    const accountHash: AccountHash = await this.provider.getAccountByPublicKeyHash(publicKeyHash.toBytes());
-    return Hash.from(accountHash.accountHash);
-  }
 
 
   /**
@@ -132,28 +122,7 @@ export class Explorer {
     return microBlock;
   }
 
-  /**
-   * Retrieves the account hash for a given public key.
-   *
-   * @param hashScheme
-   * @param {PublicSignatureKey} publicKey - The public signature key associated with the account*/
-  async getAccountByPublicKey(
-      publicKey: PublicSignatureKey,
-      hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
-  ): Promise<Hash> {
-    const accountHash : AccountHash = await this.provider.getAccountByPublicKey(publicKey, hashScheme);
-    return Hash.from(accountHash.accountHash);
-  }
 
-
-  /**
-   * Retrieves a list of accounts from the specified chain.
-   *
-   * @return {Promise<Hash[]>} A promise that resolves to an array of account objects.
-   */
-  async getAccounts() {
-    return await this.getObjectList(CHAIN.VB_ACCOUNT);
-  }
 
   /**
    * Retrieves the list of validator nodes from the specified chain.

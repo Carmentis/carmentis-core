@@ -4,7 +4,7 @@ import {MaskManager} from "./maskManager";
 import {TypeManager} from "../data/types";
 import {PepperMerklizer, SaltMerklizer} from "./merklizer";
 import {DATA} from "../constants/constants";
-import {Proof} from "../blockchain/types";
+import {MerkleProof, Proof, RecordEntry} from "../blockchain/types";
 
 const MAX_UINT8_ARRAY_DUMP_SIZE = 24;
 
@@ -43,7 +43,7 @@ type Channel =
 export class IntermediateRepresentation {
     importedFromProof: boolean;
     channelDefinitions: Map<number, Channel>;
-    irObject: Item[];
+    irObject: Item[] = [];
     object: any;
 
     usedChannels: number[] = [];
@@ -768,7 +768,16 @@ export class IntermediateRepresentation {
             }
         });
 
-        this.usedChannels = [...this.irObject[0].channels].sort((a, b) => a - b);
+
+        // we do this to prevent the case when irObject[0] is undefined
+        const firstIrObject = this.irObject[0];
+        if (firstIrObject !== undefined) {
+            const channels = [...firstIrObject.channels];
+            this.usedChannels = channels.sort((a, b) => a - b);
+        } else {
+            this.usedChannels = []
+        }
+        //this.usedChannels = [...this.irObject[0].channels].sort((a, b) => a - b);
 
         for (const channelId of this.usedChannels) {
             if (!this.channelDefinitions.has(channelId)) {
@@ -903,7 +912,7 @@ export class IntermediateRepresentation {
     /**
      Exports the IR object back to the core JSON-compatible object it describes.
      */
-    exportToJson() {
+    exportToJson(){
         const object = {root: null};
 
         this.traverseIrObject({
@@ -920,7 +929,9 @@ export class IntermediateRepresentation {
         });
 
         if (object.root === null) {
-            throw new Error('internal error: null root after exporting to JSON');
+            // We comment this error because it may happen when there is no data to return
+            //throw new Error('internal error: null root after exporting to JSON');
+            return {}
         }
 
         return object.root;

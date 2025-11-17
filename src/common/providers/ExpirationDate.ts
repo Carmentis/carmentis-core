@@ -17,7 +17,13 @@ export class ExpirationDate {
     static of(expirationDate: Date) {
         return new ExpirationDate(Optional.of(expirationDate), false);
     }
-
+    
+    
+    static fromDurationInDays(durationInDays: number) {
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + durationInDays);
+        return ExpirationDate.of(expirationDate);
+    }
 
     isEndless() {
         return this.endless;

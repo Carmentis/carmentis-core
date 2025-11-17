@@ -2,11 +2,12 @@ import {CHAIN, ECO, SCHEMAS, SECTIONS} from "../constants/constants";
 import {SchemaSerializer, SchemaUnserializer} from "../data/schemaSerializer";
 import {Utils} from "../utils/utils";
 import {Crypto} from "../crypto/crypto";
-import {MicroblockHeader, MicroblockSection} from "./types";
+import {MicroblockHeader, MicroblockSection, OrganizationDescription} from "./types";
 import {Hash} from "../entities/Hash";
 import {CarmentisError, SectionNotFoundError} from "../errors/carmentis-error";
 import {SectionType} from "../entities/SectionType";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 
 export interface Section<T = any> {
     type: number,
@@ -19,7 +20,6 @@ export interface Section<T = any> {
 export class Microblock {
     gasPrice: number;
     hash: any;
-    // @ts-ignore add initial value to the microblock header
     header: MicroblockHeader;
     sections: Section[];
     type: number;
@@ -42,9 +42,14 @@ export class Microblock {
         };
     }
 
+
     /**
-     Creates a microblock at a given height.
-     If the height is greater than 1, a 'previousHash' is expected.
+     * Creates a microblock at a given height.
+     * If the height is greater than 1, a 'previousHash' is expected.
+     * @param height
+     * @param previousHash
+     * @param expirationDay
+     * @deprecated Use Microblock.createGenesisMicroblock or Microblock.createMicroblock to create a microblock.
      */
     create(height: number, previousHash: Uint8Array | null, expirationDay: number) {
         if (height == 1) {
@@ -71,6 +76,18 @@ export class Microblock {
             gasPrice: 0,
             bodyHash: Utils.getNullHash()
         };
+    }
+
+    static createGenesisMicroblock(mbType: number, expirationDay: number = 0) {
+        const mb = new Microblock(mbType);
+        mb.create(1, null, expirationDay );
+        return mb;
+    }
+
+    static createMicroblock(mbType: number, height: number, previousHash: Uint8Array, expirationDay: number) {
+        const mb = new Microblock(mbType);
+        mb.create(height, previousHash, expirationDay );
+        return mb;
     }
 
     /**
@@ -160,8 +177,10 @@ export class Microblock {
         this.header.timestamp = timestamp;
     }
 
-    setFeesPayerAccount(account: Uint8Array) {
-        this.feesPayerAccount = account;
+    setFeesPayerAccount(accountHash: Uint8Array) {
+        // TODO(correctness): Should ensure that the fees payer account is defined
+        //if (!(accountHash instanceof Uint8Array)) throw new TypeError(`Invalid fees payer account type: expected Uint8array, got ${typeof accountHash}`)
+        this.feesPayerAccount = accountHash;
     }
 
     /**
@@ -178,7 +197,7 @@ export class Microblock {
     /**
      Stores a section, including its serialized data, hash and index.
      */
-    storeSection(type: SectionType, object: any, data: any): Section {
+    private storeSection(type: SectionType, object: any, data: any): Section {
         const hash = Crypto.Hashes.sha256AsBinary(data);
         const index = this.sections.length;
 
@@ -187,6 +206,36 @@ export class Microblock {
 
         return section;
     }
+
+    /**
+     * Adds an organization signature scheme section.
+     */
+    addOrganizationSignatureSchemeSection(object: { schemeId: SignatureSchemeId }) {
+        return this.addSection(SectionType.ORG_SIG_SCHEME, object);
+    }
+
+    /**
+     * Adds an organization public key section.
+     */
+    addOrganizationPublicKeySection(object: { publicKey: Uint8Array }) {
+        return this.addSection(SectionType.ORG_PUBLIC_KEY, object);
+    }
+
+    /**
+     * Adds an organization description section.
+     */
+    addOrganizationDescriptionSection(object: OrganizationDescription) {
+        return this.addSection(SectionType.ORG_DESCRIPTION, object);
+    }
+
+    /**
+     * Adds an organization signature section.
+     */
+    addOrganizationSignatureSection(object: { signature: Uint8Array }) {
+        return this.addSection(SectionType.ORG_SIGNATURE, object);
+    }
+
+
 
     /**
      *
@@ -313,7 +362,7 @@ export class Microblock {
      */
     serialize() {
         const body = {
-            body: this.sections.map(({ type, data }: any) => ({type, data}))
+            body: this.sections.map(({ type, data }) => ({type, data}))
         };
 
         this.setGasData(true);

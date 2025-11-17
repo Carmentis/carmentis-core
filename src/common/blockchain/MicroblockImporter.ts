@@ -23,12 +23,15 @@ const OBJECT_CLASSES = [
     ApplicationLedger
 ];
 
+/**
+ * This class is used to parse a serialized microblock.
+ */
 export class MicroblockImporter {
-    bodyData: any;
+    bodyData: Uint8Array;
     _error: Optional<Error> = Optional.none();
-    hash: any;
+    hash: Uint8Array;
     header: any;
-    headerData: any;
+    headerData: Uint8Array;
     provider: Provider;
     // @ts-ignore Add an initial value to the vb (possibly undefined).
     vb: VirtualBlockchain<any>;
@@ -37,8 +40,9 @@ export class MicroblockImporter {
     constructor({
         data,
         provider
-    }: any) {
+    }: { data: Uint8Array, provider: Provider }) {
         this.provider = provider;
+        // TODO: Splitting the serialized mb is never a good idea, instead decode a structured data containing the serialized header and body
         this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
         this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
         this.hash = Crypto.Hashes.sha256AsBinary(this.headerData);

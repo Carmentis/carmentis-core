@@ -6,6 +6,8 @@ import {CMTSToken} from "../economics/currencies/token";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {OrganizationNotFoundError, VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
+import {Hash} from "../entities/Hash";
 
 export class Organization {
   provider: any;
@@ -37,7 +39,15 @@ export class Organization {
   }
 
   async _load(identifier: Uint8Array) {
-    await this.vb.load(identifier);
+    try {
+        return await this.vb.load(identifier);
+    } catch (e) {
+        if (e instanceof VirtualBlockchainNotFoundError) {
+            throw new OrganizationNotFoundError(Hash.from(identifier));
+        } else {
+            throw e;
+        }
+    }
   }
 
   async setDescription(object: OrganizationDescription) {

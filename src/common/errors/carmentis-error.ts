@@ -12,6 +12,7 @@ export enum CarmentisErrorCode {
     // internal error
     INTERNAL_ERROR = 500,
     TYPE_CHECKING_FAILURE_ERROR = 501,
+    SERIALIZATION_ERROR,
 
     // proof-related error
     PROOF_VERIFICATION_FAILURE = 300,
@@ -224,7 +225,7 @@ export class SectionError extends BlockchainError {}
 
 
 export class ActorNotInvitedError extends BlockchainError {
-    constructor(actorId: number, channelId: number) {
+    constructor(actorId: number | string, channelId: number | string) {
         super(`Actor ${actorId} has not been invited to channel ${channelId}`);
     }
 }
@@ -262,14 +263,7 @@ export class ApplicationNotFoundError extends BlockchainError {
     }
 }
 
-export class ApplicationLedgerNotFoundError extends BlockchainError {
-    constructor(applicationLedgerId: Hash) {
-        super(
-            `Application ledger not found for id: ${applicationLedgerId.encode()}`,
-            CarmentisErrorCode.APPLICATION_LEDGER_NOT_FOUND
-        );
-    }
-}
+
 
 export class ValidatorNodeNotFoundError extends BlockchainError {
     constructor(nodeId: Hash) {
@@ -294,8 +288,14 @@ export class VirtualBlockchainNotFoundError extends BlockchainError {
     constructor(virtualBlockchainId: Hash) {
         super(
             `Virtual blockchain not found: ${virtualBlockchainId.encode()}`,
-            CarmentisErrorCode.VIRTUAL_BLOCKCHAIN_ALREADY_EXISTS
+            CarmentisErrorCode.VIRTUAL_BLOCKCHAIN_NOT_FOUND
         );
+    }
+}
+
+export class ApplicationLedgerNotFoundError extends VirtualBlockchainNotFoundError {
+    constructor(applicationLedgerId: Hash) {
+        super(applicationLedgerId);
     }
 }
 
@@ -314,5 +314,11 @@ export class SectionNotFoundError extends ProtocolError {
 export class NoSharedSecretError extends ProtocolError {
     constructor(guestId: number, hostId: number) {
         super(`No shared secret between host ${hostId} and guest ${guestId}`);
+    }
+}
+
+export class SerializationError extends CarmentisError {
+    constructor(message: string) {
+        super(message, CarmentisErrorCode.SERIALIZATION_ERROR);
     }
 }

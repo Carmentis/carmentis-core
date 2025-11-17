@@ -211,8 +211,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         // if the actor id is the creator of the channel, then we have to derive the channel key locally...
         const state = this.getState();
         const creatorId = state.channels[channelId].creatorId;
-        if (creatorId == actorId) {
-            return await this.deriveChannelKey(channelId);
         logger.debug('getChannelKey {data}', () => ({
             data: {
                 state,
@@ -222,6 +220,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
                 actorPrivateDecryptionKey: CryptoEncoderFactory.defaultStringPublicKeyEncryptionEncoder().encodePrivateDecryptionKey(actorPrivateDecryptionKey)
             }
         }))
+        if (creatorId === actorId) {
+            const channelKey = await this.deriveChannelKey(channelId);
+            logger.debug(`Channel key derived from private signature key for channel ${channelId}: ${channelKey}`)
+            return channelKey;
         }
 
         // ... otherwise we have to obtain the (encryption of the) channel key from an invitation section.
@@ -489,6 +491,16 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     async invitationCallback(microblock: Microblock, section: Section<ApplicationLedgerChannelInvitationSection>) {
         // TODO: check that the actor is not already in the channel
+        // Here
+
+        // we update the local state with the invitation section
+        const {guestId, channelId} = section.object;
+        const state = this.getState();
+        const guestActor = state.actors[guestId];
+        guestActor.invitations.push({
+            channelId,
+            height: microblock.getHeight()
+        })
         const logger = Logger.getLogger();
         logger.debug("Updated state after channel invitation callback: {state}", {state: this.state})
     }

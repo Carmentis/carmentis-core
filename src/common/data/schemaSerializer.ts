@@ -74,7 +74,7 @@ export class SchemaSerializer<T = any> {
 
         if (mainType == DATA.TYPE_OBJECT) {
             if (TypeManager.getType(value) != DATA.TYPE_OBJECT) {
-                throw `'${fieldPath}' is not an object`;
+                throw new SerializationError(`'${fieldPath}' is not an object`);
             }
             if (schemaItem.definition) {
                 this.serializeObject(schemaItem.definition, value, fieldPath);

@@ -35,6 +35,10 @@ import {
     AbstractPrivateDecryptionKey
 } from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 import {AES256GCMSymmetricEncryptionKey} from "../crypto/encryption/symmetric-encryption/encryption-interface";
+import {Logger} from "../utils/Logger";
+import {Crypto} from "../crypto/crypto";
+import {Assertion} from "../utils/Assertion";
+import {CryptoEncoderFactory} from "../crypto/CryptoEncoderFactory";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBState> {
     constructor({provider}: { provider: Provider }) {
@@ -197,11 +201,27 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
      * @throws DecryptionError Occurs when one of the encrypted channel key or encrypted shared key cannot be decrypted.
      */
     async getChannelKey(actorId: number, channelId: number, actorPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+        // defensive programming
+        Assertion.assert(typeof actorId === 'number', 'Expected actor id with type number')
+        Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId}`)
+
+        const logger = Logger.getLogger(['critical']);
+
+
         // if the actor id is the creator of the channel, then we have to derive the channel key locally...
         const state = this.getState();
         const creatorId = state.channels[channelId].creatorId;
         if (creatorId == actorId) {
             return await this.deriveChannelKey(channelId);
+        logger.debug('getChannelKey {data}', () => ({
+            data: {
+                state,
+                actorId,
+                creatorId,
+                channelId,
+                actorPrivateDecryptionKey: CryptoEncoderFactory.defaultStringPublicKeyEncryptionEncoder().encodePrivateDecryptionKey(actorPrivateDecryptionKey)
+            }
+        }))
         }
 
         // ... otherwise we have to obtain the (encryption of the) channel key from an invitation section.
@@ -229,6 +249,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         channelId: number,
         actorPrivateDecryptionKey: AbstractPrivateDecryptionKey
     ) {
+        Assertion.assert(typeof actorId === 'number', `actorId should be a number, got ${typeof actorId}`)
+        Assertion.assert(typeof channelId === 'number', `channelId should be a number, got ${typeof actorId}`)
+
+
         // look for an invitation of actorId to channelId and extract the encrypted channel key
         const state = this.getState();
         const invitation = state.actors[actorId].invitations.find(
@@ -347,6 +371,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
         const myPublicSignatureKeyBytes = myPublicSignatureKey.getPublicKeyAsBytes();
 
         const state = this.getState();
+        const logger = Logger.getLogger([ApplicationLedgerVb.name]);
+        logger.info("Current identity: {data}", () => ({
+            data: {
+                actors: state.actors,
+                currentIdentityPublicKey: CryptoEncoderFactory.defaultStringSignatureEncoder().encodePublicKey(myPublicSignatureKey)
+            }
+        }))
 
         for (const id in state.actors) {
             const actorId = Number(id);
@@ -361,6 +392,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
             }
         }
 
+        logger.debug('Current actor not found: Application ledger state actors: {state.actors}', {state})
         throw new CurrentActorNotFoundError();
     }
 
@@ -457,6 +489,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerVBSt
 
     async invitationCallback(microblock: Microblock, section: Section<ApplicationLedgerChannelInvitationSection>) {
         // TODO: check that the actor is not already in the channel
+        const logger = Logger.getLogger();
+        logger.debug("Updated state after channel invitation callback: {state}", {state: this.state})
     }
 
     async publicChannelDataCallback(microblock: Microblock, section: any) {

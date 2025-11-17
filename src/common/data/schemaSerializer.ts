@@ -2,7 +2,7 @@ import {DATA, SCHEMAS} from "../constants/constants";
 import {WriteStream, ReadStream} from "./byteStreams";
 import {TypeManager, TypeChecker} from "./types";
 import {Utils} from "../utils/utils";
-import {CarmentisError} from "../errors/carmentis-error";
+import {CarmentisError, SerializationError} from "../errors/carmentis-error";
 import {TypeCheckingFailureError} from "../errors/type-checking-failure-error";
 
 export class SchemaSerializer<T = any> {
@@ -22,7 +22,7 @@ export class SchemaSerializer<T = any> {
     serialize(object: T): Uint8Array {
         // we raise a technical exception if the schema is not defined, mostly due to a distinct, incompatible
         // SDK version
-        if (this.schema === undefined) throw new CarmentisError("Provided schema is undefined: this should not happen")
+        if (this.schema === undefined) throw new SerializationError("Provided schema is undefined: this should not happen")
 
 
         this.stream = new WriteStream;
@@ -41,17 +41,17 @@ export class SchemaSerializer<T = any> {
 
             if (value === undefined) {
                 //console.log(`Field ${fieldPath} missing for schema ${schema} in obtained object`, object)
-                throw `field '${fieldPath}' is missing`;
+                throw new SerializationError(`field '${fieldPath}' is missing`);
             }
 
             if (schemaItem.type & DATA.TYPE_ARRAY_OF) {
                 if (TypeManager.getType(value) != DATA.TYPE_ARRAY) {
-                    throw `'${fieldPath}' is not an array`;
+                    throw new SerializationError(`'${fieldPath}' is not an array`);
                 }
 
                 if (schemaItem.size !== undefined) {
                     if (value.length != schemaItem.size) {
-                        throw `invalid size for '${fieldPath}' (expecting ${schemaItem.size} entries, got ${value.length})`;
+                        throw new SerializationError(`invalid size for '${fieldPath}' (expecting ${schemaItem.size} entries, got ${value.length})`);
                     }
                 } else {
                     this.stream.writeVarUint(value.length);

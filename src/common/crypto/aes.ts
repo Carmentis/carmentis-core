@@ -1,5 +1,7 @@
 import { gcm } from "@noble/ciphers/aes";
+import {Logger} from "../utils/Logger";
 
+const logger = Logger.getLogger(["crypto", "aes-gcm"])
 export const Aes = {
   encryptGcm,
   decryptGcm
@@ -20,7 +22,7 @@ function decryptGcm(key: any, data: any, iv: any) {
     return decrypted;
   }
   catch(e) {
-    console.error(e);
+      logger.warn('{e}', {e});
   }
   return false;
 }

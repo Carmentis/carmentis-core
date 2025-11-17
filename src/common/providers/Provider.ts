@@ -19,6 +19,7 @@ import {Hash} from "../entities/Hash";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {NotAuthenticatedError} from "../errors/carmentis-error";
+import {Logger} from "../utils/Logger";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -81,12 +82,14 @@ export class Provider {
         }
 
         const externalAccountHash = await this.externalProvider.getAccountByPublicKeyHash(publicKeyHash);
+        const logger = Logger.getLogger([Provider.name]);
+        logger.debug(`Account hash ${externalAccountHash} is associated to public key hash ${publicKeyHash}`)
 
         // TODO: save it locally
-        return externalAccountHash;
+        return externalAccountHash.accountHash;
     }
 
-    async getAccountByPublicKey(
+    async getAccountHashByPublicKey(
         publicKey: PublicSignatureKey,
         hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
     ) {

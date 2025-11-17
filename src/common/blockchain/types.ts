@@ -118,19 +118,37 @@ export interface ApplicationLedgeChannel {
     creatorId: number;
 }
 
+
+export interface ApplicationLedgerActorInvitationState {
+    channelId: number;
+    height: number;
+}
+
+
+/**
+ * Describes a shared secret between two parties.
+ * One of the actor is implicit: This object should be associated with
+ * an actor identifier, the other one is defined in this state.
+ */
+export interface ApplicationLedgerSharedSecretState {
+    /**
+     * The identifier of the other actor for which the shared key is intended to be used by.
+     */
+    peerActorId: number;
+
+    /**
+     * The height in the virtual blockchain where the shared key is defined.
+     */
+    height: number;
+}
+
 export interface ApplicationLedgerActor {
     name: string;
     subscribed: boolean;
     signatureKeyHeight: number;
     pkeKeyHeight: number;
-    sharedSecrets: {
-        peerActorId: number;
-        height: number;
-    }[];
-    invitations: {
-        channelId: number;
-        height: number;
-    }[];
+    sharedSecrets: ApplicationLedgerSharedSecretState[];
+    invitations: ApplicationLedgerActorInvitationState[];
 }
 
 export interface ApplicationLedgerVBState {
@@ -159,6 +177,10 @@ export interface ApplicationLedgerActorCreationSection {
     id: number,
     type: number,
     name: string,
+}
+
+export interface ApplicationLedgerDeclarationSection {
+    applicationId: Uint8Array
 }
 
 export interface ApplicationLedgerSharedKeySection {
@@ -382,3 +404,10 @@ export interface Proof {
         data: any
     }[]
 }
+
+
+import {z} from "zod";
+
+export const AccountHashSchema =  z.object({
+    accountHash: z.instanceof(Uint8Array)
+})

@@ -58,34 +58,6 @@ export class AccountHistoryView {
      */
     containsTransactionAtHeight(height: number): boolean { return this.transactionByHeight.has(height) }
 
-    /*
-    getAmountOfTransactionAtHeight(height: number): CMTSToken {
-        const transaction = this.getTransactionAtHeight(height);
-        return CMTSToken.createAtomic(transaction.amount);
-    }
-
-    getDateOfTransactionAtHeight(height: number): Date {
-        const transaction = this.getTransactionAtHeight(height);
-        return new Date(transaction.timestamp * 1000);
-    }
-
-    getTransactionTimestampAtHeight(height: number) : number {
-        const transaction = this.getTransactionAtHeight(height);
-        return transaction.timestamp;
-    }
-
-    getLinkedAccountOfTransactionAtHeight(height: number): Hash {
-        const transaction = this.getTransactionAtHeight(height);
-        return Hash.from(transaction.linkedAccount);
-    }
-
-    getPreviousHashOfTransactionAtHeight(height: number): Hash {
-        const transaction = this.getTransactionAtHeight(height);
-        return Hash.from(transaction.previousHistoryHash);
-    }
-
-     */
-
     getTransactionAtHeight(height: Height): Transaction {
         const transaction = this.transactionByHeight.get(height);
         if (transaction === undefined) {

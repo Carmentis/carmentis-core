@@ -1,3 +1,5 @@
+export {}
+/*
 import {SCHEMAS, SECTIONS} from "../constants/constants";
 import {ApplicationLedgerVb} from "./ApplicationLedgerVb";
 import {SchemaValidator} from "../data/schemaValidator";
@@ -64,60 +66,26 @@ export class ApplicationLedger {
         this.allowedPkeSchemeIds = [];
     }
 
-    /**
-     * Sets the list of allowed signature schemes by assigning the provided scheme IDs.
-     *
-     * @param {SignatureSchemeId[]} schemeIds - An array of signature scheme IDs that are allowed.
-     * @return {void} This method does not return anything.
-     */
     setAllowedSignatureSchemes(schemeIds: SignatureSchemeId[]) {
         this.allowedSignatureSchemeIds = schemeIds;
     }
 
-    /**
-     * Sets the allowed public key encryption schemes.
-     *
-     * @param {PublicKeyEncryptionSchemeId[]} schemeIds - An array of public key encryption scheme IDs to designate as allowed.
-     * @return {void}
-     */
     setAllowedPkeSchemes(schemeIds: PublicKeyEncryptionSchemeId[]) {
         this.allowedPkeSchemeIds = schemeIds;
     }
 
-    /**
-     * Retrieves the list of allowed signature scheme identifiers.
-     *
-     * @return {Array} An array containing the identifiers of the allowed signature schemes.
-     */
     getAllowedSignatureSchemes() {
         return this.allowedSignatureSchemeIds;
     }
 
-    /**
-     * Retrieves the list of allowed public key encryption schemes.
-     *
-     * @return {Array} An array containing the identifiers of allowed public key encryption schemes.
-     */
     getAllowedPkeSchemes() {
         return this.allowedPkeSchemeIds;
     }
 
-    /**
-     * Determines if the provided signature scheme ID is allowed.
-     *
-     * @param {SignatureSchemeId} schemeId - The ID of the signature scheme to check.
-     * @return {boolean} True if the signature scheme ID is allowed, otherwise false.
-     */
     isAllowedSignatureScheme(schemeId: SignatureSchemeId) {
         return this.allowedSignatureSchemeIds.includes(schemeId);
     }
 
-    /**
-     * Checks if a given public key encryption scheme is allowed.
-     *
-     * @param {PublicKeyEncryptionSchemeId} schemeId - The ID of the public key encryption scheme to check.
-     * @return {boolean} Returns true if the scheme is allowed, otherwise returns false.
-     */
     isAllowedPkeScheme(schemeId: PublicKeyEncryptionSchemeId) {
         return this.allowedPkeSchemeIds.includes(schemeId);
     }
@@ -130,14 +98,6 @@ export class ApplicationLedger {
         return this.vb.getGenesisSeed();
     }
 
-    /**
-     * Returns the (unique) identifier associated with the name of the actor.
-     *
-     * Note: Two actors cannot have the same name.
-     *
-     * @param actorName The name of the actor from which we want to get the identifier.
-     * @returns
-     */
     getActorIdFromActorName(actorName: string) {
         return this.vb.getActorIdFromActorName(actorName);
     }
@@ -303,21 +263,7 @@ export class ApplicationLedger {
         return this.getRecord(1, hostPrivateDecryptionKey);
     }
 
-    /**
-     * Exports a proof containing intermediate representations for all microblocks up to the current height of the virtual blockchain.
-     *
-     * @param {Object} customInfo - Custom information to include in the proof.
-     * @param {string} customInfo.author - The author of the proof file.
-     * @return {Promise<Object>} A promise that resolves to an object containing metadata and the exported proof data.
-     * @return {Object} return.info - Metadata about the proof.
-     * @return {string} return.info.title - A title describing the proof file.
-     * @return {string} return.info.date - The date the proof was created, in ISO format.
-     * @return {string} return.info.author - The author of the proof file.
-     * @return {string} return.info.virtualBlockchainIdentifier - The identifier of the virtual blockchain.
-     * @return {Array<Object>} return.proofs - An array of exported proof data for each microblock.
-     * @return {number} return.proofs[].height - The height of the microblock.
-     * @return {Object} return.proofs[].data - The proof data for the corresponding microblock.
-     */
+   
     async exportProof(customInfo: {
         author: string
     }, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<Proof> {
@@ -353,11 +299,6 @@ export class ApplicationLedger {
         this.gasPrice = gasPrice;
     }
 
-    /**
-     * Retrieves the application ID.
-     *
-     * @return {Hash} The hashed application ID obtained from the underlying system.
-     */
     getApplicationId() {
         return Hash.from(this.vb.getApplicationId());
     }
@@ -377,10 +318,7 @@ export class ApplicationLedger {
     }
 
 
-    /**
-     * Returns the list of created actors (name of the actor and its public key, if any).
-     * @param height
-     */
+
     async getCreatedActorsAtHeight(height: Height) {
         // TODO implement method to list created actors
     }
@@ -414,3 +352,5 @@ export class ApplicationLedger {
 
 
 }
+
+ */

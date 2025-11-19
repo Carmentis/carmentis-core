@@ -217,12 +217,6 @@ export interface VirtualBlockchainUpdateInterface {
     headers: Uint8Array[]
 }
 
-export interface VirtualBlockchainStateDTO<CustomState = any> {
-    type: number,
-    height: number,
-    lastMicroblockHash: Uint8Array,
-    customState: CustomState
-}
 
 export interface VirtualBlockchainStateInterface<CustomState = object> {
     type: number,
@@ -232,16 +226,6 @@ export interface VirtualBlockchainStateInterface<CustomState = object> {
     customState: CustomState
 }
 
-export interface MicroBlockHeader {
-    magicString: string;
-    protocolVersion: number;
-    height: number;
-    previousHash: Uint8Array;
-    timestamp: number;
-    gas: number;
-    gasPrice: number;
-    bodyHash: Uint8Array;
-}
 
 export interface MsgVirtualBlockchainState {
     stateData: Uint8Array
@@ -270,7 +254,7 @@ export interface AccountTransactionInterface {
 export interface AccountHistoryInterface {
     list: AccountTransactionInterface[]
 }
-
+/*
 export interface AccountTokenIssuance {
     amount: number;
 }
@@ -308,6 +292,8 @@ export interface AccountStake {
     amount: number;
     nodeIdentifier: Uint8Array;
 }
+ */
+
 
 export interface ObjectList {
     list: Uint8Array[];

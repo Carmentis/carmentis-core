@@ -1,6 +1,5 @@
 import {SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
-import {Organization} from "./Organization";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
 import {ValidatorNodeVBState} from "./types";

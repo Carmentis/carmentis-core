@@ -1,3 +1,6 @@
+export {}
+/*
+
 import {SECTIONS} from "../constants/constants";
 import {ProtocolVb} from "./ProtocolVb";
 import {Crypto} from "../crypto/crypto";
@@ -58,4 +61,4 @@ export class Protocol {
     await this.vb.setSignature(privateKey);
     return await this.vb.publish(waitForAnchoring);
   }
-}
+}*/

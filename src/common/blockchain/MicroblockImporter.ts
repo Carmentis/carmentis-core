@@ -1,11 +1,5 @@
 import {CHAIN, SCHEMAS} from "../constants/constants";
 import {SchemaUnserializer} from "../data/schemaSerializer";
-import {Protocol} from "./Protocol";
-import {Account} from "./Account";
-import {ValidatorNode} from "./ValidatorNode";
-import {Organization} from "./Organization";
-import {Application} from "./Application";
-import {ApplicationLedger} from "./ApplicationLedger";
 import {Provider} from "../providers/Provider";
 import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
@@ -14,15 +8,14 @@ import {Microblock} from "./Microblock";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Optional} from "../entities/Optional";
 import {BlockchainSerializer} from "../data/BlockchainSerializer";
+import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
+import {OrganizationVb} from "./OrganizationVb";
+import {AccountVb} from "./AccountVb";
+import {ApplicationVb} from "./ApplicationVb";
+import {ValidatorNodeVb} from "./ValidatorNodeVb";
+import {ProtocolVb} from "./ProtocolVb";
+import {ApplicationLedgerVb} from "./ApplicationLedgerVb";
 
-const OBJECT_CLASSES = [
-    Protocol,
-    Account,
-    ValidatorNode,
-    Organization,
-    Application,
-    ApplicationLedger
-];
 
 /**
  * This class is used to parse a serialized microblock.
@@ -43,8 +36,7 @@ export class MicroblockImporter {
         provider
     }: { data: Uint8Array, provider: Provider }) {
         this.provider = provider;
-        // TODO: Splitting the serialized mb is never a good idea, instead decode a structured data containing the serialized header and body
-        const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(
+       const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(
             data
         );
         this.headerData = serializedHeader;
@@ -205,6 +197,7 @@ export class MicroblockImporter {
                 vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
             }
             else {
+                // TODO(duplicated): remove this duplication code
                 // extract the type and the expiration day from the special previousHash field
                 type = this.header.previousHash[0];
 
@@ -216,6 +209,31 @@ export class MicroblockImporter {
             }
 
             // attempt to instantiate the VB class
+            let vb: VirtualBlockchain;
+            switch (type) {
+                case VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN:
+                    vb = new OrganizationVb(this.provider);
+                    break;
+                case VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN:
+                    vb = new AccountVb(this.provider);
+                    break;
+                case VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN:
+                    vb = new ApplicationVb(this.provider);
+                    break;
+                case VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN:
+                    vb = new ValidatorNodeVb(this.provider);
+                    break;
+                case VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN:
+                    vb = new ProtocolVb(this.provider);
+                    break;
+                case VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN:
+                    vb = new ApplicationLedgerVb(this.provider);
+                    break
+                default:
+                    throw new Error(`Unknown virtual blockchain type: ${type}`);
+
+            }
+            /*
             const objectClass = OBJECT_CLASSES[type];
 
             if(!objectClass) {
@@ -225,6 +243,9 @@ export class MicroblockImporter {
 
             this.object = new objectClass({ provider: this.provider });
             this.vb = this.object.vb;
+
+             */
+            this.vb = vb;
 
             // if the VB exists ...
             if(this.header.height > 1) {

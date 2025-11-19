@@ -1,3 +1,5 @@
+export {}
+/*
 import {SECTIONS} from "../constants/constants";
 import {ValidatorNodeVb} from "./ValidatorNodeVb";
 import {CMTSToken} from "../economics/currencies/token";
@@ -115,3 +117,5 @@ export class ValidatorNode {
     return await this.vb.publish(waitForAnchoring);
   }
 }
+
+ */

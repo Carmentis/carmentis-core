@@ -2,9 +2,10 @@ import {WriteStream, ReadStream} from "../data/byteStreams";
 import {PathManager} from "./pathManager";
 import {MaskManager} from "./maskManager";
 import {TypeManager} from "../data/types";
-import {PepperMerklizer, SaltMerklizer} from "./merklizer";
 import {DATA} from "../constants/constants";
 import {MerkleProof, Proof, RecordEntry} from "../blockchain/types";
+import {PepperMerklizer} from "./PepperMerklizer";
+import {SaltMerklizer} from "./SaltMerklizer";
 
 const MAX_UINT8_ARRAY_DUMP_SIZE = 24;
 

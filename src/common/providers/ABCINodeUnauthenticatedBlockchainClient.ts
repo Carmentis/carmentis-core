@@ -1,3 +1,5 @@
+export {}
+/*
 import {Provider} from "./Provider";
 import {
     AccountHash,
@@ -49,12 +51,7 @@ import {BlockchainClient} from "./BlockchainClient";
 import { AbstractPrivateDecryptionKey, StateUpdateRequest } from "../common";
 
 export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient {
-    /**
-     * Creates an instance of ABCINodeBlockchainReader from the provided node URL.
-     *
-     * @param {string} nodeUrl - The URL of the node to connect to.
-     * @return {ABCINodeUnauthenticatedBlockchainClient} A new instance of ABCINodeBlockchainReader initialized with the specified node URL.
-     */
+
     static createFromNodeURL(nodeUrl: string): ABCINodeUnauthenticatedBlockchainClient {
         return new ABCINodeUnauthenticatedBlockchainClient(nodeUrl);
     }
@@ -166,12 +163,6 @@ export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient
         return new MicroBlockInformation(header, virtualBlockchainState);
     }
 
-    /**
-     * Locks the current process until the specified microblock is published.
-     *
-     * @param {Hash} microblockHash - The hash of the microblock to wait for publishing.
-     * @return {Promise<Hash>} A promise that resolves to the virtual blockchain ID where the micro-block is published
-     */
     async lockUntilMicroBlockPublished(microblockHash: Hash): Promise<Hash> {
         const answer = await this.networkProvider.awaitMicroblockAnchoring(microblockHash.toBytes());
         return Hash.from(answer.virtualBlockchainId);
@@ -227,13 +218,7 @@ export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient
         return new VirtualBlockchainStateWrapper(vbId, state);
     }
 
-    /**
-     * Loads the application ledger associated with the given VB ID.
-     *
-     * @param {Hash} vbId - The hash identifier for the application ledger to load.
-     * @param provider
-     * @return {Promise<ApplicationLedger>} A promise that resolves to an instance of ApplicationLedger after loading.
-     */
+
     async loadApplicationLedger(vbId: Hash, provider: Provider = this.publicProvider): Promise<ApplicationLedger> {
        try {
            const applicationLedger = new ApplicationLedger({ provider });
@@ -327,29 +312,16 @@ export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient
         }
     }
 
-    /**
-     * Retrieves a list of accounts from the specified chain.
-     *
-     * @return {Promise<Hash[]>} A promise that resolves to an array of account objects.
-     */
+
     async getAllAccounts() {
         return await this.getObjectList(VB_ACCOUNT);
     }
 
-    /**
-     * Retrieves the list of validator nodes from the specified chain.
-     *
-     * @return {Promise<Hash[]>} A promise that resolves to an array of validator node objects.
-     */
     async getAllValidatorNodes() {
         return await this.getObjectList(VB_VALIDATOR_NODE);
     }
 
-    /**
-     * Retrieves a list of organizations.
-     *
-     * @return {Promise<Hash[]>} A promise that resolves to an array of organizations.
-     */
+
     async getAllOrganizations() {
         return await this.getObjectList(VB_ORGANIZATION);
     }
@@ -358,11 +330,6 @@ export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient
         return NetworkProvider.sendStatusQueryToNodeServer(this.nodeUrl);
     }
 
-    /**
-     * Retrieves a list of applications from the specified chain.
-     *
-     * @return {Promise<Hash[]>} A promise that resolves to an array of application objects.
-     */
     async getAllApplications() {
         return await this.getObjectList(VB_APPLICATION);
     }
@@ -372,3 +339,5 @@ export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient
         return response.list.map(Hash.from)
     }
 }
+
+ */

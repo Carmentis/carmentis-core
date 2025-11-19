@@ -2,37 +2,61 @@ import {CHAIN, ECO, SCHEMAS, SECTIONS} from "../constants/constants";
 import {SchemaSerializer, SchemaUnserializer} from "../data/schemaSerializer";
 import {Utils} from "../utils/utils";
 import {Crypto} from "../crypto/crypto";
-import {MicroblockHeaderObject, MicroblockSection} from "./types";
+import {MicroblockHeaderObject} from "./types";
 import {Hash} from "../entities/Hash";
 import {CarmentisError, IllegalStateError, SectionNotFoundError} from "../errors/carmentis-error";
 import {SectionType} from "../entities/SectionType";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
-import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 import {
-    OrganizationDescription, OrganizationDescriptionSection,
-    OrganizationPublicKeySection, OrganizationSignatureSection, OrganizationSigSchemeSection,
-    ProtocolSigSchemeSection, ProtocolPublicKeySection, ProtocolProtocolUpdateSection,
-    ProtocolNodeUpdateSection, ProtocolSignatureSection,
-    AccountSigSchemeSection, AccountPublicKeySection, AccountTokenIssuanceSection,
-    AccountCreationSection, AccountTransferSection, AccountVestingTransferSection,
-    AccountEscrowTransferSection, AccountStakeSection, AccountSignatureSection,
-    ValidatorNodeSigSchemeSection, ValidatorNodeDeclarationSection, ValidatorNodeDescriptionSection,
-    ValidatorNodeRpcEndpointSection, ValidatorNodeNetworkIntegrationSection, ValidatorNodeSignatureSection,
-    OrganizationServerSection,
-    ApplicationSigSchemeSection, ApplicationDescriptionSection, ApplicationDeclarationSection,
+    AccountCreationSection,
+    AccountEscrowTransferSection,
+    AccountPublicKeySection,
+    AccountSignatureSection,
+    AccountSigSchemeSection,
+    AccountStakeSection,
+    AccountTokenIssuanceSection,
+    AccountTransferSection,
+    AccountVestingTransferSection,
+    ApplicationDeclarationSection,
+    ApplicationDescriptionSection,
+    ApplicationLedgerActorCreationSection,
+    ApplicationLedgerActorSubscriptionSection,
+    ApplicationLedgerAllowedPkeSchemesSection,
+    ApplicationLedgerAllowedSigSchemesSection,
+    ApplicationLedgerAuthorSection,
+    ApplicationLedgerAuthorSignatureSection,
+    ApplicationLedgerChannelCreationSection,
+    ApplicationLedgerChannelInvitationSection,
+    ApplicationLedgerDeclarationSection,
+    ApplicationLedgerEndorsementRequestSection,
+    ApplicationLedgerEndorserSignatureSection,
+    ApplicationLedgerPrivateChannelSection,
+    ApplicationLedgerPublicChannelSection,
+    ApplicationLedgerSharedKeySection,
     ApplicationSignatureSection,
-    ApplicationLedgerAllowedSigSchemesSection, ApplicationLedgerAllowedPkeSchemesSection,
-    ApplicationLedgerChannelCreationSection, ApplicationLedgerAuthorSection,
-    ApplicationLedgerEndorsementRequestSection, ApplicationLedgerEndorserSignatureSection,
-    ApplicationLedgerAuthorSignatureSection, ApplicationLedgerChannelInvitationSection,
-    ApplicationLedgerActorCreationSection, ApplicationLedgerDeclarationSection,
-    ApplicationLedgerSharedKeySection, ApplicationLedgerPrivateChannelSection,
-    ApplicationLedgerPublicChannelSection, ApplicationLedgerActorSubscriptionSection
+    ApplicationSigSchemeSection,
+    OrganizationDescriptionSection,
+    OrganizationPublicKeySection,
+    OrganizationServerSection,
+    OrganizationSignatureSection,
+    OrganizationSigSchemeSection,
+    ProtocolNodeUpdateSection,
+    ProtocolProtocolUpdateSection,
+    ProtocolPublicKeySection,
+    ProtocolSignatureSection,
+    ProtocolSigSchemeSection,
+    ValidatorNodeDeclarationSection,
+    ValidatorNodeDescriptionSection,
+    ValidatorNodeNetworkIntegrationSection,
+    ValidatorNodeRpcEndpointSection,
+    ValidatorNodeSignatureSection,
+    ValidatorNodeSigSchemeSection
 } from "./sectionSchemas";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
 import {BlockchainSerializer} from "../data/BlockchainSerializer";
 import {LocalStateUpdaterFactory} from "../blockchainV2/localStatesUpdater/LocalStateUpdaterFactory";
 import {CMTSToken} from "../economics/currencies/token";
+import {EncoderFactory} from "../utils/encoder";
 
 export interface Section<T = any> {
     type: number,
@@ -43,6 +67,32 @@ export interface Section<T = any> {
 }
 
 export class Microblock {
+    
+    static createGenesisAccountMicroblock(): Microblock {
+        return new Microblock(VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN)
+    };
+
+    static createGenesisValidatorNodeMicroblock(): Microblock {
+        return new Microblock(VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN)
+    };
+
+    static createGenesisApplicationMicroblock(): Microblock {
+        return new Microblock(VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN)
+    };
+
+    static createGenesisProtocolMicroblock(): Microblock {
+        return new Microblock(VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN)
+    };
+
+    static createGenesisOrganizationMicroblock(): Microblock {
+        return new Microblock(VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN)
+    };
+
+    static createGenesisApplicationLedgerMicroblock(): Microblock {
+        return new Microblock(VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN)
+    };
+
+
     gasPrice: number;
     hash: Uint8Array;
     header: MicroblockHeaderObject;
@@ -51,9 +101,13 @@ export class Microblock {
     feesPayerAccount: Uint8Array | null;
 
     constructor(type: VirtualBlockchainType) {
+        const defaultExpirationDay = 0;
+        const defaultTimestampInSeconds = Math.floor(Date.now() / 1000);
+        const defaultGasPrice = CMTSToken.zero().getAmountAsAtomic();
+
         this.type = type;
         this.sections = [];
-        this.gasPrice = 0;
+        this.gasPrice = defaultGasPrice;
         this.hash = Utils.getNullHash();
         this.feesPayerAccount = null;
         this.header = {
@@ -61,8 +115,8 @@ export class Microblock {
             magicString: CHAIN.MAGIC_STRING,
             protocolVersion: CHAIN.PROTOCOL_VERSION,
             height: 1,
-            previousHash: Utils.getNullHash(),
-            timestamp: 0,
+            previousHash: Microblock.generatePreviousHashForGenesisMicroblock(type, defaultExpirationDay),
+            timestamp: defaultTimestampInSeconds,
             gas: 0,
             gasPrice: 0,
             bodyHash: Utils.getNullHash()
@@ -80,15 +134,7 @@ export class Microblock {
      */
     create(height: number, previousHash: Uint8Array | null, expirationDay: number) {
         if (height == 1) {
-            const genesisSeed = Crypto.Random.getBytes(24);
-
-            previousHash = Utils.getNullHash();
-            previousHash[0] = this.type;
-            previousHash[1] = expirationDay >> 24;
-            previousHash[2] = expirationDay >> 16;
-            previousHash[3] = expirationDay >> 8;
-            previousHash[4] = expirationDay;
-            previousHash.set(genesisSeed, 8);
+          previousHash = Microblock.generatePreviousHashForGenesisMicroblock(this.type, expirationDay);
         } else if (previousHash === null) {
             throw `previous hash not provided`;
         }
@@ -104,6 +150,19 @@ export class Microblock {
             gasPrice: 0,
             bodyHash: Utils.getNullHash()
         };
+    }
+
+    private static generatePreviousHashForGenesisMicroblock(mbType: VirtualBlockchainType, expirationDay = 0) {
+        const genesisSeed = Crypto.Random.getBytes(24);
+
+        const previousHash = Utils.getNullHash();
+        previousHash[0] = mbType;
+        previousHash[1] = expirationDay >> 24;
+        previousHash[2] = expirationDay >> 16;
+        previousHash[3] = expirationDay >> 8;
+        previousHash[4] = expirationDay;
+        previousHash.set(genesisSeed, 8);
+        return previousHash
     }
 
     setLocalStateUpdaterVersion(localStateUpdaterVersion: number) {
@@ -422,13 +481,13 @@ export class Microblock {
      * @param {number} extraBytes - Additional bytes for gas data to be factored in if includeGas is true.
      * @return {Uint8Array} The serialized binary representation of the microblock for signing.
      */
-    serializeForSigning(includeGas: boolean, sectionCount: number, extraBytes: number): Uint8Array {
+    serializeForSigning(includeGas: boolean, sectionCount?: number, extraBytes: number = 0): Uint8Array {
         this.setGasData(includeGas, extraBytes);
 
         const headerData = BlockchainSerializer.serializeMicroblockHeader(this.header);
         //const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
         //const headerData = serializer.serialize(this.header);
-        const sections = this.sections.slice(0, sectionCount);
+        const sections = this.sections.slice(0, sectionCount || this.sections.length);
 
         // TODO: find another way
         return Utils.binaryFrom(
@@ -985,6 +1044,33 @@ export class Microblock {
     getApplicationLedgerAuthorSignatureSection() {
         return this.getSectionByType<ApplicationLedgerAuthorSignatureSection>(SectionType.APP_LEDGER_AUTHOR_SIGNATURE);
     }
+    
+    toString(): string {
+        const encoder = EncoderFactory.bytesToHexEncoder();
+        let output = `Microblock:\n`;
+        output += `  Hash: ${encoder.encode(this.hash)}\n`;
+        output += `  Fees payer account: ${this.feesPayerAccount ? encoder.encode(this.feesPayerAccount) : "Null"}\n`;
+        output += `  Header:\n`;
+        output += `    Magic String: ${this.header.magicString}\n`;
+        output += `    Protocol Version: ${this.header.protocolVersion}\n`;
+        output += `    Height: ${this.header.height}\n`;
+        output += `    Previous Hash: ${encoder.encode(this.header.previousHash)}\n`;
+        output += `    Timestamp: ${this.header.timestamp}\n`;
+        output += `    Gas: ${this.header.gas}\n`;
+        output += `    Gas Price: ${this.header.gasPrice}\n`;
+        output += `    Body Hash: ${encoder.encode(this.header.bodyHash)}\n`;
+        output += `    Local State Updater Version: ${this.header.localStateUpdaterVersion}\n`;
 
+        output += `  Sections (${this.sections.length}):\n`;
+        this.sections.forEach((section, index) => {
+            output += `    Section ${index}:\n`;
+            output += `      Section Type: ${section.type}\n`;
+            output += `      Section Hash: ${encoder.encode(section.hash)}\n`;
+            output += `      Section Data Length: ${section.data.length} bytes\n`;
+            output += `      Section Object: ${JSON.stringify(section.object, null).replace(/\n/g, '\n      ')}\n`;
+        });
+
+        return output;
+    }
 
 }

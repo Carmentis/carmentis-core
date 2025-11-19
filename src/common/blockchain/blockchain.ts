@@ -1,3 +1,5 @@
+export {}
+/*
 import {Provider} from "../providers/Provider";
 import {Explorer} from "./explorer";
 import {MicroblockImporter} from "./MicroblockImporter";
@@ -19,9 +21,7 @@ import {
 
 export type OperatorAnchorRequest = Omit<StateUpdateRequest, 'applicationId'>;
 
-/**
- * @deprecated Use BlockchainFacade.
- */
+
 export class Blockchain {
   provider: Provider;
   constructor(provider: Provider) {
@@ -44,12 +44,7 @@ export class Blockchain {
     return this.provider.isKeyed();
   }
 
-  /**
-   * When creating a genesis account, a public key can be provided.
-   * If no public key is provided, the public key of the provider will be used.
-   *
-   * @returns {Promise<Account>}
-   */
+
   async createGenesisAccount(genesisPublicKey?: PublicSignatureKey) {
     if (!this.provider.isKeyed()) throw 'Cannot create a genesis account without a keyed provider.'
     const account = new Account({ provider: this.provider });
@@ -57,14 +52,7 @@ export class Blockchain {
     return account;
   }
 
-  /**
-   * Should be used with a keyed provider.
-   *
-   * @param {Hash} sellerAccount
-   * @param {PublicSignatureKey} buyerPublicKey
-   * @param {number} amount
-   * @returns {Promise<Account>}
-   */
+
   async createAccount(sellerAccount: Hash, buyerPublicKey: PublicSignatureKey, amount: number) {
     if (!this.provider.isKeyed()) throw 'Cannot create an account without a keyed provider.'
     const hexEncoder = EncoderFactory.bytesToHexEncoder();
@@ -74,102 +62,63 @@ export class Blockchain {
   }
 
 
-  /**
-   * Loads an account using the given identifier.
-   *
-   * @param {Hash} identifier - The identifier for the account.
-   * @return {Promise<Account>} A promise that resolves to an instance of the loaded account.
-   */
+
   async loadAccount(identifier: Hash) {
     const account = new Account({ provider: this.provider });
     await account._load(identifier.toBytes());
     return account;
   }
 
-  /**
-   * Should be used with a keyed provider.
-   *
-   * @returns {Promise<Organization>}
-   */
+
   async createOrganization() {
     const organization = new Organization({ provider: this.provider });
     await organization._create();
     return organization;
   }
 
-  /**
-   * Can be used with a keyed provider.
-   *
-   * @param identifierString
-   * @returns {Promise<Organization>}
-   */
+
   async loadOrganization(identifierString: Hash) {
     const organization = new Organization({ provider: this.provider });
     await organization._load(identifierString.toBytes());
     return organization;
   }
 
-  /**
-   * Should be used with a keyed provider.
-   *
-   * @returns {Promise<ValidatorNode>}
-   */
+
   async createValidatorNode(organizationIdentifierString: Hash) {
     const validatorNode = new ValidatorNode({ provider: this.provider });
     await validatorNode._create(organizationIdentifierString.toBytes());
     return validatorNode;
   }
 
-  /**
-   * Can be used with a keyed provider.
-   *
-   * @param identifier
-   * @returns {Promise<ValidatorNode>}
-   */
+
   async loadValidatorNode(identifier: Hash) {
     const validatorNode = new ValidatorNode({ provider: this.provider });
     await validatorNode._load(identifier.toBytes());
     return validatorNode;
   }
 
-  /**
-   * Should be used with a keyed provider.
-   *
-   * @returns {Promise<Application>}
-   */
+
   async createApplication(organizationIdentifierString: Hash) {
     const application = new Application({ provider: this.provider });
     await application._create(organizationIdentifierString.toBytes());
     return application;
   }
 
-  /**
-   * Can be used with a keyed provider.
-   *
-   * @param identifier
-   * @returns {Promise<Application>}
-   */
+
   async loadApplication(identifier: Hash) {
     const application = new Application({ provider: this.provider });
     await application._load(identifier.toBytes());
     return application;
   }
 
-  /**
-   * Should be used with a keyed provider.
-   *
-   * @param object {StateUpdateRequest}
-   * @returns {Promise<ApplicationLedger>}
-   */
+
   async getApplicationLedgerFromJson(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, object: StateUpdateRequest) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._processJson(hostPrivateDecryptionKey, object);
     return applicationLedger;
   }
 
-  /**
-   * Imports a proof.
-   */
+
   async importApplicationLedgerProof(proof: Proof): Promise<ImportedProof[]> {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._load(Utils.binaryFromHexa(proof.info.virtualBlockchainIdentifier));
@@ -177,11 +126,7 @@ export class Blockchain {
     return data;
   }
 
-  /**
-   * Should be used with a keyed provider.
-   *
-   * @returns {Promise<ApplicationLedger>}
-   */
+
   async createApplicationLedger() {
     if (!this.provider.isKeyed()) throw 'Cannot create application ledger without a keyed provider.'
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
@@ -190,15 +135,10 @@ export class Blockchain {
     return applicationLedger;
   }
 
-  /**
-   * Can be used with a keyed provider.
-   *
-   * @param identifier
-   * @returns {Promise<ApplicationLedger>}
-   */
   async loadApplicationLedger(identifier: Hash) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._load(identifier.toBytes());
     return applicationLedger;
   }
 }
+*/

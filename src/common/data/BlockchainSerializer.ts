@@ -1,6 +1,5 @@
 import {MicroblockHeaderObject} from "../blockchain/types";
 import {SchemaSerializer, SchemaUnserializer} from "./schemaSerializer";
-import {MicroBlockHeaderDto} from "../entities/MicroBlockHeaderDto";
 import { SCHEMAS } from "../constants/constants";
 import {decode, diagnose, encode} from 'cbor2';
 

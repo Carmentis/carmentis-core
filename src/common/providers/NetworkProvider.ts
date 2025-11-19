@@ -38,7 +38,7 @@ export class NetworkProvider {
         this.nodeUrl = nodeUrl;
     }
 
-    async sendMicroblock(headerData: any, bodyData: any) {
+    async sendSerializedMicroblock(headerData: any, bodyData: any) {
         const answer = await this.broadcastTx(Utils.binaryFrom(headerData, bodyData));
         return answer;
     }

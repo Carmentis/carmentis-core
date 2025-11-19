@@ -1,3 +1,5 @@
+export {}
+/*
 import {SECTIONS} from "../constants/constants";
 import {ApplicationVb} from "./ApplicationVb";
 import {Crypto} from "../crypto/crypto";
@@ -81,3 +83,5 @@ export class Application {
         return await this.vb.publish(waitForAnchoring);
     }
 }
+
+ */

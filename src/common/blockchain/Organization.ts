@@ -1,3 +1,5 @@
+export {}
+/*
 import {SECTIONS} from "../constants/constants";
 import {OrganizationVb} from "./OrganizationVb";
 import {Crypto} from "../crypto/crypto";
@@ -84,3 +86,5 @@ export class Organization {
     return await this.vb.publish(waitForAnchoring);
   }
 }
+
+ */

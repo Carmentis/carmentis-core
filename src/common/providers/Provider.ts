@@ -1,20 +1,26 @@
 import {BlockchainUtils} from "../blockchain/blockchainUtils";
 import {Utils} from "../utils/utils";
-import {CryptographicHash} from "../crypto/hash/hash-interface";
+import {CryptographicHash, Sha256CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {
     AccountHistoryInterface,
-    ChainInformationDTO,
-    BlockInformationDTO,
-    BlockContentDTO,
     AccountStateDTO,
+    AccountVBState,
+    ApplicationLedgerLocalStateObject,
+    ApplicationVBState,
+    BlockContentDTO,
+    BlockInformationDTO,
+    ChainInformationDTO,
+    GenesisSnapshotDTO,
     MicroblockInformationSchema,
-    ObjectList, GenesisSnapshotDTO, OrganizationVBState, ApplicationVBState, AccountVBState,
-    ApplicationLedgerLocalStateObject, ProtocolVBState, ValidatorNodeVBState
+    MsgVirtualBlockchainState,
+    ObjectList,
+    OrganizationVBState,
+    ProtocolVBState,
+    ValidatorNodeVBState
 } from "../blockchain/types";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
-import {VirtualBlockchainStateWrapper} from "../wrappers/VirtualBlockchainStateWrapper";
 import {KeyedProvider} from "./KeyedProvider";
 import {Hash} from "../entities/Hash";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
@@ -24,10 +30,12 @@ import {Logger} from "../utils/Logger";
 import {OrganizationLocalState} from "../blockchainV2/localStates/OrganizationLocalState";
 import {AccountLocalState} from "../blockchainV2/localStates/AccountLocalState";
 import {ApplicationLedgerLocalState} from "../blockchainV2/localStates/ApplicationLedgerLocalState";
-import {ApplicationLedgerVb} from "../blockchain/ApplicationLedgerVb";
 import {ApplicationLocalState} from "../blockchainV2/localStates/ApplicationLocalState";
 import {ProtocolLocalState} from "../blockchainV2/localStates/ProtocolLocalState";
 import {ValidatorNodeLocalState} from "../blockchainV2/localStates/ValidatorNodeLocalState";
+import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
+import {Microblock} from "../blockchain/Microblock";
+import {BlockchainSerializer} from "../data/BlockchainSerializer";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -51,7 +59,7 @@ export class Provider {
     }
 
     async sendMicroblock(headerData: any, bodyData: any) {
-        return await this.externalProvider.sendMicroblock(headerData, bodyData);
+        return await this.externalProvider.sendSerializedMicroblock(headerData, bodyData);
     }
 
     async awaitMicroblockAnchoring(hash: Uint8Array) {
@@ -106,7 +114,13 @@ export class Provider {
         return await this.getAccountByPublicKeyHash(publicKeyHash);
     }
 
-    async getObjectList(type: number): Promise<ObjectList> {
+
+    async getAllAccounts(): Promise<Hash[]> {
+        const list = await this.getObjectList(VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN);
+        return list.list.map(Hash.from)
+    }
+
+    async getObjectList(type: VirtualBlockchainType): Promise<ObjectList> {
         return await this.externalProvider.getObjectList(type);
     }
 
@@ -189,7 +203,7 @@ export class Provider {
         return content.microblockHashes;
     }
 
-    async getVirtualBlockchainStateInternal(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainStateWrapper> {
+    async getVirtualBlockchainStateInternal(virtualBlockchainId: Uint8Array): Promise<MsgVirtualBlockchainState> {
         return await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
     }
 
@@ -363,5 +377,18 @@ export class Provider {
         return ValidatorNodeLocalState.createFromLocalState(
             await this.getVirtualBlockchainLocalStateFromId<ValidatorNodeVBState>(validatorNodeId)
         )
+    }
+
+    async getAccountHashFromPublicKey(publicKey: PublicSignatureKey) {
+        const hashScheme = new Sha256CryptographicHash();
+        const answer = await this.externalProvider.getAccountByPublicKeyHash(
+            hashScheme.hash(publicKey.getPublicKeyAsBytes())
+        );
+        return Hash.from(answer.accountHash);
+    }
+
+    publishMicroblock(microblockToPublish: Microblock) {
+        const {headerData: serializedHeader, bodyData:serialiazedBody} = microblockToPublish.serialize();
+        return this.externalProvider.sendSerializedMicroblock(serializedHeader, serialiazedBody)
     }
 }

@@ -1,9 +1,6 @@
 import {SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
-import {Organization} from "./Organization";
-import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
-import {ApplicationVBState} from "./types";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {Microblock} from "./Microblock";
@@ -15,7 +12,6 @@ import {
     ApplicationMicroblockStructureChecker
 } from "../blockchainV2/structureChekers/ApplicationMicroblockStructureChecker";
 import {Hash} from "../entities/Hash";
-import {OrganizationLocalState} from "../blockchainV2/localStates/OrganizationLocalState";
 import {LocalStateUpdaterFactory} from "../blockchainV2/localStatesUpdater/LocalStateUpdaterFactory";
 
 export class ApplicationVb extends VirtualBlockchain {
@@ -58,9 +54,7 @@ export class ApplicationVb extends VirtualBlockchain {
         return await organization.getPublicKey();
     }
 
-    /**
-     Update methods
-     */
+    /*
     async setSignatureScheme(object: any) {
         await this.addSection(SECTIONS.APP_SIG_SCHEME, object);
     }
@@ -73,16 +67,11 @@ export class ApplicationVb extends VirtualBlockchain {
         await this.addSection(SECTIONS.APP_DESCRIPTION, object);
     }
 
-
-    /**
-     *
-     * @param {PrivateSignatureKey} privateKey
-     * @returns {Promise<void>}
-     */
     async setSignature(privateKey: PrivateSignatureKey) {
         const object = this.createSignature(privateKey);
         await this.addSection(SECTIONS.APP_SIGNATURE, object);
     }
+     */
 
 
     async signatureCallback(microblock: Microblock, section: any) {

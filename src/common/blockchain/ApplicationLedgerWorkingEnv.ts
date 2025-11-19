@@ -11,23 +11,11 @@ import {SchemaValidator} from "../data/schemaValidator";
 import {Utils} from "../utils/utils";
 import {ActorType} from "../constants/ActorType";
 import {Crypto} from "../crypto/crypto";
-import {
-    ActorNotInvitedError, CurrentActorNotFoundError,
-    DecryptionError,
-    IllegalParameterError, NoSharedSecretError,
-    SharedKeyDecryptionError
-} from "../errors/carmentis-error";
-import {SCHEMAS, SECTIONS} from "../constants/constants";
+import {DecryptionError, IllegalParameterError, SharedKeyDecryptionError} from "../errors/carmentis-error";
+import {SCHEMAS} from "../constants/constants";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
-import {
-    ApplicationLedgerActorSubscriptionSection, ApplicationLedgerChannelInvitationSection,
-    ApplicationLedgerSharedKeySection
-} from "./sectionSchemas";
-import {SectionType} from "../entities/SectionType";
-import {IntermediateRepresentation} from "../records/intermediateRepresentation";
 import {Assertion} from "../utils/Assertion";
 import {Logger} from "../utils/Logger";
-import {CryptoEncoderFactory} from "../crypto/CryptoEncoderFactory";
 import {HKDF} from "../crypto/kdf/HKDF";
 import {AES256GCMSymmetricEncryptionKey} from "../crypto/encryption/symmetric-encryption/encryption-interface";
 import {IApplicationLedgerLocalStateUpdater} from "../blockchainV2/localStates/ILocalStateUpdater";

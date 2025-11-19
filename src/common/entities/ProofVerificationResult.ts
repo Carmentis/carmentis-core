@@ -1,11 +1,9 @@
 import {ImportedProof} from "../blockchain/types";
-import {MicroblockImporter} from "../blockchain/MicroblockImporter";
-import {IllegalParameterError} from "../errors/carmentis-error";
-import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Optional} from "./Optional";
 import {Height} from "./Height";
 import {Hash} from "./Hash";
 import {AbstractPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+import {ApplicationLedgerVb} from "../blockchain/ApplicationLedgerVb";
 
 /**
  * Represents the result of a proof verification process, encapsulating the verified data and
@@ -14,15 +12,15 @@ import {AbstractPrivateDecryptionKey} from "../crypto/encryption/public-key-encr
 export class ProofVerificationResult {
     private constructor(
         private verified: boolean,
-        private appLedger: ApplicationLedger,
+        private appLedger: ApplicationLedgerVb,
         private importedProofs: Optional<ImportedProof[]>,
     ) {}
 
-    static createSuccessfulProofVerificationResult(appLedger: ApplicationLedger, data: ImportedProof[]) {
+    static createSuccessfulProofVerificationResult(appLedger: ApplicationLedgerVb, data: ImportedProof[]) {
         return new ProofVerificationResult(true, appLedger, Optional.some(data));
     }
 
-    static createFailedProofVerificationResult(appLedger: ApplicationLedger) {
+    static createFailedProofVerificationResult(appLedger: ApplicationLedgerVb) {
         return new ProofVerificationResult(false, appLedger, Optional.none());
     }
 
@@ -59,7 +57,7 @@ export class ProofVerificationResult {
      * @return {Hash} The virtual blockchain ID associated with the application's ledger.
      */
     getApplicationLedgerId(): Hash {
-        return this.appLedger.getVirtualBlockchainId()
+        return this.appLedger.getIdentifier()
     }
 
 

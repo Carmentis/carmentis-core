@@ -1,91 +1,185 @@
-import { SECTIONS } from "../../constants/constants";
+import {SECTIONS} from "../../constants/constants";
 import {Microblock} from "../microblock/Microblock";
 
+/**
+ * The StructureChecker class is responsible for validating the structure of a microblock.
+ * It enforces constraints and expectations on specific sections within a microblock based on their types.
+ * The class includes functionality to navigate sections, verify constraints, and group sections for validation.
+ */
 export class StructureChecker {
-  microblock: Microblock;
-  pointer: any;
-  constructor(microblock: Microblock) {
-    this.microblock = microblock;
-    this.pointer = 0;
-  }
+    /**
+     * Represents a microblock in a blockchain system. A microblock is a smaller unit of a blockchain block,
+     * typically used to facilitate faster transactions or state updates within the blockchain network.
+     *
+     * @typedef {Object} Microblock
+     * @property {string} id - The unique identifier for the microblock.
+     * @property {number} sequence - The sequence number of the microblock within the parent block.
+     * @property {Array<Object>} transactions - A list of transactions included in the microblock.
+     * @property {string} parentBlockHash - The hash of the parent block to which the microblock belongs.
+     * @property {string} previousMicroblockHash - The hash of the previous microblock in the sequence.
+     * @property {string} proposer - The identifier of the node or entity that proposed the microblock.
+     * @property {number} timestamp - The Unix timestamp marking when the microblock was created.
+     * @property {string} signature - The cryptographic signature verifying the authenticity of the microblock.
+     */
+    microblock: Microblock;
+    /**
+     * A numeric variable that stores a memory address or a reference to another variable.
+     * This pointer is used to indirectly access the value or object located at the specified memory address.
+     *
+     * @type {number} The numeric address or reference.
+     */
+    pointer: number;
 
-  isFirstBlock() {
-    return this.microblock.getHeight() == 1;
-  }
-
-  expects(constraint: any, type: any) {
-    let count = 0;
-
-    while(!this.endOfList() && this.currentSection().type == type) {
-      count++;
-      this.pointer++;
+    /**
+     * Constructs an instance of the class with the provided Microblock object.
+     *
+     * @param {Microblock} microblock - The Microblock instance to be associated with this object.
+     * @return {void} No return value.
+     */
+    constructor(microblock: Microblock) {
+        this.microblock = microblock;
+        this.pointer = 0;
     }
 
-    if(!this.checkConstraint(constraint, count)) {
-      throw `expected ${SECTIONS.CONSTRAINT_NAMES[constraint]} of type ${this.getTypeLabel(type)}, got ${count}`;
-    }
-  }
-
-  group(groupConstraint: any, list: any) {
-    const counts = new Map;
-    let groupCount = 0;
-
-    for(const [ constraint, type ] of list) {
-      counts.set(type, 0);
+    /**
+     * Checks if the current block is the first block in the chain.
+     *
+     * @return {boolean} Returns true if the block's height is 1, otherwise false.
+     */
+    isFirstBlock() {
+        return this.microblock.getHeight() == 1;
     }
 
-    while(!this.endOfList()) {
-      const currentType = this.currentSection().type;
+    /**
+     * Validates and counts consecutive sections of a specified type in a list against a given constraint.
+     *
+     * @param constraint The constraint that defines the allowed count of sections.
+     * @param type The type of sections to be counted and validated.
+     * @return void
+     * @throws An error if the count of sections does not meet the specified constraint.
+     */
+    expects(constraint: any, type: any) {
+        let count = 0;
 
-      // @ts-expect-error TS(7031): Binding element 'count' implicitly has an 'any' ty... Remove this comment to see the full error message
-      if(!list.some(([ count, type ]) => type == currentType)) {
-        break;
-      }
-      counts.set(currentType, counts.get(currentType) + 1);
-      groupCount++;
-      this.pointer++;
+        while (!this.endOfList() && this.currentSection().type == type) {
+            count++;
+            this.pointer++;
+        }
+
+        if (!this.checkConstraint(constraint, count)) {
+            throw `expected ${SECTIONS.CONSTRAINT_NAMES[constraint]} of type ${this.getTypeLabel(type)}, got ${count}`;
+        }
     }
 
-    if(!this.checkConstraint(groupConstraint, groupCount)) {
-      throw `expected ${SECTIONS.CONSTRAINT_NAMES[groupConstraint]} in group, got ${groupCount}`;
+    /**
+     * Groups elements based on the provided group constraint and a list of type constraints.
+     *
+     * @param groupConstraint The constraint that defines the grouping condition.
+     * @param list A list of type constraints, where each element is a tuple containing a constraint and a type.
+     * @return void
+     * @throws An error if the group constraint or type constraints are not met.
+     */
+    group(groupConstraint: any, list: any) {
+        const counts = new Map;
+        let groupCount = 0;
+
+        for (const [constraint, type] of list) {
+            counts.set(type, 0);
+        }
+
+        while (!this.endOfList()) {
+            const currentType = this.currentSection().type;
+
+            // @ts-expect-error TS(7031): Binding element 'count' implicitly has an 'any' ty... Remove this comment to see the full error message
+            if (!list.some(([count, type]) => type == currentType)) {
+                break;
+            }
+            counts.set(currentType, counts.get(currentType) + 1);
+            groupCount++;
+            this.pointer++;
+        }
+
+        if (!this.checkConstraint(groupConstraint, groupCount)) {
+            throw `expected ${SECTIONS.CONSTRAINT_NAMES[groupConstraint]} in group, got ${groupCount}`;
+        }
+
+        for (const [constraint, type] of list) {
+            const count = counts.get(type);
+
+            if (!this.checkConstraint(constraint, count)) {
+                throw `expected ${SECTIONS.CONSTRAINT_NAMES[constraint]} of type ${this.getTypeLabel(type)}, got ${count}`;
+            }
+        }
     }
 
-    for(const [ constraint, type ] of list) {
-      const count = counts.get(type);
-
-      if(!this.checkConstraint(constraint, count)) {
-        throw `expected ${SECTIONS.CONSTRAINT_NAMES[constraint]} of type ${this.getTypeLabel(type)}, got ${count}`;
-      }
+    /**
+     * Validates if the current section is at the end of the list.
+     * Throws an error if the current section is not the expected end.
+     *
+     * @return {void} Does not return a value.
+     */
+    endsHere(): void {
+        if (!this.endOfList()) {
+            const currentSection = this.currentSection();
+            const currentSectionType = currentSection.type;
+            throw `Unexpected section ${this.getTypeLabel(currentSectionType)}`;
+        }
     }
-  }
 
-  endsHere() {
-    if(!this.endOfList()) {
-      throw `unexpected section ${this.getTypeLabel(this.currentSection())}`;
+    /**
+     * Retrieves the current section based on the pointer's position.
+     *
+     * @return {Object} The current section object from the list of all sections.
+     */
+    currentSection() {
+        return this.microblock.getAllSections()[this.pointer];
     }
-  }
 
-  currentSection() {
-    return this.microblock.getAllSections()[this.pointer];
-  }
-
-  endOfList() {
-    return !this.currentSection();
-  }
-
-  checkConstraint(constraint: number, count: any) {
-    switch(constraint) {
-      case SECTIONS.ANY         : { return true; }
-      case SECTIONS.ZERO        : { return count == 0; }
-      case SECTIONS.ONE         : { return count == 1; }
-      case SECTIONS.AT_LEAST_ONE: { return count >= 1; }
-      case SECTIONS.AT_MOST_ONE : { return count <= 1; }
+    /**
+     * Determines if the current section is at its end.
+     *
+     * @return {boolean} Returns true if the current section is null or undefined, indicating the end of the list. Otherwise, returns false.
+     */
+    endOfList() {
+        return !this.currentSection();
     }
-    return false;
-  }
 
-  getTypeLabel(type: any) {
-    const section = SECTIONS.DEF[this.microblock.getType()][type];
-    return section ? section.label : "unknown";
-  }
+    /**
+     * Evaluates a given constraint on a specified count and returns whether the constraint is satisfied.
+     *
+     * @param {number} constraint - The constraint to check. This could be any predefined constant such as SECTIONS.ANY, SECTIONS.ZERO, etc.
+     * @param {any} count - The actual count value to assess against the given constraint.
+     * @return {boolean} Returns true if the count satisfies the given constraint, otherwise false.
+     */
+    checkConstraint(constraint: number, count: any) {
+        switch (constraint) {
+            case SECTIONS.ANY         : {
+                return true;
+            }
+            case SECTIONS.ZERO        : {
+                return count == 0;
+            }
+            case SECTIONS.ONE         : {
+                return count == 1;
+            }
+            case SECTIONS.AT_LEAST_ONE: {
+                return count >= 1;
+            }
+            case SECTIONS.AT_MOST_ONE : {
+                return count <= 1;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Retrieves the label for a given type based on the defined sections of the microblock.
+     *
+     * @param {number} type - The type for which the label needs to be retrieved.
+     * @return {string} The label associated with the given type, or "unknown" if the type is not defined.
+     */
+    getTypeLabel(type: number): string {
+        const section = SECTIONS.DEF[this.microblock.getType()][type];
+        return section ? section.label : "unknown";
+    }
 }

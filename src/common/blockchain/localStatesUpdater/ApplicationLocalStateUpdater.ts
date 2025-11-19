@@ -1,10 +1,11 @@
 import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {ValidatorNodeLocalState} from "../localStates/ValidatorNodeLocalState";
-import {Microblock, Section} from "../microblock/Microblock";
+import {Microblock} from "../microblock/Microblock";
 import {ProtocolLocalState} from "../localStates/ProtocolLocalState";
 import {ApplicationLocalState} from "../localStates/ApplicationLocalState";
 import {SectionNotFoundError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
+import {Section} from "../../type/Section";
 
 export class ApplicationLocalStateUpdater implements ILocalStateUpdater<ApplicationLocalState> {
     updateState(prevState: ApplicationLocalState, microblock: Microblock): ApplicationLocalState {

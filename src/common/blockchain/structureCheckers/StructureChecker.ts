@@ -10,7 +10,7 @@ export class StructureChecker {
   }
 
   isFirstBlock() {
-    return this.microblock.header.height == 1;
+    return this.microblock.getHeight() == 1;
   }
 
   expects(constraint: any, type: any) {
@@ -66,7 +66,7 @@ export class StructureChecker {
   }
 
   currentSection() {
-    return this.microblock.sections[this.pointer];
+    return this.microblock.getAllSections()[this.pointer];
   }
 
   endOfList() {
@@ -85,7 +85,7 @@ export class StructureChecker {
   }
 
   getTypeLabel(type: any) {
-    const section = SECTIONS.DEF[this.microblock.type][type];
+    const section = SECTIONS.DEF[this.microblock.getType()][type];
     return section ? section.label : "unknown";
   }
 }

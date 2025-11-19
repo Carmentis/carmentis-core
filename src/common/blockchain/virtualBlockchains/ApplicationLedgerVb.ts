@@ -18,7 +18,7 @@ import {
     SectionNotFoundError,
     SharedKeyDecryptionError,
 } from "../../errors/carmentis-error";
-import {Microblock, Section} from "../microblock/Microblock";
+import {Microblock} from "../microblock/Microblock";
 import {
     AbstractPrivateDecryptionKey,
     AbstractPublicEncryptionKey
@@ -49,6 +49,7 @@ import {SchemaValidator} from "../../data/schemaValidator";
 import {SectionType} from "../../entities/SectionType";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {ApplicationLedgerWorkingEnv} from "./ApplicationLedgerWorkingEnv";
+import {Section} from "../../type/Section";
 
 export class ApplicationLedgerVb extends VirtualBlockchain {
 

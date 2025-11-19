@@ -1,6 +1,6 @@
 
 
-import {Microblock, Section} from "../microblock/Microblock";
+import {Microblock} from "../microblock/Microblock";
 import {IApplicationLedgerLocalStateUpdater, ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
 import {SectionType} from "../../entities/SectionType";
@@ -19,12 +19,13 @@ import {
     ApplicationLedgerDeclarationSection,
     ApplicationLedgerSharedKeySection
 } from "../../type/sections";
+import {Section} from "../../type/Section";
 
 export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<ApplicationLedgerLocalState>, IApplicationLedgerLocalStateUpdater {
     async updateState(prevState: ApplicationLedgerLocalState, microblock: Microblock): Promise<ApplicationLedgerLocalState> {
         const newState = prevState.clone();
         const mbHeight = microblock.getHeight();
-        for (const section of microblock.sections) {
+        for (const section of microblock.getAllSections()) {
             await this.updateStateFromSection(prevState, section, mbHeight);
         }
         return newState;

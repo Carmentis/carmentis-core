@@ -5,7 +5,7 @@ import {
     AbstractPrivateDecryptionKey,
     AbstractPublicEncryptionKey
 } from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
-import {Microblock, Section} from "../microblock/Microblock";
+import {Microblock} from "../microblock/Microblock";
 import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
 import {SchemaValidator} from "../../data/schemaValidator";
 import {Utils} from "../../utils/utils";
@@ -20,6 +20,7 @@ import {HKDF} from "../../crypto/kdf/HKDF";
 import {AES256GCMSymmetricEncryptionKey} from "../../crypto/encryption/symmetric-encryption/encryption-interface";
 import {IApplicationLedgerLocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
+import {Section} from "../../type/Section";
 
 
 export class ApplicationLedgerWorkingEnv {

@@ -1,5 +1,5 @@
 import {CHAIN} from "../../constants/constants";
-import {Microblock, Section} from "../microblock/Microblock";
+import {Microblock} from "../microblock/Microblock";
 import {Utils} from "../../utils/utils";
 import {Provider} from "../../providers/Provider";
 import {Hash} from "../../entities/Hash";
@@ -15,6 +15,7 @@ import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
 import {IMicroblockStructureChecker} from "../structureCheckers/IMicroblockStructureChecker";
 import {EncoderFactory} from "../../utils/encoder";
+import {Section} from "../../type/Section";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -100,7 +101,7 @@ export abstract class VirtualBlockchain {
     async getGenesisSeed() {
         const mb = await this.getFirstMicroBlock();
         // TODO(correctness): check because the genesisseed is a *part* of the previousHash (also includes type and expirationDate)
-        return Hash.from(mb.header.previousHash);
+        return mb.getPreviousHash();
     }
 
     /**

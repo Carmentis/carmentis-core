@@ -288,7 +288,7 @@ export class MicroblockImporter {
         try {
             // check the gas
             const mb = this.getMicroBlock();
-            const declaredGas = mb.header.gas;
+            const declaredGas = mb.getGas().getAmountAsAtomic();
             const expectedGas = mb.computeGas();
 
             if(declaredGas != expectedGas) {

@@ -1,9 +1,10 @@
 import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
-import {Microblock, Section} from "../microblock/Microblock";
+import {Microblock} from "../microblock/Microblock";
 import {AccountLocalState} from "../localStates/AccountLocalState";
 import {SECTIONS, ECO} from "../../constants/constants";
 import {AccountVb} from "../virtualBlockchains/AccountVb";
+import {Section} from "../../type/Section";
 
 export class AccountLocalStateUpdater implements ILocalStateUpdater<AccountLocalState> {
     constructor() {}
@@ -56,7 +57,7 @@ export class AccountLocalStateUpdater implements ILocalStateUpdater<AccountLocal
     }
 
     private async publicKeyCallback(state: AccountLocalState, microblock: Microblock, section: Section) {
-        state.updatePublicKeyHeight(microblock.header.height);
+        state.updatePublicKeyHeight(microblock.getHeight());
     }
 
     private async tokenIssuanceCallback(state: AccountLocalState, microblock: Microblock, section: Section) {

@@ -146,6 +146,7 @@ export * from "./trees/merkleTree";
 export * from "./trees/radixChecker";
 export * from "./trees/radixConstants";
 export * from "./trees/radixUtils";
+export * from "./type/Section";
 export * from "./type/StateUpdateRequest";
 export * from "./type/sections";
 export * from "./type/types";

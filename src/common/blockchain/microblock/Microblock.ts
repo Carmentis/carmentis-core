@@ -57,23 +57,7 @@ import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {CMTSToken} from "../../economics/currencies/token";
 import {EncoderFactory} from "../../utils/encoder";
-
-/**
- * Represents a section within a microblock containing data and metadata.
- * @template T - The type of object stored in the section
- */
-export interface Section<T = any> {
-    /** The type identifier for this section */
-    type: number,
-    /** The deserialized object stored in this section */
-    object: T,
-    /** The raw serialized data of this section */
-    data: Uint8Array,
-    /** The hash of this section's data */
-    hash: Uint8Array,
-    /** The index position of this section within the microblock */
-    index: number,
-}
+import {Section} from "../../type/Section";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -129,13 +113,53 @@ export class Microblock {
         return new Microblock(VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN)
     };
 
+    /**
+     * Represents the price of gas.
+     */
+    private gasPrice: number;
 
-    gasPrice: number;
-    hash: Uint8Array;
-    header: MicroblockHeaderObject;
-    sections: Section[];
-    type: number;
-    feesPayerAccount: Uint8Array | null;
+    /**
+     * A variable representing binary data encoded as a `Uint8Array`.
+     *
+     * This variable is typically used to handle cryptographic or hashed data.
+     * It stores an array of 8-bit unsigned integers.
+     *
+     * Common use cases include:
+     * - Storing hashes generated from input data using cryptographic algorithms.
+     * - Transmitting compact binary data.
+     * - Performing binary-level operations on arrays of unsigned integers.
+     */
+    private hash: Uint8Array;
+
+    /**
+     * Represents the header for a microblock.
+     * The `MicroblockHeaderObject` provides metadata and essential details about the microblock,
+     * such as its version, parent block reference, microblock sequence, and other relevant data.
+     *
+     * This object is integral for validating and processing microblocks and ensuring they
+     * are chained properly within their respective blockchains.
+     */
+    private header: MicroblockHeaderObject;
+
+    /**
+     * Represents an array of sections.
+     *
+     * Each section contains structured data, typically used to divide or group related content
+     * or functionality within a microblock.
+     */
+    private readonly sections: Section[];
+
+    /**
+     * Represents a virtual blockchain type.
+     */
+    private readonly type: VirtualBlockchainType;
+
+    /**
+     * Represents the account details responsible for paying applicable fees.
+     * This variable can either hold a `Uint8Array`, containing the account id,
+     * or be `null` if no account is specified.
+     */
+    private feesPayerAccount: Uint8Array | null;
 
     /**
      * Creates a new Microblock instance.
@@ -1139,4 +1163,10 @@ export class Microblock {
         return output;
     }
 
+    /**
+     *
+     */
+    getType(): VirtualBlockchainType {
+        return this.type;
+    }
 }

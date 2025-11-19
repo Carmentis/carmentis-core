@@ -8,27 +8,16 @@ import {Microblock} from "../microblock/Microblock";
  */
 export class StructureChecker {
     /**
-     * Represents a microblock in a blockchain system. A microblock is a smaller unit of a blockchain block,
-     * typically used to facilitate faster transactions or state updates within the blockchain network.
-     *
-     * @typedef {Object} Microblock
-     * @property {string} id - The unique identifier for the microblock.
-     * @property {number} sequence - The sequence number of the microblock within the parent block.
-     * @property {Array<Object>} transactions - A list of transactions included in the microblock.
-     * @property {string} parentBlockHash - The hash of the parent block to which the microblock belongs.
-     * @property {string} previousMicroblockHash - The hash of the previous microblock in the sequence.
-     * @property {string} proposer - The identifier of the node or entity that proposed the microblock.
-     * @property {number} timestamp - The Unix timestamp marking when the microblock was created.
-     * @property {string} signature - The cryptographic signature verifying the authenticity of the microblock.
+     * Represents a microblock in a blockchain system.
      */
-    microblock: Microblock;
+    private microblock: Microblock;
     /**
      * A numeric variable that stores a memory address or a reference to another variable.
      * This pointer is used to indirectly access the value or object located at the specified memory address.
      *
      * @type {number} The numeric address or reference.
      */
-    pointer: number;
+    private pointer: number;
 
     /**
      * Constructs an instance of the class with the provided Microblock object.

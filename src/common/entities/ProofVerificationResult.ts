@@ -1,9 +1,9 @@
-import {ImportedProof} from "../blockchain/types";
+import {ImportedProof} from "../type/types";
 import {Optional} from "./Optional";
 import {Height} from "./Height";
 import {Hash} from "./Hash";
 import {AbstractPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
-import {ApplicationLedgerVb} from "../blockchain/ApplicationLedgerVb";
+import {ApplicationLedgerVb} from "../blockchain/virtualBlockchains/ApplicationLedgerVb";
 
 /**
  * Represents the result of a proof verification process, encapsulating the verified data and

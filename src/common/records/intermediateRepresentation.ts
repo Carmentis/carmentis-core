@@ -3,7 +3,7 @@ import {PathManager} from "./pathManager";
 import {MaskManager} from "./maskManager";
 import {TypeManager} from "../data/types";
 import {DATA} from "../constants/constants";
-import {MerkleProof, Proof, RecordEntry} from "../blockchain/types";
+import {MerkleProof, Proof, RecordEntry} from "../type/types";
 import {PepperMerklizer} from "./PepperMerklizer";
 import {SaltMerklizer} from "./SaltMerklizer";
 

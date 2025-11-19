@@ -14,7 +14,7 @@ import {
     MicroblockInformationSchema, MsgVirtualBlockchainState, VirtualBlockchainStateInterface,
     VirtualBlockchainUpdateInterface,
     ObjectList, GenesisSnapshotDTO, AccountHashSchema
-} from "../blockchain/types";
+} from "../type/types";
 import axios, {AxiosError} from "axios";
 import {
     NodeConnectionRefusedError,

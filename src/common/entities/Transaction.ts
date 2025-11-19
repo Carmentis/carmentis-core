@@ -1,4 +1,4 @@
-import {AccountTransactionInterface} from "../blockchain/types";
+import {AccountTransactionInterface} from "../type/types";
 import {Height} from "./Height";
 import {Hash} from "./Hash";
 import {CMTSToken} from "../economics/currencies/token";

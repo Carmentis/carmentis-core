@@ -12,7 +12,7 @@ import {CryptoEncoderFactory} from "../common/crypto/CryptoEncoderFactory";
 import {ProviderFactory} from "../common/providers/ProviderFactory";
 import {Secp256k1PrivateSignatureKey} from "../common/crypto/signature/secp256k1";
 import {Logger} from "../common/utils/Logger";
-import {Microblock} from "../common/blockchain/Microblock";
+import {Microblock} from "../common/blockchain/microblock/Microblock";
 import {CMTSToken} from "../common/economics/currencies/token";
 
 const NODE_URL = "http://localhost:26657";

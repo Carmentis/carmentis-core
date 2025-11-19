@@ -1,4 +1,4 @@
-import {BlockchainUtils} from "../blockchain/blockchainUtils";
+import {BlockchainUtils} from "../utils/blockchainUtils";
 import {Utils} from "../utils/utils";
 import {CryptographicHash, Sha256CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
@@ -18,7 +18,7 @@ import {
     OrganizationVBState,
     ProtocolVBState,
     ValidatorNodeVBState
-} from "../blockchain/types";
+} from "../type/types";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
 import {KeyedProvider} from "./KeyedProvider";
@@ -27,14 +27,14 @@ import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {NotAuthenticatedError} from "../errors/carmentis-error";
 import {Logger} from "../utils/Logger";
-import {OrganizationLocalState} from "../blockchainV2/localStates/OrganizationLocalState";
-import {AccountLocalState} from "../blockchainV2/localStates/AccountLocalState";
-import {ApplicationLedgerLocalState} from "../blockchainV2/localStates/ApplicationLedgerLocalState";
-import {ApplicationLocalState} from "../blockchainV2/localStates/ApplicationLocalState";
-import {ProtocolLocalState} from "../blockchainV2/localStates/ProtocolLocalState";
-import {ValidatorNodeLocalState} from "../blockchainV2/localStates/ValidatorNodeLocalState";
+import {OrganizationLocalState} from "../blockchain/localStates/OrganizationLocalState";
+import {AccountLocalState} from "../blockchain/localStates/AccountLocalState";
+import {ApplicationLedgerLocalState} from "../blockchain/localStates/ApplicationLedgerLocalState";
+import {ApplicationLocalState} from "../blockchain/localStates/ApplicationLocalState";
+import {ProtocolLocalState} from "../blockchain/localStates/ProtocolLocalState";
+import {ValidatorNodeLocalState} from "../blockchain/localStates/ValidatorNodeLocalState";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
-import {Microblock} from "../blockchain/Microblock";
+import {Microblock} from "../blockchain/microblock/Microblock";
 import {BlockchainSerializer} from "../data/BlockchainSerializer";
 
 /**

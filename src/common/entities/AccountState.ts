@@ -1,6 +1,6 @@
 import {CMTSToken} from "../economics/currencies/token";
 import {Hash} from "./Hash";
-import {AccountStateDTO} from "../blockchain/types";
+import {AccountStateDTO} from "../type/types";
 
 export class AccountState {
     private constructor(private height: number, private balance: CMTSToken, private lastHistoryHash: Hash, private lastPublicKeyDeclarationHeight: number) {

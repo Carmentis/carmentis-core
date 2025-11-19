@@ -58,36 +58,73 @@ import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterF
 import {CMTSToken} from "../../economics/currencies/token";
 import {EncoderFactory} from "../../utils/encoder";
 
+/**
+ * Represents a section within a microblock containing data and metadata.
+ * @template T - The type of object stored in the section
+ */
 export interface Section<T = any> {
+    /** The type identifier for this section */
     type: number,
+    /** The deserialized object stored in this section */
     object: T,
+    /** The raw serialized data of this section */
     data: Uint8Array,
+    /** The hash of this section's data */
     hash: Uint8Array,
+    /** The index position of this section within the microblock */
     index: number,
 }
 
+/**
+ * Represents a microblock in the blockchain that contains sections of data.
+ * Handles creation, modification, serialization and verification of microblock data.
+ */
 export class Microblock {
-    
+
+    /**
+     * Creates a genesis microblock for account virtual blockchain.
+     * @returns {Microblock} A new genesis microblock instance
+     */
     static createGenesisAccountMicroblock(): Microblock {
         return new Microblock(VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN)
     };
 
+    /**
+     * Creates a genesis microblock for validator node virtual blockchain.
+     * @returns {Microblock} A new genesis microblock instance
+     */
     static createGenesisValidatorNodeMicroblock(): Microblock {
         return new Microblock(VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN)
     };
 
+    /**
+     * Creates a genesis microblock for application virtual blockchain.
+     * @returns {Microblock} A new genesis microblock instance
+     */
     static createGenesisApplicationMicroblock(): Microblock {
         return new Microblock(VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN)
     };
 
+    /**
+     * Creates a genesis microblock for protocol virtual blockchain.
+     * @returns {Microblock} A new genesis microblock instance
+     */
     static createGenesisProtocolMicroblock(): Microblock {
         return new Microblock(VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN)
     };
 
+    /**
+     * Creates a genesis microblock for organization virtual blockchain.
+     * @returns {Microblock} A new genesis microblock instance
+     */
     static createGenesisOrganizationMicroblock(): Microblock {
         return new Microblock(VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN)
     };
 
+    /**
+     * Creates a genesis microblock for application ledger virtual blockchain.
+     * @returns {Microblock} A new genesis microblock instance
+     */
     static createGenesisApplicationLedgerMicroblock(): Microblock {
         return new Microblock(VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN)
     };
@@ -100,6 +137,10 @@ export class Microblock {
     type: number;
     feesPayerAccount: Uint8Array | null;
 
+    /**
+     * Creates a new Microblock instance.
+     * @param {VirtualBlockchainType} type - The type of virtual blockchain this microblock belongs to
+     */
     constructor(type: VirtualBlockchainType) {
         const defaultExpirationDay = 0;
         const defaultTimestampInSeconds = Math.floor(Date.now() / 1000);
@@ -152,6 +193,13 @@ export class Microblock {
         };
     }
 
+    /**
+     * Generates a previous hash value for a genesis microblock.
+     * @param {VirtualBlockchainType} mbType - The type of virtual blockchain
+     * @param {number} expirationDay - The expiration day value
+     * @returns {Uint8Array} The generated previous hash
+     * @private
+     */
     private static generatePreviousHashForGenesisMicroblock(mbType: VirtualBlockchainType, expirationDay = 0) {
         const genesisSeed = Crypto.Random.getBytes(24);
 
@@ -165,16 +213,34 @@ export class Microblock {
         return previousHash
     }
 
+    /**
+     * Sets the local state updater version.
+     * @param {number} localStateUpdaterVersion - The version number to set
+     */
     setLocalStateUpdaterVersion(localStateUpdaterVersion: number) {
         this.header.localStateUpdaterVersion = localStateUpdaterVersion;
     }
 
+    /**
+     * Creates a genesis microblock with specified type and expiration.
+     * @param {number} mbType - The type of microblock to create
+     * @param {number} expirationDay - The expiration day value
+     * @returns {Microblock} A new genesis microblock instance
+     */
     static createGenesisMicroblock(mbType: number, expirationDay: number = 0) {
         const mb = new Microblock(mbType);
         mb.create(1, null, expirationDay );
         return mb;
     }
 
+    /**
+     * Creates a new microblock with specified parameters.
+     * @param {number} mbType - The type of microblock to create
+     * @param {number} height - The height of the microblock in the chain
+     * @param {Uint8Array} previousHash - The hash of the previous microblock
+     * @param {number} expirationDay - The expiration day value
+     * @returns {Microblock} A new microblock instance
+     */
     static createMicroblock(mbType: number, height: number, previousHash: Uint8Array, expirationDay: number) {
         const mb = new Microblock(mbType);
         mb.create(height, previousHash, expirationDay );

@@ -1,5 +1,5 @@
 import {IMicroblockStructureChecker} from "./IMicroblockStructureChecker";
-import {StructureChecker} from "../microblock/StructureChecker";
+import {StructureChecker} from "./StructureChecker";
 import {Microblock} from "../microblock/Microblock";
 import {SECTIONS} from "../../constants/constants";
 

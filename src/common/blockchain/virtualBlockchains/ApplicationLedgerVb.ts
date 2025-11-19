@@ -32,7 +32,7 @@ import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocal
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {
     ApplicationLedgerMicroblockStructureChecker
-} from "../structureChekers/ApplicationLedgerMicroblockStructureChecker";
+} from "../structureCheckers/ApplicationLedgerMicroblockStructureChecker";
 import {
     ApplicationLedgerActorCreationSection,
     ApplicationLedgerActorSubscriptionSection,

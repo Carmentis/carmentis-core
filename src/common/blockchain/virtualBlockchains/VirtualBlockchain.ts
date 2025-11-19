@@ -13,7 +13,7 @@ import {
 import {SectionType} from "../../entities/SectionType";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
-import {IMicroblockStructureChecker} from "../structureChekers/IMicroblockStructureChecker";
+import {IMicroblockStructureChecker} from "../structureCheckers/IMicroblockStructureChecker";
 import {EncoderFactory} from "../../utils/encoder";
 
 /**

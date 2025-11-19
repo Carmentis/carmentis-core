@@ -5,7 +5,7 @@ import {Provider} from "../../providers/Provider";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
-import {ProtocolMicroblockStructureChecker} from "../structureChekers/ProtocolMicroblockStructureChecker";
+import {ProtocolMicroblockStructureChecker} from "../structureCheckers/ProtocolMicroblockStructureChecker";
 import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
 import {ProtocolLocalState} from "../localStates/ProtocolLocalState";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";

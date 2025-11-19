@@ -1,5 +1,5 @@
 import { SECTIONS } from "../../constants/constants";
-import {Microblock} from "./Microblock";
+import {Microblock} from "../microblock/Microblock";
 
 export class StructureChecker {
   microblock: Microblock;

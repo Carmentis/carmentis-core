@@ -7,7 +7,7 @@ import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {
     ValidatorNodeMicroblockStructureChecker
-} from "../structureChekers/ValidatorNodeMicroblockStructureChecker";
+} from "../structureCheckers/ValidatorNodeMicroblockStructureChecker";
 
 import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
 import { Microblock } from "../microblock/Microblock";

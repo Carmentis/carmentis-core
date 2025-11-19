@@ -10,7 +10,7 @@ import {Hash} from "../../entities/Hash";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {
     OrganizationMicroblockStructureChecker
-} from "../structureChekers/OrganizationMicroblockStructureChecker";
+} from "../structureCheckers/OrganizationMicroblockStructureChecker";
 import {OrganizationDescriptionSection} from "../../type/sections";
 
 export class OrganizationVb extends VirtualBlockchain {

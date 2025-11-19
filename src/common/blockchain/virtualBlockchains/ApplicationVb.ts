@@ -10,7 +10,7 @@ import {ApplicationDeclarationSection, ApplicationDescriptionSection} from "../.
 import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
 import {
     ApplicationMicroblockStructureChecker
-} from "../structureChekers/ApplicationMicroblockStructureChecker";
+} from "../structureCheckers/ApplicationMicroblockStructureChecker";
 import {Hash} from "../../entities/Hash";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 

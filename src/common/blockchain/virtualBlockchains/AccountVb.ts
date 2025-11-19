@@ -9,7 +9,7 @@ import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {IllegalStateError, SectionNotFoundError} from "../../errors/carmentis-error";
 import {SectionType} from "../../entities/SectionType";
 import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
-import {AccountMicroblockStructureChecker} from "../structureChekers/AccountMicroblockStructureChecker";
+import {AccountMicroblockStructureChecker} from "../structureCheckers/AccountMicroblockStructureChecker";
 import {AccountLocalState} from "../localStates/AccountLocalState";
 import { Microblock } from "../microblock/Microblock";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";

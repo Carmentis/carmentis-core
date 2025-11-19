@@ -3,7 +3,7 @@
 import {Microblock} from "../microblock/Microblock";
 import {IApplicationLedgerLocalStateUpdater, ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
-import {SectionType} from "../../entities/SectionType";
+import {SectionType} from "../../type/SectionType";
 import {
     ActorAlreadyDefinedError,
     AlreadySubscribedError,

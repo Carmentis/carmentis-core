@@ -7,7 +7,7 @@ import {Microblock} from "../microblock/Microblock";
 import {OrganizationVb} from "./OrganizationVb";
 import {ApplicationLocalState} from "../localStates/ApplicationLocalState";
 import {ApplicationDeclarationSection, ApplicationDescriptionSection} from "../../type/sections";
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {
     ApplicationMicroblockStructureChecker
 } from "../structureCheckers/ApplicationMicroblockStructureChecker";

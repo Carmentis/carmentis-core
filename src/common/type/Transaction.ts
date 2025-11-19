@@ -1,6 +1,6 @@
-import {AccountTransactionInterface} from "../type/types";
+import {AccountTransactionInterface} from "./types";
 import {Height} from "./Height";
-import {Hash} from "./Hash";
+import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
 import {
     BK_EARNED_BLOCK_FEES,

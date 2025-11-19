@@ -10,9 +10,9 @@ import {
     MicroBlockNotFoundInVirtualBlockchainAtHeightError,
     VirtualBlockchainNotFoundError
 } from "../../errors/carmentis-error";
-import {SectionType} from "../../entities/SectionType";
+import {SectionType} from "../../type/SectionType";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {IMicroblockStructureChecker} from "../structureCheckers/IMicroblockStructureChecker";
 import {EncoderFactory} from "../../utils/encoder";
 import {Section} from "../../type/Section";
@@ -238,7 +238,7 @@ export abstract class VirtualBlockchain {
     async appendMicroBlock(microblock: Microblock) {
         // if the current state of the vb is empty (no microblock), then update the identifier
         if (this.isEmpty()) {
-            this.identifier = microblock.getHash();
+            this.identifier = microblock.getHash().toBytes();
         }
 
 

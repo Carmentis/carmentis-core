@@ -11,7 +11,7 @@ import {ProtocolLocalStateUpdater} from "./ProtocolLocalStateUpdater";
 import {OrganizationLocalStateUpdater} from "./OrganizationLocalStateUpdater";
 import {AccountLocalStateUpdater} from "./AccountLocalStateUpdater";
 import {ApplicationLocalStateUpdater} from "./ApplicationLocalStateUpdater";
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 
 export class LocalStateUpdaterFactory {
     static createApplicationLedgerLocalStateUpdater(localStateVersion: number): IApplicationLedgerLocalStateUpdater {

@@ -1,7 +1,7 @@
-import {AccountTransactionInterface} from "../type/types";
+import {AccountTransactionInterface} from "./types";
 import {CMTSToken} from "../economics/currencies/token";
 import {IllegalParameterError} from "../errors/carmentis-error";
-import {Hash} from "./Hash";
+import {Hash} from "../entities/Hash";
 import {Transaction} from "./Transaction";
 import {Height} from "./Height";
 

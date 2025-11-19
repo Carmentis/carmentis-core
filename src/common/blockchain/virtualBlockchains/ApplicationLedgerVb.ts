@@ -39,14 +39,14 @@ import {
     ApplicationLedgerChannelInvitationSection,
     ApplicationLedgerSharedKeySection
 } from "../../type/sections";
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Hash} from "../../entities/Hash";
 import {ActorType} from "../../constants/ActorType";
-import {Height} from "../../entities/Height";
+import {Height} from "../../type/Height";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
 import {StateUpdateRequest} from "../../type/StateUpdateRequest";
 import {SchemaValidator} from "../../data/schemaValidator";
-import {SectionType} from "../../entities/SectionType";
+import {SectionType} from "../../type/SectionType";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {ApplicationLedgerWorkingEnv} from "./ApplicationLedgerWorkingEnv";
 import {Section} from "../../type/Section";

@@ -9,7 +9,7 @@ import {
     ValidatorNodeMicroblockStructureChecker
 } from "../structureCheckers/ValidatorNodeMicroblockStructureChecker";
 
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import { Microblock } from "../microblock/Microblock";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {ValidatorNodeLocalState} from "../localStates/ValidatorNodeLocalState";

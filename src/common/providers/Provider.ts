@@ -33,7 +33,7 @@ import {ApplicationLedgerLocalState} from "../blockchain/localStates/Application
 import {ApplicationLocalState} from "../blockchain/localStates/ApplicationLocalState";
 import {ProtocolLocalState} from "../blockchain/localStates/ProtocolLocalState";
 import {ValidatorNodeLocalState} from "../blockchain/localStates/ValidatorNodeLocalState";
-import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../type/VirtualBlockchainType";
 import {Microblock} from "../blockchain/microblock/Microblock";
 import {BlockchainSerializer} from "../data/BlockchainSerializer";
 

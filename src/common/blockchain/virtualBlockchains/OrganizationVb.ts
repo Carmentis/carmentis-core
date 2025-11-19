@@ -5,7 +5,7 @@ import {Provider} from "../../providers/Provider";
 import {Microblock} from "../microblock/Microblock";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {OrganizationLocalState} from "../localStates/OrganizationLocalState";
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Hash} from "../../entities/Hash";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {

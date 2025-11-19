@@ -1,7 +1,7 @@
 import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {OrganizationLocalState} from "../localStates/OrganizationLocalState";
 import {Microblock} from "../microblock/Microblock";
-import {SectionType} from "../../entities/SectionType";
+import {SectionType} from "../../type/SectionType";
 import {
     OrganizationDescriptionSection,
     OrganizationPublicKeySection,

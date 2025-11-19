@@ -6,7 +6,7 @@ import {
     AbstractPublicEncryptionKey
 } from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 import {Microblock} from "../microblock/Microblock";
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {SchemaValidator} from "../../data/schemaValidator";
 import {Utils} from "../../utils/utils";
 import {ActorType} from "../../constants/ActorType";

@@ -1,7 +1,7 @@
 import * as DATA from './data';
 import * as CHAIN from './chain';
 import {Schema, CONTRACT_SCHEMA} from './schemas';
-import {SectionType} from '../entities/SectionType';
+import {SectionType} from '../type/SectionType';
 
 // ============================================================================================================================ //
 //  Constraints                                                                                                                 //

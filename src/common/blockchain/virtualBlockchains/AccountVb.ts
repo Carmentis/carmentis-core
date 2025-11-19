@@ -14,6 +14,7 @@ import {AccountLocalState} from "../localStates/AccountLocalState";
 import { Microblock } from "../microblock/Microblock";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {INITIAL_OFFER} from "../../constants/economics";
+import {CMTSToken} from "../../economics/currencies/token";
 
 export class AccountVb extends VirtualBlockchain {
 
@@ -72,7 +73,22 @@ export class AccountVb extends VirtualBlockchain {
         }
     }
 
-    static async addGenesisAccountCreation(microblock: Microblock, genesisPublicKey: PublicSignatureKey): Promise<Microblock> {
+    static async createAccountCreationMicroblock(accountOwnerPublicKey: PublicSignatureKey, initialAmount: CMTSToken, sellerAccountId: Uint8Array, accountName: string = '') {
+        const mb = Microblock.createGenesisAccountMicroblock();
+        mb.addAccountSignatureSchemeSection({
+            schemeId: accountOwnerPublicKey.getSignatureSchemeId()
+        });
+        mb.addAccountPublicKeySection({
+            publicKey: accountOwnerPublicKey.getPublicKeyAsBytes()
+        });
+        mb.addAccountCreationSection({
+            amount: initialAmount.getAmountAsAtomic(),
+            sellerAccount: sellerAccountId
+        });
+        return mb;
+    }
+
+    static async createIssuerAccountCreationMicroblock(genesisPublicKey: PublicSignatureKey): Promise<Microblock> {
         /*
          // we need a public key to create the genesis account, so we raise an exception if
         // both the provider and the default public key are undefined
@@ -88,6 +104,7 @@ export class AccountVb extends VirtualBlockchain {
 
         // we use in priority the default public key, if provided, or the keyed provider's public key
         const publicKey = genesisPublicKey;
+        const microblock = Microblock.createGenesisAccountMicroblock();
         microblock.addAccountSignatureSchemeSection({
             schemeId: publicKey.getSignatureSchemeId()
         });

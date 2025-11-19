@@ -5,7 +5,7 @@ import {Crypto} from "../../crypto/crypto";
 import {MicroblockHeaderObject} from "../../type/types";
 import {Hash} from "../../entities/Hash";
 import {CarmentisError, IllegalStateError, SectionNotFoundError} from "../../errors/carmentis-error";
-import {SectionType} from "../../entities/SectionType";
+import {SectionType} from "../../type/SectionType";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {
     AccountCreationSection,
@@ -52,7 +52,7 @@ import {
     ValidatorNodeSignatureSection,
     ValidatorNodeSigSchemeSection
 } from "../../type/sections";
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {CMTSToken} from "../../economics/currencies/token";
@@ -64,6 +64,33 @@ import {Section} from "../../type/Section";
  * Handles creation, modification, serialization and verification of microblock data.
  */
 export class Microblock {
+
+    /**
+     * Creates a genesis microblock with specified type and expiration.
+     * @param {number} mbType - The type of microblock to create
+     * @param {number} expirationDay - The expiration day value
+     * @returns {Microblock} A new genesis microblock instance
+     * @deprecated Use a more specific microblock genesis creation method.
+     */
+    static createGenesisMicroblock(mbType: number, expirationDay: number = 0) {
+        const mb = new Microblock(mbType);
+        mb.create(1, null, expirationDay );
+        return mb;
+    }
+
+    /**
+     * Creates a new microblock with specified parameters.
+     * @param {number} mbType - The type of microblock to create
+     * @param {number} height - The height of the microblock in the chain
+     * @param {Uint8Array} previousHash - The hash of the previous microblock
+     * @param {number} expirationDay - The expiration day value
+     * @returns {Microblock} A new microblock instance
+     */
+    static createMicroblock(mbType: number, height: number, previousHash: Uint8Array, expirationDay: number) {
+        const mb = new Microblock(mbType);
+        mb.create(height, previousHash, expirationDay );
+        return mb;
+    }
 
     /**
      * Creates a genesis microblock for account virtual blockchain.
@@ -169,13 +196,7 @@ export class Microblock {
         const defaultExpirationDay = 0;
         const defaultTimestampInSeconds = Math.floor(Date.now() / 1000);
         const defaultGasPrice = CMTSToken.zero().getAmountAsAtomic();
-
-        this.type = type;
-        this.sections = [];
-        this.gasPrice = defaultGasPrice;
-        this.hash = Utils.getNullHash();
-        this.feesPayerAccount = null;
-        this.header = {
+        const initialHeader : MicroblockHeaderObject = {
             localStateUpdaterVersion: LocalStateUpdaterFactory.defaultLocalStateUpdaterVersionByVbType(type),
             magicString: CHAIN.MAGIC_STRING,
             protocolVersion: CHAIN.PROTOCOL_VERSION,
@@ -184,8 +205,15 @@ export class Microblock {
             timestamp: defaultTimestampInSeconds,
             gas: 0,
             gasPrice: 0,
-            bodyHash: Utils.getNullHash()
+            bodyHash: Microblock.computeInitialBodyHash()
         };
+
+        this.type = type;
+        this.sections = [];
+        this.gasPrice = defaultGasPrice;
+        this.feesPayerAccount = null;
+        this.header = initialHeader;
+        this.hash = Microblock.computeMicroblockHash(initialHeader);
     }
 
 
@@ -245,31 +273,7 @@ export class Microblock {
         this.header.localStateUpdaterVersion = localStateUpdaterVersion;
     }
 
-    /**
-     * Creates a genesis microblock with specified type and expiration.
-     * @param {number} mbType - The type of microblock to create
-     * @param {number} expirationDay - The expiration day value
-     * @returns {Microblock} A new genesis microblock instance
-     */
-    static createGenesisMicroblock(mbType: number, expirationDay: number = 0) {
-        const mb = new Microblock(mbType);
-        mb.create(1, null, expirationDay );
-        return mb;
-    }
 
-    /**
-     * Creates a new microblock with specified parameters.
-     * @param {number} mbType - The type of microblock to create
-     * @param {number} height - The height of the microblock in the chain
-     * @param {Uint8Array} previousHash - The hash of the previous microblock
-     * @param {number} expirationDay - The expiration day value
-     * @returns {Microblock} A new microblock instance
-     */
-    static createMicroblock(mbType: number, height: number, previousHash: Uint8Array, expirationDay: number) {
-        const mb = new Microblock(mbType);
-        mb.create(height, previousHash, expirationDay );
-        return mb;
-    }
 
     /**
      Updates the timestamp.
@@ -325,15 +329,20 @@ export class Microblock {
         mb.gasPrice = header.gasPrice;
 
         // we check that the hash of the body is consistent with the body hash contained in the header
-        const bodyHash = Crypto.Hashes.sha256AsBinary(serializedBody);
-        if (!Utils.binaryIsEqual(header.bodyHash, bodyHash)) {
-            throw new CarmentisError(`Body hash in the header is different of the locally computed body hash`);
+        const computedBodyHash = Crypto.Hashes.sha256AsBinary(serializedBody);
+        const bodyHashContainedInHeader = header.bodyHash;
+        const areBodyHashMatching = Utils.binaryIsEqual(bodyHashContainedInHeader, computedBodyHash)
+        if (!areBodyHashMatching) {
+            const encoder = EncoderFactory.bytesToHexEncoder();
+            throw new CarmentisError(
+                `Body hash in the header is different of the locally computed body hash: header.bodyHash=${encoder.encode(bodyHashContainedInHeader)}, computed=${encoder.encode(computedBodyHash)}`
+            );
         }
 
         // parse the body
         const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY);
         // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
-        const body = bodyUnserializer.unserialize(bodyData).body;
+        const body = bodyUnserializer.unserialize(serializedBody).body;
         for (const {type, data} of body) {
             const sectionSchema = SECTIONS.DEF[expectedMbType][type];
             const unserializer = new SchemaUnserializer(sectionSchema);
@@ -346,7 +355,17 @@ export class Microblock {
     }
 
 
-    getHash(): Uint8Array {
+    /**
+     * Retrieves the hash of the microblock.
+     */
+    getHash(): Hash {
+        return Hash.from(this.hash);
+    }
+
+    /**
+     * Retrieves the hash of the microblock as bytes.
+     */
+    getHashAsBytes(): Uint8Array {
         return this.hash;
     }
 
@@ -426,15 +445,35 @@ export class Microblock {
 
         // we update the body hash and microblock hash
         this.setGasData(true);
-        this.header.bodyHash = this.computeBodyHashFromSections(this.sections);
-        
-        const headerData = BlockchainSerializer.serializeMicroblockHeader(this.header);
-        this.hash = Crypto.Hashes.sha256AsBinary(headerData);
-
+        this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
+        this.hash = Microblock.computeMicroblockHash(this.header)
+        //const headerData = BlockchainSerializer.serializeMicroblockHeader(this.header);
+        //this.hash = Crypto.Hashes.sha256AsBinary(headerData);
         return section;
     }
 
-    private computeBodyHashFromSections(sections: Section[]): Uint8Array {
+
+
+    computeBodyHash() {
+        return Microblock.computeBodyHashFromSections(this.sections)
+    }
+
+    /**
+     * Computes the initial hash for the body by utilizing sections of a microblock.
+     * This method uses an empty array of sections to determine the body hash.
+     *
+     * @return {Uint8Array} The computed hash of the body based on the provided sections.
+     */
+    private static computeInitialBodyHash(): Uint8Array {
+        return Microblock.computeBodyHashFromSections([])
+    }
+
+    private static computeMicroblockHash(header: MicroblockHeaderObject) {
+        const headerData = BlockchainSerializer.serializeMicroblockHeader(header);
+        return Crypto.Hashes.sha256AsBinary(headerData);
+    }
+
+    private static computeBodyHashFromSections(sections: Section[]): Uint8Array {
         const body = {
             body: sections.map(({ type, data }) => ({type, data}))
         };
@@ -454,7 +493,8 @@ export class Microblock {
             body: this.sections.map(({ type, data }) => ({type, data}))
         };
 
-        this.setGasData(true);
+        // TODO: should not update the state here
+        //this.setGasData(true);
 
         const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
         const bodyData = bodySerializer.serialize(body);
@@ -467,6 +507,7 @@ export class Microblock {
 
         return {microblockHash, headerData, bodyHash, bodyData};
     }
+
 
     
 

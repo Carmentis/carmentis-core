@@ -8,7 +8,7 @@ import {Microblock} from "./Microblock";
 import {VirtualBlockchain} from "../virtualBlockchains/VirtualBlockchain";
 import {Optional} from "../../entities/Optional";
 import {BlockchainSerializer} from "../../data/BlockchainSerializer";
-import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
+import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {OrganizationVb} from "../virtualBlockchains/OrganizationVb";
 import {AccountVb} from "../virtualBlockchains/AccountVb";
 import {ApplicationVb} from "../virtualBlockchains/ApplicationVb";

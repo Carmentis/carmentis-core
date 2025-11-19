@@ -1,8 +1,8 @@
 import {PublicationExecutionContext} from "./PublicationExecutionContext";
-import {OrganizationDescription} from "../../blockchain/types";
 import {IllegalParameterError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
 import {Optional} from "../../entities/Optional";
+import {OrganizationDescription} from "../../blockchain/sectionSchemas";
 
 /**
  * Represents the execution context specific to an organization's publication process.

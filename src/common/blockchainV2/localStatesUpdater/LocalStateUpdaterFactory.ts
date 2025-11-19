@@ -1,4 +1,4 @@
-import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
+import {IApplicationLedgerLocalStateUpdater, ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
 import {AppLedgerLocalStateUpdaterV1} from "./ApplicationLedgerLocalStateUpdater";
 import {IllegalParameterError} from "../../errors/carmentis-error";
@@ -10,9 +10,11 @@ import {ValidatorNodeLocalStateUpdater} from "./ValidatorNodeLocalStateUpdater";
 import {ProtocolLocalStateUpdater} from "./ProtocolLocalStateUpdater";
 import {OrganizationLocalStateUpdater} from "./OrganizationLocalStateUpdater";
 import {AccountLocalStateUpdater} from "./AccountLocalStateUpdater";
+import {ApplicationLocalStateUpdater} from "./ApplicationLocalStateUpdater";
+import {VirtualBlockchainType} from "../../entities/VirtualBlockchainType";
 
 export class LocalStateUpdaterFactory {
-    static createApplicationLedgerLocalStateUpdater(localStateVersion: number): ILocalStateUpdater<ApplicationLedgerLocalState> {
+    static createApplicationLedgerLocalStateUpdater(localStateVersion: number): IApplicationLedgerLocalStateUpdater {
         switch (localStateVersion) {
             case 1: return new AppLedgerLocalStateUpdaterV1;
             default: throw new IllegalParameterError("Unknown application local state version");
@@ -51,4 +53,22 @@ export class LocalStateUpdaterFactory {
         }
     }
 
+    static createApplicationLocalStateUpdater(localStateUpdateVersion: number) {
+        switch (localStateUpdateVersion) {
+            case 1: return new ApplicationLocalStateUpdater()
+            default:
+                throw new IllegalParameterError("Unknown validator node local state version");
+        }
+    }
+
+    /**
+     * Returns the default local state updater version for the given virtual blockchain type.
+     *
+     * @param {VirtualBlockchainType} type - The type of the virtual blockchain for which the updater version is needed.
+     * @return {number} The default local state updater version associated with the specified virtual blockchain type.
+     */
+    static defaultLocalStateUpdaterVersionByVbType(type: VirtualBlockchainType): number {
+        // since we do not have done any update now, the default local state updater version is at one for every VBs
+        return 1;
+    }
 }

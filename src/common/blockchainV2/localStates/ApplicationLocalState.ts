@@ -1,5 +1,6 @@
 import {ApplicationVBState} from "../../blockchain/types";
 import {Utils} from "../../utils/utils";
+import {Hash} from "../../entities/Hash";
 
 export class ApplicationLocalState {
     constructor(private localState: ApplicationVBState) {
@@ -17,19 +18,27 @@ export class ApplicationLocalState {
         });
     }
 
+    clone() {
+        return new ApplicationLocalState({...this.localState})
+    }
+
     getLocalState(): ApplicationVBState {
         return this.localState;
     }
 
-    updateSignatureScheme(signatureSchemeId: number) {
+    setSignatureSchemeId(signatureSchemeId: number) {
         this.localState.signatureSchemeId = signatureSchemeId;
     }
 
-    updateOrganizationId(organizationId: Uint8Array) {
+    setOrganizationId(organizationId: Uint8Array) {
         this.localState.organizationId = organizationId;
     }
 
-    updateDescriptionHeight(descriptionHeight: number) {
+    setDescriptionHeight(descriptionHeight: number) {
         this.localState.descriptionHeight = descriptionHeight;
+    }
+
+    getOrganizationId(): Hash {
+        return Hash.from(this.localState.organizationId);
     }
 }

@@ -1,115 +1,94 @@
-import {CHAIN, SECTIONS} from "../constants/constants";
+import {SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Organization} from "./Organization";
-import {StructureChecker} from "./StructureChecker";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
-import {ApplicationDeclaration, ApplicationDescription, ApplicationVBState} from "./types";
+import {ApplicationVBState} from "./types";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {Microblock} from "./Microblock";
+import {OrganizationVb} from "./OrganizationVb";
+import {ApplicationLocalState} from "../blockchainV2/localStates/ApplicationLocalState";
+import {ApplicationDeclarationSection, ApplicationDescriptionSection} from "./sectionSchemas";
+import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
+import {
+    ApplicationMicroblockStructureChecker
+} from "../blockchainV2/structureChekers/ApplicationMicroblockStructureChecker";
+import {Hash} from "../entities/Hash";
+import {OrganizationLocalState} from "../blockchainV2/localStates/OrganizationLocalState";
+import {LocalStateUpdaterFactory} from "../blockchainV2/localStatesUpdater/LocalStateUpdaterFactory";
 
-export class ApplicationVb extends VirtualBlockchain<ApplicationVBState> {
-  constructor(provider: Provider) {
-    super({ provider, type: CHAIN.VB_APPLICATION });
+export class ApplicationVb extends VirtualBlockchain {
 
-    this.registerSectionCallback(SECTIONS.APP_SIG_SCHEME, this.signatureSchemeCallback);
-    this.registerSectionCallback(SECTIONS.APP_DECLARATION, this.declarationCallback);
-    this.registerSectionCallback(SECTIONS.APP_DESCRIPTION, this.descriptionCallback);
-    this.registerSectionCallback(SECTIONS.APP_SIGNATURE, this.signatureCallback);
-  }
-
-  /**
-    Update methods
-  */
-  async setSignatureScheme(object: any) {
-    await this.addSection(SECTIONS.APP_SIG_SCHEME, object);
-  }
-
-  async setDeclaration(object: ApplicationDeclaration) {
-    await this.addSection(SECTIONS.APP_DECLARATION, object);
-  }
-
-  async setDescription(object: ApplicationDescription) {
-    await this.addSection(SECTIONS.APP_DESCRIPTION, object);
-  }
-
-  getDescriptionHeight(): number {
-    return this.getState().descriptionHeight;
-  }
-
-  /**
-   *
-   * @param {PrivateSignatureKey} privateKey
-   * @returns {Promise<void>}
-   */
-  async setSignature(privateKey: PrivateSignatureKey) {
-    const object = this.createSignature(privateKey);
-    await this.addSection(SECTIONS.APP_SIGNATURE, object);
-  }
-
-  /**
-    Section callbacks
-  */
-  async signatureSchemeCallback(microblock: any, section: any) {
-    this.getState().signatureSchemeId = section.object.schemeId;
-  }
-
-  async declarationCallback(microblock: any, section: any) {
-    // TODO: check the organization
-    this.getState().organizationId = section.object.organizationId;
-  }
-
-  async descriptionCallback(microblock: any, section: any) {
-    this.getState().descriptionHeight = microblock.header.height;
-  }
-
-  async signatureCallback(microblock: Microblock, section: any) {
-    const publicKey = await this.getOrganizationPublicKey();
-    const feesPayerAccount = await this.provider.getAccountHashByPublicKey(publicKey);
-      microblock.setFeesPayerAccount(feesPayerAccount);
-  }
-
-  async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
-    const organization = new Organization({ provider: this.provider });
-    await organization._load(this.getState().organizationId);
-
-    return await organization.getPublicKey();
-  }
-
-  private static UNDEFINED_SIGNATURE_SCHEME_ID = -1;
-  private static UNDEFINED_ORGANIZATION_ID = Utils.getNullHash();
-  private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
-
-  getInitialState(): ApplicationVBState {
-    return {
-      signatureSchemeId: ApplicationVb.UNDEFINED_SIGNATURE_SCHEME_ID,
-      organizationId: ApplicationVb.UNDEFINED_ORGANIZATION_ID,
-      descriptionHeight: ApplicationVb.UNDEFINED_DESCRIPTION_HEIGHT
+    // ------------------------------------------
+    // Static methods
+    // ------------------------------------------
+    static async loadApplicationVirtualBlockchain(provider: Provider, applicationId: Hash) {
+        const vb = new ApplicationVb(provider);
+        await vb.synchronizeVirtualBlockchainFromProvider(applicationId);
+        const state = await provider.getApplicationLocalStateFromId(applicationId)
+        vb.setLocalState(state);
+        return vb;
     }
-  }
 
-  /**
-    Structure check
-  */
-  checkStructure(microblock: any) {
-    const checker = new StructureChecker(microblock);
+    static createOrganizationVirtualBlockchain(provider: Provider) {
+        return new OrganizationVb(provider);
+    }
 
-    checker.expects(
-      checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-      SECTIONS.APP_SIG_SCHEME
-    );
-    checker.expects(
-      checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-      SECTIONS.APP_DECLARATION
-    );
-    checker.group(
-      SECTIONS.AT_LEAST_ONE,
-      [
-        [ SECTIONS.AT_MOST_ONE, SECTIONS.APP_DESCRIPTION ]
-      ]
-    );
-    checker.expects(SECTIONS.ONE, SECTIONS.APP_SIGNATURE);
-    checker.endsHere();
-  }
+    // ------------------------------------------
+    // Instance implementation
+    // ------------------------------------------
+    constructor(provider: Provider,  private state: ApplicationLocalState = ApplicationLocalState.createInitialState()) {
+        super(provider, VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN, new ApplicationMicroblockStructureChecker());
+    }
+
+    protected setLocalState(state: ApplicationLocalState) {
+        this.state = state
+    }
+
+
+    protected async updateLocalState(microblock: Microblock): Promise<void> {
+        const localStateUpdater = LocalStateUpdaterFactory.createApplicationLocalStateUpdater(microblock.getLocalStateUpdateVersion());
+        this.state = localStateUpdater.updateState(this.state, microblock);
+    }
+
+    async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
+        const organizationId = this.state.getOrganizationId();
+        const organization = await OrganizationVb.loadOrganizationVirtualBlockchain(this.provider, organizationId);
+        return await organization.getPublicKey();
+    }
+
+    /**
+     Update methods
+     */
+    async setSignatureScheme(object: any) {
+        await this.addSection(SECTIONS.APP_SIG_SCHEME, object);
+    }
+
+    async setDeclaration(object: ApplicationDeclarationSection) {
+        await this.addSection(SECTIONS.APP_DECLARATION, object);
+    }
+
+    async setDescription(object: ApplicationDescriptionSection) {
+        await this.addSection(SECTIONS.APP_DESCRIPTION, object);
+    }
+
+
+    /**
+     *
+     * @param {PrivateSignatureKey} privateKey
+     * @returns {Promise<void>}
+     */
+    async setSignature(privateKey: PrivateSignatureKey) {
+        const object = this.createSignature(privateKey);
+        await this.addSection(SECTIONS.APP_SIGNATURE, object);
+    }
+
+
+    async signatureCallback(microblock: Microblock, section: any) {
+        const publicKey = await this.getOrganizationPublicKey();
+        const feesPayerAccount = await this.provider.getAccountHashByPublicKey(publicKey);
+        microblock.setFeesPayerAccount(feesPayerAccount);
+    }
+
 }

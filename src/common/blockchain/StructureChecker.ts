@@ -1,9 +1,10 @@
 import { SECTIONS } from "../constants/constants";
+import {Microblock} from "./Microblock";
 
 export class StructureChecker {
-  microblock: any;
+  microblock: Microblock;
   pointer: any;
-  constructor(microblock: any) {
+  constructor(microblock: Microblock) {
     this.microblock = microblock;
     this.pointer = 0;
   }
@@ -72,7 +73,7 @@ export class StructureChecker {
     return !this.currentSection();
   }
 
-  checkConstraint(constraint: any, count: any) {
+  checkConstraint(constraint: number, count: any) {
     switch(constraint) {
       case SECTIONS.ANY         : { return true; }
       case SECTIONS.ZERO        : { return count == 0; }
@@ -80,6 +81,7 @@ export class StructureChecker {
       case SECTIONS.AT_LEAST_ONE: { return count >= 1; }
       case SECTIONS.AT_MOST_ONE : { return count <= 1; }
     }
+    return false;
   }
 
   getTypeLabel(type: any) {

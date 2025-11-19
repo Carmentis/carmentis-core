@@ -5,15 +5,13 @@ import {Crypto} from "../crypto/crypto";
 import {Utils} from "../utils/utils";
 import {Provider} from "../providers/Provider";
 import {
-    ApplicationLedgerPrivateChannelSection,
-    ApplicationLedgerPublicChannelSection,
     ImportedProof,
     Proof
 } from "./types";
-import {Section} from "./Microblock";
+import {Microblock, Section} from "./Microblock";
 import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
-import {RecordDescription} from "./RecordDescription";
+import {StateUpdateRequest} from "./StateUpdateRequest";
 import {Height} from "../entities/Height";
 import {
     ActorNotInvitedError,
@@ -46,6 +44,7 @@ import {CryptoEncoderFactory} from "../crypto/CryptoEncoderFactory";
 import {EncoderFactory} from "../utils/encoder";
 import {Logger} from "../utils/Logger";
 import {Assertion} from "../utils/Assertion";
+import {ApplicationLedgerPrivateChannelSection, ApplicationLedgerPublicChannelSection} from "./sectionSchemas";
 
 export class ApplicationLedger {
     private provider: Provider;
@@ -140,50 +139,11 @@ export class ApplicationLedger {
      * @returns
      */
     getActorIdFromActorName(actorName: string) {
-        return this.vb.getActorId(actorName);
+        return this.vb.getActorIdFromActorName(actorName);
     }
 
-    /**
-     * Subscribes an actor in the application ledger.
-     *
-     * A subscription is used to associate public keys to an actor name (or identifier).
-     *
-     * @param actorName The name of the actor subscribed on the application ledger.
-     * @param actorPublicSignatureKey  The public signature key of the actor.
-     * @param actorPublicEncryptionKey The public encryption key of the actor.
-     *
-     * @returns
-     */
-    subscribeActor(
-        actorName: string,
-        actorPublicSignatureKey: PublicSignatureKey,
-        actorPublicEncryptionKey: AbstractPublicEncryptionKey,
-    ) {
-        const actorId = this.getActorIdFromActorName(actorName);
 
-        // The actor type is currently not used in the protocol
-        const unknownActorType = ActorType.UNKNOWN;
 
-        // The organization id is currently not used in the protocol. 
-        // Initially, it has been designed to handle the case where a user from another organization is added to an external vb.
-        const nullOrganizationId = Utils.getNullHash();
-        return this.vb.subscribeActor({
-            actorId,
-            actorType: unknownActorType,
-            organizationId: nullOrganizationId,
-            signatureSchemeId: actorPublicSignatureKey.getSignatureSchemeId(),
-            signaturePublicKey: actorPublicSignatureKey.getPublicKeyAsBytes(),
-            pkeSchemeId: actorPublicEncryptionKey.getSchemeId(),
-            pkePublicKey: actorPublicEncryptionKey.getRawPublicKey(),
-        })
-    }
-
-    getVirtualBlockchain() {
-        if (!this.vb) {
-            throw new Error("Cannot return application ledger virtual blockchain: undefined virtual blockchain. ")
-        }
-        return this.vb;
-    }
 
     async _create(applicationId: string) {
         if (!this.provider.isKeyed()) {
@@ -201,7 +161,7 @@ export class ApplicationLedger {
         await this.vb.load(identifier);
     }
 
-    async _processJson(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription) {
+    async _processJson(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, object: StateUpdateRequest) {
         const validator = new SchemaValidator(SCHEMAS.RECORD_DESCRIPTION);
         validator.validate(object);
 
@@ -237,7 +197,7 @@ export class ApplicationLedger {
         // when creating the virtual blockchain application ledger, the author is automatically
         // subscribed (it should also be created above so it must be specified in the actors section).
         const authorName = object.author;
-        const authorId = this.vb.getActorId(authorName);
+        const authorId = this.vb.getActorIdFromActorName(authorName);
         if (isBuildingGenesisMicroBlock) {
             const authorPublicSignatureKey = this.provider.getPrivateSignatureKey().getPublicKey();
             const authorPublicEncryptionKey = hostPrivateDecryptionKey.getPublicKey();
@@ -322,72 +282,12 @@ export class ApplicationLedger {
 
             // sometimes, there is no message to show (not provided by the application server). In this case,
             // we replace the message with an empty string.
-            const endorserId = this.vb.getActorId(object.endorser);
+            const endorserId = this.vb.getActorIdFromActorName(object.endorser);
             const messageToShow = object.approvalMessage ?? "";
             await this.vb.addEndorsementRequest(endorserId, messageToShow)
         }
     }
 
-    /**
-     * Retrieves an existing shared key between two peers, or undefined.
-     */
-    private async getExistingSharedKey(hostId: number, guestId: number): Promise<Uint8Array | undefined> {
-        // search the guest actor associated with the provided guest id
-        const guestActor = this.getActorByIdOrFail(guestId);
-
-        // we search in the state the height of the microblock where the (encrypted) shared key is declared
-        const sharedSecretFromState = guestActor.sharedSecrets.find(
-            (object) => object.peerActorId == hostId
-        );
-
-        // if no shared secret is defined, then return undefined
-        if (sharedSecretFromState === undefined) {
-            return undefined;
-        }
-
-        // search the section declaring the (encrypted) shared key in the microblock specified in the state.
-        const microBlock = await this.vb.getMicroblock(sharedSecretFromState.height);
-        const sharedSecretSection = microBlock.getSection((section: any) =>
-            section.type == SECTIONS.APP_LEDGER_SHARED_SECRET &&
-            section.object.hostId == hostId &&
-            section.object.guestId == guestId
-        );
-
-        // if the condition is verified, then there is a shared secret section in the vb declaring
-        // a shared secret between guest and host but no shared key is included in the section: very very bad!
-        if (sharedSecretSection === undefined) {
-            throw new NoSharedSecretError(guestId, hostId);
-        }
-
-        return sharedSecretSection.object.encryptedChannelKey;
-    }
-
-    /**
-     * Creates a shared key between two peers.
-     */
-    private async createSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, hostId: number, guestId: number) {
-        const hostPrivateDecryptionKeyBytes = hostPrivateDecryptionKey.getRawPrivateKey();
-
-        const vbGenesisSeed = await this.vb.getGenesisSeed();
-        const encoder = new TextEncoder;
-        const info = Utils.binaryFrom(encoder.encode("SHARED_SECRET"), vbGenesisSeed, guestId);
-        const hkdf = new HKDF();
-        const hostGuestSharedKeyBytes = hkdf.deriveKeyNoSalt(hostPrivateDecryptionKeyBytes, info, 32);
-        const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(hostGuestSharedKeyBytes);
-
-        // we encrypt the shared key with the guest's public key
-        const guestPublicEncryptionKey = await this.getPublicEncryptionKeyByActorId(guestId);
-        const encryptedSharedKey = guestPublicEncryptionKey.encrypt(hostGuestSharedKey.getRawSecretKey());
-
-        // we create the section containing the shared secret key
-        await this.vb.createSharedSecret({
-            hostId,
-            guestId,
-            encryptedSharedKey,
-        });
-
-        return hostGuestSharedKey;
-    }
 
     actorIsSubscribed(name: string) {
         const actor = this.vb.getActor(name);
@@ -445,235 +345,12 @@ export class ApplicationLedger {
         };
     }
 
-    /**
-     *
-     * @param proofObject
-     * @param hostPrivateDecryptionKey
-     * @throws ProofVerificationFailedError Occurs when the provided proof is not verified.
-     */
-    async importProof(proofObject: Proof, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey): Promise<ImportedProof[]> {
-        const data: ImportedProof[] = [];
-
-        for (let height = 1; height <= this.vb.height; height++) {
-            const proof = proofObject.proofs.find((proof: any) => proof.height == height);
-            const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateDecryptionKey);
-            const merkleData = ir.importFromProof(proof?.data);
-
-            // TODO: check Merkle root hash
-            const verified = true;
-            if (!verified) {
-                throw new ProofVerificationFailedError();
-            }
-
-            data.push({
-                height,
-                // TODO(fix): need attention
-                // @ts-ignore
-                data: ir.exportToJson()
-            });
-        }
-
-        return data;
-    }
-
-    /**
-     * Retrieves the public encryption key of an actor by its identifier.
-     *
-     * @param actorId The identifier of the actor.
-     * @returns The public encryption key of the actor.
-     */
-    async getPublicEncryptionKeyByActorId(actorId: number) {
-        // recover the actor's public encryption key from the virtual blockchain state
-        // and ensure that the public encryption key is defined
-        const actor = this.getActorByIdOrFail(actorId);
-        const actorPublicKeyEncryptionHeightDefinition = actor.pkeKeyHeight;
-        const isPkeDefined =
-            typeof actorPublicKeyEncryptionHeightDefinition === 'number' &&
-            actorPublicKeyEncryptionHeightDefinition !== 0;
-        if (!isPkeDefined) {
-            throw new ProtocolError(`Actor ${actorId} has not subscribed to a public encryption key.`)
-        }
-
-        // search the microblock containing the actor subscription (and the public encryption key definition)
-        const microBlock = await this.vb.getMicroblock(actorPublicKeyEncryptionHeightDefinition);
-        const subscribeSection = microBlock.getSection((section: any) =>
-            section.type == SECTIONS.APP_LEDGER_ACTOR_SUBSCRIPTION &&
-            section.object.actorId == actorId
-        );
-
-        // reconstruct the public encryption key
-        const rawPkePublicKey = subscribeSection.object.pkePublicKey;
-        const pkeSchemeId = subscribeSection.object.pkeSchemeId;
-        return CryptoSchemeFactory.createPublicEncryptionKey(pkeSchemeId, rawPkePublicKey);
-    }
-
-    private getActorByIdOrFail(actorId: number) {
-        const state = this.vb.getState();
-        const allActors = state.actors;
-
-        // we first check if the actor identifier is valid
-        if (actorId < 0 || actorId >= allActors.length) {
-            throw new Error(`Actor with id ${actorId} does not exist.`);
-        }
-
-        // we then check if the actor is defined (in practice, this test should never fail, but we never know...)
-        const actor = state.actors[actorId];
-        if (actor === undefined || actor === null) {
-            throw new ProtocolError(`Actor with id ${actorId} is not defined.`);
-        }
-
-        return actor;
-    }
-
-    async getMicroblockIntermediateRepresentation(height: number, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey) {
-        const microblock = await this.vb.getMicroblock(height);
-        const listOfChannels: { channelId: number, data: object, merkleRootHash?: string }[] = [];
-
-        // we load the public channels that should be always accessible
-        const publicChannelDataSections = microblock.getSections<ApplicationLedgerPublicChannelSection>(
-            (section) => section.type == SECTIONS.APP_LEDGER_PUBLIC_CHANNEL_DATA
-        );
-        for (const publicChannelSection of publicChannelDataSections) {
-            const { channelId, data } = publicChannelSection.object;
-            listOfChannels.push({
-                channelId: channelId,
-                data: data
-            });
-        }
 
 
-        // we now load private channels that might be protected (encrypted)
-        const logger = Logger.getLogger([ApplicationLedger.name]);
-        if (hostPrivateDecryptionKey instanceof AbstractPrivateDecryptionKey) {
-            try {
-                // we attempt to identify the current actor
-                const currentActorId = await this.vb.getCurrentActorId();
-                const privateChannelDataSections = microblock.getSections<ApplicationLedgerPrivateChannelSection>(
-                    (section) => section.type == SECTIONS.APP_LEDGER_PRIVATE_CHANNEL_DATA
-                );
 
-                for (const section of privateChannelDataSections) {
-                    const { channelId, encryptedData, merkleRootHash } = section.object;
-                    try {
-                        const channelKey = await this.vb.getChannelKey(currentActorId, channelId, hostPrivateDecryptionKey);
-                        const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, channelId);
-                        const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, channelId);
-                        const data = Crypto.Aes.decryptGcm(channelSectionKey, encryptedData, channelSectionIv);
-                        // TODO: might need to move on the decryptGcm method
-                        if (data === false) throw new DecryptionError("Failed to decrypt encrypted section data");
-
-                        logger.debug(`Allowed to access private channel {channelName} (channel id={channelId})`, () => ({
-                            channelName: this.vb.getChannelNameById(channelId),
-                            channelId
-                        }))
-
-                        listOfChannels.push({
-                            channelId: channelId,
-                            merkleRootHash: Utils.binaryToHexa(merkleRootHash),
-                            data: data as Uint8Array
-                        });
-                    } catch (e) {
-                        if (e instanceof DecryptionError || e instanceof ActorNotInvitedError) {
-                            //console.warn(`Not allowed to access channel ${channelId}`)
-                            logger.debug(`Access to private channel {channelName} forbidden (channel id={channelId}): {e}`, () => ({
-                                e,
-                                channelName: this.vb.getChannelNameById(channelId),
-                                channelId
-                            }))
-                        } else {
-                            throw e;
-                        }
-                    }
-                }
-            } catch (e) {
-                if (e instanceof CurrentActorNotFoundError) {
-                    // This case occurs when the current actor is not found in the application ledger
-                    // which happen when an external actor attempts to read the content of the application ledger.
-                    const logger = Logger.getLogger([ApplicationLedger.name]);
-                    logger.debug("Unabled to recover private channels: {e}", {e})
-                } else {
-                    throw e;
-                }
-            }
-
-        } else {
-            console.warn("No private channel loaded: no private decryption key provided.")
-        }
-
-        // import the channels to the intermediate representation
-        const ir = this.vb.getChannelSpecializedIntermediateRepresentationInstance();
-        ir.importFromSectionFormat(listOfChannels);
-        return ir;
-    }
-
-    async inviteActorOnChannel(actorName: string, channelName: string, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
-        const channelId = this.vb.getChannelIdByChannelName(channelName);
-        const actorId = this.vb.getActorId(actorName);
-        Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId} for channel ${channelName}`)
-
-
-        const authorId = await this.vb.getCurrentActorId();
-        const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
-        const guestId = actorId; // the guest is the actor assigned to the channel
-
-        // if the guestId equals the hostId, it is likely a misuse of the record. In this case, we do not do anything
-        // because the author is already in the channel by definition (no need to create a shared key, ...).
-        if (hostId === guestId) return;
-
-        // To invite the actor in the channel, we first retrieve or generate a symmetric encryption key used to establish
-        // secure communication between both peers. The key is then used to encrypt the channel key and put in a dedicated
-        // section of the microblock.
-        const hostGuestEncryptedSharedKey =
-            await this.getExistingSharedKey(hostId, guestId) ||
-            await this.getExistingSharedKey(guestId, hostId);
-
-
-        // if we have found the (encrypted) shared secret key, then we *attempt* to decrypt it, otherwise
-        // there is no shared secret key and then we create a new one
-        let hostGuestSharedKey: AES256GCMSymmetricEncryptionKey;
-        if (hostGuestEncryptedSharedKey !== undefined) {
-            try {
-                hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
-                    hostPrivateDecryptionKey.decrypt(hostGuestEncryptedSharedKey)
-                );
-            } catch (e) {
-                if (e instanceof DecryptionError) {
-                    throw new SharedKeyDecryptionError("Cannot decrypt the shared key with the provided decryption key: Have you provided the valid one?")
-                } else {
-                    throw e;
-                }
-            }
-        } else {
-            hostGuestSharedKey = await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
-        }
-
-
-        // we encrypt the channel key using the shared secret key
-        const channelKey = await this.vb.getChannelKey(hostId, channelId, hostPrivateDecryptionKey);
-        const encryptedChannelKey = hostGuestSharedKey.encrypt(channelKey);
-
-        // we log the result
-        const logger = Logger.getLogger([ApplicationLedger.name]);
-        logger.info(`Actor {guestName} invited to channel ${channelName}`, () => ({
-            guestName: actorName,
-        }))
-        logger.debug(`Channel key for channel ${channelName}: ${channelKey}`)
-
-        // we create the section containing the encrypted channel key (that can only be decrypted by the host and the guest)
-        await this.vb.inviteToChannel({
-            channelId,
-            hostId,
-            guestId,
-            encryptedChannelKey,
-        })
-    }
 
     setGasPrice(gasPrice: CMTSToken) {
         this.gasPrice = gasPrice;
-    }
-
-    getMicroblockData() {
-        return this.vb.getMicroblockData();
     }
 
     /**

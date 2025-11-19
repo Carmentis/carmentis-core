@@ -1,5 +1,6 @@
 import {ProtocolVBState, ValidatorNodeVBState} from "../../blockchain/types";
 import {Utils} from "../../utils/utils";
+import {Hash} from "../../entities/Hash";
 export class ValidatorNodeLocalState {
     constructor(private localState: ValidatorNodeVBState) {
     }
@@ -17,4 +18,25 @@ export class ValidatorNodeLocalState {
             signatureSchemeId: 0
         });
     }
+
+    getOrganizationId() {
+        return Hash.from(this.localState.organizationId);
+    }
+
+    getDescriptionHeight() {
+        return this.localState.descriptionHeight;
+    }
+
+    getNetworkIntegrationHeight() {
+        return this.localState.networkIntegrationHeight;
+    }
+
+    getRpcEndpointHeight() {
+        return this.localState.rpcEndpointHeight;
+    }
+
+    getSignatureSchemeId() {
+        return this.localState.signatureSchemeId;
+    }
+
 }

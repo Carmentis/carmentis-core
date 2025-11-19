@@ -17,6 +17,7 @@ import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
  * and interacting with a virtual blockchain (vb) context. Provides methods for creating,
  * loading, transferring, and publishing updates.
  */
+/*
 export class Account {
     vb: AccountVb;
     provider: Provider;
@@ -56,7 +57,7 @@ export class Account {
      * @param {number} amount
      * @returns {Promise<void>}
      * @private
-     */
+     *
     async _create(sellerAccount: Uint8Array, buyerPublicKey: PublicSignatureKey, amount: number) {
         if (!this.provider.isKeyed()) throw new IllegalStateError("Cannot create an account without a keyed provider.")
         await this.vb.setSignatureScheme({
@@ -75,20 +76,7 @@ export class Account {
         await this.vb.load(identifier);
     }
 
-    /**
-     * Retrieves the public key for the current instance of the cryptographic context.
-     *
-     * The method fetches the raw public key and the signature scheme ID, then utilizes the CryptoSchemeFactory
-     * to create and return a public signature key object.
-     *
-     * @return {Promise<PublicSignatureKey>} A promise that resolves to a public signature key object.
-     */
-    async getPublicKey() {
-        const rawPublicKey = await this.vb.getPublicKey();
-        const schemeId = await this.vb.getSignatureSchemeId();
-        const factory = new CryptoSchemeFactory();
-        return factory.createPublicSignatureKey(schemeId, rawPublicKey);
-    }
+
 
     async transfer(object: AccountTransfer) {
         await this.vb.setTransfer(object);
@@ -152,3 +140,5 @@ export class Account {
 
     }
 }
+
+ */

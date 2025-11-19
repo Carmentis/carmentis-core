@@ -10,7 +10,7 @@ import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Application} from "../blockchain/Application";
 import {CMTSToken} from "../economics/currencies/token";
 
-import {RecordDescription} from "../blockchain/RecordDescription";
+import {StateUpdateRequest} from "../blockchain/StateUpdateRequest";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {
@@ -90,7 +90,7 @@ export class ABCINodeAuthenticatedBlockchainClient extends ABCINodeUnauthenticat
         return applicationLedger;
     }
 
-    async createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription<T>, expirationDay: number) {
+    async createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: StateUpdateRequest<T>, expirationDay: number) {
         const applicationLedger = new ApplicationLedger({provider: this.defaultKeyedProvider});
         if (applicationLedger.vb.getHeight() == 0) {
             applicationLedger.vb.setExpirationDay(expirationDay);

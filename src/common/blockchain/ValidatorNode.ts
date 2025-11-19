@@ -1,10 +1,15 @@
 import {SECTIONS} from "../constants/constants";
 import {ValidatorNodeVb} from "./ValidatorNodeVb";
-import {ValidatorNodeDeclaration, ValidatorNodeDescription, ValidatorNodeRpcEndpoint, ValidatorNodeNetworkIntegration} from "./types";
 import {CMTSToken} from "../economics/currencies/token";
 import {Hash} from "../entities/Hash";
 import {Provider} from "../providers/Provider";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {
+    ValidatorNodeDeclarationSection,
+    ValidatorNodeDescriptionSection,
+    ValidatorNodeVotingPowerUpdateSection,
+    ValidatorNodeRpcEndpointSection
+} from "./sectionSchemas";
 
 export class ValidatorNode {
   provider: any;
@@ -36,18 +41,18 @@ export class ValidatorNode {
   }
 
   async _load(identifier: any) {
-    await this.vb.load(identifier);
+    await this.vb.synchronizeVirtualBlockchain(identifier);
   }
 
-  async setDescription(object: ValidatorNodeDescription) {
+  async setDescription(object: ValidatorNodeDescriptionSection) {
     await this.vb.setDescription(object);
   }
 
-  async setRpcEndpoint(object: ValidatorNodeRpcEndpoint) {
+  async setRpcEndpoint(object: ValidatorNodeRpcEndpointSection) {
     await this.vb.setRpcEndpoint(object);
   }
 
-  async setNetworkIntegration(object: ValidatorNodeNetworkIntegration) {
+  async setNetworkIntegration(object: ValidatorNodeVotingPowerUpdateSection) {
     await this.vb.setNetworkIntegration(object);
   }
 
@@ -57,7 +62,7 @@ export class ValidatorNode {
 
   async getDeclaration() {
     const microblock = await this.vb.getFirstMicroBlock();
-    const section = microblock.getSection<ValidatorNodeDeclaration>(
+    const section = microblock.getSection<ValidatorNodeDeclarationSection>(
         (section: any) => section.type == SECTIONS.VN_DECLARATION
     );
     return section.object;
@@ -65,7 +70,7 @@ export class ValidatorNode {
 
   async getDescription() {
     const microblock = await this.vb.getMicroblock(this.vb.getDescriptionHeight());
-    const section = microblock.getSection<ValidatorNodeDescription>(
+    const section = microblock.getSection<ValidatorNodeDescriptionSection>(
         (section: any) => section.type == SECTIONS.VN_DESCRIPTION
     );
     return section.object;
@@ -73,7 +78,7 @@ export class ValidatorNode {
 
   async getRpcEndpoint() {
     const microblock = await this.vb.getMicroblock(this.vb.getRpcEndpointHeight());
-    const section = microblock.getSection<ValidatorNodeRpcEndpoint>(
+    const section = microblock.getSection<ValidatorNodeRpcEndpointSection>(
         (section: any) => section.type == SECTIONS.VN_RPC_ENDPOINT
     );
     return section.object;
@@ -87,7 +92,7 @@ export class ValidatorNode {
     }
 
     const microblock = await this.vb.getMicroblock(height);
-    const section = microblock.getSection<ValidatorNodeNetworkIntegration>(
+    const section = microblock.getSection<ValidatorNodeVotingPowerUpdateSection>(
         (section: any) => section.type == SECTIONS.VN_NETWORK_INTEGRATION
     );
     return section.object;

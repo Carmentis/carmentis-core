@@ -32,4 +32,16 @@ export class OrganizationLocalState {
     updateDescriptionHeight(descriptionHeight: number) {
         this.localState.descriptionHeight = descriptionHeight;
     }
+
+    getPublicKeyDefinitionHeight() {
+        return this.localState.publicKeyHeight;
+    }
+
+    getPublicSignatureKeySchemeId() {
+        return this.localState.signatureSchemeId
+    }
+
+    getDescriptionHeight() {
+        return this.localState.descriptionHeight;
+    }
 }

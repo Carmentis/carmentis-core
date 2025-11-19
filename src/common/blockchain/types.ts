@@ -1,5 +1,4 @@
-import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
-import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+import {z} from "zod";
 
 export interface ImportedProof {
     height: number;
@@ -50,46 +49,12 @@ export interface MerkleProof {
 export interface ProtocolVBState {
     signatureSchemeId: number;
     publicKeyHeight: number;
+    variables: { variableName: string, variableValue: string }[]
 }
 
 export interface AccountVBState {
     signatureSchemeId: number;
     publicKeyHeight: number;
-}
-
-export interface ApplicationDescription {
-    name: string,
-    logoUrl: string,
-    homepageUrl: string,
-    description: string
-}
-
-export interface ApplicationDeclaration {
-    organizationId: Uint8Array
-}
-
-export interface OrganizationDescription {
-    name: string,
-    city: string,
-    countryCode: string,
-    website: string
-}
-
-export interface ValidatorNodeDescription {
-    cometPublicKeyType: string,
-    cometPublicKey: string
-}
-
-export interface ValidatorNodeRpcEndpoint {
-    rpcEndpoint: string
-}
-
-export interface ValidatorNodeNetworkIntegration {
-    votingPower: number
-}
-
-export interface ValidatorNodeDeclaration {
-    organizationId: Uint8Array
 }
 
 export interface OrganizationVBState {
@@ -112,7 +77,7 @@ export interface ApplicationVBState {
     descriptionHeight: number;
 }
 
-export interface ApplicationLedgeChannel {
+export interface ApplicationLedgerChannel {
     name: string;
     isPrivate: boolean;
     creatorId: number;
@@ -152,6 +117,7 @@ export interface ApplicationLedgerActor {
 }
 
 
+
 /**
  * Describes the local state of the application ledger.
  */
@@ -159,63 +125,8 @@ export interface ApplicationLedgerLocalStateObject {
     allowedSignatureSchemeIds: number[];
     allowedPkeSchemeIds: number[];
     applicationId: Uint8Array;
-    channels: ApplicationLedgeChannel[];
+    channels: ApplicationLedgerChannel[];
     actors: ApplicationLedgerActor[];
-}
-
-
-export interface ApplicationLedgerEndorsementRequestSection {
-    endorserId: number,
-    message: string,
-}
-
-export interface ApplicationLedgerChannelInvitationSection {
-    channelId: number;
-    hostId: number;
-    guestId: number;
-    encryptedChannelKey: Uint8Array;
-}
-
-
-export interface ApplicationLedgerActorCreationSection {
-    id: number,
-    type: number,
-    name: string,
-}
-
-export interface ApplicationLedgerDeclarationSection {
-    applicationId: Uint8Array
-}
-
-export interface ApplicationLedgerSharedKeySection {
-    hostId: number;
-    guestId: number;
-    encryptedSharedKey: Uint8Array
-}
-/*
- { name: 'channelId',      type: DATA.TYPE_UINT8 },
-    { name: 'merkleRootHash', type: DATA.TYPE_BIN256 },
-    { name: 'encryptedData',  type: DATA.TYPE_BINARY }
- */
-export interface ApplicationLedgerPrivateChannelSection {
-    channelId: number,
-    merkleRootHash: Uint8Array,
-    encryptedData: Uint8Array,
-}
-
-export interface ApplicationLedgerPublicChannelSection {
-    channelId: number,
-    data: Uint8Array,
-}
-
-export interface ApplicationLedgerActorSubscriptionSection {
-    actorId: number,
-    actorType: number,
-    organizationId: Uint8Array,
-    signatureSchemeId: SignatureSchemeId,
-    signaturePublicKey: Uint8Array,
-    pkeSchemeId: PublicKeyEncryptionSchemeId,
-    pkePublicKey: Uint8Array
 }
 
 
@@ -259,7 +170,7 @@ export interface ValidatorNodeDTO {
     validatorNodeHash: Uint8Array;
 }
 
-export interface MicroblockHeader {
+export interface MicroblockHeaderObject {
     magicString: string;
     protocolVersion: number;
     height: number;
@@ -268,6 +179,11 @@ export interface MicroblockHeader {
     gas: number;
     gasPrice: number;
     bodyHash: Uint8Array;
+
+    /**
+     * This field is used to determine the local state update version to use.
+     */
+    localStateUpdaterVersion: number
 }
 
 export interface MicroblockSection {
@@ -409,8 +325,6 @@ export interface Proof {
     }[]
 }
 
-
-import {z} from "zod";
 
 export const AccountHashSchema =  z.object({
     accountHash: z.instanceof(Uint8Array)

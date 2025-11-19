@@ -1,13 +1,13 @@
 import {SECTIONS} from "../constants/constants";
 import {OrganizationVb} from "./OrganizationVb";
 import {Crypto} from "../crypto/crypto";
-import {OrganizationDescription} from "./types";
 import {CMTSToken} from "../economics/currencies/token";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 import {OrganizationNotFoundError, VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
 import {Hash} from "../entities/Hash";
+import {OrganizationDescription} from "./sectionSchemas";
 
 export class Organization {
   provider: any;
@@ -40,7 +40,7 @@ export class Organization {
 
   async _load(identifier: Uint8Array) {
     try {
-        return await this.vb.load(identifier);
+        return await this.vb.synchronizeVirtualBlockchain(identifier);
     } catch (e) {
         if (e instanceof VirtualBlockchainNotFoundError) {
             throw new OrganizationNotFoundError(Hash.from(identifier));
@@ -56,7 +56,7 @@ export class Organization {
 
   async getDescription() : Promise<OrganizationDescription> {
     // TODO (for all similar methods): the state may have changed and there may be a more recent description
-    const microblock = await this.vb.getMicroblock(this.vb.getDescriptionHeight());
+    const microblock = await this.vb.getMicroblock(this.());
     const section = microblock.getSection<OrganizationDescription>(
         (section: any) => section.type == SECTIONS.ORG_DESCRIPTION
     );

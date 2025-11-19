@@ -10,14 +10,14 @@ import {Utils} from "../utils/utils";
 import {EncoderFactory} from "../utils/encoder";
 import {ImportedProof, Proof} from "./types";
 import {Hash} from "../entities/Hash";
-import {RecordDescription} from "./RecordDescription";
+import {StateUpdateRequest} from "./StateUpdateRequest";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {
     AbstractPrivateDecryptionKey
 } from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 
 
-export type OperatorAnchorRequest = Omit<RecordDescription, 'applicationId'>;
+export type OperatorAnchorRequest = Omit<StateUpdateRequest, 'applicationId'>;
 
 /**
  * @deprecated Use BlockchainFacade.
@@ -158,10 +158,10 @@ export class Blockchain {
   /**
    * Should be used with a keyed provider.
    *
-   * @param object {RecordDescription}
+   * @param object {StateUpdateRequest}
    * @returns {Promise<ApplicationLedger>}
    */
-  async getApplicationLedgerFromJson(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription) {
+  async getApplicationLedgerFromJson(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, object: StateUpdateRequest) {
     const applicationLedger = new ApplicationLedger({ provider: this.provider });
     await applicationLedger._processJson(hostPrivateDecryptionKey, object);
     return applicationLedger;

@@ -1,19 +1,19 @@
 import {PublicationExecutionContext} from "./PublicationExecutionContext";
-import {RecordDescription} from "../../blockchain/RecordDescription";
+import {StateUpdateRequest} from "../../blockchain/StateUpdateRequest";
 import {IllegalUsageError} from "../../errors/carmentis-error";
 import {ExpirationDate} from "../ExpirationDate";
 
 export class RecordPublicationExecutionContext<T> extends PublicationExecutionContext {
 
     private expirationDate: ExpirationDate;
-    private record?: RecordDescription<T>;
+    private record?: StateUpdateRequest<T>;
 
     constructor() {
         super();
         this.expirationDate = ExpirationDate.endless();
     }
 
-    withRecord(record: RecordDescription<T>): RecordPublicationExecutionContext<T> {
+    withRecord(record: StateUpdateRequest<T>): RecordPublicationExecutionContext<T> {
         this.record = record;
         return this;
     }
@@ -34,7 +34,7 @@ export class RecordPublicationExecutionContext<T> extends PublicationExecutionCo
         return this.expirationDate;
     }
 
-    build(): RecordDescription<T> {
+    build(): StateUpdateRequest<T> {
         if (!this.record) throw new IllegalUsageError("Record is required for record publication.")
         return this.record;
     }

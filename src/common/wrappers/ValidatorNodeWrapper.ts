@@ -1,7 +1,11 @@
 import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {Hash} from "../entities/Hash";
-import {ValidatorNodeDescription, ValidatorNodeRpcEndpoint, ValidatorNodeNetworkIntegration} from "../blockchain/types";
 import {CometBFTPublicKey} from "../cometbft/CometBFTPublicKey";
+import {
+    ValidatorNodeDescriptionSection,
+    ValidatorNodeVotingPowerUpdateSection,
+    ValidatorNodeRpcEndpointSection
+} from "../blockchain/sectionSchemas";
 
 export class ValidatorNodeWrapper {
     static async wrap(validatorNode: ValidatorNode) {
@@ -15,9 +19,9 @@ export class ValidatorNodeWrapper {
 
     private constructor(
         private readonly organizationId: Hash,
-        private readonly description: ValidatorNodeDescription,
-        private readonly rpcEndpoint: ValidatorNodeRpcEndpoint,
-        private readonly networkIntegration: ValidatorNodeNetworkIntegration
+        private readonly description: ValidatorNodeDescriptionSection,
+        private readonly rpcEndpoint: ValidatorNodeRpcEndpointSection,
+        private readonly networkIntegration: ValidatorNodeVotingPowerUpdateSection
     ) {}
 
     /**

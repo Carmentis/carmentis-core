@@ -1,31 +1,62 @@
-import {CHAIN, SECTIONS} from "../constants/constants";
+import {SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
-import {StructureChecker} from "./StructureChecker";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
-import {Crypto} from "../crypto/crypto";
-import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/Provider";
-import {MicroblockSection, OrganizationDescription, OrganizationVBState} from "./types";
-import {Microblock, Section} from "./Microblock";
+import {Microblock} from "./Microblock";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
-import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
-import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {OrganizationLocalState} from "../blockchainV2/localStates/OrganizationLocalState";
+import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
+import {Hash} from "../entities/Hash";
+import {LocalStateUpdaterFactory} from "../blockchainV2/localStatesUpdater/LocalStateUpdaterFactory";
+import {
+    OrganizationMicroblockStructureChecker
+} from "../blockchainV2/structureChekers/OrganizationMicroblockStructureChecker";
+import {OrganizationDescriptionSection} from "./sectionSchemas";
 
-export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
-    constructor({
-            provider
-        }: { provider: Provider }) {
-        super({ provider, type: CHAIN.VB_ORGANIZATION });
+export class OrganizationVb extends VirtualBlockchain {
 
-        this.registerSectionCallback(SECTIONS.ORG_SIG_SCHEME, this.signatureSchemeCallback);
-        this.registerSectionCallback(SECTIONS.ORG_PUBLIC_KEY, this.publicKeyCallback);
-        this.registerSectionCallback(SECTIONS.ORG_DESCRIPTION, this.descriptionCallback);
-        this.registerSectionCallback(SECTIONS.ORG_SIGNATURE, this.signatureCallback);
+    // ------------------------------------------
+    // Static methods
+    // ------------------------------------------
+    static async loadOrganizationVirtualBlockchain(provider: Provider, organizationId: Hash) {
+        const orgVb = new OrganizationVb(provider);
+        await orgVb.synchronizeVirtualBlockchainFromProvider(organizationId);
+        const state = await provider.getOrganizationLocalStateFromId(organizationId)
+        orgVb.setLocalState(state);
+        return orgVb;
+    }
+
+    static createOrganizationVirtualBlockchain(provider: Provider) {
+        return new OrganizationVb(provider);
+    }
+
+    // ------------------------------------------
+    // Instance implementation
+    // ------------------------------------------
+
+    private state: OrganizationLocalState;
+
+    constructor(provider: Provider, state: OrganizationLocalState = OrganizationLocalState.createInitialState()) {
+        super(provider, VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN, new OrganizationMicroblockStructureChecker())
+        this.state = state;
+    }
+
+
+
+    protected async updateLocalState(microblock: Microblock) {
+        const localStateVersion = microblock.getLocalStateUpdateVersion();
+        const localStateUpdater = LocalStateUpdaterFactory.createOrganizationLocalStateUpdater(localStateVersion);
+        this.state = await localStateUpdater.updateState(this.state, microblock);
+    }
+
+    protected setLocalState(state: OrganizationLocalState) {
+        this.state = state
     }
 
     /**
      Update methods
      */
+    /*
     async setSignatureScheme(signatureSchemeId: SignatureSchemeId) {
         await this.addSection(SECTIONS.ORG_SIG_SCHEME, {
             schemeId: signatureSchemeId
@@ -43,7 +74,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
      *
      * @param {OrganizationDescription} object - The object containing the organization description details.
      * @return {Promise<void>} A promise that resolves when the description has been successfully set.
-     */
+     *
     async setDescription(object: OrganizationDescription) {
         await this.addSection(SECTIONS.ORG_DESCRIPTION, object);
     }
@@ -52,15 +83,18 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
      *
      * @param {PrivateSignatureKey} privateKey
      * @returns {Promise<void>}
-     */
+     *
     async setSignature(privateKey: PrivateSignatureKey) {
         const object = this.createSignature(privateKey);
         await this.addSection(SECTIONS.ORG_SIGNATURE, object);
     }
 
+     */
+
     /**
      Section callbacks
      */
+    /*
     async signatureSchemeCallback(microblock: any, section: any) {
         this.getState().signatureSchemeId = section.object.schemeId;
     }
@@ -92,54 +126,24 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationVBState> {
         microblock.setFeesPayerAccount(feesPayerAccount);
     }
 
-    getDescriptionHeight(): number {
-        return this.getState().descriptionHeight;
-    }
+     */
 
     async getPublicKey(): Promise<PublicSignatureKey> {
-        const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
-        const rawPublicKey = keyMicroblock.getSection((section: any) => section.type == SECTIONS.ORG_PUBLIC_KEY).object.publicKey;
+        const publicKeyDefinitionHeight = this.state.getPublicKeyDefinitionHeight();
+        const publicSignatureKeySchemeId = this.state.getPublicSignatureKeySchemeId();
+        const keyMicroblock = await this.getMicroblock(publicKeyDefinitionHeight);
+        const section = keyMicroblock.getOrganizationPublicKeySection();
+        const rawPublicKey = section.object.publicKey;
         const cryptoFactory = new CryptoSchemeFactory();
-        const signatureSchemeId = this.getState().signatureSchemeId;
-        const publicKey = cryptoFactory.createPublicSignatureKey(signatureSchemeId, rawPublicKey)
-
+        const publicKey = cryptoFactory.createPublicSignatureKey(publicSignatureKeySchemeId, rawPublicKey)
         return publicKey;
     }
 
-    /**
-     Structure check
-     */
-    checkStructure(microblock: any) {
-        const checker = new StructureChecker(microblock);
-
-        checker.expects(
-            checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-            SECTIONS.ORG_SIG_SCHEME
-        );
-        checker.expects(
-            checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.AT_MOST_ONE,
-            SECTIONS.ORG_PUBLIC_KEY
-        );
-        checker.group(
-            SECTIONS.AT_LEAST_ONE,
-            [
-                [ SECTIONS.AT_MOST_ONE, SECTIONS.ORG_DESCRIPTION ],
-                [ SECTIONS.AT_MOST_ONE, SECTIONS.ORG_SERVER ]
-            ]
-        );
-        checker.expects(SECTIONS.ONE, SECTIONS.ORG_SIGNATURE);
-        checker.endsHere();
+    async getDescription() : Promise<OrganizationDescriptionSection> {
+        const descriptionHeight = this.state.getDescriptionHeight();
+        const microblock = await this.getMicroblock(descriptionHeight);
+        const section = microblock.getOrganizationDescriptionSection();
+        return section.object;
     }
 
-    private static UNDEFINED_SIGNATURE_SCHEME_ID = -1;
-    private static UNDEFINED_PUBLIC_KEY_HEIGHT = 0;
-    private static UNDEFINED_DESCRIPTION_HEIGHT = 0;
-
-    protected getInitialState(): OrganizationVBState {
-        return {
-            signatureSchemeId: OrganizationVb.UNDEFINED_SIGNATURE_SCHEME_ID,
-            publicKeyHeight: OrganizationVb.UNDEFINED_PUBLIC_KEY_HEIGHT,
-            descriptionHeight: OrganizationVb.UNDEFINED_DESCRIPTION_HEIGHT
-        }
-    }
 }

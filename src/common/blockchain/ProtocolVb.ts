@@ -1,24 +1,50 @@
-import {CHAIN, SECTIONS} from "../constants/constants";
+import {SECTIONS} from "../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
-import {StructureChecker} from "./StructureChecker";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
-import {Crypto} from "../crypto/crypto";
-import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Provider} from "../providers/Provider";
-import {MicroblockSection, ProtocolVBState} from "./types";
-import {Section} from "./Microblock";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {ProtocolMicroblockStructureChecker} from "../blockchainV2/structureChekers/ProtocolMicroblockStructureChecker";
+import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
+import {ProtocolLocalState} from "../blockchainV2/localStates/ProtocolLocalState";
+import {LocalStateUpdaterFactory} from "../blockchainV2/localStatesUpdater/LocalStateUpdaterFactory";
+import {Microblock} from "./Microblock";
+import {Hash} from "../entities/Hash";
 
-export class ProtocolVb extends VirtualBlockchain<ProtocolVBState> {
-    private signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
-    constructor({
-            provider
-        }: { provider: Provider }) {
-        super({ provider, type: CHAIN.VB_PROTOCOL });
+export class ProtocolVb extends VirtualBlockchain {
+
+    // ------------------------------------------
+    // Static methods
+    // ------------------------------------------
+    static async loadProtocolVirtualBlockchain(provider: Provider, protocolId: Hash) {
+        const vb = new ProtocolVb(provider);
+        await vb.synchronizeVirtualBlockchainFromProvider(protocolId);
+        const state = await provider.getProtocolLocalStateFromId(protocolId)
+        vb.setLocalState(state);
+        return vb;
     }
 
+    // ------------------------------------------
+    // Instance implementation
+    // ------------------------------------------
+    constructor(provider: Provider, private state: ProtocolLocalState = ProtocolLocalState.createInitialState()) {
+        super(provider, VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN, new ProtocolMicroblockStructureChecker());
+    }
+
+    protected setLocalState(state: ProtocolLocalState) {
+        this.state = state
+    }
+
+    protected async updateLocalState(microblock: Microblock): Promise<void> {
+        const localStateUpdater = LocalStateUpdaterFactory.createProtocolLocalStateUpdater(microblock.getLocalStateUpdateVersion());
+        this.state = await localStateUpdater.updateState(this.state, microblock);
+    }
+
+    /**
+     Update methods
+     */
+    /*
     async setSignatureScheme(signatureSchemeId: SignatureSchemeId) {
         await this.addSection(SECTIONS.PROTOCOL_SIG_SCHEME, {
             schemeId: signatureSchemeId
@@ -35,18 +61,23 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolVBState> {
         const object = this.createSignature(privateKey);
         await this.addSection(SECTIONS.PROTOCOL_SIGNATURE, object);
     }
+     */
+
 
     async getPublicKey(): Promise<PublicSignatureKey> {
-        const keyMicroblock = await this.getMicroblock(this.getState().publicKeyHeight);
+        const keyMicroblock = await this.getMicroblock(this.state.getLocalState().publicKeyHeight);
         const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.PROTOCOL_PUBLIC_KEY).object.publicKey;
         const cryptoFactory = new CryptoSchemeFactory();
-        const signatureSchemeId = this.getState().signatureSchemeId;
+        const signatureSchemeId = this.state.getLocalState().signatureSchemeId;
         const publicKey = cryptoFactory.createPublicSignatureKey(signatureSchemeId, rawPublicKey)
 
         return publicKey;
     }
 
-    checkStructure(microblock: any) {
-        const checker = new StructureChecker(microblock);
+    async signatureCallback(microblock: Microblock, section: any) {
+        const publicKey = await this.getPublicKey();
+        const feesPayerAccount = await this.provider.getAccountHashByPublicKey(publicKey);
+        microblock.setFeesPayerAccount(feesPayerAccount);
     }
+
 }

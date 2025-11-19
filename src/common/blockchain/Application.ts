@@ -1,11 +1,11 @@
 import {SECTIONS} from "../constants/constants";
 import {ApplicationVb} from "./ApplicationVb";
 import {Crypto} from "../crypto/crypto";
-import {ApplicationDeclaration, ApplicationDescription} from "./types";
 import {Provider} from "../providers/Provider";
 import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {ApplicationDeclarationSection, ApplicationDescriptionSection} from "./sectionSchemas";
 
 export class Application {
     provider: any;
@@ -37,10 +37,10 @@ export class Application {
     }
 
     async _load(identifier: any) {
-        await this.vb.load(identifier);
+        await this.vb.synchronizeVirtualBlockchain(identifier);
     }
 
-    async setDescription(object: ApplicationDescription) {
+    async setDescription(object: ApplicationDescriptionSection) {
         await this.vb.setDescription(object);
     }
 
@@ -50,7 +50,7 @@ export class Application {
 
     async getDeclaration() {
         const microblock = await this.vb.getFirstMicroBlock();
-        const section = microblock.getSection<ApplicationDeclaration>(
+        const section = microblock.getSection<ApplicationDeclarationSection>(
             (section: any) => section.type == SECTIONS.APP_DECLARATION
         );
         return section.object;
@@ -58,7 +58,7 @@ export class Application {
 
     async getDescription() {
         const microblock = await this.vb.getMicroblock(this.vb.getDescriptionHeight());
-        const section = microblock.getSection<ApplicationDescription>(
+        const section = microblock.getSection<ApplicationDescriptionSection>(
             (section: any) => section.type == SECTIONS.APP_DESCRIPTION
         );
         return section.object;

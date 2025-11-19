@@ -12,7 +12,8 @@ export class ProtocolLocalState {
     static createInitialState() {
         return new ProtocolLocalState({
             signatureSchemeId: 0,
-            publicKeyHeight: 0
+            publicKeyHeight: 0,
+            variables: []
         });
     }
 

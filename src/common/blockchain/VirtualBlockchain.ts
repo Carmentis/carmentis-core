@@ -12,32 +12,63 @@ import {
 } from "../errors/carmentis-error";
 import {SectionType} from "../entities/SectionType";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
-import {MicroBlockBuilder} from "./MicroBlockBuilder";
+import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
+import {IMicroblockStructureChecker} from "../blockchainV2/structureChekers/IMicroblockStructureChecker";
+import {EncoderFactory} from "../utils/encoder";
 
-export abstract class VirtualBlockchain<CustomState> {
+/**
+ * Abstract class representing a Virtual Blockchain (VB).
+ * A Virtual Blockchain is a construct that consists of microblocks at specific heights, allowing for the creation and
+ * management of a blockchain-like structure. This class includes core functionalities such as loading VB states, managing microblocks,
+ * and configuring expiration settings.
+ *
+ * This class is intended to be subclassed to implement specific behavior for varied virtual blockchain types.
+ */
+export abstract class VirtualBlockchain {
     public static INITIAL_HEIGHT = 1;
 
-    currentMicroblock: Microblock | null;
-    height: number;
-    identifier: Uint8Array | undefined;
-    microblockHashes: Uint8Array[];
+    private height: number;
+    private identifier: Uint8Array | undefined;
+    private microblockHashes: Uint8Array[];
     provider: Provider;
-    sectionCallbacks: Map<SectionType, (microblock: Microblock, section: Section) => void | Promise<void>>;
-    state?: CustomState;
-    type: number;
-    expirationDay: number;
+    private type: number;
+    private expirationDay: number;
+    private microblockStructureChecker: IMicroblockStructureChecker;
 
-    constructor({provider, type}: { provider: Provider, type: number }) {
-        if(!CHAIN.VB_NAME[type]) {
-            throw `Invalid virtual blockchain type '${type}'`;
-        }
+    constructor(provider: Provider, type: VirtualBlockchainType, microblockStructureChecker: IMicroblockStructureChecker) {
+        this.microblockStructureChecker = microblockStructureChecker;
         this.provider = provider;
-        this.sectionCallbacks = new Map;
+        //this.sectionCallbacks = new Map;
         this.microblockHashes = [];
-        this.currentMicroblock = null;
+        //this.currentMicroblock = null;
         this.type = type;
         this.expirationDay = 0;
         this.height = 0;
+    }
+
+
+
+    /**
+     * Synchronizes the virtual blockchain state from the provider using the given virtual blockchain identifier.
+     *
+     * @param {Hash} vbId - The identifier of the virtual blockchain to be synchronized.
+     * @return {Promise<void>} Resolves when the virtual blockchain has been successfully synchronized.
+     *                         Throws an error if the virtual blockchain is not found or if the blockchain type is invalid.
+     */
+    protected async synchronizeVirtualBlockchainFromProvider(vbId: Hash) {
+        const identifier = vbId.toBytes()
+        const content = await this.provider.getVirtualBlockchainContent(identifier);
+        if (content === null || content.state === undefined) {
+            throw new VirtualBlockchainNotFoundError(vbId);
+        }
+        // the type is already assigned when creating the virtual blockchain
+        if (content.state.type !== this.type) throw new Error("Invalid blockchain type loaded");
+
+
+        this.identifier = identifier;
+        this.height = content.state.height;
+        this.expirationDay = content.state.expirationDay;
+        this.microblockHashes = content.microblockHashes;
     }
 
     setExpirationDay(day: number) {
@@ -47,6 +78,7 @@ export abstract class VirtualBlockchain<CustomState> {
         this.expirationDay = day;
     }
 
+    /*
     getState(): CustomState {
         if (!this.state) {
             this.state = this.getInitialState();
@@ -58,24 +90,47 @@ export abstract class VirtualBlockchain<CustomState> {
         throw new Error("State is undefined and no initial state has been defined.");
     }
 
+     */
+
+    /**
+     * Retrieves the genesis seed by extracting it from the previous hash of the first microblock.
+     *
+     * @return {Promise<Hash>} A promise that resolves to the genesis seed derived from the microblock's previous hash.
+     */
     async getGenesisSeed() {
         const mb = await this.getFirstMicroBlock();
-        return mb.header.previousHash;
+        // TODO(correctness): check because the genesisseed is a *part* of the previousHash (also includes type and expirationDate)
+        return Hash.from(mb.header.previousHash);
     }
 
+    /**
+     * Retrieves the height value.
+     *
+     * @return {number} The current height.
+     */
     getHeight(): number {
         return this.height;
     }
 
+    /**
+     * Retrieves the identifier associated with the current instance.
+     *
+     * @return {Uint8Array} The unique identifier of the instance.
+     */
     getId(): Uint8Array {
         return this.identifier!
     }
 
+    /**
+     * Checks whether the virtual blockchain identifier is defined.
+     *
+     * @return {boolean} True if the virtual blockchain identifier is defined, otherwise false.
+     */
     isVirtualBlockchainIdDefined(): boolean {
         return this.identifier instanceof Uint8Array;
     }
 
-    abstract checkStructure(microblock: any): void;
+    //abstract checkMicroblockStructure(microblock: any): void;
 
     /**
      Registers a callback for a given section type.
@@ -84,38 +139,16 @@ export abstract class VirtualBlockchain<CustomState> {
         sectionType: SectionType,
         callback: (mb: Microblock, section: Section<T>) => void | Promise<void>
     ) {
-        this.sectionCallbacks.set(sectionType, callback.bind(this));
+        //this.sectionCallbacks.set(sectionType, callback.bind(this));
     }
 
-    /**
-     Loads a VB from its identifier.
-     */
-    async load(identifier: Uint8Array) {
-        const content = await this.provider.getVirtualBlockchainContent(identifier);
-        const vbId = Hash.from(identifier);
 
-        if(content === null || content.state === undefined) {
-            throw new VirtualBlockchainNotFoundError(vbId);
-        }
 
-        if(this.type != content.state.type) {
-            throw `inconsistent virtual blockchain type (expected ${this.type}, got ${content.state.type})`;
-        }
-
-        this.identifier = identifier;
-        this.height = content.state.height;
-        this.expirationDay = content.state.expirationDay;
-        this.state = content.state.customState as CustomState;
-        this.microblockHashes = content.microblockHashes;
-    }
-
-    /**
-     Imports a microblock defined by its header data and body data.
-     */
+    /*
     async importMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
         this.currentMicroblock = new Microblock(this.type);
         this.currentMicroblock.load(headerData, bodyData);
-        this.checkStructure(this.currentMicroblock);
+        this.checkMicroblockStructure(this.currentMicroblock);
 
         for(const section of this.currentMicroblock.sections) {
             await this.processSectionCallback(this.currentMicroblock, section);
@@ -130,6 +163,8 @@ export abstract class VirtualBlockchain<CustomState> {
         return this.currentMicroblock.hash;
     }
 
+     */
+
     /**
      * Retrieves the first microblock.
      *
@@ -139,46 +174,98 @@ export abstract class VirtualBlockchain<CustomState> {
         return this.getMicroblock(1);
     }
 
-    /**
-     Returns the microblock at the given height.
-     */
-    async getMicroblock(height: number) {
-        if(height == this.microblockHashes.length + 1 && this.currentMicroblock) {
-            return this.currentMicroblock;
-        }
-        const hash = this.microblockHashes[height - 1];
 
-        if(!hash) {
+    /**
+     * Retrieves the microblock based on the given height.
+     *
+     * @param {number} height - The height of the microblock to retrieve.
+     * @return {Promise<Microblock>} A promise that resolves to the requested Microblock instance.
+     * @throws {MicroBlockNotFoundInVirtualBlockchainAtHeightError} If the microblock is not found at the specified height.
+     * @throws {Error} If the microblock information cannot be loaded.
+     */
+    async getMicroblock(height: number): Promise<Microblock> {
+        // retrieve the hash of the microblock from its height
+        const hash = this.microblockHashes[height - 1];
+        if (!(hash instanceof Uint8Array)) {
             throw new MicroBlockNotFoundInVirtualBlockchainAtHeightError(this.getIdentifier(), height);
         }
-        const info = await this.provider.getMicroblockInformation(hash);
 
-        if(info === null) {
-            throw new Error("unable to load microblock information");
+        // load the content of the microblock from the provider
+        const info = await this.provider.getMicroblockInformation(hash);
+        if (info === null) {
+            const encoder = EncoderFactory.bytesToBase64Encoder();
+            throw new Error(`Unable to load microblock information from hash ${encoder.encode(hash)} (height ${height})`);
         }
 
         const bodyList = await this.provider.getMicroblockBodys([ hash ]);
-        const microblock = new Microblock(this.type);
-        microblock.load(info.header, bodyList[0].body);
+        const serializedHeader = info.header;
+        const serializedBody = bodyList[0].body;
+        const microblock = Microblock.loadFromSerializedHeaderAndBody(this.type, serializedHeader, serializedBody )
+        //const microblock = new Microblock(this.type);
+        //microblock.load(info.header, bodyList[0].body);
 
         return microblock;
     }
 
+    /**
+     * Retrieves the identifier of the virtual blockchain.
+     * Throws an error if the identifier is undefined.
+     *
+     * @return {Hash} The hash representation of the virtual blockchain identifier.
+     */
     getIdentifier(): Hash {
         if (this.identifier === undefined) throw new TypeError(`Got undefined virtual blockchain identifier`)
         return Hash.from(this.identifier);
     }
 
-
-    async appendMicroBlock(microblock: Microblock) {
-        // we increase the height of the vb
-        this.height += 1;
-        // we call all callbacks to update the vb state with respect to the appended mb
-        for (const section of microblock.getAllSections()) {
-            await this.processSectionCallback(microblock, section);
-        }
+    /**
+     * Checks whether the structure is empty.
+     *
+     * @return {boolean} Returns true if the structure has no height, otherwise false.
+     */
+    isEmpty(): boolean {
+        return this.getHeight() === 0;
     }
 
+
+    /**
+     * Appends a microblock to the current structure, updating the identifier and height if necessary.
+     *
+     * @param {Microblock} microblock - The microblock to append.
+     * @return {Promise<void>} A promise that resolves once the microblock is appended and the local state is updated.
+     */
+    async appendMicroBlock(microblock: Microblock) {
+        // if the current state of the vb is empty (no microblock), then update the identifier
+        if (this.isEmpty()) {
+            this.identifier = microblock.getHash();
+        }
+
+
+        // we increase the height of the vb
+        this.height += 1;
+
+        // TODO update the previous hash of the microblock if possible
+        await this.updateLocalState(microblock);
+    }
+
+    /**
+     * Retrieves the type of the current instance.
+     *
+     * @return {string} The type of the instance.
+     */
+    getType() {
+        return this.type;
+    }
+
+    /**
+     * Updates the local state with the provided microblock.
+     *
+     * @param {Microblock} microblock - The microblock object containing the data to update the local state.
+     * @return {Promise<void>} A promise that resolves when the local state has been successfully updated.
+     */
+    protected abstract updateLocalState(microblock: Microblock): Promise<void>;
+
+    /*
     startMicroBlockConstruction() {
         const isBuildingGenesisMicroBlock = this.height === 0;
         this.currentMicroblock = new Microblock(this.type);
@@ -188,9 +275,9 @@ export abstract class VirtualBlockchain<CustomState> {
         return { isBuildingGenesisMicroBlock }
     }
 
-    /**
-     Adds a section to the current microblock.
      */
+
+    /*
     async addSection(type: SectionType, object: any) {
         if (!this.currentMicroblock) {
             this.startMicroBlockConstruction();
@@ -200,9 +287,9 @@ export abstract class VirtualBlockchain<CustomState> {
         await this.processSectionCallback(this.currentMicroblock, section);
     }
 
-    /**
-     Processes a section callback (if defined).
      */
+
+    /*
     async processSectionCallback(microblock: Microblock, section: Section) {
         const callback = this.sectionCallbacks.get(section.type);
         if(callback) {
@@ -210,14 +297,10 @@ export abstract class VirtualBlockchain<CustomState> {
         }
     }
 
-    /**
-     * Creates a cryptographic signature for a microblock.
-     *
-     * @param {PrivateSignatureKey} privateKey - The private key used to generate the signature.
-     * @param {boolean} [withGas=true] - Specifies whether the signature should include gas information.
-     * @return {{ signature: Uint8Array }} An object containing the generated signature as a Uint8Array.
-     * @throws {Error} If no microblock has been created yet.
      */
+
+
+    /*
     createSignature(privateKey: PrivateSignatureKey, withGas = true) : { signature: Uint8Array } {
         if (!this.currentMicroblock) throw new Error(
             "Cannot create a signature for a microblock that has not been created yet."
@@ -226,36 +309,33 @@ export abstract class VirtualBlockchain<CustomState> {
         return { signature };
     }
 
-    /**
-     * Set the gas price for the current microblock.
-     *
-     * @param {CMTSToken} gasPrice
      */
+    /*
     setGasPrice(gasPrice: CMTSToken) {
         if (!this.currentMicroblock) throw new Error("Cannot set gas price on a microblock that has not been created yet.");
         this.currentMicroblock.gasPrice = gasPrice.getAmountAsAtomic();
     }
 
-    /**
-     Returns the raw data of the current microblock.
      */
+
+    /*
     getMicroblockData() {
         if(!this.currentMicroblock) throw new Error("Cannot get the data of a microblock that has not been created yet.");
 
-        this.checkStructure(this.currentMicroblock);
+        this.checkMicroblockStructure(this.currentMicroblock);
 
         const { headerData, bodyData } = this.currentMicroblock.serialize();
 
         return Utils.binaryFrom(headerData, bodyData);
     }
 
-    /**
-     Publishes the current microblock.
      */
+
+    /*
     async publish(waitForAnchoring: boolean) {
         if (!this.currentMicroblock) throw new InternalError("Cannot publish a microblock that has not been created yet.");
 
-        this.checkStructure(this.currentMicroblock);
+        this.checkMicroblockStructure(this.currentMicroblock);
 
         const { microblockHash, headerData, bodyData } = this.currentMicroblock.serialize();
 
@@ -274,7 +354,8 @@ export abstract class VirtualBlockchain<CustomState> {
         return Hash.from(microblockHash);
     }
 
-    getType() {
-        return this.type;
-    }
+     */
+
+
+
 }

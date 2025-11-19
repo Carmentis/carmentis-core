@@ -13,6 +13,7 @@ import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {Microblock} from "./Microblock";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Optional} from "../entities/Optional";
+import {BlockchainSerializer} from "../data/BlockchainSerializer";
 
 const OBJECT_CLASSES = [
     Protocol,
@@ -43,9 +44,14 @@ export class MicroblockImporter {
     }: { data: Uint8Array, provider: Provider }) {
         this.provider = provider;
         // TODO: Splitting the serialized mb is never a good idea, instead decode a structured data containing the serialized header and body
-        this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
-        this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
-        this.hash = Crypto.Hashes.sha256AsBinary(this.headerData);
+        const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(
+            data
+        );
+        this.headerData = serializedHeader;
+        this.bodyData = serializedBody;
+        //this.headerData = data.slice(0, SCHEMAS.MICROBLOCK_HEADER_SIZE);
+        //this.bodyData = data.slice(SCHEMAS.MICROBLOCK_HEADER_SIZE);
+        this.hash = Crypto.Hashes.sha256AsBinary(serializedHeader);
     }
 
     containsError() {
@@ -223,7 +229,7 @@ export class MicroblockImporter {
             // if the VB exists ...
             if(this.header.height > 1) {
                 // ... load it
-                await this.vb.load(vbIdentifier);
+                await this.vb.synchronizeVirtualBlockchain(vbIdentifier);
             }
             else {
                 // otherwise, set its expiration day

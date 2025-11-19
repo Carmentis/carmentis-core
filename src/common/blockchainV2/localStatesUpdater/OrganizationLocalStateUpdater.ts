@@ -1,9 +1,67 @@
 import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {OrganizationLocalState} from "../localStates/OrganizationLocalState";
 import {Microblock} from "../../blockchain/Microblock";
+import {SectionType} from "../../entities/SectionType";
+import {
+    OrganizationDescriptionSection,
+    OrganizationPublicKeySection,
+    OrganizationSigSchemeSection
+} from "../../blockchain/sectionSchemas";
 
 export class OrganizationLocalStateUpdater implements ILocalStateUpdater<OrganizationLocalState> {
-    updateState(prevState: OrganizationLocalState, microblock: Microblock): OrganizationLocalState {
-        return prevState;
+    updateState(localState: OrganizationLocalState, microblock: Microblock): OrganizationLocalState {
+        // update the organization signature scheme id
+        const signatureSchemeIdSections = microblock.getSections<OrganizationSigSchemeSection>(
+            s => s.type === SectionType.ORG_SIG_SCHEME
+        );
+        if (signatureSchemeIdSections.length !== 0) {
+            if (signatureSchemeIdSections.length !== 1) throw new Error('Cannot accept multiple signature schemes');
+            const section = signatureSchemeIdSections[0];
+            const {schemeId} = section.object;
+            // TODO: check signature scheme id is valid
+            localState.updateSignatureScheme(schemeId);
+        }
+
+        // update height where the public key is defined
+        const signaturePublicKeyDefinitionSections = microblock.getSections<OrganizationPublicKeySection>(
+            s => s.type === SectionType.ORG_PUBLIC_KEY
+        );
+        if (signaturePublicKeyDefinitionSections.length !== 0) {
+            if (signaturePublicKeyDefinitionSections.length !== 1) throw new Error('Cannot accept multiple signature public keys');
+            localState.updateDescriptionHeight(microblock.getHeight());
+        }
+
+        // update the description
+        const descSections = microblock.getSections<OrganizationDescriptionSection>(
+            s => s.type === SectionType.ORG_DESCRIPTION
+        );
+        if (descSections.length !== 0) {
+            if (descSections.length !== 1) throw new Error('Cannot accept multiple descriptions');
+            localState.updateDescriptionHeight(microblock.getHeight())
+        }
+
+        return localState;
     }
+
+    /*
+    async signatureCallback(microblock: Microblock, section: any) {
+        const publicKey = await this.getPublicKey();
+
+        const isMicroBlockSignatureValid = microblock.verifySignature(
+            publicKey,
+            section.object.signature,
+            true,
+            section.index
+        );
+
+        if(!isMicroBlockSignatureValid) {
+            throw `invalid signature`;
+        }
+
+        const publicKeyHash = Crypto.Hashes.sha256AsBinary(publicKey.getPublicKeyAsBytes());
+        const feesPayerAccount = await this.provider.getAccountByPublicKeyHash(publicKeyHash);
+        microblock.setFeesPayerAccount(feesPayerAccount);
+    }
+
+     */
 }

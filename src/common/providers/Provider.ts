@@ -9,7 +9,8 @@ import {
     BlockContentDTO,
     AccountStateDTO,
     MicroblockInformationSchema,
-    ObjectList, GenesisSnapshotDTO
+    ObjectList, GenesisSnapshotDTO, OrganizationVBState, ApplicationVBState, AccountVBState,
+    ApplicationLedgerLocalStateObject, ProtocolVBState, ValidatorNodeVBState
 } from "../blockchain/types";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
@@ -20,6 +21,13 @@ import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {NotAuthenticatedError} from "../errors/carmentis-error";
 import {Logger} from "../utils/Logger";
+import {OrganizationLocalState} from "../blockchainV2/localStates/OrganizationLocalState";
+import {AccountLocalState} from "../blockchainV2/localStates/AccountLocalState";
+import {ApplicationLedgerLocalState} from "../blockchainV2/localStates/ApplicationLedgerLocalState";
+import {ApplicationLedgerVb} from "../blockchain/ApplicationLedgerVb";
+import {ApplicationLocalState} from "../blockchainV2/localStates/ApplicationLocalState";
+import {ProtocolLocalState} from "../blockchainV2/localStates/ProtocolLocalState";
+import {ValidatorNodeLocalState} from "../blockchainV2/localStates/ValidatorNodeLocalState";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -305,5 +313,55 @@ export class Provider {
         }
 
         return { state, microblockHashes };
+    }
+
+    async getVirtualBlockchainFromId(vbId: Hash) {
+
+    }
+
+    async getOrganizationVirtualBlockchainById(organizationId: Hash) {
+
+    }
+
+    async getVirtualBlockchainLocalStateFromId<T>(organizationId: Hash): Promise<T> {
+        const state = await this.getVirtualBlockchainContent(organizationId.toBytes());
+        if (state === undefined || state?.state === undefined) throw new Error(`Cannot load the local state of vb ${organizationId.encode()}`)
+        return state.state.customState as T;
+    }
+
+    async getOrganizationLocalStateFromId(organizationId: Hash) {
+        return OrganizationLocalState.createFromLocalState(
+            await this.getVirtualBlockchainLocalStateFromId<OrganizationVBState>(organizationId)
+        );
+    }
+
+    async getAccountOrganizationLocalStateFromId(accountId: Hash) {
+        return AccountLocalState.createFromLocalState(
+            await this.getVirtualBlockchainLocalStateFromId<AccountVBState>(accountId)
+        )
+    }
+
+    async getApplicationLedgerLocalStateFromId(appLedgerId: Hash) {
+        return ApplicationLedgerLocalState.createFromLocalState(
+            await this.getVirtualBlockchainLocalStateFromId<ApplicationLedgerLocalStateObject>(appLedgerId)
+        )
+    }
+
+    async getApplicationLocalStateFromId(applicationId: Hash) {
+        return ApplicationLocalState.createFromLocalState(
+            await this.getVirtualBlockchainLocalStateFromId<ApplicationVBState>(applicationId)
+        )
+    }
+
+    async getProtocolLocalStateFromId(protocolId: Hash) {
+        return ProtocolLocalState.createFromLocalState(
+            await this.getVirtualBlockchainLocalStateFromId<ProtocolVBState>(protocolId)
+        )
+    }
+
+    async getValidatorNodeLocalStateFromId(validatorNodeId: Hash) {
+        return ValidatorNodeLocalState.createFromLocalState(
+            await this.getVirtualBlockchainLocalStateFromId<ValidatorNodeVBState>(validatorNodeId)
+        )
     }
 }

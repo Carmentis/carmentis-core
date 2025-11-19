@@ -11,12 +11,11 @@ import {ValidatorNode} from "../blockchain/ValidatorNode";
 import {Organization} from "../blockchain/Organization";
 import {Application} from "../blockchain/Application";
 
-import {RecordDescription} from "../blockchain/RecordDescription";
+import {StateUpdateRequest} from "../blockchain/StateUpdateRequest";
 import {
-    ApplicationDescription, BlockContentDTO,
+    BlockContentDTO,
     BlockInformationDTO,
     ChainInformationDTO,
-    OrganizationDescription,
     Proof
 } from "../blockchain/types";
 import {VirtualBlockchainType} from "../entities/VirtualBlockchainType";
@@ -30,6 +29,7 @@ import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {
     AbstractPrivateDecryptionKey
 } from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+import {ApplicationDescriptionSection, OrganizationDescription} from "../blockchain/sectionSchemas";
 
 export interface BlockchainClient {
     getManyMicroBlock(type: VirtualBlockchainType, hashes: Hash[]): Promise<Microblock[]>;
@@ -91,7 +91,7 @@ export interface BlockchainClient {
     createValidatorNode(organizationIdentifierString: Hash): Promise<ValidatorNode>;
     createApplication(organizationIdentifierString: Hash): Promise<Application>;
     createApplicationLedger(applicationId: Hash, expirationDay: number): Promise<ApplicationLedger>;
-    createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription<T>, expirationDay: number): Promise<ApplicationLedger>;
+    createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: StateUpdateRequest<T>, expirationDay: number): Promise<ApplicationLedger>;
     createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string, gasPrice: CMTSToken): Promise<any>;
 
 

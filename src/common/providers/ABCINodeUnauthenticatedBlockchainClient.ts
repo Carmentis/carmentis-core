@@ -34,7 +34,6 @@ import {ApplicationLedger} from "../blockchain/ApplicationLedger";
 import {Application} from "../blockchain/Application";
 import {Organization} from "../blockchain/Organization";
 import {ValidatorNode} from "../blockchain/ValidatorNode";
-import {Account} from "../blockchain/Account";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
 import {KeyedProvider} from "./KeyedProvider";
@@ -42,16 +41,12 @@ import {ProofVerificationResult} from "../entities/ProofVerificationResult";
 import {Microblock} from "../blockchain/Microblock";
 import {VB_ACCOUNT, VB_APPLICATION, VB_ORGANIZATION, VB_VALIDATOR_NODE} from "../constants/chain";
 import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseType";
-import {ChainInformationWrapper} from "../wrappers/ChainInformationWrapper";
-import {ValidatorNodeWrapper} from "../wrappers/ValidatorNodeWrapper";
-import {BlockInformationWrapper} from "../wrappers/BlockInformationWrapper";
-import {BlockContentWrapper} from "../wrappers/BlockContentWrapper";
 import {VirtualBlockchainWrapper} from "../wrappers/VirtualBlockchainWrapper";
 import {MicroBlockHeaderWrapper} from "../wrappers/MicroBlockHeaderWrapper";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {BlockchainClient} from "./BlockchainClient";
-import { AbstractPrivateDecryptionKey, RecordDescription } from "../common";
+import { AbstractPrivateDecryptionKey, StateUpdateRequest } from "../common";
 
 export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient {
     /**
@@ -94,7 +89,7 @@ export class ABCINodeUnauthenticatedBlockchainClient implements BlockchainClient
     createApplicationLedger(applicationId: Hash, expirationDay: number): Promise<ApplicationLedger> {
         throw new NotAuthenticatedError();
     }
-    createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: RecordDescription<T>, expirationDay: number): Promise<ApplicationLedger> {
+    createApplicationLedgerFromJson<T = any>(privateDecryptionKey: AbstractPrivateDecryptionKey, object: StateUpdateRequest<T>, expirationDay: number): Promise<ApplicationLedger> {
         throw new NotAuthenticatedError();
     }
     createTokenTransfer(sellerPrivateKey: PrivateSignatureKey, buyerAccount: Hash, amount: CMTSToken, publicReference: string, privateReference: string, gasPrice: CMTSToken): Promise<any> {

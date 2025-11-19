@@ -27,4 +27,12 @@ export class AccountLocalState {
     updatePublicKeyHeight(publicKeyHeight: number) {
         this.localState.publicKeyHeight = publicKeyHeight;
     }
+
+    getPublicKeyHeight() {
+        return this.localState.publicKeyHeight;
+    }
+
+    getPublicKeySchemeId() {
+        return this.localState.signatureSchemeId;
+    }
 }

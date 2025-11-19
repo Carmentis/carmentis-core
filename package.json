@@ -95,6 +95,7 @@
     "@noble/post-quantum": "^0.4.1",
     "@noble/secp256k1": "^2.2.3",
     "axios": "^1.10.0",
+    "cbor2": "^2.0.1",
     "clipanion": "^3.2.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",

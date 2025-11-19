@@ -1,6 +1,7 @@
 import {Application} from "../blockchain/Application";
 import {Hash} from "../entities/Hash";
-import {ApplicationDescription} from "../blockchain/types";
+
+import {ApplicationDescriptionSection} from "../blockchain/sectionSchemas";
 
 export class ApplicationWrapper {
     static async wrap(application: Application) {
@@ -12,7 +13,7 @@ export class ApplicationWrapper {
 
     private constructor(
         private readonly organizationId: Hash,
-        private readonly description: ApplicationDescription
+        private readonly description: ApplicationDescriptionSection
     ) {}
 
     /**

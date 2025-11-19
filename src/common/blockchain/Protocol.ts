@@ -36,7 +36,7 @@ export class Protocol {
   }
 
   async _load(identifier: Uint8Array) {
-    await this.vb.load(identifier);
+    await this.vb.synchronizeVirtualBlockchain(identifier);
   }
 
   async getPublicKey() : Promise<PublicSignatureKey> {

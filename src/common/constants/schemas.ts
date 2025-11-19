@@ -316,9 +316,13 @@ export const BLOCK_CONTENT = {
 // ============================================================================================================================ //
 //  Microblock                                                                                                                  //
 // ============================================================================================================================ //
+/**
+ * TODO: DO NOT USE THIS VARIABLE!!! DECODE THEN EXTRACT INSTEAD OF JUST EXTRACTING
+ * @deprecated Th
+ */
 export const MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET = 12;
-export const MICROBLOCK_HEADER_BODY_HASH_OFFSET = 57;
-export const MICROBLOCK_HEADER_SIZE = 89;
+export const MICROBLOCK_HEADER_BODY_HASH_OFFSET = 59;
+export const MICROBLOCK_HEADER_SIZE = 91;
 
 export const MICROBLOCK_HEADER: Schema = {
   label: 'MicroblockHeader',
@@ -330,7 +334,8 @@ export const MICROBLOCK_HEADER: Schema = {
     { name: 'timestamp',       type: DATA.TYPE_UINT48 },          // +44
     { name: 'gas',             type: DATA.TYPE_UINT24 },          // +50
     { name: 'gasPrice',        type: DATA.TYPE_UINT32 },          // +53
-    { name: 'bodyHash',        type: DATA.TYPE_BIN256 }           // +57
+      { name: 'localStateUpdaterVersion',        type: DATA.TYPE_UINT16 }, // +57
+      { name: 'bodyHash',        type: DATA.TYPE_BIN256 },           // + 59
   ]
 };
 

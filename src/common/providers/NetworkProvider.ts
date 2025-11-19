@@ -27,8 +27,8 @@ import {getLogger} from "@logtape/logtape";
 import {Logger} from "../utils/Logger";
 
 export class NetworkProvider {
-    nodeUrl: any;
-    constructor(nodeUrl: any) {
+    nodeUrl: string;
+    constructor(nodeUrl: string) {
         try {
             new URL(nodeUrl);
         }
@@ -229,12 +229,6 @@ export class NetworkProvider {
             }
             throw e
         }
-        /*
-        return new Promise(async (resolve, reject) => {
-
-        })
-
-         */
     }
 
     async broadcastTx(data: any) {
@@ -293,22 +287,6 @@ export class NetworkProvider {
             return parsingResult.data;
         }
         throw new NodeError(parsingResult.error.message);
-    }
-
-    static async sendBlockByHeightQueryToNodeServer(nodeUrl: string, blockHeight: number) {
-        const urlObject = new URL(nodeUrl);
-        urlObject.pathname = "block";
-        urlObject.searchParams.append("height", blockHeight.toString());
-        const data  = await NetworkProvider.query(urlObject) as any;
-        throw new NotImplementedError();
-        /*
-        const parsingResult = RPCNodeStatusResponseSchema.safeParse(data);
-        if (parsingResult.success) {
-            return parsingResult.data;
-        }
-        throw new NodeError(parsingResult.error.message);
-
-         */
     }
 
     async getGenesisSnapshot(): Promise<GenesisSnapshotDTO> {

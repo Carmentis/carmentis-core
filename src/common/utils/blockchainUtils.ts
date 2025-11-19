@@ -5,6 +5,7 @@ import { Utils } from "./utils";
 
 import {MicroblockInformationSchema, VirtualBlockchainStateInterface} from "../type/types";
 import {MicroBlockHeaderDto} from "../entities/MicroBlockHeaderDto";
+import {BlockchainSerializer} from "../data/BlockchainSerializer";
 
 
 export const BlockchainUtils = {
@@ -50,19 +51,28 @@ function checkHeaderList(headers: any) {
 /**
   Extracts the 'previousHash' field from a microblock header in binary format.
 */
-function previousHashFromHeader(header: any) {
+function previousHashFromHeader(serializedHeader: Uint8Array) {
+    const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
+    return header.previousHash;
+    /*
   return header.slice(
     SCHEMAS.MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET,
     SCHEMAS.MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET + 32
   );
+
+     */
 }
 
 
-function decodeMicroblockHeader(data: Uint8Array) {
+function decodeMicroblockHeader(serializedHeader: Uint8Array) {
+    return BlockchainSerializer.unserializeMicroblockHeader(serializedHeader)
+    /*
   const unserializer = new SchemaUnserializer<MicroBlockHeaderDto>(SCHEMAS.MICROBLOCK_HEADER);
   const object = unserializer.unserialize(data);
 
   return object;
+
+     */
 }
 
 function encodeMicroblockVbInformation(virtualBlockchainType: number, virtualBlockchainId: Uint8Array) {

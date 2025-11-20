@@ -123,7 +123,7 @@ export class ValidatorNodeVb extends VirtualBlockchain {
 
     async getOrganizationVirtualBlockchain() {
         const orgId = this.state.getOrganizationId();
-        return await OrganizationVb.loadOrganizationVirtualBlockchain(this.provider, orgId);
+        return await this.provider.loadOrganizationVirtualBlockchain(orgId);
     }
 
     async getOrganizationPublicKey(): Promise<PublicSignatureKey> {

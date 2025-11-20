@@ -28,7 +28,8 @@ import {IExternalProvider} from "./IExternalProvider";
 export class NetworkProvider implements IExternalProvider {
     private logger = Logger.getNetworkProviderLogger();
     private static staticLogger = Logger.getNetworkProviderLogger();
-    nodeUrl: string;
+    private readonly nodeUrl: string;
+
     constructor(nodeUrl: string) {
         this.logger.debug(`NetworkProvider constructor -> nodeUrl: ${nodeUrl}`);
         try {

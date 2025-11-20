@@ -18,17 +18,7 @@ import {Hash} from "../../entities/Hash";
 
 export class ValidatorNodeVb extends VirtualBlockchain {
 
-    // ------------------------------------------
-    // Static methods
-    // ------------------------------------------
-    static async loadValidatorNodeVirtualBlockchain(provider: Provider, validatorNodeId: Hash) {
-        const vb = new ValidatorNodeVb(provider);
-        await vb.synchronizeVirtualBlockchainFromProvider(validatorNodeId);
-        const state = await provider.getValidatorNodeLocalStateFromId(validatorNodeId)
-        vb.setLocalState(state);
-        return vb;
-    }
-    
+
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------

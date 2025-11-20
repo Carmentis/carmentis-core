@@ -58,6 +58,7 @@ import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterF
 import {CMTSToken} from "../../economics/currencies/token";
 import {EncoderFactory} from "../../utils/encoder";
 import {Section} from "../../type/Section";
+import {TimestampValidationResult} from "./TimestampValidationResult";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -617,6 +618,44 @@ export class Microblock {
         );
 
         return publicKey.verify(signedData, signature);
+    }
+
+    /**
+     * Validates whether a given timestamp is within an acceptable range.
+     * Checks if the timestamp is too far in the past or too far in the future
+     * compared to the reference timestamp.
+     *
+     * @param {number} [referenceTimestamp=Utils.getTimestampInSeconds()] - The reference timestamp to compare against. Defaults to the current timestamp in seconds.
+     * @return {TimestampValidationResult} Returns the validation result:
+     * VALID if the timestamp is within the range, TOO_FAR_IN_THE_PAST if it's too far in the past,
+     * or TOO_FAR_IN_THE_FUTURE if it's too far in the future.
+     */
+    isValidTimestamp(referenceTimestamp: number = Utils.getTimestampInSeconds()): TimestampValidationResult {
+        // check if too far in the past
+        const isTooFarInPast = this.header.timestamp < referenceTimestamp - CHAIN.MAX_MICROBLOCK_PAST_DELAY;
+        if (isTooFarInPast) {
+            return TimestampValidationResult.TOO_FAR_IN_THE_PAST
+        }
+
+        // check if too far in the future
+        const isTooFarInFuture = this.header.timestamp > referenceTimestamp + CHAIN.MAX_MICROBLOCK_FUTURE_DELAY;
+        if(isTooFarInFuture) {
+            return TimestampValidationResult.TOO_FAR_IN_THE_FUTURE
+        }
+
+        return TimestampValidationResult.VALID
+    }
+
+    /**
+     * Validates if the declared gas amount matches the computed gas amount.
+     *
+     * @return {boolean} Returns true if the declared gas is equal to the expected gas, otherwise false.
+     */
+    isValidGas() {
+        const mb = this;
+        const declaredGas = mb.getGas().getAmountAsAtomic();
+        const expectedGas = mb.computeGas();
+        return declaredGas === expectedGas;
     }
 
     /**

@@ -400,4 +400,69 @@ export class Provider {
         const {headerData: serializedHeader, bodyData:serialiazedBody} = microblockToPublish.serialize();
         return this.externalProvider.sendSerializedMicroblock(serializedHeader, serialiazedBody)
     }
+
+    async loadValidatorNodeVirtualBlockchain(validatorNodeId: Hash) {
+        const vb = new ValidatorNodeVb(this);
+        await this.initializeVirtualBlockchain(vb, validatorNodeId); //synchronizeVirtualBlockchainFromProvider(validatorNodeId);
+        const state = await this.getValidatorNodeLocalStateFromId(validatorNodeId)
+        vb.setLocalState(state);
+        return vb;
+    }
+
+    async loadAccountVirtualBlockchain(accountId: Hash) {
+        const vb = new AccountVb(this);
+        await this.initializeVirtualBlockchain(vb, accountId);
+        const state = await this.getAccountLocalStateFromId(accountId)
+        vb.setLocalState(state);
+        return vb;
+    }
+
+    async loadApplicationLedgerVirtualBlockchain(appLedgerId: Hash) {
+        const vb = new ApplicationLedgerVb(this);
+        await this.initializeVirtualBlockchain(vb, appLedgerId);
+        const state = await this.getApplicationLedgerLocalStateFromId(appLedgerId)
+        vb.setLocalState(state);
+        return vb;
+    }
+
+    async loadApplicationVirtualBlockchain(applicationId: Hash) {
+        const vb = new ApplicationVb(this);
+        await this.initializeVirtualBlockchain(vb, applicationId);
+        const state = await this.getApplicationLocalStateFromId(applicationId)
+        vb.setLocalState(state);
+        return vb;
+    }
+
+    async loadOrganizationVirtualBlockchain(organizationId: Hash) {
+        const orgVb = new OrganizationVb(this);
+        await this.initializeVirtualBlockchain(orgVb, organizationId);
+        const state = await this.getOrganizationLocalStateFromId(organizationId)
+        orgVb.setLocalState(state);
+        return orgVb;
+    }
+
+    async loadProtocolVirtualBlockchain(protocolId: Hash) {
+        const vb = new ProtocolVb(this);
+        await this.initializeVirtualBlockchain(vb, protocolId);
+        const state = await this.getProtocolLocalStateFromId(protocolId)
+        vb.setLocalState(state);
+        return vb;
+    }
+
+
+
+    private async initializeVirtualBlockchain(vb :VirtualBlockchain, vbId: Hash) {
+        const identifier = vbId.toBytes()
+        const content = await this.getVirtualBlockchainContent(identifier);
+        if (content === null || content.state === undefined) {
+            throw new VirtualBlockchainNotFoundError(vbId);
+        }
+        // the type is already assigned when creating the virtual blockchain
+        if (content.state.type !== vb.getType()) throw new Error("Invalid blockchain type loaded");
+
+        vb.setIdentifier(identifier) //this.identifier = identifier;
+        vb.setHeight(content.state.height) //this.height = content.state.height;
+        vb.setExpirationDay(content.state.expirationDay) //this.expirationDay = content.state.expirationDay;
+        vb.setMicroblockHashes(content.microblockHashes) // this.microblockHashes = content.microblockHashes;
+    }
 }

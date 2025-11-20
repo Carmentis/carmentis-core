@@ -42,7 +42,7 @@ export class OrganizationVb extends VirtualBlockchain {
         this.state = await localStateUpdater.updateState(this.state, microblock);
     }
 
-    protected setLocalState(state: OrganizationLocalState) {
+    setLocalState(state: OrganizationLocalState) {
         this.state = state
     }
 

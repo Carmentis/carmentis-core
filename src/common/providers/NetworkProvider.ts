@@ -23,8 +23,10 @@ import {NodeConnectionRefusedError, NodeEndpointClosedWhileCatchingUpError, Node
 import {CometBFTErrorCode} from "../errors/CometBFTErrorCode";
 import {RPCNodeStatusResponseSchema} from "./nodeRpc/RPCNodeStatusResponseSchema";
 import {Logger} from "../utils/Logger";
+import {IExternalProvider} from "./IExternalProvider";
 
-export class NetworkProvider {
+export class NetworkProvider implements IExternalProvider {
+    private logger = Logger.getNetworkProviderLogger();
     nodeUrl: string;
     constructor(nodeUrl: string) {
         try {
@@ -37,17 +39,21 @@ export class NetworkProvider {
     }
 
     async sendSerializedMicroblock(headerData: any, bodyData: any) {
+        this.logger.debug(`sendSerializedMicroblock -> headerData: ${JSON.stringify(headerData)}, bodyData: ${JSON.stringify(bodyData)}`);
         const answer = await this.broadcastTx(Utils.binaryFrom(headerData, bodyData));
+        this.logger.debug(`sendSerializedMicroblock <- ${JSON.stringify(answer)}`);
         return answer;
     }
 
     async awaitMicroblockAnchoring(hash: any) {
+        this.logger.debug(`awaitMicroblockAnchoring -> hash: ${hash}`);
         const answer = await this.abciQuery<MicroblockInformationSchema>(
             SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
             {
                 hash
             }
         );
+        this.logger.debug(`awaitMicroblockAnchoring <- ${JSON.stringify(answer)}`);
         return answer;
     }
 
@@ -131,7 +137,7 @@ export class NetworkProvider {
         return answer;
     }
 
-    async getMicroblockInformation(hash: Uint8Array) {
+    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema | null>  {
         const answer = await this.abciQuery<MicroblockInformationSchema>(
             SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
             {
@@ -141,7 +147,7 @@ export class NetworkProvider {
         return answer;
     }
 
-    async getMicroblockBodys(hashes: Uint8Array[]) {
+    async getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroBlockBodys | null>  {
         const answer = await this.abciQuery<MicroBlockBodys>(
             SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
             {
@@ -232,17 +238,21 @@ export class NetworkProvider {
     async broadcastTx(data: any) {
         const urlObject = new URL(this.nodeUrl);
 
-        const logger = Logger.getLogger([NetworkProvider.name])
-        logger.debug(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
+        this.logger.debug(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
 
         urlObject.pathname = "broadcast_tx_sync";
         urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));
 
-        return await NetworkProvider.query(urlObject);
+        const result = await NetworkProvider.query(urlObject);
+        this.logger.debug(`broadcastTx <- {*}`, () => ({result}));
+        return result;
     }
 
-    async abciQuery<T = object>(msgId: any, msgData: any): Promise<T> {
-        return NetworkProvider.sendABCIQueryToNodeServer(msgId, msgData, this.nodeUrl);
+    async abciQuery<T = object>(msgId: number, msgData: object): Promise<T> {
+        this.logger.debug(`abciQuery -> msgId: ${msgId}, msgData: ${JSON.stringify(msgData)}`);
+        const result = await NetworkProvider.sendABCIQueryToNodeServer(msgId, msgData, this.nodeUrl);
+        this.logger.debug(`abciQuery <- {*}`, () => ({result}));
+        return result as T;
     }
 
     static async sendABCIQueryToNodeServer<T = object>(msgId: any, msgData: any, nodeUrl: string): Promise<T> {

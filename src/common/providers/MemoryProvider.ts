@@ -1,17 +1,21 @@
 import {Utils} from "../utils/utils";
+import {Logger} from "../utils/Logger";
+import {IInternalProvider} from "./IInternalProvider";
 
-export class MemoryProvider {
+type StringToBinaryMap = Map<string, Uint8Array>
+export class MemoryProvider implements IInternalProvider {
 
+    private logger = Logger.getMemoryProviderLogger();
     private static instance: MemoryProvider = new MemoryProvider();
 
     static getInstance() {
         return this.instance;
     }
 
-    microblockHeaderStore: any;
-    microblockBodyStore: any;
-    microblockVbInformationStore: any;
-    virtualBlockchainStateStore: any;
+    private microblockHeaderStore: StringToBinaryMap;
+    private microblockBodyStore: StringToBinaryMap;
+    private microblockVbInformationStore: StringToBinaryMap;
+    private virtualBlockchainStateStore: StringToBinaryMap;
 
     constructor() {
         this.microblockHeaderStore = new Map;
@@ -21,30 +25,39 @@ export class MemoryProvider {
     }
 
     clear() {
+        this.logger.debug(`Clearing`);
         this.microblockHeaderStore = new Map;
         this.microblockBodyStore = new Map;
         this.microblockVbInformationStore = new Map;
         this.virtualBlockchainStateStore = new Map;
     }
 
-    async getMicroblockVbInformation(hash: Uint8Array): Promise<Uint8Array> {
-        return await MemoryProvider.get(this.microblockVbInformationStore, hash);
+    async getMicroblockVbInformation(hash: Uint8Array): Promise<Uint8Array | null> {
+        const result = await MemoryProvider.get(this.microblockVbInformationStore, hash);
+        this.logger.debug(`getMicroblockVbInformation identifier=${Utils.binaryToHexa(hash)} -> ${result ? result.length : 0} bytes`);
+        return result;
     }
 
-    async getMicroblock(identifier: any) {
+    async getMicroblock(identifier: Uint8Array) {
         return new Uint8Array();
     }
 
-    async getMicroblockHeader(identifier: any) {
-        return await MemoryProvider.get(this.microblockHeaderStore, identifier);
+    async getMicroblockHeader(identifier: Uint8Array) {
+        const result = await MemoryProvider.get(this.microblockHeaderStore, identifier);
+        this.logger.debug(`getMicroblockHeader identifier=${Utils.binaryToHexa(identifier)} -> ${result ? result.length : 0} bytes`);
+        return result;
     }
 
-    async getMicroblockBody(identifier: any) {
-        return await MemoryProvider.get(this.microblockBodyStore, identifier);
+    async getMicroblockBody(identifier: Uint8Array) {
+        const result = await MemoryProvider.get(this.microblockBodyStore, identifier);
+        this.logger.debug(`getMicroblockBody identifier=${Utils.binaryToHexa(identifier)} -> ${result ? result.length : 0} bytes`);
+        return result;
     }
 
-    async getVirtualBlockchainState(identifier: any) {
-        return await MemoryProvider.get(this.virtualBlockchainStateStore, identifier);
+    async getVirtualBlockchainState(identifier: Uint8Array) {
+        const result = await MemoryProvider.get(this.virtualBlockchainStateStore, identifier);
+        this.logger.debug(`getVirtualBlockchainState identifier=${Utils.binaryToHexa(identifier)} -> ${result ? result.length : 0} bytes`);
+        return result;
     }
 
     async getAccountByPublicKeyHash(publicKeyHash: Uint8Array) {
@@ -52,32 +65,36 @@ export class MemoryProvider {
         return null;
     }
 
-    async setMicroblockVbInformation(identifier: any, data: any) {
+    async setMicroblockVbInformation(identifier: Uint8Array, data: Uint8Array) {
+        this.logger.debug(`setMicroblockVbInformation identifier=${Utils.binaryToHexa(identifier)} -> ${data.length} bytes`);
         return await MemoryProvider.set(this.microblockVbInformationStore, identifier, data);
     }
 
-    async setMicroblockHeader(identifier: any, data: any) {
+    async setMicroblockHeader(identifier: Uint8Array, data: Uint8Array) {
+        this.logger.debug(`setMicroblockHeader identifier=${Utils.binaryToHexa(identifier)} -> ${data.length} bytes`);
         return await MemoryProvider.set(this.microblockHeaderStore, identifier, data);
     }
 
-    async setMicroblockBody(identifier: any, data: any) {
+    async setMicroblockBody(identifier: Uint8Array, data: Uint8Array) {
+        this.logger.debug(`setMicroblockBody identifier=${Utils.binaryToHexa(identifier)} -> ${data.length} bytes`);
         return await MemoryProvider.set(this.microblockBodyStore, identifier, data);
     }
 
-    async setVirtualBlockchainState(identifier: any, data: any) {
+    async setVirtualBlockchainState(identifier: Uint8Array, data: Uint8Array) {
+        this.logger.debug(`setVirtualBlockchainState identifier=${Utils.binaryToHexa(identifier)} -> ${data.length} bytes`);
         return await MemoryProvider.set(this.virtualBlockchainStateStore, identifier, data);
     }
 
-    static async get(store: any, identifier: any) {
+    static async get(store: StringToBinaryMap, identifier: Uint8Array): Promise<Uint8Array | null> {
         const key = Utils.binaryToHexa(identifier);
-
         if (!store.has(key)) {
             return null;
         }
-        return store.get(key);
+        const result = store.get(key);
+        return result instanceof Uint8Array ? result : null;
     }
 
-    static async set(store: any, identifier: any, data: any) {
+    static async set(store: StringToBinaryMap, identifier: Uint8Array, data: Uint8Array) {
         const key = Utils.binaryToHexa(identifier);
 
         store.set(key, data);

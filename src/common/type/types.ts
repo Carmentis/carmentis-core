@@ -210,12 +210,10 @@ export interface MicroBlockBodys {
     list: MicroBlockBody[];
 }
 
-export interface VirtualBlockchainUpdateInterface {
-    exists: boolean,
-    changed: boolean,
-    stateData: Uint8Array,
-    headers: Uint8Array[]
-}
+export type VirtualBlockchainUpdateInterface =
+    { exists: false } |
+    { exists: true, changed: false } |
+    { exists: true, changed: true, stateData: Uint8Array, headers: Uint8Array[] }
 
 
 export interface VirtualBlockchainStateInterface<CustomState = object> {

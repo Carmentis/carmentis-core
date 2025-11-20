@@ -25,7 +25,7 @@ import {KeyedProvider} from "./KeyedProvider";
 import {Hash} from "../entities/Hash";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
-import {NotAuthenticatedError, VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
+import {IllegalStateError, NotAuthenticatedError, VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
 import {Logger} from "../utils/Logger";
 import {OrganizationLocalState} from "../blockchain/localStates/OrganizationLocalState";
 import {AccountLocalState} from "../blockchain/localStates/AccountLocalState";
@@ -42,14 +42,18 @@ import {ApplicationLedgerVb} from "../blockchain/virtualBlockchains/ApplicationL
 import {ApplicationVb} from "../blockchain/virtualBlockchains/ApplicationVb";
 import {OrganizationVb} from "../blockchain/virtualBlockchains/OrganizationVb";
 import {ProtocolVb} from "../blockchain/virtualBlockchains/ProtocolVb";
+import {Assertion} from "../utils/Assertion";
+import {IInternalProvider} from "./IInternalProvider";
+import {IExternalProvider} from "./IExternalProvider";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
  */
 export class Provider {
-    externalProvider: NetworkProvider;
-    internalProvider: MemoryProvider;
-    constructor(internalProvider: any, externalProvider: any) {
+    externalProvider: IExternalProvider;
+    internalProvider: IInternalProvider;
+
+    constructor(internalProvider: IInternalProvider, externalProvider: IExternalProvider) {
         this.internalProvider = internalProvider;
         this.externalProvider = externalProvider;
     }
@@ -64,7 +68,7 @@ export class Provider {
         throw new NotAuthenticatedError();
     }
 
-    async sendMicroblock(headerData: any, bodyData: any) {
+    async sendMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
         return await this.externalProvider.sendSerializedMicroblock(headerData, bodyData);
     }
 
@@ -130,7 +134,9 @@ export class Provider {
         return await this.externalProvider.getObjectList(type);
     }
 
-    async storeMicroblock(hash: any, virtualBlockchainId: any, virtualBlockchainType: number, height: number, headerData: Uint8Array, bodyData: Uint8Array) {
+    async storeMicroblock(hash: Uint8Array, virtualBlockchainId: Uint8Array, virtualBlockchainType: number, height: number, headerData: Uint8Array, bodyData: Uint8Array) {
+        Assertion.assert(headerData.length > 0, "headerData must not be empty");
+        Assertion.assert(bodyData.length > 0, "bodyData must not be empty");
         await this.internalProvider.setMicroblockVbInformation(
             hash,
             BlockchainUtils.encodeMicroblockVbInformation(virtualBlockchainType, virtualBlockchainId)
@@ -139,8 +145,8 @@ export class Provider {
         await this.internalProvider.setMicroblockBody(hash, bodyData);
     }
 
-    async updateVirtualBlockchainState(virtualBlockchainId: Uint8Array, type: number, expirationDay: number, height: number, lastMicroblockHash: Uint8Array, customStateObject: any) {
-        const stateData = BlockchainUtils.encodeVirtualBlockchainState(type, expirationDay, height, lastMicroblockHash, customStateObject);
+    async updateVirtualBlockchainState(virtualBlockchainId: Uint8Array, type: number, expirationDay: number, height: number, lastMicroblockHash: Uint8Array, localState: object) {
+        const stateData = BlockchainUtils.encodeVirtualBlockchainState(type, expirationDay, height, lastMicroblockHash, localState);
         await this.internalProvider.setVirtualBlockchainState(virtualBlockchainId, stateData);
     }
 
@@ -210,28 +216,41 @@ export class Provider {
     }
 
     async getVirtualBlockchainStateInternal(virtualBlockchainId: Uint8Array): Promise<MsgVirtualBlockchainState> {
-        return await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
+        throw new Error("Not implemented");
+        // TODO(fix): return await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
     }
 
     async getVirtualBlockchainStateExternal(virtualBlockchainId: Uint8Array) {
         return await this.externalProvider.getVirtualBlockchainState(virtualBlockchainId);
     }
 
-    async getVirtualBlockchainHeaders(virtualBlockchainId: any, knownHeight: any) {
+    async getVirtualBlockchainHeaders(virtualBlockchainId: Uint8Array, knownHeight: number) {
+        // we first search on the internal provider for the state of this VB
         const stateData = await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
-        const state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
+        if (stateData instanceof Uint8Array) {
+            // recover the state of the virtual blockchain
+            const state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
+            let height = state.height;
+            let microblockHash = state.lastMicroblockHash;
 
-        let height = state.height;
-        let microblockHash = state.lastMicroblockHash;
-        const headers = [];
+            // load all the headers from the known height to the initial block
+            const headers = [];
+            while (height > knownHeight) {
+                const header = await this.internalProvider.getMicroblockHeader(microblockHash);
+                if (header instanceof Uint8Array) {
+                    headers.push(header);
+                    microblockHash = BlockchainUtils.previousHashFromHeader(header);
+                    height--;
+                } else {
+                    throw new IllegalStateError(`Cannot get the headers of a non-existing microblock ${Utils.binaryToHexa(microblockHash)}`);
+                }
+            }
 
-        while(height > knownHeight) {
-            const header = await this.internalProvider.getMicroblockHeader(microblockHash);
-            headers.push(header);
-            microblockHash = BlockchainUtils.previousHashFromHeader(header);
-            height--;
+            return headers;
+        } else {
+            throw new IllegalStateError("Cannot get the headers of a non-existing VB");
         }
-        return headers;
+
     }
 
     async getVirtualBlockchainContent(virtualBlockchainId: Uint8Array) {
@@ -335,13 +354,6 @@ export class Provider {
         return { state, microblockHashes };
     }
 
-    async getVirtualBlockchainFromId(vbId: Hash) {
-
-    }
-
-    async getOrganizationVirtualBlockchainById(organizationId: Hash) {
-
-    }
 
     async getVirtualBlockchainLocalStateFromId<T>(organizationId: Hash): Promise<T> {
         const state = await this.getVirtualBlockchainContent(organizationId.toBytes());

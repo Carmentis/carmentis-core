@@ -55,7 +55,7 @@ export class ApplicationVb extends VirtualBlockchain {
 
     async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
         const organizationId = this.state.getOrganizationId();
-        const organization = await OrganizationVb.loadOrganizationVirtualBlockchain(this.provider, organizationId);
+        const organization = await this.provider.loadOrganizationVirtualBlockchain(organizationId);
         return await organization.getPublicKey();
     }
 

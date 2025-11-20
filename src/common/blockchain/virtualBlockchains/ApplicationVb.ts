@@ -15,27 +15,7 @@ import {Hash} from "../../entities/Hash";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 
 export class ApplicationVb extends VirtualBlockchain {
-
-    // ------------------------------------------
-    // Static methods
-    // ------------------------------------------
-    static async loadApplicationVirtualBlockchain(provider: Provider, applicationId: Hash) {
-        const vb = new ApplicationVb(provider);
-        await vb.synchronizeVirtualBlockchainFromProvider(applicationId);
-        const state = await provider.getApplicationLocalStateFromId(applicationId)
-        vb.setLocalState(state);
-        return vb;
-    }
-
-    static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
-        const signature = microblock.sign(privateSignatureKey, true);
-        microblock.addApplicationSignatureSection({ signature });
-    }
-
-    static createOrganizationVirtualBlockchain(provider: Provider) {
-        return new OrganizationVb(provider);
-    }
-
+    
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------

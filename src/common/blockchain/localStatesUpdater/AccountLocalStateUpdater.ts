@@ -59,8 +59,8 @@ export class AccountLocalStateUpdater implements ILocalStateUpdater<AccountLocal
     }
 
     private async tokenIssuanceCallback(state: AccountLocalState, microblock: Microblock, section: Section) {
-        if(section.object.amount != ECO.INITIAL_OFFER) {
-            throw `the amount of the initial token issuance is not the expected one`;
+        if (section.object.amount != ECO.INITIAL_OFFER) {
+            throw new Error(`the amount of the initial token issuance is not the expected one`);
         }
     }
 

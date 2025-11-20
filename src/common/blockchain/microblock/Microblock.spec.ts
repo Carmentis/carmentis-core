@@ -3,6 +3,7 @@ import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Hash} from "../../entities/Hash";
 import {Utils} from "../../utils/utils";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
+import {Secp256k1PrivateSignatureKey} from "../../crypto/signature/secp256k1";
 
 describe('Microblock.createGenesisAccountMicroblock', () => {
     it('should create a genesis microblock of type ACCOUNT_VIRTUAL_BLOCKCHAIN', () => {
@@ -107,5 +108,18 @@ describe('Microblock.loadSerializedMicroblock', () => {
         }
 
     })
+})
 
+
+describe('Microblock.verifySignature', () => {
+    it("should verify a valid signature", () => {
+        const sk = Secp256k1PrivateSignatureKey.gen();
+        const pk = sk.getPublicKey();
+        const mb = Microblock.createGenesisAccountMicroblock();
+        mb.addAccountPublicKeySection({
+            publicKey: pk.getPublicKeyAsBytes()
+        });
+        const signature = mb.sign(sk);
+        expect(signature).toBeInstanceOf(Uint8Array)
+    })
 })

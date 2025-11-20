@@ -32,7 +32,7 @@ export interface RecordHashableField {
     fieldPath: string;
 }
 
-export interface StateUpdateRequest<DataType = any> {
+export interface AppLedgerStateUpdateRequest<DataType = any> {
     /**
      * Links the record to an application.
      */

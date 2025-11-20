@@ -1,6 +1,7 @@
+import {ApplicationLedgerMicroblockBuilder} from "./ApplicationLedgerMicroblockBuilder";
 import {ApplicationLedgerVb} from "./ApplicationLedgerVb";
 import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
-import {StateUpdateRequest} from "../../type/StateUpdateRequest";
+import {AppLedgerStateUpdateRequest} from "../../type/AppLedgerStateUpdateRequest";
 import {
     AbstractPrivateDecryptionKey,
     AbstractPublicEncryptionKey
@@ -21,28 +22,31 @@ import {AES256GCMSymmetricEncryptionKey} from "../../crypto/encryption/symmetric
 import {IApplicationLedgerLocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {Section} from "../../type/Section";
+import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
+import {hkdf} from "@noble/hashes/hkdf.js";
 
+export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedgerMicroblockBuilder {
 
-export class ApplicationLedgerWorkingEnv {
-
-    static async createNewMicroblockFromVirtualBlockchain(vb: ApplicationLedgerVb) {
+    static async createFromVirtualBlockchain(vb: ApplicationLedgerVb) {
         const copyVb = structuredClone(vb);
-        let microblock = new Microblock(VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN);
-        const vbHeightIncludingNewMicroblock = copyVb.getHeight() + 1;
-        microblock.setHeight(vbHeightIncludingNewMicroblock);
-        await copyVb.appendMicroBlock(microblock);
-        return new ApplicationLedgerWorkingEnv(microblock, copyVb, copyVb.getLocalState())
-    }
-
-    private stateUpdater: IApplicationLedgerLocalStateUpdater;
-    private constructor(private mbUnderConstruction: Microblock, private vb: ApplicationLedgerVb, private state: ApplicationLedgerLocalState) {
-        this.stateUpdater = LocalStateUpdaterFactory.createApplicationLedgerLocalStateUpdater(
-            mbUnderConstruction.getLocalStateUpdateVersion()
-        );
+        const mb = await copyVb.createMicroblock();
+        return new ApplicationLedgerStateUpdateRequestHandler(mb, copyVb)
     }
 
 
-    async createMicroblockFromStateUpdateRequest(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, object: StateUpdateRequest) {
+    constructor(mbUnderConstruction: Microblock, vb: ApplicationLedgerVb) {
+        super(mbUnderConstruction, vb);
+    }
+
+    private get state() {
+        return this.getLocalState()
+    }
+
+
+    async createMicroblockFromStateUpdateRequest(
+        hostPrivateDecryptionKey: AbstractPrivateDecryptionKey,
+        object: AppLedgerStateUpdateRequest
+    ) {
         const validator = new SchemaValidator(SCHEMAS.RECORD_DESCRIPTION);
         validator.validate(object);
 
@@ -57,9 +61,10 @@ export class ApplicationLedgerWorkingEnv {
         const isBuildingGenesisMicroBlock = this.vb.isEmpty();
         if (isBuildingGenesisMicroBlock) {
             // genesis -> link the application ledger with the application id
-            this.mbUnderConstruction.addApplicationLedgerDeclarationSection({
+            const section = this.mbUnderConstruction.addApplicationLedgerDeclarationSection({
                 applicationId: Utils.binaryFromHexa(object.applicationId)
             });
+            await this.updateStateWithSection(section);
         }
 
         // add the new actors
@@ -70,7 +75,7 @@ export class ApplicationLedgerWorkingEnv {
                 type: ActorType.UNKNOWN,
                 name: def.name
             })
-            await this.updateLocalStateWithSection(createdSection);
+            await this.updateStateWithSection(createdSection);
             freeActorId = freeActorId + 1;
         }
 
@@ -100,7 +105,7 @@ export class ApplicationLedgerWorkingEnv {
                 creatorId: authorId,
                 name: def.name
             });
-            await this.updateLocalStateWithSection(createdSection);
+            await this.updateStateWithSection(createdSection);
             freeChannelId += 1;
         }
 
@@ -156,13 +161,13 @@ export class ApplicationLedgerWorkingEnv {
                     merkleRootHash: Utils.binaryFromHexa(channelData.merkleRootHash),
                     encryptedData: encryptedData
                 });
-                await this.updateLocalStateWithSection(createdSection)
+                await this.updateStateWithSection(createdSection)
             } else {
                 const createdSection = this.mbUnderConstruction.addApplicationLedgerPublicChannelSection({
                     channelId,
                     data: channelData.data
                 });
-                await this.updateLocalStateWithSection(createdSection)
+                await this.updateStateWithSection(createdSection)
             }
         }
 
@@ -182,7 +187,7 @@ export class ApplicationLedgerWorkingEnv {
                 message: messageToShow,
                 endorserId
             });
-            await this.updateLocalStateWithSection(createdSection)
+            await this.updateStateWithSection(createdSection)
         }
 
         return this.mbUnderConstruction
@@ -249,7 +254,7 @@ export class ApplicationLedgerWorkingEnv {
             guestId,
             encryptedChannelKey,
         })
-        await this.updateLocalStateWithSection(createdSection);
+        await this.updateStateWithSection(createdSection);
     }
 
 
@@ -265,7 +270,7 @@ export class ApplicationLedgerWorkingEnv {
             guestId,
             encryptedSharedKey,
         });
-        await this.updateLocalStateWithSection(addedSection);
+        await this.updateStateWithSection(addedSection);
 
         return hostGuestSharedKey;
     }
@@ -296,7 +301,7 @@ export class ApplicationLedgerWorkingEnv {
 
     private async generateSharedKeyAndEncryptedSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, guestId: number) {
         const vbGenesisSeed = await this.getGenesisSeed();
-        const hostGuestSharedKey = ApplicationLedgerWorkingEnv.deriveHostGuestSharedKey(hostPrivateDecryptionKey, vbGenesisSeed.toBytes(), guestId);
+        const hostGuestSharedKey = ApplicationLedgerStateUpdateRequestHandler.deriveHostGuestSharedKey(hostPrivateDecryptionKey, vbGenesisSeed.toBytes(), guestId);
 
 
         // we encrypt the shared key with the guest's public key
@@ -312,17 +317,6 @@ export class ApplicationLedgerWorkingEnv {
             return await this.vb.getGenesisSeed();
         }
     }
-
-    private async updateLocalStateWithSection(section: Section) {
-        this.vb.setLocalState(
-            await this.stateUpdater.updateStateFromSection(
-                this.vb.getLocalState(),
-                section,
-                this.mbUnderConstruction.getHeight()
-            )
-        );
-    }
-
 
     /**
      * Subscribes an actor in the application ledger.
@@ -362,7 +356,7 @@ export class ApplicationLedgerWorkingEnv {
             pkeSchemeId: actorPublicEncryptionKey.getSchemeId(),
             pkePublicKey: actorPublicEncryptionKey.getRawPublicKey(),
         });
-        await this.updateLocalStateWithSection(addedSection);
+        await this.updateStateWithSection(addedSection);
     }
 
 

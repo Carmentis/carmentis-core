@@ -36,7 +36,7 @@ export class ValidatorNodeVb extends VirtualBlockchain {
         super(provider, VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN, new ValidatorNodeMicroblockStructureChecker());
     }
 
-    protected setLocalState(state: ValidatorNodeLocalState) {
+    setLocalState(state: ValidatorNodeLocalState) {
         this.state = state
     }
 

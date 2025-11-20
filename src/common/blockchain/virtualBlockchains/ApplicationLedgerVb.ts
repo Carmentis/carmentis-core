@@ -78,13 +78,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
         super(provider, VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN, new ApplicationLedgerMicroblockStructureChecker())
         this.state = state;
     }
-
-    /**
-     * This method should be used to
-     */
-    createWorkingEnv() {
-        return ApplicationLedgerMicroblockBuilder.createNewMicroblockFromVirtualBlockchain(this);
-    }
+    
 
     protected async updateLocalState(microblock: Microblock): Promise<void> {
         const stateUpdater = LocalStateUpdaterFactory.createApplicationLedgerLocalStateUpdater(microblock.getLocalStateUpdateVersion());

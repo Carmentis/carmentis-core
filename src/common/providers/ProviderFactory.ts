@@ -23,7 +23,7 @@ export class ProviderFactory {
      *
      * @param {string} nodeUrl*/
     static createInMemoryProviderWithExternalProvider(nodeUrl: string): Provider {
-        return new Provider(new MemoryProvider(), new NetworkProvider(nodeUrl));
+        return new Provider(new MemoryProvider(), NetworkProvider.createFromUrl(nodeUrl));
     }
 
 
@@ -35,6 +35,6 @@ export class ProviderFactory {
      * @return {Provider} An instance of a Provider configured with an in-memory provider and the specified external network provider.
      */
     static createKeyedProviderExternalProvider(privateKey: PrivateSignatureKey, nodeUrl: string): Provider {
-        return new KeyedProvider(privateKey, new MemoryProvider(), new NetworkProvider(nodeUrl));
+        return new KeyedProvider(privateKey, new MemoryProvider(), NetworkProvider.createFromUrl(nodeUrl));
     }
 }

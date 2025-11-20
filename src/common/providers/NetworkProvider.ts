@@ -26,21 +26,21 @@ import {Logger} from "../utils/Logger";
 import {IExternalProvider} from "./IExternalProvider";
 
 export class NetworkProvider implements IExternalProvider {
-    private logger = Logger.getNetworkProviderLogger();
     private static staticLogger = Logger.getNetworkProviderLogger();
-    private readonly nodeUrl: string;
+    private logger = NetworkProvider.staticLogger;
 
-    constructor(nodeUrl: string) {
-        this.logger.debug(`NetworkProvider constructor -> nodeUrl: ${nodeUrl}`);
+    static createFromUrl(url: string): NetworkProvider {
+        const logger = NetworkProvider.staticLogger;
+        logger.debug(`NetworkProvider constructor -> nodeUrl: ${url}`);
         try {
-            new URL(nodeUrl);
-        }
-        catch(e) {
+            new URL(url);
+            return new NetworkProvider(url);
+        } catch(e) {
             throw new Error(`invalid node URL`);
         }
-        this.nodeUrl = nodeUrl;
-        this.logger.debug(`NetworkProvider constructor <- initialized`);
     }
+
+    constructor(private readonly nodeUrl: string) {}
 
     async sendSerializedMicroblock(headerData: any, bodyData: any) {
         this.logger.debug(`sendSerializedMicroblock -> headerData: ${JSON.stringify(headerData)}, bodyData: ${JSON.stringify(bodyData)}`);

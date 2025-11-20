@@ -20,17 +20,6 @@ import {ApplicationVb} from "./ApplicationVb";
 
 export class AccountVb extends VirtualBlockchain {
 
-    // ------------------------------------------
-    // Static methods
-    // ------------------------------------------
-    static async loadAccountVirtualBlockchain(provider: Provider, accountId: Hash) {
-        const vb = new AccountVb(provider);
-        await vb.synchronizeVirtualBlockchainFromProvider(accountId);
-        const state = await provider.getAccountLocalStateFromId(accountId)
-        vb.setLocalState(state);
-        return vb;
-    }
-
     constructor(provider: Provider, private state: AccountLocalState = AccountLocalState.createInitialState()) {
         super(provider, VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN, new AccountMicroblockStructureChecker());
     }

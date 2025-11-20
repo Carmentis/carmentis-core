@@ -1,4 +1,4 @@
-import { HCVCodec, HCVDecoded } from '../common/utils/HCVCodec';
+import {HCVCodec} from '../common/utils/HCVCodec';
 
 describe('HCVCodec', () => {
   describe('encode', () => {

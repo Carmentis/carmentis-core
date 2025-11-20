@@ -1,5 +1,5 @@
-import { DATA } from "../constants/constants";
-import { Utf8Encoder } from "./utf8Encoder";
+import {DATA} from "../constants/constants";
+import {Utf8Encoder} from "./utf8Encoder";
 
 import {TypeCheckingFailureError} from "../errors/type-checking-failure-error";
 

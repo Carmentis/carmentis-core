@@ -1,8 +1,4 @@
-import http from "http";
-import https from "https";
-import { NetworkProvider } from "./NetworkProvider";
-import { Utils } from "../utils/utils";
-import axios from "axios";
+import {NetworkProvider} from "./NetworkProvider";
 
 export class ServerNetworkProvider extends NetworkProvider {
   constructor(nodeUrl: any) {

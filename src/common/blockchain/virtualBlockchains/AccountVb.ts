@@ -1,22 +1,16 @@
-import {SECTIONS} from "../../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
-import {AccountVBState} from "../../type/types";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
 import {Provider} from "../../providers/Provider";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
-import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {IllegalStateError, SectionNotFoundError} from "../../errors/carmentis-error";
-import {SectionType} from "../../type/SectionType";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {AccountMicroblockStructureChecker} from "../structureCheckers/AccountMicroblockStructureChecker";
 import {AccountLocalState} from "../localStates/AccountLocalState";
-import { Microblock } from "../microblock/Microblock";
+import {Microblock} from "../microblock/Microblock";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {INITIAL_OFFER} from "../../constants/economics";
 import {CMTSToken} from "../../economics/currencies/token";
-import {Hash} from "../../entities/Hash";
-import {ApplicationVb} from "./ApplicationVb";
 
 export class AccountVb extends VirtualBlockchain {
 

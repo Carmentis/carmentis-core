@@ -1,9 +1,7 @@
 import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
-import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
 import {Microblock} from "../microblock/Microblock";
 import {AccountLocalState} from "../localStates/AccountLocalState";
-import {SECTIONS, ECO} from "../../constants/constants";
-import {AccountVb} from "../virtualBlockchains/AccountVb";
+import {ECO, SECTIONS} from "../../constants/constants";
 import {Section} from "../../type/Section";
 
 export class AccountLocalStateUpdater implements ILocalStateUpdater<AccountLocalState> {

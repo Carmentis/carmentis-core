@@ -1,5 +1,5 @@
-import { DATA, SCHEMAS } from "../constants/constants";
-import { SchemaSerializer, SchemaUnserializer } from "./schemaSerializer";
+import {SCHEMAS} from "../constants/constants";
+import {SchemaSerializer, SchemaUnserializer} from "./schemaSerializer";
 
 export class MessageSerializer<T = any> {
   collection: any;

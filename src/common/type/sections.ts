@@ -1,19 +1,25 @@
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
-import * as DATA from "../constants/data";
-import {CONTRACT_SCHEMA} from "../constants/schemas";
 import {
-    ACCOUNT_CREATION, ACCOUNT_ESCROW_TRANSFER,
+    ACCOUNT_CREATION,
+    ACCOUNT_ESCROW_TRANSFER,
     ACCOUNT_PUBLIC_KEY,
     ACCOUNT_SIG_SCHEME,
-    ACCOUNT_SIGNATURE, ACCOUNT_STAKE, ACCOUNT_TOKEN_ISSUANCE, ACCOUNT_TRANSFER, ACCOUNT_VESTING_TRANSFER,
+    ACCOUNT_SIGNATURE,
+    ACCOUNT_STAKE,
+    ACCOUNT_TOKEN_ISSUANCE,
+    ACCOUNT_TRANSFER,
+    ACCOUNT_VESTING_TRANSFER,
     ORG_DESCRIPTION,
-    ORG_PUBLIC_KEY, ORG_SERVER,
-    ORG_SIG_SCHEME, ORG_SIGNATURE,
+    ORG_PUBLIC_KEY,
+    ORG_SERVER,
+    ORG_SIG_SCHEME,
+    ORG_SIGNATURE,
     PROTOCOL_NODE_UPDATE,
     PROTOCOL_PROTOCOL_UPDATE,
     PROTOCOL_PUBLIC_KEY,
-    PROTOCOL_SIG_SCHEME, PROTOCOL_SIGNATURE
+    PROTOCOL_SIG_SCHEME,
+    PROTOCOL_SIGNATURE
 } from "../constants/sections";
 
 // ---------------------------------------------------------------------------

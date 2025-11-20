@@ -3,14 +3,11 @@ import {VirtualBlockchain} from "./VirtualBlockchain";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
 import {Provider} from "../../providers/Provider";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
-import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
-import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {ProtocolMicroblockStructureChecker} from "../structureCheckers/ProtocolMicroblockStructureChecker";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {ProtocolLocalState} from "../localStates/ProtocolLocalState";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {Microblock} from "../microblock/Microblock";
-import {Hash} from "../../entities/Hash";
 
 export class ProtocolVb extends VirtualBlockchain {
 

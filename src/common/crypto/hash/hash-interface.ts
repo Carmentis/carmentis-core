@@ -1,4 +1,4 @@
-import { sha256 } from "@noble/hashes/sha2";
+import {sha256} from "@noble/hashes/sha2";
 
 export interface CryptographicHash {
     getHashSchemeId(): CryptographicHashSchemeId;

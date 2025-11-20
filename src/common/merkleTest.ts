@@ -1,7 +1,7 @@
 // @ts-expect-error TS(2307): Cannot find module './merkleTree.js' or its corres... Remove this comment to see the full error message
-import { MerkleTree } from "./merkleTree";
-import { Utils } from "./utils/utils";
-import { Crypto } from "./crypto/crypto";
+import {MerkleTree} from "./merkleTree";
+import {Utils} from "./utils/utils";
+import {Crypto} from "./crypto/crypto";
 
 for(let size = 1; size <= 16; size++) {
   console.log(`Testing tree of size ${size}`);

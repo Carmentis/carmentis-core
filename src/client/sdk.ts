@@ -6,7 +6,7 @@ export { wiExtensionWallet } from "./walletInterface/wiExtensionWallet";
 
 
 import * as wiClientSocket from "./walletInterface/wiClientSocket";
-import { io } from "./network/browserSocketInterface";
+import {io} from "./network/browserSocketInterface";
 
 export * from './walletInterface/v2/operator-client-socket';
 

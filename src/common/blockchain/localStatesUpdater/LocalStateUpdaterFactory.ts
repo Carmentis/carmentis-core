@@ -1,5 +1,4 @@
 import {IApplicationLedgerLocalStateUpdater, ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
-import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
 import {AppLedgerLocalStateUpdaterV1} from "./ApplicationLedgerLocalStateUpdater";
 import {IllegalParameterError} from "../../errors/carmentis-error";
 import {AccountLocalState} from "../localStates/AccountLocalState";

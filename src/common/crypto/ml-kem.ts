@@ -1,5 +1,5 @@
-import { ml_kem768 } from "@noble/post-quantum/ml-kem";
-import { randomBytes } from "@noble/post-quantum/utils";
+import {ml_kem768} from "@noble/post-quantum/ml-kem";
+import {randomBytes} from "@noble/post-quantum/utils";
 
 export const MLKem = {
   generateKeyPair,

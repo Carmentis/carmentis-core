@@ -1,5 +1,4 @@
 import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
-import {OrganizationLocalState} from "../localStates/OrganizationLocalState";
 import {Microblock} from "../microblock/Microblock";
 import {ValidatorNodeLocalState} from "../localStates/ValidatorNodeLocalState";
 

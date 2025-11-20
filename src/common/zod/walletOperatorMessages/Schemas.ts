@@ -1,5 +1,4 @@
 import {z} from 'zod';
-import {decode, encode} from "cbor2";
 
 export enum WalletOperatorMessageType {
     WALLET_OPERATOR_RESPONSE_ERROR = 'WALLET_OPERATOR_RESPONSE_ERROR',

@@ -1,10 +1,6 @@
 // generic-symmetric-key-encoder.spec.ts
 import {GenericSymmetricKeyEncoder} from './generic-symmetric-key-encoder';
-import {
-    AES256GCMSymmetricEncryptionKey,
-    SymmetricEncryptionSchemeId,
-    SymmetricEncryptionKey
-} from "./encryption-interface";
+import {AES256GCMSymmetricEncryptionKey, SymmetricEncryptionSchemeId} from "./encryption-interface";
 
 describe('GenericSymmetricKeyEncoder', () => {
     let encoder: GenericSymmetricKeyEncoder;

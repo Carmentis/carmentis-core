@@ -1,5 +1,3 @@
-
-import * as common from "../common/common";
 import {URL} from "url";
 
 const PREPARE_USER_APPROVAL_PATH = "/prepareUserApproval"

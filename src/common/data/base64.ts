@@ -1,4 +1,4 @@
-import { Utf8Encoder } from "./utf8Encoder";
+import {Utf8Encoder} from "./utf8Encoder";
 
 const ALPHA  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 const BASE64 = ALPHA + "+/=";

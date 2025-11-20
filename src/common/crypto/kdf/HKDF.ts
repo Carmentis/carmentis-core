@@ -1,5 +1,5 @@
-import { hkdf } from '@noble/hashes/hkdf.js';
-import { sha256 } from '@noble/hashes/sha2.js';
+import {hkdf} from '@noble/hashes/hkdf.js';
+import {sha256} from '@noble/hashes/sha2.js';
 
 import {KeyDerivationFunction} from "./KeyDerivationFunction";
 import {KeyDerivationFunctionSchemeId} from "./keyDerivationFunctionSchemeId";

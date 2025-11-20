@@ -1,5 +1,5 @@
-import { Utils } from "./utils";
-import { BytesToBase64Encoder } from "./encoder";
+import {Utils} from "./utils";
+import {BytesToBase64Encoder} from "./encoder";
 
 describe('binaryFrom', () => {
   it('should correctly encode and decode three numbers', () => {

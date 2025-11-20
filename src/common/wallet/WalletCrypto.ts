@@ -2,7 +2,6 @@ import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {AccountCrypto} from "./AccountCrypto";
 import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
-import {WalletSeedEncoder} from "../utils/WalletSeedEncoder";
 import {BinaryToStringEncoderInterface} from "../utils/BinaryToStringEncoderInterface";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";

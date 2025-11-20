@@ -1,7 +1,7 @@
 import {MicroblockHeaderObject} from "../type/types";
 import {SchemaSerializer, SchemaUnserializer} from "./schemaSerializer";
-import { SCHEMAS } from "../constants/constants";
-import {decode, diagnose, encode} from 'cbor2';
+import {SCHEMAS} from "../constants/constants";
+import {decode, encode} from 'cbor2';
 
 export class BlockchainSerializer {
     static serializeMicroblockSerializedHeaderAndBody(serializedHeader: Uint8Array, serializedBody: Uint8Array): Uint8Array {

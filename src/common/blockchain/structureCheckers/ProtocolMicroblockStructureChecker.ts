@@ -1,7 +1,6 @@
 import {IMicroblockStructureChecker} from "./IMicroblockStructureChecker";
 import {StructureChecker} from "./StructureChecker";
 import {Microblock} from "../microblock/Microblock";
-import {SECTIONS} from "../../constants/constants";
 
 export class ProtocolMicroblockStructureChecker implements IMicroblockStructureChecker {
     checkMicroblockStructure(microblock: Microblock): boolean {

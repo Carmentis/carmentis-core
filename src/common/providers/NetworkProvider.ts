@@ -1,29 +1,27 @@
-import { SCHEMAS } from "../constants/constants";
-import { Base64 } from "../data/base64";
-import { Utils } from "../utils/utils";
-import { MessageSerializer, MessageUnserializer } from "../data/messageSerializer";
+import {SCHEMAS} from "../constants/constants";
+import {Base64} from "../data/base64";
+import {Utils} from "../utils/utils";
+import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer";
 import {
     AccountHash,
+    AccountHashSchema,
     AccountHistoryInterface,
     AccountStateDTO,
-    ChainInformationDTO,
-    BlockInformationDTO,
     BlockContentDTO,
-    ValidatorNodeDTO,
+    BlockInformationDTO,
+    ChainInformationDTO,
+    GenesisSnapshotDTO,
     MicroBlockBodys,
-    MicroblockInformationSchema, MsgVirtualBlockchainState, VirtualBlockchainStateInterface,
-    VirtualBlockchainUpdateInterface,
-    ObjectList, GenesisSnapshotDTO, AccountHashSchema
+    MicroblockInformationSchema,
+    MsgVirtualBlockchainState,
+    ObjectList,
+    ValidatorNodeDTO,
+    VirtualBlockchainUpdateInterface
 } from "../type/types";
 import axios, {AxiosError} from "axios";
-import {
-    NodeConnectionRefusedError,
-    NodeEndpointClosedWhileCatchingUpError,
-    NodeError, NotImplementedError
-} from "../errors/carmentis-error";
+import {NodeConnectionRefusedError, NodeEndpointClosedWhileCatchingUpError, NodeError} from "../errors/carmentis-error";
 import {CometBFTErrorCode} from "../errors/CometBFTErrorCode";
 import {RPCNodeStatusResponseSchema} from "./nodeRpc/RPCNodeStatusResponseSchema";
-import {getLogger} from "@logtape/logtape";
 import {Logger} from "../utils/Logger";
 
 export class NetworkProvider {

@@ -1,6 +1,6 @@
-import { DATA } from "../constants/constants";
-import { Utf8Encoder } from "./utf8Encoder";
-import { Utils } from "../utils/utils";
+import {DATA} from "../constants/constants";
+import {Utf8Encoder} from "./utf8Encoder";
+import {Utils} from "../utils/utils";
 
 const NUM_SMALL     = 0x80;
 const NUM_TYPE      = 0x60;

@@ -47,10 +47,10 @@ import {
     ProtocolSigSchemeSection,
     ValidatorNodeDeclarationSection,
     ValidatorNodeDescriptionSection,
-    ValidatorNodeVotingPowerUpdateSection,
     ValidatorNodeRpcEndpointSection,
     ValidatorNodeSignatureSection,
-    ValidatorNodeSigSchemeSection
+    ValidatorNodeSigSchemeSection,
+    ValidatorNodeVotingPowerUpdateSection
 } from "../../type/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {BlockchainSerializer} from "../../data/BlockchainSerializer";

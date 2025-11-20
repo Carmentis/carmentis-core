@@ -1,7 +1,7 @@
 import {io, Socket} from "socket.io-client";
 import {EncoderFactory} from "../../../common/utils/encoder";
 import {MessageSerializer, MessageUnserializer} from "../../../common/data/messageSerializer";
-import { SCHEMAS } from "../../../common/constants/constants";
+import {SCHEMAS} from "../../../common/constants/constants";
 import * as qrCode from "../../qrCode/qrCode";
 import {SchemaSerializer, SchemaUnserializer} from "../../../common/data/schemaSerializer";
 

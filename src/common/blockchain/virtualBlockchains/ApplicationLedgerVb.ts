@@ -1,4 +1,4 @@
-import {SCHEMAS, SECTIONS} from "../../constants/constants";
+import {SECTIONS} from "../../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {HKDF} from "../../crypto/kdf/HKDF";
 import {ImportedProof, Proof} from "../../type/types";
@@ -10,13 +10,11 @@ import {
     ActorNotInvitedError,
     CurrentActorNotFoundError,
     DecryptionError,
-    IllegalParameterError,
     MicroBlockNotFoundInVirtualBlockchainAtHeightError,
     NoSharedSecretError,
     ProofVerificationFailedError,
     ProtocolError,
     SectionNotFoundError,
-    SharedKeyDecryptionError,
 } from "../../errors/carmentis-error";
 import {Microblock} from "../microblock/Microblock";
 import {
@@ -34,21 +32,16 @@ import {
     ApplicationLedgerMicroblockStructureChecker
 } from "../structureCheckers/ApplicationLedgerMicroblockStructureChecker";
 import {
-    ApplicationLedgerActorCreationSection,
     ApplicationLedgerActorSubscriptionSection,
     ApplicationLedgerChannelInvitationSection,
     ApplicationLedgerSharedKeySection
 } from "../../type/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Hash} from "../../entities/Hash";
-import {ActorType} from "../../constants/ActorType";
 import {Height} from "../../type/Height";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
-import {AppLedgerStateUpdateRequest} from "../../type/AppLedgerStateUpdateRequest";
-import {SchemaValidator} from "../../data/schemaValidator";
 import {SectionType} from "../../type/SectionType";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
-import {ApplicationLedgerMicroblockBuilder} from "./ApplicationLedgerMicroblockBuilder";
 import {Section} from "../../type/Section";
 
 export class ApplicationLedgerVb extends VirtualBlockchain {

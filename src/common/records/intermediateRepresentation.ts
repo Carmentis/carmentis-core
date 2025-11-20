@@ -1,9 +1,8 @@
-import {WriteStream, ReadStream} from "../data/byteStreams";
+import {ReadStream, WriteStream} from "../data/byteStreams";
 import {PathManager} from "./pathManager";
 import {MaskManager} from "./maskManager";
 import {TypeManager} from "../data/types";
 import {DATA} from "../constants/constants";
-import {MerkleProof, Proof, RecordEntry} from "../type/types";
 import {PepperMerklizer} from "./PepperMerklizer";
 import {SaltMerklizer} from "./SaltMerklizer";
 

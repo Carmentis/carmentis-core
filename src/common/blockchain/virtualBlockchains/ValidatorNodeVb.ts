@@ -1,20 +1,12 @@
-import {SECTIONS} from "../../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
-import {Utils} from "../../utils/utils";
 import {Provider} from "../../providers/Provider";
-import {ValidatorNodeVBState} from "../../type/types";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
-import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
-import {
-    ValidatorNodeMicroblockStructureChecker
-} from "../structureCheckers/ValidatorNodeMicroblockStructureChecker";
+import {ValidatorNodeMicroblockStructureChecker} from "../structureCheckers/ValidatorNodeMicroblockStructureChecker";
 
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
-import { Microblock } from "../microblock/Microblock";
+import {Microblock} from "../microblock/Microblock";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {ValidatorNodeLocalState} from "../localStates/ValidatorNodeLocalState";
-import {OrganizationVb} from "./OrganizationVb";
-import {Hash} from "../../entities/Hash";
 
 export class ValidatorNodeVb extends VirtualBlockchain {
 

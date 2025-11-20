@@ -1,13 +1,8 @@
-import {
-    ApplicationLedgerActor,
-    ApplicationLedgerLocalStateObject
-} from "../../type/types";
-import {Utils} from "../../utils/utils";
+import {ApplicationLedgerActor, ApplicationLedgerLocalStateObject} from "../../type/types";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {ActorNotDefinedError, ChannelAlreadyDefinedError, ChannelNotDefinedError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
-import {ApplicationLedgerActorCreationSection} from "../../type/sections";
 
 export class ApplicationLedgerLocalState {
     private static UNDEFINED_APPLICATION_ID = new Uint8Array(0);

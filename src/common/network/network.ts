@@ -1,6 +1,5 @@
-import { SCHEMAS } from "../constants/constants";
+import {SCHEMAS} from "../constants/constants";
 import {MessageSerializer, MessageUnserializer} from "../data/messageSerializer";
-import {Base64 as base64} from "../data/base64";
 import {EncoderFactory} from "../utils/encoder";
 import axios from "axios";
 

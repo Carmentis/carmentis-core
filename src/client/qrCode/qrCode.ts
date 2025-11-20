@@ -1,6 +1,6 @@
-import { qrcode } from "./qrCodeGenerator";
-import { SCHEMAS } from "../../common/constants/constants";
-import {SchemaSerializer}  from "../../common/data/schemaSerializer";
+import {qrcode} from "./qrCodeGenerator";
+import {SCHEMAS} from "../../common/constants/constants";
+import {SchemaSerializer} from "../../common/data/schemaSerializer";
 import {EncoderFactory} from "../../common/utils/encoder";
 //import * as base64 from "../../common/util/base64";
 //import * as uint8 from "../../common/util/uint8";

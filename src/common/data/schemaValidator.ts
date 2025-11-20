@@ -1,5 +1,5 @@
-import { DATA, SCHEMAS } from "../constants/constants";
-import { TypeManager, TypeChecker } from "./types";
+import {DATA, SCHEMAS} from "../constants/constants";
+import {TypeChecker, TypeManager} from "./types";
 import {CarmentisError} from "../errors/carmentis-error";
 
 export class SchemaValidator {

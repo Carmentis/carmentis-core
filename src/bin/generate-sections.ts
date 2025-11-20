@@ -1,4 +1,4 @@
-import { Project } from 'ts-morph';
+import {Project} from 'ts-morph';
 
 const project = new Project();
 project.addSourceFilesAtPaths('src/common/entities/*.ts');

@@ -1,5 +1,4 @@
-
-import { z } from "zod";
+import {z} from "zod";
 
 const PositiveInt = z.number().int().gt(0);
 type PositiveInt = z.infer<typeof PositiveInt>;

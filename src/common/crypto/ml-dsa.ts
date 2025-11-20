@@ -1,5 +1,5 @@
-import { ml_dsa65 } from "@noble/post-quantum/ml-dsa";
-import { randomBytes } from "@noble/post-quantum/utils";
+import {ml_dsa65} from "@noble/post-quantum/ml-dsa";
+import {randomBytes} from "@noble/post-quantum/utils";
 
 export const MLDsa = {
   generateKeyPair,

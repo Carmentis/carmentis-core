@@ -1,15 +1,12 @@
-import { ERRORS, SCHEMAS } from "../../common/constants/constants";
-import * as crypto from "../../common/crypto/crypto";
+import {SCHEMAS} from "../../common/constants/constants";
 import * as clientSocket from "./wiClientSocket";
 import * as qrCode from "../qrCode/qrCode";
 import * as web from "../web/web";
 import {SchemaSerializer, SchemaUnserializer} from "../../common/data/schemaSerializer";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
-import {CryptoSchemeFactory} from "../../common/crypto/CryptoSchemeFactory";
-import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
-import {WI_INVALID_SIGNATURE} from "../../common/constants/errors";
 import {EncoderFactory, EncoderInterface} from "../../common/utils/encoder";
+
 //import { wiError } from "../../common/errors/error";
 
 export class wiClient {

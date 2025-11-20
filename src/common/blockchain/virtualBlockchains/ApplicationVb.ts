@@ -1,17 +1,10 @@
-import {SECTIONS} from "../../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Provider} from "../../providers/Provider";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
-import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {Microblock} from "../microblock/Microblock";
-import {OrganizationVb} from "./OrganizationVb";
 import {ApplicationLocalState} from "../localStates/ApplicationLocalState";
-import {ApplicationDeclarationSection, ApplicationDescriptionSection} from "../../type/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
-import {
-    ApplicationMicroblockStructureChecker
-} from "../structureCheckers/ApplicationMicroblockStructureChecker";
-import {Hash} from "../../entities/Hash";
+import {ApplicationMicroblockStructureChecker} from "../structureCheckers/ApplicationMicroblockStructureChecker";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 
 export class ApplicationVb extends VirtualBlockchain {

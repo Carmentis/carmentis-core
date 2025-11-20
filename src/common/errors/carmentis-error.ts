@@ -1,6 +1,4 @@
-import {StringSignatureEncoder} from "../crypto/signature/signature-encoder";
 import {Hash} from "../entities/Hash";
-import {SectionType} from "../type/SectionType";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 
 export enum CarmentisErrorCode {

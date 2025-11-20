@@ -1,10 +1,10 @@
-import { wiWallet } from "./wiWallet";
-import { SCHEMAS } from "../../common/constants/constants";
-import * as crypto from "../../common/crypto/crypto";
+import {wiWallet} from "./wiWallet";
+import {SCHEMAS} from "../../common/constants/constants";
 //import * as schemaSerializer from "../../common/serializers/schema-serializer";
 import * as clientSocket from "./wiClientSocket";
 import * as qrCode from "../qrCode/qrCode";
 import {SchemaSerializer} from "../../common/data/schemaSerializer";
+
 //import {CarmentisError} from "../../common/errors/error";
 
 export class wiApplicationWallet extends wiWallet<Uint8Array> {

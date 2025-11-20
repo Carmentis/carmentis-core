@@ -1,13 +1,11 @@
 import {ApplicationLedgerMicroblockBuilder} from "./ApplicationLedgerMicroblockBuilder";
 import {ApplicationLedgerVb} from "./ApplicationLedgerVb";
-import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
 import {AppLedgerStateUpdateRequest} from "../../type/AppLedgerStateUpdateRequest";
 import {
     AbstractPrivateDecryptionKey,
     AbstractPublicEncryptionKey
 } from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 import {Microblock} from "../microblock/Microblock";
-import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {SchemaValidator} from "../../data/schemaValidator";
 import {Utils} from "../../utils/utils";
 import {ActorType} from "../../constants/ActorType";
@@ -19,11 +17,6 @@ import {Assertion} from "../../utils/Assertion";
 import {Logger} from "../../utils/Logger";
 import {HKDF} from "../../crypto/kdf/HKDF";
 import {AES256GCMSymmetricEncryptionKey} from "../../crypto/encryption/symmetric-encryption/encryption-interface";
-import {IApplicationLedgerLocalStateUpdater} from "../localStates/ILocalStateUpdater";
-import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
-import {Section} from "../../type/Section";
-import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
-import {hkdf} from "@noble/hashes/hkdf.js";
 
 export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedgerMicroblockBuilder {
 

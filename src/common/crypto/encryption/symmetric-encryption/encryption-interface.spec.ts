@@ -1,8 +1,8 @@
 import {
     AES256GCMSymmetricEncryptionKey,
     ExtendedSymmetricEncryptionKey,
-    SymmetricEncryptionSchemeId,
-    SymmetricEncryptionKey
+    SymmetricEncryptionKey,
+    SymmetricEncryptionSchemeId
 } from './encryption-interface';
 
 describe('ExtendedSymmetricEncryptionKey', () => {

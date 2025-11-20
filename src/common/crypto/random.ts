@@ -1,5 +1,5 @@
-import { Utils } from "../utils/utils";
-import { randomBytes } from "@noble/hashes/utils";
+import {Utils} from "../utils/utils";
+import {randomBytes} from "@noble/hashes/utils";
 
 export const Random = {
   getBytes,

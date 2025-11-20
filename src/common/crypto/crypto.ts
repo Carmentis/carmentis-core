@@ -1,9 +1,9 @@
-import { Random } from "./random";
-import { Hashes } from "./hashes";
-import { Aes } from "./aes";
-import { MLDsa } from "./ml-dsa";
-import { MLKem } from "./ml-kem";
-import { Secp256k1 } from "./secp256k1";
+import {Random} from "./random";
+import {Hashes} from "./hashes";
+import {Aes} from "./aes";
+import {MLDsa} from "./ml-dsa";
+import {MLKem} from "./ml-kem";
+import {Secp256k1} from "./secp256k1";
 
 const SIG_SCHEME_IDS = {
   SECP256K1: 0,

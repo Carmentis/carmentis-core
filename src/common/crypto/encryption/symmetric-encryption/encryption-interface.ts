@@ -1,4 +1,4 @@
-import { gcm } from "@noble/ciphers/aes";
+import {gcm} from "@noble/ciphers/aes";
 import {CarmentisError, DecryptionError} from "../../../errors/carmentis-error";
 
 

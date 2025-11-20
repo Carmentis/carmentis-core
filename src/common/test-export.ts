@@ -1,6 +1,5 @@
 import * as fs from "fs";
-import { IntermediateRepresentation } from "./records/intermediateRepresentation";
-import { Utils } from "./utils/utils";
+import {IntermediateRepresentation} from "./records/intermediateRepresentation";
 
 const content = fs.readFileSync("./test-data/test1-small.json", "utf8");
 const testObject = JSON.parse(content);

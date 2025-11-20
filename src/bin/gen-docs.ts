@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { generateDocumentation } from 'tsdoc-markdown';
+import {generateDocumentation} from 'tsdoc-markdown';
 
 const utilsEntryFile = 'src/common/common.ts';
 

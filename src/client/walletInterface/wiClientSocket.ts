@@ -1,8 +1,6 @@
-import { SCHEMAS } from "../../common/constants/constants";
+import {SCHEMAS} from "../../common/constants/constants";
 import {EncoderFactory} from "../../common/utils/encoder";
-import {SchemaSerializer} from "../../common/data/schemaSerializer";
 import {MessageSerializer, MessageUnserializer} from "../../common/data/messageSerializer";
-import {getCombinedBaseUrl} from "barrelsby/bin/options/baseUrl";
 //import * as base64 from "../../common/util/base64";
 //import * as schemaSerializer from "../../common/serializers/schema-serializer";
 

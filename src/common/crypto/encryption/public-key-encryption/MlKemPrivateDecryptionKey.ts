@@ -1,5 +1,4 @@
 import {AbstractPrivateDecryptionKey} from "./PublicKeyEncryptionSchemeInterface";
-import {EncoderFactory} from "../../../utils/encoder";
 import {ml_kem768} from "@noble/post-quantum/ml-kem";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {AES256GCMSymmetricEncryptionKey} from "../symmetric-encryption/encryption-interface";

@@ -1,18 +1,8 @@
-import {CHAIN} from "../../constants/constants";
 import {Microblock} from "../microblock/Microblock";
-import {Utils} from "../../utils/utils";
 import {Provider} from "../../providers/Provider";
 import {Hash} from "../../entities/Hash";
-import {CMTSToken} from "../../economics/currencies/token";
-import {
-    IllegalParameterError,
-    IllegalStateError,
-    InternalError,
-    MicroBlockNotFoundInVirtualBlockchainAtHeightError,
-    VirtualBlockchainNotFoundError
-} from "../../errors/carmentis-error";
+import {IllegalParameterError, MicroBlockNotFoundInVirtualBlockchainAtHeightError} from "../../errors/carmentis-error";
 import {SectionType} from "../../type/SectionType";
-import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {IMicroblockStructureChecker} from "../structureCheckers/IMicroblockStructureChecker";
 import {EncoderFactory} from "../../utils/encoder";

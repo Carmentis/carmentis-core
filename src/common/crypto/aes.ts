@@ -1,4 +1,4 @@
-import { gcm } from "@noble/ciphers/aes";
+import {gcm} from "@noble/ciphers/aes";
 import {Logger} from "../utils/Logger";
 
 const logger = Logger.getLogger(["crypto", "aes-gcm"])

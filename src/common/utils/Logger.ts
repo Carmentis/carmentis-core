@@ -1,5 +1,4 @@
-import { getLogger } from "@logtape/logtape";
-import { configure, getConsoleSink } from "@logtape/logtape";
+import {configure, getConsoleSink, getLogger} from "@logtape/logtape";
 
 export class Logger {
     static getLogger(context: string[] = []) {

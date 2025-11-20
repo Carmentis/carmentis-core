@@ -1,8 +1,7 @@
-import { EncoderFactory } from "../utils/encoder";
-import { HCVPkeEncoder } from "./encryption/public-key-encryption/HCVPkeEncoder";
-import { PkeEncoderInterface } from "./encryption/public-key-encryption/PkeEncoderInterface";
-import { HCVSignatureEncoder } from "./signature/HCVSignatureEncoder";
-import { StringSignatureEncoder } from "./signature/signature-encoder";
+import {EncoderFactory} from "../utils/encoder";
+import {HCVPkeEncoder} from "./encryption/public-key-encryption/HCVPkeEncoder";
+import {PkeEncoderInterface} from "./encryption/public-key-encryption/PkeEncoderInterface";
+import {HCVSignatureEncoder} from "./signature/HCVSignatureEncoder";
 import {SignatureEncoderInterface} from "./signature/SignatureEncoderInterface";
 
 

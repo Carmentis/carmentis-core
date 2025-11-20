@@ -1,4 +1,4 @@
-import { z } from "zod";
+import {z} from "zod";
 
 export const NewBlockEventSchema = z.object({
     jsonrpc: z.literal("2.0"),

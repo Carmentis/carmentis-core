@@ -1,32 +1,12 @@
 import {ApplicationLedgerVb} from "./ApplicationLedgerVb";
-import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
-import {AppLedgerStateUpdateRequest} from "../../type/AppLedgerStateUpdateRequest";
-import {
-    AbstractPrivateDecryptionKey,
-    AbstractPublicEncryptionKey
-} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 import {Microblock} from "../microblock/Microblock";
-import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
-import {SchemaValidator} from "../../data/schemaValidator";
-import {Utils} from "../../utils/utils";
-import {ActorType} from "../../constants/ActorType";
-import {Crypto} from "../../crypto/crypto";
-import {
-    DecryptionError, IllegalParameterError,
-    MicroBlockNotFoundInVirtualBlockchainAtHeightError, SharedKeyDecryptionError
-} from "../../errors/carmentis-error";
-import {SCHEMAS} from "../../constants/constants";
-import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
-import {Assertion} from "../../utils/Assertion";
-import {Logger} from "../../utils/Logger";
-import {HKDF} from "../../crypto/kdf/HKDF";
-import {AES256GCMSymmetricEncryptionKey} from "../../crypto/encryption/symmetric-encryption/encryption-interface";
+import {MicroBlockNotFoundInVirtualBlockchainAtHeightError} from "../../errors/carmentis-error";
 import {IApplicationLedgerLocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {Section} from "../../type/Section";
 import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
-import { Height } from "../../common";
-import { VirtualBlockchain } from "./VirtualBlockchain";
+import {Height} from "../../common";
+import {VirtualBlockchain} from "./VirtualBlockchain";
 
 
 export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFailureFallback {

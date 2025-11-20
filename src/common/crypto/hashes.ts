@@ -1,6 +1,6 @@
-import { Utils } from "../utils/utils";
-import { sha256 as H256 } from "@noble/hashes/sha256";
-import { sha512 as H512 } from "@noble/hashes/sha512";
+import {Utils} from "../utils/utils";
+import {sha256 as H256} from "@noble/hashes/sha256";
+import {sha512 as H512} from "@noble/hashes/sha512";
 import {InternalError} from "../errors/carmentis-error";
 
 export const Hashes = {

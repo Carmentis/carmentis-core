@@ -35,7 +35,6 @@ import {ProtocolLocalState} from "../blockchain/localStates/ProtocolLocalState";
 import {ValidatorNodeLocalState} from "../blockchain/localStates/ValidatorNodeLocalState";
 import {VirtualBlockchainType} from "../type/VirtualBlockchainType";
 import {Microblock} from "../blockchain/microblock/Microblock";
-import {BlockchainSerializer} from "../data/BlockchainSerializer";
 import {ValidatorNodeVb} from "../blockchain/virtualBlockchains/ValidatorNodeVb";
 import {VirtualBlockchain} from "../blockchain/virtualBlockchains/VirtualBlockchain";
 import {AccountVb} from "../blockchain/virtualBlockchains/AccountVb";

@@ -1,5 +1,4 @@
 import {AccountVBState} from "../../type/types";
-import {Utils} from "../../utils/utils";
 
 export class AccountLocalState {
     constructor(private localState: AccountVBState) {

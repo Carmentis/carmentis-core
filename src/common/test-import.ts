@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { IntermediateRepresentation } from "./records/intermediateRepresentation";
+import {IntermediateRepresentation} from "./records/intermediateRepresentation";
 
 const proofAsText = fs.readFileSync("./test-data/proofs/proof1.json", 'utf-8');
 const proof = JSON.parse(proofAsText);

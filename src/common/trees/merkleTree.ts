@@ -1,5 +1,5 @@
-import { Crypto } from "../crypto/crypto";
-import { Utils } from "../utils/utils";
+import {Crypto} from "../crypto/crypto";
+import {Utils} from "../utils/utils";
 
 export class MerkleTree {
   leaves: any;

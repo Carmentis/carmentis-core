@@ -1,5 +1,5 @@
-import { Crypto } from "./crypto/crypto";
-import { Utils } from "./utils/utils";
+import {Crypto} from "./crypto/crypto";
+import {Utils} from "./utils/utils";
 // @ts-expect-error TS(2307): Cannot find module '@cmts-dev/carmentis-sdk/server... Remove this comment to see the full error message
 import * as sdk from "@cmts-dev/carmentis-sdk/server";
 

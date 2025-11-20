@@ -1,5 +1,4 @@
 import {ProtocolVBState} from "../../type/types";
-import {Utils} from "../../utils/utils";
 
 export class ProtocolLocalState {
     constructor(private localState: ProtocolVBState) {

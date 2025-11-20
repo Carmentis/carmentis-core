@@ -2,7 +2,9 @@ import {ImportedProof} from "../type/types";
 import {Optional} from "./Optional";
 import {Height} from "../type/Height";
 import {Hash} from "./Hash";
-import {AbstractPrivateDecryptionKey} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
+import {
+    AbstractPrivateDecryptionKey
+} from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 import {ApplicationLedgerVb} from "../blockchain/virtualBlockchains/ApplicationLedgerVb";
 
 /**

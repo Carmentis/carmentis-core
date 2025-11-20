@@ -1,5 +1,3 @@
-
-
 import {Microblock} from "../microblock/Microblock";
 import {IApplicationLedgerLocalStateUpdater, ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
 import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
@@ -8,14 +6,17 @@ import {
     ActorAlreadyDefinedError,
     AlreadySubscribedError,
     CannotSubscribeError,
-    CarmentisError,
     ChannelAlreadyDefinedError,
-    ChannelNotDefinedError, InvalidActorError,
-    InvalidChannelError, NotAllowedPkeSchemeError, NotAllowedSignatureSchemeError, SectionNotFoundError
+    ChannelNotDefinedError,
+    InvalidActorError,
+    InvalidChannelError,
+    NotAllowedPkeSchemeError,
+    NotAllowedSignatureSchemeError
 } from "../../errors/carmentis-error";
 import {Logger} from "../../utils/Logger";
 import {
-    ApplicationLedgerActorCreationSection, ApplicationLedgerChannelInvitationSection,
+    ApplicationLedgerActorCreationSection,
+    ApplicationLedgerChannelInvitationSection,
     ApplicationLedgerDeclarationSection,
     ApplicationLedgerSharedKeySection
 } from "../../type/sections";

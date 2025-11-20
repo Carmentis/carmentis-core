@@ -1,4 +1,11 @@
-import {VB_ACCOUNT, VB_APP_LEDGER, VB_APPLICATION, VB_ORGANIZATION, VB_PROTOCOL, VB_VALIDATOR_NODE} from "../constants/chain";
+import {
+    VB_ACCOUNT,
+    VB_APP_LEDGER,
+    VB_APPLICATION,
+    VB_ORGANIZATION,
+    VB_PROTOCOL,
+    VB_VALIDATOR_NODE
+} from "../constants/chain";
 
 export enum VirtualBlockchainType {
     ACCOUNT_VIRTUAL_BLOCKCHAIN = VB_ACCOUNT,

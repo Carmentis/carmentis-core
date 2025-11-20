@@ -1,4 +1,4 @@
-import { DATA } from "../constants/constants";
+import {DATA} from "../constants/constants";
 
 export const PathManager = {
   parsePrefix,

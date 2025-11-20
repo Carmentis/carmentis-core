@@ -1,6 +1,7 @@
-import {ProtocolVBState, ValidatorNodeVBState} from "../../type/types";
+import {ValidatorNodeVBState} from "../../type/types";
 import {Utils} from "../../utils/utils";
 import {Hash} from "../../entities/Hash";
+
 export class ValidatorNodeLocalState {
     constructor(private localState: ValidatorNodeVBState) {
     }

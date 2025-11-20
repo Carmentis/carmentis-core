@@ -1,9 +1,9 @@
-import { SCHEMAS } from "../../common/constants/constants";
+import {SCHEMAS} from "../../common/constants/constants";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {randomBytes} from "@noble/post-quantum/utils";
-import {MessageSerializer, MessageUnserializer} from "../../common/data/messageSerializer";
+import {MessageSerializer} from "../../common/data/messageSerializer";
 import {EncoderFactory} from "../../common/utils/encoder";
-import {Server, Socket} from "socket.io";
+import {Socket} from "socket.io";
 
 let requests: any = [],
     qrIdentifiers = new Map(),

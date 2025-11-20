@@ -1,6 +1,5 @@
 import * as DATA from './data';
-import * as CHAIN from './chain';
-import {Schema, CONTRACT_SCHEMA} from './schemas';
+import {CONTRACT_SCHEMA, Schema} from './schemas';
 import {SectionType} from '../type/SectionType';
 
 // ============================================================================================================================ //

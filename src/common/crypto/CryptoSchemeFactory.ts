@@ -1,10 +1,10 @@
 import {
-    AES256GCMSymmetricEncryptionKey, AES256GCMSymmetricEncryptionScheme,
+    AES256GCMSymmetricEncryptionKey,
+    AES256GCMSymmetricEncryptionScheme,
     DecapsulationKey,
-    EncapsulationKey,
-    KeyExchangeSchemeId,
+    SymmetricEncryptionKey,
+    SymmetricEncryptionKeyScheme,
     SymmetricEncryptionSchemeId,
-    SymmetricEncryptionKey, SymmetricEncryptionKeyScheme,
 } from "./encryption/symmetric-encryption/encryption-interface";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey, MLDSA65SignatureScheme} from "./signature/ml-dsa-65";
 import {CryptographicHash, CryptographicHashSchemeId, Sha256CryptographicHash} from "./hash/hash-interface";

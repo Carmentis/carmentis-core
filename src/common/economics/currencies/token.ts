@@ -1,4 +1,3 @@
-import {CENTITOKEN, MILLITOKEN} from "../../constants/economics";
 import {EconomicsError, InvalidTokenUnitError} from "../../errors/carmentis-error";
 import {Currency} from "./currency";
 

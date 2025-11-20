@@ -1,9 +1,7 @@
 import {ml_dsa65} from "@noble/post-quantum/ml-dsa";
 import {randomBytes} from "@noble/post-quantum/utils";
 import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
-import {PublicSignatureKey} from "./PublicSignatureKey";
 import {SignatureScheme} from "./SignatureScheme";
-import {PrivateSignatureKey} from "./PrivateSignatureKey";
 import {BasePrivateSignatureKey} from "./BasePrivateSignatureKey";
 import {BasePublicSignatureKey} from "./BasePublicSignatureKey";
 import {SignatureSchemeId} from "./SignatureSchemeId";

@@ -1,4 +1,4 @@
-import { PathManager } from "./pathManager";
+import {PathManager} from "./pathManager";
 
 export class MessageManager {
   static async encode(msg: any, irLoader: any) {

@@ -1,5 +1,4 @@
 import {OrganizationVBState} from "../../type/types";
-import {Utils} from "../../utils/utils";
 
 export class OrganizationLocalState {
     constructor(private localState: OrganizationVBState) {

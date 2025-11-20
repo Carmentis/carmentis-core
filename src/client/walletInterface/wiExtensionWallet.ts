@@ -1,5 +1,4 @@
-import { wiWallet } from "./wiWallet";
-import { SCHEMAS } from "../../common/constants/constants";
+import {wiWallet} from "./wiWallet";
 import {SchemaSerializer} from "../../common/data/schemaSerializer";
 import {WI_ANSWERS} from "../../common/constants/schemas";
 import {EncoderFactory, EncoderInterface} from "../../common/utils/encoder";

@@ -1,9 +1,8 @@
-import {getPublicKey, PrivKey, sign, utils, etc, verify} from '@noble/secp256k1';
+import {etc, getPublicKey, PrivKey, sign, utils, verify} from '@noble/secp256k1';
 import {sha256} from "@noble/hashes/sha2";
 import {EncoderInterface} from "../../utils/encoder";
 import {PublicSignatureKey} from "./PublicSignatureKey";
 import {SignatureScheme} from "./SignatureScheme";
-import {PrivateSignatureKey} from "./PrivateSignatureKey";
 import {BasePrivateSignatureKey} from "./BasePrivateSignatureKey";
 import {BasePublicSignatureKey} from "./BasePublicSignatureKey";
 import {SignatureSchemeId} from "./SignatureSchemeId";

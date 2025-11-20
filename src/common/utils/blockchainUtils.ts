@@ -1,10 +1,9 @@
-import { SCHEMAS } from "../constants/constants";
-import { SchemaSerializer, SchemaUnserializer } from "../data/schemaSerializer";
-import { Crypto } from "../crypto/crypto";
-import { Utils } from "./utils";
+import {SCHEMAS} from "../constants/constants";
+import {SchemaSerializer, SchemaUnserializer} from "../data/schemaSerializer";
+import {Crypto} from "../crypto/crypto";
+import {Utils} from "./utils";
 
 import {MicroblockInformationSchema, VirtualBlockchainStateInterface} from "../type/types";
-import {MicroBlockHeaderDto} from "../entities/MicroBlockHeaderDto";
 import {BlockchainSerializer} from "../data/BlockchainSerializer";
 
 

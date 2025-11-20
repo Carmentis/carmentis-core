@@ -56,14 +56,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     // ------------------------------------------
     // Static methods
     // ------------------------------------------
-    static async loadApplicationLedgerVirtualBlockchain(provider: Provider, appLedgerId: Hash) {
-        const vb = new ApplicationLedgerVb(provider);
-        await vb.synchronizeVirtualBlockchainFromProvider(appLedgerId);
-        const state = await provider.getApplicationLedgerLocalStateFromId(appLedgerId)
-        vb.setLocalState(state);
-        return vb;
-    }
-
     static createApplicationLedgerVirtualBlockchain(provider: Provider) {
         return new ApplicationLedgerVb(provider);
     }

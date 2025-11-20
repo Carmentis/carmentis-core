@@ -43,7 +43,7 @@ export class ApplicationVb extends VirtualBlockchain {
         super(provider, VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN, new ApplicationMicroblockStructureChecker());
     }
 
-    protected setLocalState(state: ApplicationLocalState) {
+    setLocalState(state: ApplicationLocalState) {
         this.state = state
     }
 

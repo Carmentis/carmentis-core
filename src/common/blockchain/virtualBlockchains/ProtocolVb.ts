@@ -38,7 +38,7 @@ export class ProtocolVb extends VirtualBlockchain {
         super(provider, VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN, new ProtocolMicroblockStructureChecker());
     }
 
-    protected setLocalState(state: ProtocolLocalState) {
+    setLocalState(state: ProtocolLocalState) {
         this.state = state
     }
 

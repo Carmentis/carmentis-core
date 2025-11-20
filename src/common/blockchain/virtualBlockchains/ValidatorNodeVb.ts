@@ -114,12 +114,7 @@ export class ValidatorNodeVb extends VirtualBlockchain {
     }
 
      */
-
-    async signatureCallback(microblock: any, section: any) {
-        const publicKey = await this.getOrganizationPublicKey();
-        const feesPayerAccount = await this.provider.getAccountHashByPublicKey(publicKey);
-        microblock.setFeesPayerAccount(feesPayerAccount);
-    }
+    
 
     async getOrganizationVirtualBlockchain() {
         const orgId = this.state.getOrganizationId();

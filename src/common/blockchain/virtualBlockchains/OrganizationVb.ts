@@ -19,14 +19,6 @@ export class OrganizationVb extends VirtualBlockchain {
     // ------------------------------------------
     // Static methods
     // ------------------------------------------
-    static async loadOrganizationVirtualBlockchain(provider: Provider, organizationId: Hash) {
-        const orgVb = new OrganizationVb(provider);
-        await orgVb.synchronizeVirtualBlockchainFromProvider(organizationId);
-        const state = await provider.getOrganizationLocalStateFromId(organizationId)
-        orgVb.setLocalState(state);
-        return orgVb;
-    }
-
     static createOrganizationVirtualBlockchain(provider: Provider) {
         return new OrganizationVb(provider);
     }

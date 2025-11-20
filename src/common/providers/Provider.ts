@@ -25,7 +25,7 @@ import {KeyedProvider} from "./KeyedProvider";
 import {Hash} from "../entities/Hash";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
-import {NotAuthenticatedError} from "../errors/carmentis-error";
+import {NotAuthenticatedError, VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
 import {Logger} from "../utils/Logger";
 import {OrganizationLocalState} from "../blockchain/localStates/OrganizationLocalState";
 import {AccountLocalState} from "../blockchain/localStates/AccountLocalState";
@@ -36,6 +36,13 @@ import {ValidatorNodeLocalState} from "../blockchain/localStates/ValidatorNodeLo
 import {VirtualBlockchainType} from "../type/VirtualBlockchainType";
 import {Microblock} from "../blockchain/microblock/Microblock";
 import {BlockchainSerializer} from "../data/BlockchainSerializer";
+import {ValidatorNodeVb} from "../blockchain/virtualBlockchains/ValidatorNodeVb";
+import {VirtualBlockchain} from "../blockchain/virtualBlockchains/VirtualBlockchain";
+import {AccountVb} from "../blockchain/virtualBlockchains/AccountVb";
+import {ApplicationLedgerVb} from "../blockchain/virtualBlockchains/ApplicationLedgerVb";
+import {ApplicationVb} from "../blockchain/virtualBlockchains/ApplicationVb";
+import {OrganizationVb} from "../blockchain/virtualBlockchains/OrganizationVb";
+import {ProtocolVb} from "../blockchain/virtualBlockchains/ProtocolVb";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.

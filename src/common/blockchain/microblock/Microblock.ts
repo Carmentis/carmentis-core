@@ -65,6 +65,9 @@ import {Section} from "../../type/Section";
  */
 export class Microblock {
 
+    // ------------------------------------------
+    // Static methods
+    // ------------------------------------------
     /**
      * Creates a genesis microblock with specified type and expiration.
      * @param {number} mbType - The type of microblock to create
@@ -139,6 +142,73 @@ export class Microblock {
     static createGenesisApplicationLedgerMicroblock(): Microblock {
         return new Microblock(VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN)
     };
+
+
+    static loadFromSerializedMicroblock(expectedMbType: VirtualBlockchainType, serializedMicroblock: Uint8Array) {
+        const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(serializedMicroblock);
+        return Microblock.loadFromSerializedHeaderAndBody(expectedMbType, serializedHeader, serializedBody);
+    }
+
+    static loadFromSerializedHeaderAndBody(expectedMbType: VirtualBlockchainType, serializedHeader: Uint8Array, serializedBody: Uint8Array): Microblock {
+        const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
+        const mb = new Microblock(expectedMbType);
+        mb.header = header;
+
+
+        // we compute the hash of the microblock being the hash of the serialized header and assign the gas price
+        mb.hash = Crypto.Hashes.sha256AsBinary(serializedHeader);
+        mb.gasPrice = header.gasPrice;
+
+        // we check that the hash of the body is consistent with the body hash contained in the header
+        const computedBodyHash = Crypto.Hashes.sha256AsBinary(serializedBody);
+        const bodyHashContainedInHeader = header.bodyHash;
+        const areBodyHashMatching = Utils.binaryIsEqual(bodyHashContainedInHeader, computedBodyHash)
+        if (!areBodyHashMatching) {
+            const encoder = EncoderFactory.bytesToHexEncoder();
+            throw new CarmentisError(
+                `Body hash in the header is different of the locally computed body hash: header.bodyHash=${encoder.encode(bodyHashContainedInHeader)}, computed=${encoder.encode(computedBodyHash)}`
+            );
+        }
+
+        // parse the body
+        const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY);
+        // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
+        const body = bodyUnserializer.unserialize(serializedBody).body;
+        for (const {type, data} of body) {
+            const sectionSchema = SECTIONS.DEF[expectedMbType][type];
+            const unserializer = new SchemaUnserializer(sectionSchema);
+            const object = unserializer.unserialize(data);
+
+            mb.storeSection(type, object, data);
+        }
+
+        return mb;
+    }
+
+
+    /**
+     * Generates a previous hash value for a genesis microblock.
+     * @param {VirtualBlockchainType} mbType - The type of virtual blockchain
+     * @param {number} expirationDay - The expiration day value
+     * @returns {Uint8Array} The generated previous hash
+     * @private
+     */
+    private static generatePreviousHashForGenesisMicroblock(mbType: VirtualBlockchainType, expirationDay = 0) {
+        const genesisSeed = Crypto.Random.getBytes(24);
+
+        const previousHash = Utils.getNullHash();
+        previousHash[0] = mbType;
+        previousHash[1] = expirationDay >> 24;
+        previousHash[2] = expirationDay >> 16;
+        previousHash[3] = expirationDay >> 8;
+        previousHash[4] = expirationDay;
+        previousHash.set(genesisSeed, 8);
+        return previousHash
+    }
+
+    // ------------------------------------------
+    // Instance implementation
+    // ------------------------------------------
 
     /**
      * Represents the price of gas.
@@ -245,25 +315,6 @@ export class Microblock {
         };
     }
 
-    /**
-     * Generates a previous hash value for a genesis microblock.
-     * @param {VirtualBlockchainType} mbType - The type of virtual blockchain
-     * @param {number} expirationDay - The expiration day value
-     * @returns {Uint8Array} The generated previous hash
-     * @private
-     */
-    private static generatePreviousHashForGenesisMicroblock(mbType: VirtualBlockchainType, expirationDay = 0) {
-        const genesisSeed = Crypto.Random.getBytes(24);
-
-        const previousHash = Utils.getNullHash();
-        previousHash[0] = mbType;
-        previousHash[1] = expirationDay >> 24;
-        previousHash[2] = expirationDay >> 16;
-        previousHash[3] = expirationDay >> 8;
-        previousHash[4] = expirationDay;
-        previousHash.set(genesisSeed, 8);
-        return previousHash
-    }
 
     /**
      * Sets the local state updater version.
@@ -312,47 +363,7 @@ export class Microblock {
             this.storeSection(type, object, data);
         }
     }
-    
-    static loadFromSerializedMicroblock(expectedMbType: VirtualBlockchainType, serializedMicroblock: Uint8Array) {
-        const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(serializedMicroblock);
-        return Microblock.loadFromSerializedHeaderAndBody(expectedMbType, serializedHeader, serializedBody);
-    }
 
-    static loadFromSerializedHeaderAndBody(expectedMbType: VirtualBlockchainType, serializedHeader: Uint8Array, serializedBody: Uint8Array): Microblock {
-        const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
-        const mb = new Microblock(expectedMbType);
-        mb.header = header;
-
-
-        // we compute the hash of the microblock being the hash of the serialized header and assign the gas price
-        mb.hash = Crypto.Hashes.sha256AsBinary(serializedHeader);
-        mb.gasPrice = header.gasPrice;
-
-        // we check that the hash of the body is consistent with the body hash contained in the header
-        const computedBodyHash = Crypto.Hashes.sha256AsBinary(serializedBody);
-        const bodyHashContainedInHeader = header.bodyHash;
-        const areBodyHashMatching = Utils.binaryIsEqual(bodyHashContainedInHeader, computedBodyHash)
-        if (!areBodyHashMatching) {
-            const encoder = EncoderFactory.bytesToHexEncoder();
-            throw new CarmentisError(
-                `Body hash in the header is different of the locally computed body hash: header.bodyHash=${encoder.encode(bodyHashContainedInHeader)}, computed=${encoder.encode(computedBodyHash)}`
-            );
-        }
-
-        // parse the body
-        const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY);
-        // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
-        const body = bodyUnserializer.unserialize(serializedBody).body;
-        for (const {type, data} of body) {
-            const sectionSchema = SECTIONS.DEF[expectedMbType][type];
-            const unserializer = new SchemaUnserializer(sectionSchema);
-            const object = unserializer.unserialize(data);
-
-            mb.storeSection(type, object, data);
-        }
-
-        return mb;
-    }
 
 
     /**

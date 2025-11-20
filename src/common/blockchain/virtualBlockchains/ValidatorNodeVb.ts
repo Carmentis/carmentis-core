@@ -8,23 +8,24 @@ import {Microblock} from "../microblock/Microblock";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {ValidatorNodeLocalState} from "../localStates/ValidatorNodeLocalState";
 
-export class ValidatorNodeVb extends VirtualBlockchain {
+export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeLocalState> {
 
 
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------
-    constructor(provider: Provider, private state: ValidatorNodeLocalState = ValidatorNodeLocalState.createInitialState()) {
-        super(provider, VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN, new ValidatorNodeMicroblockStructureChecker());
+    constructor(provider: Provider, state: ValidatorNodeLocalState = ValidatorNodeLocalState.createInitialState()) {
+        super(provider, VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN, state);
     }
 
-    setLocalState(state: ValidatorNodeLocalState) {
-        this.state = state
-    }
-
-    protected async updateLocalState(microblock: Microblock): Promise<void> {
+    protected async updateLocalState(state: ValidatorNodeLocalState, microblock: Microblock): Promise<ValidatorNodeLocalState> {
         const stateUpdater = LocalStateUpdaterFactory.createValidatorNodeLocalStateUpdater(microblock.getLocalStateUpdateVersion());
-        this.state = await stateUpdater.updateState(this.state, microblock)
+        return await stateUpdater.updateState(state, microblock)
+    }
+    
+    protected checkMicroblockStructure(microblock: Microblock): boolean {
+        const checker = new ValidatorNodeMicroblockStructureChecker();
+        return checker.checkMicroblockStructure(microblock);
     }
 
     /**
@@ -99,7 +100,7 @@ export class ValidatorNodeVb extends VirtualBlockchain {
     
 
     async getOrganizationVirtualBlockchain() {
-        const orgId = this.state.getOrganizationId();
+        const orgId = this.localState.getOrganizationId();
         return await this.provider.loadOrganizationVirtualBlockchain(orgId);
     }
 

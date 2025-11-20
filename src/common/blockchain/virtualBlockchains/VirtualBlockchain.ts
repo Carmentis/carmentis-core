@@ -10,6 +10,7 @@ import {Section} from "../../type/Section";
 import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
 import {ThrownErrorMicroblockSearchFailureFallback} from "./fallbacks/ThrownErrorMicroblockSearchFailureFallback";
 import {Height} from "../../type/Height";
+import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -19,9 +20,10 @@ import {Height} from "../../type/Height";
  *
  * This class is intended to be subclassed to implement specific behavior for varied virtual blockchain types.
  */
-export abstract class VirtualBlockchain {
+export abstract class VirtualBlockchain<LocalState = unknown> {
     public static INITIAL_HEIGHT = 1;
 
+    protected localState: LocalState;
     private height: number;
     private identifier: Uint8Array | undefined;
     private microblockHashes: Uint8Array[];
@@ -30,20 +32,55 @@ export abstract class VirtualBlockchain {
     private expirationDay: number;
     private microblockSearchFailureFallback: IMicroblockSearchFailureFallback;
 
-    // TODO: use microblock structure checker
-    private microblockStructureChecker: IMicroblockStructureChecker;
-
-    constructor(provider: Provider, type: VirtualBlockchainType, microblockStructureChecker: IMicroblockStructureChecker) {
-        this.microblockStructureChecker = microblockStructureChecker;
+    constructor(
+        provider: Provider,
+        type: VirtualBlockchainType,
+        localState: LocalState,
+    ) {
+        this.localState = localState;
         this.provider = provider;
-        //this.sectionCallbacks = new Map;
         this.microblockHashes = [];
-        //this.currentMicroblock = null;
         this.type = type;
         this.expirationDay = 0;
         this.height = 0;
         this.microblockSearchFailureFallback = new ThrownErrorMicroblockSearchFailureFallback();
     }
+
+    /**
+     * Validates the structure of the provided microblock to ensure it adheres to the expected format or constraints.
+     *
+     * @param {Microblock} microblock - The microblock object to be validated.
+     * @return {boolean} Returns true if the microblock structure is valid; otherwise, returns false.
+     */
+    protected abstract checkMicroblockStructure(microblock: Microblock): boolean;
+
+    /**
+     * Updates the local state with information from the provided microblock.
+     *
+     * @param {LocalState} state - The current local state that needs to be updated.
+     * @param {Microblock} microblock - The microblock containing new data to update the local state.
+     * @return {Promise<LocalState>} A promise that resolves to the updated local state.
+     */
+    protected abstract updateLocalState(state: LocalState, microblock: Microblock): Promise<LocalState>;
+
+    /**
+     * Retrieves the local state of the current instance.
+     *
+     * @return {LocalState} The local state associated with this instance.
+     */
+    getLocalState(): LocalState {
+        return this.localState;
+    }
+
+    /**
+     * Updates the local state of the component.
+     *
+     * @param {LocalState} localState - The new local state object to be set.
+     * @return {void} Does not return a value.
+     */
+    setLocalState(localState: LocalState): void {
+        this.localState = localState;
+    };
 
     /**
      * This method returns a new microblock which extends the virtual blockchain state.
@@ -84,11 +121,13 @@ export abstract class VirtualBlockchain {
     }
 
     setExpirationDay(day: number) {
-        if(this.height) {
+        if(this.height > 1) {
             throw new Error("The expiration day cannot be changed anymore.");
         }
         this.expirationDay = day;
     }
+
+
 
     /*
     getState(): CustomState {
@@ -258,21 +297,40 @@ export abstract class VirtualBlockchain {
      * @param {Microblock} microblock - The microblock to append.
      * @return {Promise<void>} A promise that resolves once the microblock is appended and the local state is updated.
      */
-    async appendMicroBlock(microblock: Microblock) {
+    async appendMicroBlock(microblock: Microblock): Promise<void> {
         // we first check that the microblock has a valid structure
-        const isValid = this.microblockStructureChecker.checkMicroblockStructure(microblock);
+        const isValid = this.checkMicroblockStructure(microblock);
         if (!isValid) throw new IllegalParameterError("Provided microblock has an invalid structure")
+
+        // TODO update the previous hash of the microblock if possible
+        this.localState = await this.updateLocalState(this.localState, microblock);
 
         // if the current state of the vb is empty (no microblock), then update the identifier
         if (this.isEmpty()) {
             this.identifier = microblock.getHash().toBytes();
         }
 
+        // we update the list of microblock hashes
+        const mbHash = microblock.getHash().toBytes();
+        this.microblockHashes[this.height] = mbHash;
+
+
+
+
+        // we store the microblock
+        const { headerData, bodyData } = microblock.serialize();
+        await this.provider.storeMicroblock(
+            mbHash,
+            this.getIdentifier().toBytes(),
+            this.getType(),
+            this.height,
+            headerData,
+            bodyData
+        )
+
         // we increase the height of the vb
         this.height += 1;
 
-        // TODO update the previous hash of the microblock if possible
-        await this.updateLocalState(microblock);
     }
 
     setMicroblockSearchFailureFallback(fallback: IMicroblockSearchFailureFallback) {
@@ -289,12 +347,15 @@ export abstract class VirtualBlockchain {
     }
 
     /**
-     * Updates the local state with the provided microblock.
+     * Retrieves the expiration day of the object.
      *
-     * @param {Microblock} microblock - The microblock object containing the data to update the local state.
-     * @return {Promise<void>} A promise that resolves when the local state has been successfully updated.
+     * @return {number|string} The expiration day of the object. The type may vary depending on implementation.
      */
-    protected abstract updateLocalState(microblock: Microblock): Promise<void>;
+    getExpirationDay() {
+        return this.expirationDay;
+    }
+
+
 
     /*
     startMicroBlockConstruction() {

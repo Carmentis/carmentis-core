@@ -9,7 +9,7 @@ import {ProtocolLocalState} from "../localStates/ProtocolLocalState";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {Microblock} from "../microblock/Microblock";
 
-export class ProtocolVb extends VirtualBlockchain {
+export class ProtocolVb extends VirtualBlockchain<ProtocolLocalState> {
 
     // ------------------------------------------
     // Static methods
@@ -18,17 +18,18 @@ export class ProtocolVb extends VirtualBlockchain {
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------
-    constructor(provider: Provider, private state: ProtocolLocalState = ProtocolLocalState.createInitialState()) {
-        super(provider, VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN, new ProtocolMicroblockStructureChecker());
+    constructor(provider: Provider, state: ProtocolLocalState = ProtocolLocalState.createInitialState()) {
+        super(provider, VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN, state);
     }
 
-    setLocalState(state: ProtocolLocalState) {
-        this.state = state
+    protected checkMicroblockStructure(microblock: Microblock): boolean {
+        const checker = new ProtocolMicroblockStructureChecker();
+        return checker.checkMicroblockStructure(microblock);
     }
 
-    protected async updateLocalState(microblock: Microblock): Promise<void> {
+    protected async updateLocalState(state:ProtocolLocalState, microblock: Microblock) {
         const localStateUpdater = LocalStateUpdaterFactory.createProtocolLocalStateUpdater(microblock.getLocalStateUpdateVersion());
-        this.state = await localStateUpdater.updateState(this.state, microblock);
+        return localStateUpdater.updateState(state, microblock);
     }
 
     /**
@@ -55,10 +56,10 @@ export class ProtocolVb extends VirtualBlockchain {
 
 
     async getPublicKey(): Promise<PublicSignatureKey> {
-        const keyMicroblock = await this.getMicroblock(this.state.getLocalState().publicKeyHeight);
+        const keyMicroblock = await this.getMicroblock(this.localState.getLocalState().publicKeyHeight);
         const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.PROTOCOL_PUBLIC_KEY).object.publicKey;
         const cryptoFactory = new CryptoSchemeFactory();
-        const signatureSchemeId = this.state.getLocalState().signatureSchemeId;
+        const signatureSchemeId = this.localState.getLocalState().signatureSchemeId;
         const publicKey = cryptoFactory.createPublicSignatureKey(signatureSchemeId, rawPublicKey)
 
         return publicKey;

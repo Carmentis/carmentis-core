@@ -7,27 +7,28 @@ import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {ApplicationMicroblockStructureChecker} from "../structureCheckers/ApplicationMicroblockStructureChecker";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 
-export class ApplicationVb extends VirtualBlockchain {
+export class ApplicationVb extends VirtualBlockchain<ApplicationLocalState> {
     
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------
-    constructor(provider: Provider,  private state: ApplicationLocalState = ApplicationLocalState.createInitialState()) {
-        super(provider, VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN, new ApplicationMicroblockStructureChecker());
-    }
-
-    setLocalState(state: ApplicationLocalState) {
-        this.state = state
+    constructor(provider: Provider,  state: ApplicationLocalState = ApplicationLocalState.createInitialState()) {
+        super(provider, VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN, state);
     }
 
 
-    protected async updateLocalState(microblock: Microblock): Promise<void> {
+    protected async updateLocalState(state: ApplicationLocalState, microblock: Microblock) {
         const localStateUpdater = LocalStateUpdaterFactory.createApplicationLocalStateUpdater(microblock.getLocalStateUpdateVersion());
-        this.state = localStateUpdater.updateState(this.state, microblock);
+        return localStateUpdater.updateState(state, microblock);
+    }
+    
+    protected checkMicroblockStructure(microblock: Microblock): boolean {
+        const checker = new ApplicationMicroblockStructureChecker();
+        return checker.checkMicroblockStructure(microblock);
     }
 
     async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
-        const organizationId = this.state.getOrganizationId();
+        const organizationId = this.localState.getOrganizationId();
         const organization = await this.provider.loadOrganizationVirtualBlockchain(organizationId);
         return await organization.getPublicKey();
     }

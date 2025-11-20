@@ -12,22 +12,24 @@ import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterF
 import {INITIAL_OFFER} from "../../constants/economics";
 import {CMTSToken} from "../../economics/currencies/token";
 
-export class AccountVb extends VirtualBlockchain {
+export class AccountVb extends VirtualBlockchain<AccountLocalState> {
 
-    constructor(provider: Provider, private state: AccountLocalState = AccountLocalState.createInitialState()) {
-        super(provider, VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN, new AccountMicroblockStructureChecker());
+    constructor(provider: Provider, state: AccountLocalState = AccountLocalState.createInitialState()) {
+        super(provider, VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN, state );
     }
 
-    protected async updateLocalState(microblock: Microblock): Promise<void> {
+    protected async updateLocalState(state: AccountLocalState, microblock: Microblock): Promise<AccountLocalState> {
         const localStateUpdater = LocalStateUpdaterFactory.createAccountLocalStateUpdater(
             microblock.getLocalStateUpdateVersion()
         );
-        this.state = await localStateUpdater.updateState(this.state, microblock);
+        return localStateUpdater.updateState(state, microblock);
     }
 
-    setLocalState(localState: AccountLocalState) {
-        this.state = localState;
+    protected checkMicroblockStructure(microblock: Microblock): boolean {
+        const checker = new AccountMicroblockStructureChecker();
+        return checker.checkMicroblockStructure(microblock)
     }
+
 
     /**
      * Retrieves the public key for the current instance of the cryptographic context.
@@ -38,8 +40,8 @@ export class AccountVb extends VirtualBlockchain {
      * @return {Promise<PublicSignatureKey>} A promise that resolves to a public signature key object.
      */
     async getPublicKey() {
-        const publicKeyDeclarationHeight = this.state.getPublicKeyHeight();
-        const schemeId = this.state.getPublicKeySchemeId();
+        const publicKeyDeclarationHeight = this.localState.getPublicKeyHeight();
+        const schemeId = this.localState.getPublicKeySchemeId();
         const mb = await this.getMicroblock(publicKeyDeclarationHeight);
         const section = mb.getAccountPublicKeySection();
         const factory = new CryptoSchemeFactory();

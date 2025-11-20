@@ -9,7 +9,7 @@ import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterF
 import {OrganizationMicroblockStructureChecker} from "../structureCheckers/OrganizationMicroblockStructureChecker";
 import {OrganizationDescriptionSection} from "../../type/sections";
 
-export class OrganizationVb extends VirtualBlockchain {
+export class OrganizationVb extends VirtualBlockchain<OrganizationLocalState> {
 
     // ------------------------------------------
     // Static methods
@@ -22,23 +22,21 @@ export class OrganizationVb extends VirtualBlockchain {
     // Instance implementation
     // ------------------------------------------
 
-    private state: OrganizationLocalState;
-
     constructor(provider: Provider, state: OrganizationLocalState = OrganizationLocalState.createInitialState()) {
-        super(provider, VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN, new OrganizationMicroblockStructureChecker())
-        this.state = state;
+        super(provider, VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN, state)
     }
 
 
 
-    protected async updateLocalState(microblock: Microblock) {
+    protected async updateLocalState(state: OrganizationLocalState, microblock: Microblock) {
         const localStateVersion = microblock.getLocalStateUpdateVersion();
         const localStateUpdater = LocalStateUpdaterFactory.createOrganizationLocalStateUpdater(localStateVersion);
-        this.state = await localStateUpdater.updateState(this.state, microblock);
+        return await localStateUpdater.updateState(state, microblock);
     }
-
-    setLocalState(state: OrganizationLocalState) {
-        this.state = state
+    
+    protected checkMicroblockStructure(microblock: Microblock): boolean {
+        const checker = new OrganizationMicroblockStructureChecker();
+        return checker.checkMicroblockStructure(microblock)
     }
 
     /**
@@ -117,8 +115,8 @@ export class OrganizationVb extends VirtualBlockchain {
      */
 
     async getPublicKey(): Promise<PublicSignatureKey> {
-        const publicKeyDefinitionHeight = this.state.getPublicKeyDefinitionHeight();
-        const publicSignatureKeySchemeId = this.state.getPublicSignatureKeySchemeId();
+        const publicKeyDefinitionHeight = this.localState.getPublicKeyDefinitionHeight();
+        const publicSignatureKeySchemeId = this.localState.getPublicSignatureKeySchemeId();
         const keyMicroblock = await this.getMicroblock(publicKeyDefinitionHeight);
         const section = keyMicroblock.getOrganizationPublicKeySection();
         const rawPublicKey = section.object.publicKey;
@@ -128,7 +126,7 @@ export class OrganizationVb extends VirtualBlockchain {
     }
 
     async getDescription() : Promise<OrganizationDescriptionSection> {
-        const descriptionHeight = this.state.getDescriptionHeight();
+        const descriptionHeight = this.localState.getDescriptionHeight();
         const microblock = await this.getMicroblock(descriptionHeight);
         const section = microblock.getOrganizationDescriptionSection();
         return section.object;

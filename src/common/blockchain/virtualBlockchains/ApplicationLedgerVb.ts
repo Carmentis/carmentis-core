@@ -44,7 +44,7 @@ import {SectionType} from "../../type/SectionType";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {Section} from "../../type/Section";
 
-export class ApplicationLedgerVb extends VirtualBlockchain {
+export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLocalState> {
 
     // ------------------------------------------
     // Static methods
@@ -57,28 +57,35 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------
-    private state: ApplicationLedgerLocalState;
 
     constructor(provider: Provider, state: ApplicationLedgerLocalState = ApplicationLedgerLocalState.createInitialState()) {
-        super(provider, VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN, new ApplicationLedgerMicroblockStructureChecker())
-        this.state = state;
+        super(provider, VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN, state )
     }
     
 
-    protected async updateLocalState(microblock: Microblock): Promise<void> {
+    protected async updateLocalState(state: ApplicationLedgerLocalState, microblock: Microblock) {
         const stateUpdater = LocalStateUpdaterFactory.createApplicationLedgerLocalStateUpdater(microblock.getLocalStateUpdateVersion());
-        this.state = await stateUpdater.updateState(this.state, microblock);
+        return stateUpdater.updateState(this.localState, microblock);
+    }
+    
+    protected checkMicroblockStructure(microblock:Microblock) {
+        const checker = new ApplicationLedgerMicroblockStructureChecker();
+        return checker.checkMicroblockStructure(microblock)
     }
 
 
     setLocalState(state: ApplicationLedgerLocalState) {
-        this.state = state;
+        this.localState = state;
     }
 
 
     actorIsSubscribed(name: string) {
         const actor = this.getActor(name);
         return actor.subscribed;
+    }
+
+    getLocalState() {
+        return this.localState;
     }
 
 
@@ -91,7 +98,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     async getActorIdByPublicSignatureKey(publicKey: PublicSignatureKey): Promise<number> {
         const logger = Logger.getLogger([ApplicationLedgerVb.name]);
 
-        const state = this.state;
+        const state = this.localState;
         const publicKeyBytes = publicKey.getPublicKeyAsBytes();
         for (let actorId = 0; actorId < state.getNumberOfActors(); actorId++) {
             const actor = state.getActorById(actorId);
@@ -147,7 +154,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     async getPublicEncryptionKeyByActorId(actorId: number): Promise<AbstractPublicEncryptionKey> {
         // recover the actor's public encryption key from the virtual blockchain state
         // and ensure that the public encryption key is defined
-        const actor = this.state.getActorById(actorId);
+        const actor = this.localState.getActorById(actorId);
         const actorPublicKeyEncryptionHeightDefinition = actor.pkeKeyHeight;
         const isPkeDefined =
             typeof actorPublicKeyEncryptionHeightDefinition === 'number' &&
@@ -177,7 +184,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
      */
     async getExistingSharedKey(hostId: number, guestId: number): Promise<Uint8Array | undefined> {
         // search the guest actor associated with the provided guest id
-        const guestActor = this.state.getActorById(guestId);
+        const guestActor = this.localState.getActorById(guestId);
 
         // we search in the state the height of the microblock where the (encrypted) shared key is declared
         const sharedSecretFromState = guestActor.sharedSecrets.find(
@@ -242,26 +249,26 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
 
 
     getChannelIdByChannelName(channelName: string) {
-        return this.state.getChannelIdFromChannelName(channelName)
+        return this.localState.getChannelIdFromChannelName(channelName)
     }
 
 
     private getActorNameById(actorId: number) {
-        const actor = this.state.getActorById(actorId);
+        const actor = this.localState.getActorById(actorId);
         return actor.name;
     }
 
     getChannelNameById(channelId: number) {
-        const channel = this.state.getChannelFromChannelId(channelId);
+        const channel = this.localState.getChannelFromChannelId(channelId);
         return channel.name;
     }
 
     getActorIdFromActorName(name: string) {
-        return this.state.getActorIdByName(name);
+        return this.localState.getActorIdByName(name);
     }
 
     getActor(name: string) {
-        return this.state.getActorByName(name);
+        return this.localState.getActorByName(name);
     }
 
 
@@ -279,7 +286,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
      * @return {Hash} The application ID.
      */
     getApplicationId(): Hash {
-        return this.state.getApplicationId();
+        return this.localState.getApplicationId();
     }
 
     /**
@@ -288,7 +295,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
      * @return {number} The number of channels.
      */
     getNumberOfChannels(): number {
-        return this.state.getNumberOfChannels();
+        return this.localState.getNumberOfChannels();
     }
 
     /**
@@ -297,7 +304,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
      * @param {number} channelId - The unique identifier of the channel
      */
     getChannelById(channelId: number) {
-        return this.state.getChannelFromChannelId(channelId);
+        return this.localState.getChannelFromChannelId(channelId);
     }
 
     /**
@@ -306,7 +313,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
      * @return {number} The number of actors.
      */
     getNumberOfActors(): number {
-        return this.state.getNumberOfActors()
+        return this.localState.getNumberOfActors()
     }
 
     private async getMicroblockIntermediateRepresentation(height: number, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey) {
@@ -433,7 +440,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
 
 
         // if the actor id is the creator of the channel, then we have to derive the channel key locally...
-        const state = this.state;
+        const state = this.localState;
         const creatorId = state.getChannelCreatorIdFromChannelId(channelId);
         logger.debug('getChannelKey {data}', () => ({
             data: {
@@ -503,16 +510,16 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
 
 
         // look for an invitation of actorId to channelId and extract the encrypted channel key
-        const actor = this.state.getActorById(actorId);
+        const actor = this.localState.getActorById(actorId);
         const actorOnChannelInvitation = actor.invitations.find(
             (invitation) => invitation.channelId == channelId
         );
 
         // if there is no invitation, then the actor is not allowed, easy
         if (!actorOnChannelInvitation) {
-            const actor = this.state.getActorById(actorId);
+            const actor = this.localState.getActorById(actorId);
             const actorName = actor.name;
-            const channel = this.state.getChannelFromChannelId(channelId);
+            const channel = this.localState.getChannelFromChannelId(channelId);
             const channelName = channel.name;
             throw new ActorNotInvitedError(actorName, channelName);
         }
@@ -556,10 +563,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
     getChannelSpecializedIntermediateRepresentationInstance() {
         const ir = new IntermediateRepresentation;
 
-        const numberOfChannels = this.state.getNumberOfChannels();
+        const numberOfChannels = this.localState.getNumberOfChannels();
 
         for (let channelId = 0; channelId < numberOfChannels; channelId++) {
-            const channel = this.state.getChannelFromChannelId(channelId);
+            const channel = this.localState.getChannelFromChannelId(channelId);
 
             if (channel.isPrivate) {
                 ir.addPrivateChannel(channelId);
@@ -804,7 +811,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
             height: microblock.getHeight()
         })
         const logger = Logger.getLogger();
-        logger.debug("Updated state after channel invitation callback: {state}", {state: this.state})
+        logger.debug("Updated state after channel invitation callback: {state}", {state: this.localState})
     }
 
     async publicChannelDataCallback(microblock: Microblock, section: any) {
@@ -832,7 +839,5 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
 
      */
 
-    getLocalState() {
-        return this.state;
-    }
+
 }

@@ -42,7 +42,7 @@ export class AccountVb extends VirtualBlockchain {
         this.state = await localStateUpdater.updateState(this.state, microblock);
     }
 
-    private setLocalState(localState: AccountLocalState) {
+    setLocalState(localState: AccountLocalState) {
         this.state = localState;
     }
 

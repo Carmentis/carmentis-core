@@ -19,6 +19,8 @@ import {ApplicationLedgerVb} from "../virtualBlockchains/ApplicationLedgerVb";
 
 /**
  * This class is used to parse a serialized microblock.
+ *
+ * @deprecated
  */
 export class MicroblockImporter {
     bodyData: Uint8Array;
@@ -71,9 +73,13 @@ export class MicroblockImporter {
     }
 
     getMicroBlock(): Microblock {
+        throw new Error("Cannot return null microblock.");
+        /*
         const mb = this.vb.currentMicroblock;
         if (mb === null) throw new Error("Cannot return null microblock.");
         return mb;
+
+         */
     }
 
     /**
@@ -250,7 +256,7 @@ export class MicroblockImporter {
             // if the VB exists ...
             if(this.header.height > 1) {
                 // ... load it
-                await this.vb.synchronizeVirtualBlockchain(vbIdentifier);
+                //await this.vb.synchronizeVirtualBlockchain(vbIdentifier);
             }
             else {
                 // otherwise, set its expiration day
@@ -271,7 +277,7 @@ export class MicroblockImporter {
     async importMicroblock() {
         try {
             // attempt to import the microblock
-            await this.vb.importMicroblock(this.headerData, this.bodyData);
+            //await this.vb.appendMicroBlock();
         }
         catch(error) {
             // @ts-expect-error TS(2571): Object is of type 'unknown'.
@@ -289,7 +295,7 @@ export class MicroblockImporter {
             // check the gas
             const mb = this.getMicroBlock();
             const declaredGas = mb.getGas().getAmountAsAtomic();
-            const expectedGas = mb.computeGas();
+            const expectedGas = mb.computeGas().getAmountAsAtomic();
 
             if(declaredGas != expectedGas) {
                 this.setErrorFromErrorMessage(`inconsistent gas value in microblock header (expected ${expectedGas}, got ${declaredGas})`);
@@ -309,7 +315,7 @@ export class MicroblockImporter {
      */
     async store() {
         const vbId = this.vb.getId();
-        await this.provider.storeMicroblock(this.hash, vbId, this.vb.type, this.vb.height, this.headerData, this.bodyData);
-        await this.provider.updateVirtualBlockchainState(vbId, this.vb.type, this.vb.expirationDay, this.vb.height, this.hash, this.vb.state);
+        //await this.provider.storeMicroblock(this.hash, vbId, this.vb.type, this.vb.height, this.headerData, this.bodyData);
+        //await this.provider.updateVirtualBlockchainState(vbId, this.vb.type, this.vb.expirationDay, this.vb.height, this.hash, this.vb.state);
     }
 }

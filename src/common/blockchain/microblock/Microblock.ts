@@ -60,6 +60,7 @@ import {EncoderFactory} from "../../utils/encoder";
 import {Section} from "../../type/Section";
 import {TimestampValidationResult} from "./TimestampValidationResult";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
+import {T} from "cbor2/lib/options-B_2zDXXZ";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -155,6 +156,14 @@ export class Microblock {
         const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
         const mb = new Microblock(expectedMbType);
         mb.header = header;
+
+        // Validate basic header fields
+        if (header.magicString != CHAIN.MAGIC_STRING) {
+            throw new Error(`magic string '${CHAIN.MAGIC_STRING}' is missing`);
+        }
+        if (header.protocolVersion != CHAIN.PROTOCOL_VERSION) {
+            throw new Error(`invalid protocol version (expected ${CHAIN.PROTOCOL_VERSION}, got ${header.protocolVersion})`);
+        }
 
 
         // we compute the hash of the microblock being the hash of the serialized header and assign the gas price
@@ -636,7 +645,7 @@ export class Microblock {
      * VALID if the timestamp is within the range, TOO_FAR_IN_THE_PAST if it's too far in the past,
      * or TOO_FAR_IN_THE_FUTURE if it's too far in the future.
      */
-    isValidTimestamp(referenceTimestamp: number = Utils.getTimestampInSeconds()): TimestampValidationResult {
+    isTemporalyCloseTo(referenceTimestamp: number = Utils.getTimestampInSeconds()): TimestampValidationResult {
         // check if too far in the past
         const isTooFarInPast = this.header.timestamp < referenceTimestamp - CHAIN.MAX_MICROBLOCK_PAST_DELAY;
         if (isTooFarInPast) {
@@ -657,11 +666,25 @@ export class Microblock {
      *
      * @return {boolean} Returns true if the declared gas is equal to the expected gas, otherwise false.
      */
-    isValidGas() {
+    isDeclaringConsistentGas(): boolean {
         const mb = this;
         const declaredGas = mb.getGas().getAmountAsAtomic();
         const expectedGas = mb.computeGas().getAmountAsAtomic();
         return declaredGas === expectedGas;
+    }
+
+    /**
+     * Computes the total fees based on the gas amount and gas price.
+     *
+     * @return {number} The calculated fees as an atomic value.
+     */
+    computeFees() {
+        const gas = this.getGas();
+        const gasPrice = this.getGasPrice();
+        return Math.floor(
+            (gas.getAmountAsAtomic() * gasPrice.getAmountAsAtomic()) /
+            ECO.GAS_UNIT,
+        );
     }
 
     /**
@@ -694,6 +717,23 @@ export class Microblock {
             ...sectionHashes
         );
         return serializedMbForSigning;
+    }
+
+    /**
+     *
+     */
+    hasSection(sectionType: SectionType) {
+        try {
+            this.getSectionByType(sectionType);
+            return true;
+        } catch (e) {
+            if (e instanceof SectionNotFoundError) return false;
+            throw e;
+        }
+    }
+
+    getIndexOfSection(sectionType: SectionType): number {
+        return this.sections.findIndex(section => section.type === sectionType);
     }
 
     /**
@@ -1088,11 +1128,11 @@ export class Microblock {
      *
      * @param {number} type - The type of the section to find.
      * @return {Section} The section object that matches the specified type.
-     * @throws {Error} If no section with the specified type is found.
+     * @throws {SectionNotFoundError} If no section with the specified type is found.
      */
     getSectionByType<T = any>(type: number): Section<T> {
         const section = this.sections.find((section: Section) => section.type === type);
-        if (section === undefined) throw new Error(`Section not found.`);
+        if (section === undefined) throw new SectionNotFoundError();
         return section
     }
     
@@ -1310,5 +1350,19 @@ export class Microblock {
 
     setPreviousHash(previousHash: Hash) {
         this.header.previousHash = previousHash.toBytes()
+    }
+
+    static extractTypeFromGenesisPreviousHash(genesisPreviousHash: Uint8Array) {
+        const type = genesisPreviousHash[0];
+        return type;
+    }
+
+    static extractExpirationDayFromGenesisPreviousHash(genesisPreviousHash: Uint8Array) {
+        const expirationDay =
+            genesisPreviousHash[1] << 24 |
+            genesisPreviousHash[2] << 16 |
+            genesisPreviousHash[3] << 8 |
+            genesisPreviousHash[4];
+        return expirationDay;
     }
 }

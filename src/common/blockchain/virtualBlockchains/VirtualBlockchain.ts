@@ -79,30 +79,7 @@ export abstract class VirtualBlockchain {
     getLastMicroblock(): Promise<Microblock> {
         return this.getMicroblock(this.getHeight())
     }
-
-
-
-    /**
-     * Synchronizes the virtual blockchain state from the provider using the given virtual blockchain identifier.
-     *
-     * @param {Hash} vbId - The identifier of the virtual blockchain to be synchronized.
-     * @return {Promise<void>} Resolves when the virtual blockchain has been successfully synchronized.
-     *                         Throws an error if the virtual blockchain is not found or if the blockchain type is invalid.
-     */
-    protected async synchronizeVirtualBlockchainFromProvider(vbId: Hash) {
-        const identifier = vbId.toBytes()
-        const content = await this.provider.getVirtualBlockchainContent(identifier);
-        if (content === null || content.state === undefined) {
-            throw new VirtualBlockchainNotFoundError(vbId);
-        }
-        // the type is already assigned when creating the virtual blockchain
-        if (content.state.type !== this.getType()) throw new Error("Invalid blockchain type loaded");
-
-        this.setIdentifier(identifier) //this.identifier = identifier;
-        this.setHeight(content.state.height) //this.height = content.state.height;
-        this.setExpirationDay(content.state.expirationDay) //this.expirationDay = content.state.expirationDay;
-        this.setMicroblockHashes(content.microblockHashes) // this.microblockHashes = content.microblockHashes;
-    }
+    
 
     setHeight(height: number) {
         this.height = height;

@@ -60,7 +60,6 @@ import {EncoderFactory} from "../../utils/encoder";
 import {Section} from "../../type/Section";
 import {TimestampValidationResult} from "./TimestampValidationResult";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
-import {T} from "cbor2/lib/options-B_2zDXXZ";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.

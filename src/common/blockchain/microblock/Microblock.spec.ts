@@ -121,5 +121,42 @@ describe('Microblock.verifySignature', () => {
         });
         const signature = mb.sign(sk);
         expect(signature).toBeInstanceOf(Uint8Array)
+        mb.addAccountSignatureSection({ signature });
+        expect(mb.verifySignature(pk, signature)).toBe(true)
+    })
+
+    it("should verify a valid signature for a microblock signed twice", () => {
+        const sk = Secp256k1PrivateSignatureKey.gen();
+        const pk = sk.getPublicKey();
+
+        // create the microblock with a single section
+        const mb = Microblock.createGenesisAccountMicroblock();
+        mb.addAccountPublicKeySection({
+            publicKey: pk.getPublicKeyAsBytes()
+        });
+
+        // sign the microblock a first time
+        const firstSignature = mb.sign(sk);
+        expect(firstSignature).toBeInstanceOf(Uint8Array)
+        mb.addAccountSignatureSection({ signature: firstSignature });
+        expect(mb.verifySignature(pk, firstSignature)).toBe(true)
+
+
+        // sign the microblock a second time
+        const secondSignature = mb.sign(sk);
+        expect(secondSignature).toBeInstanceOf(Uint8Array)
+        mb.addAccountSignatureSection({ signature: secondSignature });
+        expect(mb.verifySignature(pk, firstSignature)).toBe(false)
+        expect(mb.verifySignature(pk, secondSignature)).toBe(true)
+        expect(mb.verifySignature(pk, secondSignature)).toBe(true)
+
+        // pop the last signature
+        expect(mb.getNumberOfSections()).toBe(3)
+        mb.popSection();
+        expect(mb.getNumberOfSections()).toBe(2)
+
+        // verify the signatures
+        expect(mb.verifySignature(pk, firstSignature)).toBe(true)
+        expect(mb.verifySignature(pk, secondSignature)).toBe(false)
     })
 })

@@ -59,6 +59,7 @@ import {CMTSToken} from "../../economics/currencies/token";
 import {EncoderFactory} from "../../utils/encoder";
 import {Section} from "../../type/Section";
 import {TimestampValidationResult} from "./TimestampValidationResult";
+import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -184,6 +185,31 @@ export class Microblock {
         }
 
         return mb;
+    }
+
+    /**
+     * Computes the initial hash for the body by utilizing sections of a microblock.
+     * This method uses an empty array of sections to determine the body hash.
+     *
+     * @return {Uint8Array} The computed hash of the body based on the provided sections.
+     */
+    private static computeInitialBodyHash(): Uint8Array {
+        return Microblock.computeBodyHashFromSections([])
+    }
+
+    private static computeMicroblockHash(header: MicroblockHeaderObject) {
+        const headerData = BlockchainSerializer.serializeMicroblockHeader(header);
+        return Crypto.Hashes.sha256AsBinary(headerData);
+    }
+
+    private static computeBodyHashFromSections(sections: Section[]): Uint8Array {
+        const body = {
+            body: sections.map(({ type, data }) => ({type, data}))
+        };
+        const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
+        const bodyData = bodySerializer.serialize(body);
+        return Crypto.Hashes.sha256AsBinary(bodyData);
+
     }
 
 
@@ -456,7 +482,7 @@ export class Microblock {
         this.sections.push(section);
 
         // we update the body hash and microblock hash
-        this.setGasData(true);
+        //this.setGasData(true); The setGasData method is no more required since we never update
         this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
         this.hash = Microblock.computeMicroblockHash(this.header)
         //const headerData = BlockchainSerializer.serializeMicroblockHeader(this.header);
@@ -470,30 +496,7 @@ export class Microblock {
         return Microblock.computeBodyHashFromSections(this.sections)
     }
 
-    /**
-     * Computes the initial hash for the body by utilizing sections of a microblock.
-     * This method uses an empty array of sections to determine the body hash.
-     *
-     * @return {Uint8Array} The computed hash of the body based on the provided sections.
-     */
-    private static computeInitialBodyHash(): Uint8Array {
-        return Microblock.computeBodyHashFromSections([])
-    }
 
-    private static computeMicroblockHash(header: MicroblockHeaderObject) {
-        const headerData = BlockchainSerializer.serializeMicroblockHeader(header);
-        return Crypto.Hashes.sha256AsBinary(headerData);
-    }
-
-    private static computeBodyHashFromSections(sections: Section[]): Uint8Array {
-        const body = {
-            body: sections.map(({ type, data }) => ({type, data}))
-        };
-        const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
-        const bodyData = bodySerializer.serialize(body);
-        return Crypto.Hashes.sha256AsBinary(bodyData);
-
-    }
 
 
     /**
@@ -598,7 +601,8 @@ export class Microblock {
             signatureSize
         );
 
-        return privateKey.sign(signedData)
+        const signature = privateKey.sign(signedData)
+        return signature
     }
 
     /**
@@ -610,10 +614,12 @@ export class Microblock {
      * @param {number} sectionCount - The number of sections to include in the signed data.
      * @return {boolean} Returns true if the signature is successfully verified; otherwise, returns false.
      */
-    verifySignature(publicKey: any, signature: any, includeGas: boolean, sectionCount: number) {
+    verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas?: boolean, sectionCount?: number) {
+        const shouldIncludeGas = typeof includeGas === 'boolean' ? includeGas : true;
+        const numberOfSectionsToIncludeInSignature = sectionCount || this.sections.length - 1;
         const signedData = this.serializeForSigning(
-            includeGas,
-            sectionCount,
+            shouldIncludeGas,
+            numberOfSectionsToIncludeInSignature,
             0
         );
 
@@ -654,7 +660,7 @@ export class Microblock {
     isValidGas() {
         const mb = this;
         const declaredGas = mb.getGas().getAmountAsAtomic();
-        const expectedGas = mb.computeGas();
+        const expectedGas = mb.computeGas().getAmountAsAtomic();
         return declaredGas === expectedGas;
     }
 
@@ -669,26 +675,35 @@ export class Microblock {
      * @return {Uint8Array} The serialized binary representation of the microblock for signing.
      */
     serializeForSigning(includeGas: boolean, sectionCount?: number, extraBytes: number = 0): Uint8Array {
-        this.setGasData(includeGas, extraBytes);
-
-        const headerData = BlockchainSerializer.serializeMicroblockHeader(this.header);
+        // this.setGasData(includeGas, extraBytes);
+        const signedHeader: MicroblockHeaderObject = {
+            ...this.header,
+            gas: includeGas ? this.computeGas(extraBytes).getAmountAsAtomic() : 0,
+            gasPrice: includeGas ? this.header.gasPrice : 0
+        }
+        const headerData = BlockchainSerializer.serializeMicroblockHeader(signedHeader);
         //const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
         //const headerData = serializer.serialize(this.header);
         const sections = this.sections.slice(0, sectionCount || this.sections.length);
 
         // TODO: find another way
-        return Utils.binaryFrom(
-            headerData.slice(0, SCHEMAS.MICROBLOCK_HEADER_BODY_HASH_OFFSET),
-            ...sections.map((section) => section.hash)
+        const headerHash = headerData.slice(0, SCHEMAS.MICROBLOCK_HEADER_BODY_HASH_OFFSET);
+        const sectionHashes = sections.map((section) => section.hash);
+        const serializedMbForSigning = Utils.binaryFrom(
+            headerHash,
+            ...sectionHashes
         );
+        return serializedMbForSigning;
     }
 
     /**
-     Sets the gas data to either 0 or to their actual values.
+     *
+     *  Sets the gas data to either 0 or to their actual values.
+     *  @deprecated
      */
     setGasData(includeGas: boolean, extraBytes = 0) {
         if (includeGas) {
-            this.header.gas = this.computeGas(extraBytes);
+            this.header.gas = this.computeGas(extraBytes).getAmountAsAtomic();
             this.header.gasPrice = this.gasPrice;
         } else {
             this.header.gas = 0;
@@ -702,7 +717,9 @@ export class Microblock {
             total + section.data.length,
             extraBytes
         );
-        return ECO.FIXED_GAS_FEE + ECO.GAS_PER_BYTE * totalSize;
+        return CMTSToken.createAtomic(
+            ECO.FIXED_GAS_FEE + ECO.GAS_PER_BYTE * totalSize
+        );
     }
 
     computeRetentionPeriod(mbTimestamp: number, expirationDay: number) {
@@ -725,7 +742,11 @@ export class Microblock {
 
 
     /**
-     Adds a section of a given type and defined by a given object.
+     * Adds a new section of the specified type, serializes the provided object, and stores it.
+     *
+     * @param {SectionType} type - The type of the section to be added.
+     * @param {any} object - The data object to be serialized and added as a section.
+     * @return {Section} The newly created and stored section.
      */
     addSection(type: SectionType, object: any): Section {
         const sectionSchema = SECTIONS.DEF[this.type][type];
@@ -733,6 +754,26 @@ export class Microblock {
         const data = serializer.serialize(object);
 
         return this.storeSection(type, object, data);
+    }
+
+    /**
+     * Removes and returns the last section from the sections stack.
+     * Throws an IllegalStateError if there are no sections to pop.
+     *
+     * @return {Section} The last section removed from the sections stack.
+     * @throws {IllegalStateError} If the sections stack is empty.
+     */
+    popSection(): Section {
+        // attempt to pop the last section
+        const removedSection = this.sections.pop();
+        if (this.getNumberOfSections() == 0 || removedSection === undefined)
+            throw new IllegalStateError("Cannot pop section from empty microblock");
+
+        // update the microblock state
+        this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
+        this.hash = Microblock.computeMicroblockHash(this.header)
+
+        return removedSection
     }
 
     /**

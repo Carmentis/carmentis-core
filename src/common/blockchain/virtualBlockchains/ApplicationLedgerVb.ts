@@ -44,11 +44,11 @@ import {Hash} from "../../entities/Hash";
 import {ActorType} from "../../constants/ActorType";
 import {Height} from "../../type/Height";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
-import {StateUpdateRequest} from "../../type/StateUpdateRequest";
+import {AppLedgerStateUpdateRequest} from "../../type/AppLedgerStateUpdateRequest";
 import {SchemaValidator} from "../../data/schemaValidator";
 import {SectionType} from "../../type/SectionType";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
-import {ApplicationLedgerWorkingEnv} from "./ApplicationLedgerWorkingEnv";
+import {ApplicationLedgerMicroblockBuilder} from "./ApplicationLedgerMicroblockBuilder";
 import {Section} from "../../type/Section";
 
 export class ApplicationLedgerVb extends VirtualBlockchain {
@@ -83,7 +83,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain {
      * This method should be used to
      */
     createWorkingEnv() {
-        return ApplicationLedgerWorkingEnv.createNewMicroblockFromVirtualBlockchain(this);
+        return ApplicationLedgerMicroblockBuilder.createNewMicroblockFromVirtualBlockchain(this);
     }
 
     protected async updateLocalState(microblock: Microblock): Promise<void> {

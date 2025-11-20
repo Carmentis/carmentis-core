@@ -29,6 +29,11 @@ export class ValidatorNodeVb extends VirtualBlockchain {
         return vb;
     }
 
+    static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
+        const signature = microblock.sign(privateSignatureKey, true);
+        microblock.addValidatorNodeSignatureSection({ signature });
+    }
+
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------

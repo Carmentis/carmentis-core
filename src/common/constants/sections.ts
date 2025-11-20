@@ -173,7 +173,7 @@ export const VN_SIG_SCHEME          = SectionType.VN_SIG_SCHEME;
 export const VN_DECLARATION         = SectionType.VN_DECLARATION;
 export const VN_DESCRIPTION         = SectionType.VN_DESCRIPTION;
 export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
-export const VN_NETWORK_INTEGRATION = SectionType.VN_NETWORK_INTEGRATION;
+export const VN_VOTING_POWER_UPDATE = SectionType.VN_VOTING_POWER_UPDATE;
 export const VN_SIGNATURE           = SectionType.VN_SIGNATURE;
 
 const VALIDATOR_NODE: Schema[] = [] as const;
@@ -207,7 +207,7 @@ VALIDATOR_NODE[VN_RPC_ENDPOINT] = {
   ]
 };
 
-VALIDATOR_NODE[VN_NETWORK_INTEGRATION] = {
+VALIDATOR_NODE[VN_VOTING_POWER_UPDATE] = {
   label: 'VN_NETWORK_INTEGRATION',
   definition: [
     { name: 'votingPower', type: DATA.TYPE_UINT48 }

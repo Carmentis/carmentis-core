@@ -352,9 +352,9 @@ export interface ValidatorNodeRpcEndpointSection {
 }
 
 /**
- * @see {VN_NETWORK_INTEGRATION}
+ * @see {VN_VOTING_POWER_UPDATE}
  */
-export interface ValidatorNodeNetworkIntegrationSection {
+export interface ValidatorNodeVotingPowerUpdateSection {
     votingPower: number
 }
 

@@ -47,7 +47,7 @@ import {
     ProtocolSigSchemeSection,
     ValidatorNodeDeclarationSection,
     ValidatorNodeDescriptionSection,
-    ValidatorNodeNetworkIntegrationSection,
+    ValidatorNodeVotingPowerUpdateSection,
     ValidatorNodeRpcEndpointSection,
     ValidatorNodeSignatureSection,
     ValidatorNodeSigSchemeSection
@@ -505,7 +505,13 @@ export class Microblock {
         const headerData = headerSerializer.serialize(this.header);
         const microblockHash = Crypto.Hashes.sha256AsBinary(headerData);
 
-        return {microblockHash, headerData, bodyHash, bodyData};
+        const microblockData = BlockchainSerializer.serializeMicroblockSerializedHeaderAndBody(
+            headerData,
+            bodyData
+        )
+
+
+        return {microblockHash, headerData, bodyHash, bodyData, microblockData};
     }
 
 
@@ -572,7 +578,7 @@ export class Microblock {
      * @param {boolean} includeGas - A flag indicating whether gas-related data should be included in the signature.
      * @return {Uint8Array} The generated digital signature as a byte array.
      */
-    createSignature(privateKey: PrivateSignatureKey, includeGas: boolean): Uint8Array {
+    sign(privateKey: PrivateSignatureKey, includeGas: boolean = true): Uint8Array {
         const signatureSize = privateKey.getSignatureSize()
         const signedData = this.serializeForSigning(
             includeGas,
@@ -846,8 +852,8 @@ export class Microblock {
     /**
      * Adds a validator node network integration section.
      */
-    addValidatorNodeNetworkIntegrationSection(object: ValidatorNodeNetworkIntegrationSection) {
-        return this.addSection(SectionType.VN_NETWORK_INTEGRATION, object);
+    addValidatorNodeVotingPowerUpdateSection(object: ValidatorNodeVotingPowerUpdateSection) {
+        return this.addSection(SectionType.VN_VOTING_POWER_UPDATE, object);
     }
 
     /**
@@ -1095,7 +1101,7 @@ export class Microblock {
     }
 
     getValidatorNodeNetworkIntegrationSection() {
-        return this.getSectionByType<ValidatorNodeNetworkIntegrationSection>(SectionType.VN_NETWORK_INTEGRATION);
+        return this.getSectionByType<ValidatorNodeVotingPowerUpdateSection>(SectionType.VN_VOTING_POWER_UPDATE);
     }
 
     getValidatorNodeSignatureSection() {
@@ -1209,5 +1215,9 @@ export class Microblock {
      */
     getType(): VirtualBlockchainType {
         return this.type;
+    }
+
+    setPreviousHash(previousHash: Hash) {
+        this.header.previousHash = previousHash.toBytes()
     }
 }

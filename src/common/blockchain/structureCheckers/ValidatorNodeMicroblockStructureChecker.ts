@@ -27,7 +27,7 @@ export class ValidatorNodeMicroblockStructureChecker implements IMicroblockStruc
                     [
                         [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ],
                         [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_RPC_ENDPOINT ],
-                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_NETWORK_INTEGRATION ]
+                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_VOTING_POWER_UPDATE ]
                     ]
             );
             checker.expects(SECTIONS.ONE, SECTIONS.VN_SIGNATURE);

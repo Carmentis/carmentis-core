@@ -25,6 +25,12 @@ export class ProtocolVb extends VirtualBlockchain {
         return vb;
     }
 
+
+    static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
+        const signature = microblock.sign(privateSignatureKey, true);
+        microblock.addProtocolSignatureSection({ signature });
+    }
+
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------

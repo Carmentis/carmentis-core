@@ -5,6 +5,7 @@ import {Provider} from "../../providers/Provider";
 import {Hash} from "../../entities/Hash";
 import {CMTSToken} from "../../economics/currencies/token";
 import {
+    IllegalParameterError,
     IllegalStateError,
     InternalError,
     MicroBlockNotFoundInVirtualBlockchainAtHeightError,
@@ -16,6 +17,9 @@ import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {IMicroblockStructureChecker} from "../structureCheckers/IMicroblockStructureChecker";
 import {EncoderFactory} from "../../utils/encoder";
 import {Section} from "../../type/Section";
+import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
+import {ThrownErrorMicroblockSearchFailureFallback} from "./fallbacks/ThrownErrorMicroblockSearchFailureFallback";
+import {Height} from "../../type/Height";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -34,6 +38,9 @@ export abstract class VirtualBlockchain {
     provider: Provider;
     private type: number;
     private expirationDay: number;
+    private microblockSearchFailureFallback: IMicroblockSearchFailureFallback;
+
+    // TODO: use microblock structure checker
     private microblockStructureChecker: IMicroblockStructureChecker;
 
     constructor(provider: Provider, type: VirtualBlockchainType, microblockStructureChecker: IMicroblockStructureChecker) {
@@ -45,6 +52,32 @@ export abstract class VirtualBlockchain {
         this.type = type;
         this.expirationDay = 0;
         this.height = 0;
+        this.microblockSearchFailureFallback = new ThrownErrorMicroblockSearchFailureFallback();
+    }
+
+    /**
+     * This method returns a new microblock which extends the virtual blockchain state.
+     *
+     * The returned microblock is not added to the list of microblocks contained in the virtual blockchain
+     * but is updated to match the current state of the virtual blockchain.
+     *
+     * When the virtual blockchain is empty, the returned microblock is a genesis one.
+     */
+    async createMicroblock() {
+        // easy case where the virtual blockchain is empty: we create and return a new microblock
+        if (this.isEmpty()) return new Microblock(this.type)
+
+        // otherwise, we have to create a new microblock and update its state to match the current state
+        // of the virtual blockchain.
+        const lastMicroblock = await this.getLastMicroblock();
+        const extendingMicroblock = new Microblock(this.type);
+        extendingMicroblock.setPreviousHash(lastMicroblock.getHash());
+        extendingMicroblock.setHeight(this.getHeight() + 1);
+        return extendingMicroblock;
+    }
+
+    getLastMicroblock(): Promise<Microblock> {
+        return this.getMicroblock(this.getHeight())
     }
 
 
@@ -63,13 +96,24 @@ export abstract class VirtualBlockchain {
             throw new VirtualBlockchainNotFoundError(vbId);
         }
         // the type is already assigned when creating the virtual blockchain
-        if (content.state.type !== this.type) throw new Error("Invalid blockchain type loaded");
+        if (content.state.type !== this.getType()) throw new Error("Invalid blockchain type loaded");
 
+        this.setIdentifier(identifier) //this.identifier = identifier;
+        this.setHeight(content.state.height) //this.height = content.state.height;
+        this.setExpirationDay(content.state.expirationDay) //this.expirationDay = content.state.expirationDay;
+        this.setMicroblockHashes(content.microblockHashes) // this.microblockHashes = content.microblockHashes;
+    }
 
+    setHeight(height: number) {
+        this.height = height;
+    }
+
+    setIdentifier(identifier: Uint8Array) {
         this.identifier = identifier;
-        this.height = content.state.height;
-        this.expirationDay = content.state.expirationDay;
-        this.microblockHashes = content.microblockHashes;
+    }
+
+    setMicroblockHashes(microblockHashes: Uint8Array[]) {
+        this.microblockHashes = microblockHashes;
     }
 
     setExpirationDay(day: number) {
@@ -179,15 +223,27 @@ export abstract class VirtualBlockchain {
     /**
      * Retrieves the microblock based on the given height.
      *
-     * @param {number} height - The height of the microblock to retrieve.
+     * @param {Height} height - The height of the microblock to retrieve.
      * @return {Promise<Microblock>} A promise that resolves to the requested Microblock instance.
      * @throws {MicroBlockNotFoundInVirtualBlockchainAtHeightError} If the microblock is not found at the specified height.
      * @throws {Error} If the microblock information cannot be loaded.
      */
-    async getMicroblock(height: number): Promise<Microblock> {
-        // retrieve the hash of the microblock from its height
+    async getMicroblock(height: Height): Promise<Microblock> {
+        // if the provided height is strictly lower then we raise an error
+        if (height < 1) throw new IllegalParameterError(`Cannot retrieve microblock at height strictly lower than 1: got ${height}`);
+
+        // in case the asked height is strictly highest than the current height, we call the fallback method
+        // because it might be to access a block not contained in the virtual blockchain but under construction.
+        const currentVbHeight = this.getHeight();
+        if (currentVbHeight < height) return await this.microblockSearchFailureFallback.onMicroblockSearchFailureForExceedingHeight(
+            this,
+            height
+        );
+
+        // otherwise, the height is within the virtual blockchain range, we can safely retrieve the microblock
         const hash = this.microblockHashes[height - 1];
-        if (!(hash instanceof Uint8Array)) {
+        const isValidHashType = hash instanceof Uint8Array;
+        if (!isValidHashType) {
             throw new MicroBlockNotFoundInVirtualBlockchainAtHeightError(this.getIdentifier(), height);
         }
 
@@ -236,17 +292,24 @@ export abstract class VirtualBlockchain {
      * @return {Promise<void>} A promise that resolves once the microblock is appended and the local state is updated.
      */
     async appendMicroBlock(microblock: Microblock) {
+        // we first check that the microblock has a valid structure
+        const isValid = this.microblockStructureChecker.checkMicroblockStructure(microblock);
+        if (!isValid) throw new IllegalParameterError("Provided microblock has an invalid structure")
+
         // if the current state of the vb is empty (no microblock), then update the identifier
         if (this.isEmpty()) {
             this.identifier = microblock.getHash().toBytes();
         }
-
 
         // we increase the height of the vb
         this.height += 1;
 
         // TODO update the previous hash of the microblock if possible
         await this.updateLocalState(microblock);
+    }
+
+    setMicroblockSearchFailureFallback(fallback: IMicroblockSearchFailureFallback) {
+        this.microblockSearchFailureFallback = fallback;
     }
 
     /**

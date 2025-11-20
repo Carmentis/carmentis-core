@@ -27,6 +27,11 @@ export class ApplicationVb extends VirtualBlockchain {
         return vb;
     }
 
+    static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
+        const signature = microblock.sign(privateSignatureKey, true);
+        microblock.addApplicationSignatureSection({ signature });
+    }
+
     static createOrganizationVirtualBlockchain(provider: Provider) {
         return new OrganizationVb(provider);
     }

@@ -22,7 +22,7 @@ export enum SectionType {
     VN_DECLARATION = 33,
     VN_DESCRIPTION = 34,
     VN_RPC_ENDPOINT = 35,
-    VN_NETWORK_INTEGRATION = 36,
+    VN_VOTING_POWER_UPDATE = 36,
     VN_SIGNATURE = 37,
 
     // Organization

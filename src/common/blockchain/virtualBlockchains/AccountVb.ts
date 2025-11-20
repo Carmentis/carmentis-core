@@ -15,9 +15,21 @@ import { Microblock } from "../microblock/Microblock";
 import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {INITIAL_OFFER} from "../../constants/economics";
 import {CMTSToken} from "../../economics/currencies/token";
+import {Hash} from "../../entities/Hash";
+import {ApplicationVb} from "./ApplicationVb";
 
 export class AccountVb extends VirtualBlockchain {
 
+    // ------------------------------------------
+    // Static methods
+    // ------------------------------------------
+    static async loadAccountVirtualBlockchain(provider: Provider, accountId: Hash) {
+        const vb = new AccountVb(provider);
+        await vb.synchronizeVirtualBlockchainFromProvider(accountId);
+        const state = await provider.getAccountLocalStateFromId(accountId)
+        vb.setLocalState(state);
+        return vb;
+    }
 
     constructor(provider: Provider, private state: AccountLocalState = AccountLocalState.createInitialState()) {
         super(provider, VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN, new AccountMicroblockStructureChecker());
@@ -28,6 +40,10 @@ export class AccountVb extends VirtualBlockchain {
             microblock.getLocalStateUpdateVersion()
         );
         this.state = await localStateUpdater.updateState(this.state, microblock);
+    }
+
+    private setLocalState(localState: AccountLocalState) {
+        this.state = localState;
     }
 
     /**
@@ -115,6 +131,11 @@ export class AccountVb extends VirtualBlockchain {
             amount: INITIAL_OFFER
         })
         return microblock;
+    }
+
+    static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
+        const signature = microblock.sign(privateSignatureKey, true);
+        microblock.addAccountSignatureSection({ signature });
     }
 
 

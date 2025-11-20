@@ -12,6 +12,7 @@ import {
     OrganizationMicroblockStructureChecker
 } from "../structureCheckers/OrganizationMicroblockStructureChecker";
 import {OrganizationDescriptionSection} from "../../type/sections";
+import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 
 export class OrganizationVb extends VirtualBlockchain {
 
@@ -28,6 +29,11 @@ export class OrganizationVb extends VirtualBlockchain {
 
     static createOrganizationVirtualBlockchain(provider: Provider) {
         return new OrganizationVb(provider);
+    }
+
+    static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
+        const signature = microblock.sign(privateSignatureKey, true);
+        microblock.addOrganizationSignatureSection({ signature });
     }
 
     // ------------------------------------------

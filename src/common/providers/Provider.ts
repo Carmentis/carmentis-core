@@ -349,7 +349,7 @@ export class Provider {
         );
     }
 
-    async getAccountOrganizationLocalStateFromId(accountId: Hash) {
+    async getAccountLocalStateFromId(accountId: Hash) {
         return AccountLocalState.createFromLocalState(
             await this.getVirtualBlockchainLocalStateFromId<AccountVBState>(accountId)
         )
@@ -366,6 +366,8 @@ export class Provider {
             await this.getVirtualBlockchainLocalStateFromId<ApplicationVBState>(applicationId)
         )
     }
+
+
 
     async getProtocolLocalStateFromId(protocolId: Hash) {
         return ProtocolLocalState.createFromLocalState(

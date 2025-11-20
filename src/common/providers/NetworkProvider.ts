@@ -27,8 +27,10 @@ import {IExternalProvider} from "./IExternalProvider";
 
 export class NetworkProvider implements IExternalProvider {
     private logger = Logger.getNetworkProviderLogger();
+    private static staticLogger = Logger.getNetworkProviderLogger();
     nodeUrl: string;
     constructor(nodeUrl: string) {
+        this.logger.debug(`NetworkProvider constructor -> nodeUrl: ${nodeUrl}`);
         try {
             new URL(nodeUrl);
         }
@@ -36,6 +38,7 @@ export class NetworkProvider implements IExternalProvider {
             throw new Error(`invalid node URL`);
         }
         this.nodeUrl = nodeUrl;
+        this.logger.debug(`NetworkProvider constructor <- initialized`);
     }
 
     async sendSerializedMicroblock(headerData: any, bodyData: any) {
@@ -58,54 +61,65 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getChainInformation() {
+        this.logger.debug(`getChainInformation -> requesting chain information`);
         const answer = await this.abciQuery<ChainInformationDTO>(
             SCHEMAS.MSG_GET_CHAIN_INFORMATION,
             {}
         );
+        this.logger.debug(`getChainInformation <- received chain information`);
         return answer;
     }
 
     async getBlockInformation(height: number) {
+        this.logger.debug(`getBlockInformation -> height: ${height}`);
         const answer = await this.abciQuery<BlockInformationDTO>(
             SCHEMAS.MSG_GET_BLOCK_INFORMATION,
             {
                 height
             }
         );
+        this.logger.debug(`getBlockInformation <- received block information for height ${height}`);
         return answer;
     }
 
     async getBlockContent(height: number) {
+        this.logger.debug(`getBlockContent -> height: ${height}`);
         const answer = await this.abciQuery<BlockContentDTO>(
             SCHEMAS.MSG_GET_BLOCK_CONTENT,
             {
                 height
             }
         );
+        this.logger.debug(`getBlockContent <- received block content for height ${height}`);
         return answer;
     }
 
     async getValidatorNodeByAddress(address: Uint8Array) {
+        this.logger.debug(`getValidatorNodeByAddress -> address: ${Utils.binaryToHexa(address)}`);
         const answer = await this.abciQuery<ValidatorNodeDTO>(
             SCHEMAS.MSG_GET_VALIDATOR_NODE_BY_ADDRESS,
             {
                 address
             }
         );
+        this.logger.debug(`getValidatorNodeByAddress <- received validator node data`);
         return answer;
     }
 
     async getAccountState(accountHash: Uint8Array) {
+        this.logger.debug(`getAccountState -> accountHash: ${Utils.binaryToHexa(accountHash)}`);
         const answer = await this.abciQuery<AccountStateDTO>(
             SCHEMAS.MSG_GET_ACCOUNT_STATE,
             {
                 accountHash
             }
         );
+        this.logger.debug(`getAccountState <- received account state`);
         return answer;
     }
 
     async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number) {
+        this.logger.debug(`getAccountHistory -> accountHash: ${Utils.binaryToHexa(accountHash)}, lastHistoryHash: ${Utils.binaryToHexa(lastHistoryHash)}, maxRecords: ${maxRecords}`);
         const answer = await this.abciQuery<AccountHistoryInterface>(
             SCHEMAS.MSG_GET_ACCOUNT_HISTORY,
             {
@@ -114,50 +128,62 @@ export class NetworkProvider implements IExternalProvider {
                 maxRecords
             }
         );
+        this.logger.debug(`getAccountHistory <- received account history`);
         return answer;
     }
 
     async getAccountByPublicKeyHash(publicKeyHash: Uint8Array) {
+        this.logger.debug(`getAccountByPublicKeyHash -> publicKeyHash: ${Utils.binaryToHexa(publicKeyHash)}`);
         const answer = await this.abciQuery<AccountHash>(
             SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
             {
                 publicKeyHash
             }
         );
+        this.logger.debug(`getAccountByPublicKeyHash <- received account hash {accountHash}`, () => ({
+            accountHash: Utils.binaryToHexa(answer.accountHash)
+        }));
         return AccountHashSchema.parse(answer);
     }
 
     async getObjectList(type: number) {
+        this.logger.debug(`getObjectList -> type: ${type}`);
         const answer = await this.abciQuery<ObjectList>(
             SCHEMAS.MSG_GET_OBJECT_LIST,
             {
                 type
             }
         );
+        this.logger.debug(`getObjectList <- received object list (${answer.list.length} elements)`);
         return answer;
     }
 
     async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema | null>  {
+        this.logger.debug(`getMicroblockInformation -> hash: ${Utils.binaryToHexa(hash)}`);
         const answer = await this.abciQuery<MicroblockInformationSchema>(
             SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
             {
                 hash
             }
         );
+        this.logger.debug(`getMicroblockInformation <- received microblock information`);
         return answer;
     }
 
     async getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroBlockBodys | null>  {
+        this.logger.debug(`getMicroblockBodys -> ${hashes.length} hashes: [${hashes.map(h => Utils.binaryToHexa(h)).join(', ')}]`);
         const answer = await this.abciQuery<MicroBlockBodys>(
             SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
             {
                 hashes
             }
         );
+        this.logger.debug(`getMicroblockBodys <- received microblock bodies (${answer.list.length} elements)`);
         return answer;
     }
 
     async getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number) {
+        this.logger.debug(`getVirtualBlockchainUpdate -> virtualBlockchainId: ${Utils.binaryToHexa(virtualBlockchainId)}, knownHeight: ${knownHeight}`);
         const answer = await this.abciQuery<VirtualBlockchainUpdateInterface>(
             SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE,
             {
@@ -165,16 +191,20 @@ export class NetworkProvider implements IExternalProvider {
                 knownHeight
             }
         );
+        this.logger.debug(`getVirtualBlockchainUpdate <- received virtual blockchain update`);
         return answer;
     }
 
     async getVirtualBlockchainState(virtualBlockchainId: any) {
+        const idStr = virtualBlockchainId instanceof Uint8Array ? Utils.binaryToHexa(virtualBlockchainId) : String(virtualBlockchainId);
+        this.logger.debug(`getVirtualBlockchainState -> virtualBlockchainId: ${idStr}`);
         const answer = await this.abciQuery<MsgVirtualBlockchainState>(
             SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_STATE,
             {
                 virtualBlockchainId
             }
         );
+        this.logger.debug(`getVirtualBlockchainState <- received virtual blockchain state`);
         return answer;
     }
 
@@ -256,6 +286,7 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     static async sendABCIQueryToNodeServer<T = object>(msgId: any, msgData: any, nodeUrl: string): Promise<T> {
+        NetworkProvider.staticLogger.debug(`sendABCIQueryToNodeServer -> msgId: ${msgId}, nodeUrl: ${nodeUrl}`);
         const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
         const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
         const data = serializer.serialize(msgId, msgData);
@@ -279,29 +310,37 @@ export class NetworkProvider implements IExternalProvider {
         const { type, object } = unserializer.unserialize(binary);
 
         if(type == SCHEMAS.MSG_ERROR) {
-            // @ts-expect-error TS(2339): Property 'error' does not exist on type '{}'.... Remove this comment to see the full error message
-            throw new NodeError(`Remote error: ${object.error}`);
+            const errorMsg = (object as any).error;
+            NetworkProvider.staticLogger.debug(`sendABCIQueryToNodeServer <- error: ${errorMsg}`);
+            throw new NodeError(`Remote error: ${errorMsg}`);
         }
 
+        NetworkProvider.staticLogger.debug(`sendABCIQueryToNodeServer <- received response for msgId: ${msgId}`);
         return object as T;
     }
 
     static async sendStatusQueryToNodeServer(nodeUrl: string) {
+        NetworkProvider.staticLogger.debug(`sendStatusQueryToNodeServer -> nodeUrl: ${nodeUrl}`);
         const urlObject = new URL(nodeUrl);
         urlObject.pathname = "status";
         const data  = await NetworkProvider.query(urlObject) as any;
         const parsingResult = RPCNodeStatusResponseSchema.safeParse(data);
         if (parsingResult.success) {
+            NetworkProvider.staticLogger.debug(`sendStatusQueryToNodeServer <- received valid status response`);
             return parsingResult.data;
         }
+        NetworkProvider.staticLogger.debug(`sendStatusQueryToNodeServer <- parsing error: ${parsingResult.error.message}`);
         throw new NodeError(parsingResult.error.message);
     }
 
     async getGenesisSnapshot(): Promise<GenesisSnapshotDTO> {
-        return NetworkProvider.sendABCIQueryToNodeServer(
+        this.logger.debug(`getGenesisSnapshot -> requesting genesis snapshot`);
+        const result = await NetworkProvider.sendABCIQueryToNodeServer<GenesisSnapshotDTO>(
             SCHEMAS.MSG_GET_GENESIS_SNAPSHOT,
             {},
             this.nodeUrl
-        )
+        );
+        this.logger.debug(`getGenesisSnapshot <- received genesis snapshot`);
+        return result;
     }
 }

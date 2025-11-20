@@ -31,11 +31,6 @@ export class OrganizationVb extends VirtualBlockchain {
         return new OrganizationVb(provider);
     }
 
-    static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
-        const signature = microblock.sign(privateSignatureKey, true);
-        microblock.addOrganizationSignatureSection({ signature });
-    }
-
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------

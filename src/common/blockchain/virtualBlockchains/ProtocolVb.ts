@@ -17,13 +17,6 @@ export class ProtocolVb extends VirtualBlockchain {
     // ------------------------------------------
     // Static methods
     // ------------------------------------------
-    static async loadProtocolVirtualBlockchain(provider: Provider, protocolId: Hash) {
-        const vb = new ProtocolVb(provider);
-        await vb.synchronizeVirtualBlockchainFromProvider(protocolId);
-        const state = await provider.getProtocolLocalStateFromId(protocolId)
-        vb.setLocalState(state);
-        return vb;
-    }
 
 
     static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {

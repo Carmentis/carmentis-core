@@ -8,7 +8,7 @@ import {SignatureEncoderInterface} from "./signature/SignatureEncoderInterface";
 
 export class CryptoEncoderFactory {
     static defaultStringSignatureEncoder(): SignatureEncoderInterface<string> {
-        return new HCVSignatureEncoder(EncoderFactory.defaultBytesToStringEncoder());;
+        return new HCVSignatureEncoder(EncoderFactory.defaultBytesToStringEncoder());
     } 
 
     static defaultStringPublicKeyEncryptionEncoder(): PkeEncoderInterface {

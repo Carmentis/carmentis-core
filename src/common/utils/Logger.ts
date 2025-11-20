@@ -5,6 +5,14 @@ export class Logger {
         return getLogger(["@cmts-dev/carmentis-sdk", ...context])
     }
 
+    static getProviderLogger() {
+        return this.getLogger()
+    }
+
+    static getMemoryProviderLogger() {
+        return this.getLogger()
+    }
+
     static async enableLogs() {
         await configure({
             sinks: { console: getConsoleSink() },
@@ -12,5 +20,9 @@ export class Logger {
                 { category: "@cmts-dev/carmentis-sdk", lowestLevel: "debug", sinks: ["console"] }
             ]
         });
+    }
+
+    static getNetworkProviderLogger() {
+        return this.getLogger()
     }
 }

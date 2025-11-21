@@ -3,9 +3,23 @@ import {ProviderFactory} from "../../providers/ProviderFactory";
 import {Microblock} from "../microblock/Microblock";
 import {Secp256k1PrivateSignatureKey, Secp256k1PublicSignatureKey} from "../../crypto/signature/secp256k1";
 import {Utils} from "../../utils/utils";
+import {configure, getConsoleSink} from "@logtape/logtape";
+
+
+beforeAll(async () => {
+    await configure({
+        sinks: { console: getConsoleSink() },
+        loggers: [
+            { category: 'microblock', lowestLevel: 'debug', sinks: ['console']  }
+        ]
+    })
+})
 
 describe("virtualBlockchain.appendMicroblock", () => {
     it('should correctly add a microblock', async () => {
+
+
+
         const provider = ProviderFactory.createInMemoryProvider();
         const accountVb = new AccountVb(provider);
         expect(accountVb.isEmpty()).toBeTruthy();

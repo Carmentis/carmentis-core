@@ -122,6 +122,8 @@ export * from "./errors/type-checking-failure-error";
 export * from "./network/network";
 export * from "./providers/ABCINodeUnauthenticatedBlockchainClient";
 export * from "./providers/ExpirationDate";
+export * from "./providers/IExternalProvider";
+export * from "./providers/IInternalProvider";
 export * from "./providers/KeyedProvider";
 export * from "./providers/MemoryProvider";
 export * from "./providers/NetworkProvider";

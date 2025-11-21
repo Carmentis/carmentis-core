@@ -60,6 +60,7 @@ import {EncoderFactory} from "../../utils/encoder";
 import {Section} from "../../type/Section";
 import {TimestampValidationResult} from "./TimestampValidationResult";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
+import {Logger} from "../../utils/Logger";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -240,6 +241,11 @@ export class Microblock {
         previousHash.set(genesisSeed, 8);
         return previousHash
     }
+
+    /**
+     * Represents an instance of a logger used for microblock-level logging.
+     */
+    private static logger = Logger.getMicroblockLogger();
 
     // ------------------------------------------
     // Instance implementation
@@ -788,6 +794,10 @@ export class Microblock {
      * @return {Section} The newly created and stored section.
      */
     addSection(type: SectionType, object: any): Section {
+        Microblock.logger.debug("Adding section of type {type} to microblock: {object}", () => ({
+            type,
+            object
+        }))
         const sectionSchema = SECTIONS.DEF[this.type][type];
         const serializer = new SchemaSerializer(sectionSchema);
         const data = serializer.serialize(object);

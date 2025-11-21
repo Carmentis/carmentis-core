@@ -6,7 +6,7 @@ export class Logger {
     }
 
     static getProviderLogger() {
-        return this.getLogger()
+        return this.getLogger(['provider'])
     }
 
     static getMemoryProviderLogger() {
@@ -23,6 +23,10 @@ export class Logger {
     }
 
     static getNetworkProviderLogger() {
-        return this.getLogger()
+        return this.getLogger(['provider', 'network'])
+    }
+
+    static getMicroblockLogger() {
+        return this.getLogger(['microblock'])
     }
 }

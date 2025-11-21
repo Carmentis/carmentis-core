@@ -19,7 +19,12 @@ import {
     VirtualBlockchainUpdateInterface
 } from "../type/types";
 import axios, {AxiosError} from "axios";
-import {NodeConnectionRefusedError, NodeEndpointClosedWhileCatchingUpError, NodeError} from "../errors/carmentis-error";
+import {
+    IllegalParameterError,
+    NodeConnectionRefusedError,
+    NodeEndpointClosedWhileCatchingUpError,
+    NodeError
+} from "../errors/carmentis-error";
 import {CometBFTErrorCode} from "../errors/CometBFTErrorCode";
 import {RPCNodeStatusResponseSchema} from "./nodeRpc/RPCNodeStatusResponseSchema";
 import {Logger} from "../utils/Logger";
@@ -36,28 +41,30 @@ export class NetworkProvider implements IExternalProvider {
             new URL(url);
             return new NetworkProvider(url);
         } catch(e) {
-            throw new Error(`invalid node URL`);
+            throw new IllegalParameterError(`Invalid node URL: got ${url}`);
         }
     }
 
     constructor(private readonly nodeUrl: string) {}
 
-    async sendSerializedMicroblock(headerData: any, bodyData: any) {
-        this.logger.debug(`sendSerializedMicroblock -> headerData: ${JSON.stringify(headerData)}, bodyData: ${JSON.stringify(bodyData)}`);
+    async sendSerializedMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
+        this.logger.debug(`sendSerializedMicroblock -> header {headerDataLength} bytes, body {bodyDataLength} bytes`, () => ({
+            headerDataLength: headerData.length, bodyDataLength: bodyData.length
+        }));
+        // TODO(microblock): use a centralized manner to construct the tx data
         const answer = await this.broadcastTx(Utils.binaryFrom(headerData, bodyData));
-        this.logger.debug(`sendSerializedMicroblock <- ${JSON.stringify(answer)}`);
+        this.logger.debug(`sendSerializedMicroblock <- {*}`, () => ({answer}));
         return answer;
     }
 
     async awaitMicroblockAnchoring(hash: any) {
-        this.logger.debug(`awaitMicroblockAnchoring -> hash: ${hash}`);
+        this.logger.debug(`awaitMicroblockAnchoring -> hash: {hash}`, () => ({ hash: Utils.binaryToHexa(hash) }));
         const answer = await this.abciQuery<MicroblockInformationSchema>(
             SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
             {
                 hash
             }
         );
-        this.logger.debug(`awaitMicroblockAnchoring <- ${JSON.stringify(answer)}`);
         return answer;
     }
 
@@ -79,7 +86,6 @@ export class NetworkProvider implements IExternalProvider {
                 height
             }
         );
-        this.logger.debug(`getBlockInformation <- received block information for height ${height}`);
         return answer;
     }
 
@@ -91,12 +97,11 @@ export class NetworkProvider implements IExternalProvider {
                 height
             }
         );
-        this.logger.debug(`getBlockContent <- received block content for height ${height}`);
         return answer;
     }
 
     async getValidatorNodeByAddress(address: Uint8Array) {
-        this.logger.debug(`getValidatorNodeByAddress -> address: ${Utils.binaryToHexa(address)}`);
+        this.logger.debug(`getValidatorNodeByAddress -> address: {address}`, () => ({address: Utils.binaryToHexa(address)}));
         const answer = await this.abciQuery<ValidatorNodeDTO>(
             SCHEMAS.MSG_GET_VALIDATOR_NODE_BY_ADDRESS,
             {
@@ -108,7 +113,7 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getAccountState(accountHash: Uint8Array) {
-        this.logger.debug(`getAccountState -> accountHash: ${Utils.binaryToHexa(accountHash)}`);
+        this.logger.debug(`getAccountState -> accountHash: {accountHash}`, () => ({accountHash: Utils.binaryToHexa(accountHash)}));
         const answer = await this.abciQuery<AccountStateDTO>(
             SCHEMAS.MSG_GET_ACCOUNT_STATE,
             {
@@ -172,14 +177,17 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroBlockBodys | null>  {
-        this.logger.debug(`getMicroblockBodys -> ${hashes.length} hashes: [${hashes.map(h => Utils.binaryToHexa(h)).join(', ')}]`);
+        this.logger.debug(`getMicroblockBodys -> {*}`, () => ({
+            count: hashes.length,
+            hashes: hashes.map(h => Utils.binaryToHexa(h))
+        }));
         const answer = await this.abciQuery<MicroBlockBodys>(
             SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
             {
                 hashes
             }
         );
-        this.logger.debug(`getMicroblockBodys <- received microblock bodies (${answer.list.length} elements)`);
+        this.logger.debug(`getMicroblockBodys <- {*}`, () => ({count: answer.list.length}));
         return answer;
     }
 
@@ -269,25 +277,24 @@ export class NetworkProvider implements IExternalProvider {
     async broadcastTx(data: any) {
         const urlObject = new URL(this.nodeUrl);
 
-        this.logger.debug(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
+        this.logger.info(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
 
         urlObject.pathname = "broadcast_tx_sync";
         urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));
 
         const result = await NetworkProvider.query(urlObject);
-        this.logger.debug(`broadcastTx <- {*}`, () => ({result}));
         return result;
     }
 
     async abciQuery<T = object>(msgId: number, msgData: object): Promise<T> {
-        this.logger.debug(`abciQuery -> msgId: ${msgId}, msgData: ${JSON.stringify(msgData)}`);
+        this.logger.debug(`abciQuery -> {*}`, () => ({msgId, msgData}));
         const result = await NetworkProvider.sendABCIQueryToNodeServer(msgId, msgData, this.nodeUrl);
         this.logger.debug(`abciQuery <- {*}`, () => ({result}));
         return result as T;
     }
 
     static async sendABCIQueryToNodeServer<T = object>(msgId: any, msgData: any, nodeUrl: string): Promise<T> {
-        NetworkProvider.staticLogger.debug(`sendABCIQueryToNodeServer -> msgId: ${msgId}, nodeUrl: ${nodeUrl}`);
+        NetworkProvider.staticLogger.debug(`sendABCIQueryToNodeServer -> {*}`, () => ({msgId, nodeUrl}));
         const serializer = new MessageSerializer(SCHEMAS.NODE_MESSAGES);
         const unserializer = new MessageUnserializer(SCHEMAS.NODE_MESSAGES);
         const data = serializer.serialize(msgId, msgData);
@@ -306,17 +313,16 @@ export class NetworkProvider implements IExternalProvider {
             console.log("rawBase64EncodedResponse: ", rawBase64EncodedResponse);
             throw new NodeError("Invalid response detected")
         }
-//      console.error(`Unserializing ${rawBase64EncodedResponse}`) // TODO: remove this log
         const binary = Base64.decodeBinary(rawBase64EncodedResponse);
-        const { type, object } = unserializer.unserialize(binary);
+        const {type, object} = unserializer.unserialize(binary);
 
-        if(type == SCHEMAS.MSG_ERROR) {
+        if (type == SCHEMAS.MSG_ERROR) {
             const errorMsg = (object as any).error;
-            NetworkProvider.staticLogger.debug(`sendABCIQueryToNodeServer <- error: ${errorMsg}`);
+            NetworkProvider.staticLogger.error(`sendABCIQueryToNodeServer <- {*}`, () => ({error: errorMsg}));
             throw new NodeError(`Remote error: ${errorMsg}`);
         }
 
-        NetworkProvider.staticLogger.debug(`sendABCIQueryToNodeServer <- received response for msgId: ${msgId}`);
+        NetworkProvider.staticLogger.debug(`sendABCIQueryToNodeServer <- {*}`, () => ({msgId}));
         return object as T;
     }
 
@@ -341,7 +347,6 @@ export class NetworkProvider implements IExternalProvider {
             {},
             this.nodeUrl
         );
-        this.logger.debug(`getGenesisSnapshot <- received genesis snapshot`);
         return result;
     }
 }

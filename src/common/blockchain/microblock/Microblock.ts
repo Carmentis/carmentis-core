@@ -468,9 +468,9 @@ export class Microblock {
     }
 
     getFeesPayerAccount(): Uint8Array {
-        if ((this.feesPayerAccount instanceof Uint8Array) == false )
-            throw new IllegalStateError("Fees payer account undefined")
-        return this.feesPayerAccount;
+        //if ((this.feesPayerAccount instanceof Uint8Array) == false )
+        //    throw new IllegalStateError("Fees payer account undefined")
+        return <Uint8Array<ArrayBufferLike>>this.feesPayerAccount;
     }
 
     setTimestamp(timestamp: number) {

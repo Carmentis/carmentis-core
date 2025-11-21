@@ -11,6 +11,7 @@ import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFai
 import {ThrownErrorMicroblockSearchFailureFallback} from "./fallbacks/ThrownErrorMicroblockSearchFailureFallback";
 import {Height} from "../../type/Height";
 import {BlockchainSerializer} from "../../data/BlockchainSerializer";
+import {Logger} from "../../utils/Logger";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -22,6 +23,7 @@ import {BlockchainSerializer} from "../../data/BlockchainSerializer";
  */
 export abstract class VirtualBlockchain<LocalState = unknown> {
     public static INITIAL_HEIGHT = 1;
+    private static logger = Logger.getVirtualBlockchainLogger();
 
     protected localState: LocalState;
     private height: number;
@@ -256,7 +258,7 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
         // load the content of the microblock from the provider
         const info = await this.provider.getMicroblockInformation(hash);
         if (info === null) {
-            const encoder = EncoderFactory.bytesToBase64Encoder();
+            const encoder = EncoderFactory.bytesToHexEncoder();
             throw new Error(`Unable to load microblock information from hash ${encoder.encode(hash)} (height ${height})`);
         }
 
@@ -298,6 +300,17 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
      * @return {Promise<void>} A promise that resolves once the microblock is appended and the local state is updated.
      */
     async appendMicroBlock(microblock: Microblock): Promise<void> {
+        // raise internal error when invalid states are trigged; in practice, there cases should not happen
+        // and are written for debugging purpose only
+
+        // Case 1: the virtual blockchain is empty but contains an identifier
+        if (this.isEmpty() && this.identifier instanceof Uint8Array)
+            throw new Error("Virtual blockchain is empty but is initialized: should not happen");
+
+        // Case 2: the virtual blockchain is not empty but do not contain an identifier
+        if (!this.isEmpty() && !(this.identifier instanceof Uint8Array))
+            throw new Error("Virtual blockchain is empty but has an identifier: should not happen");
+
         // we first check that the microblock has a valid structure
         const isValid = this.checkMicroblockStructure(microblock);
         if (!isValid) throw new IllegalParameterError("Provided microblock has an invalid structure")
@@ -306,7 +319,7 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
         this.localState = await this.updateLocalState(this.localState, microblock);
 
         // if the current state of the vb is empty (no microblock), then update the identifier
-        if (this.isEmpty()) {
+        if (this.identifier === undefined) {
             this.identifier = microblock.getHash().toBytes();
         }
 
@@ -314,6 +327,8 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
         const mbHash = microblock.getHash().toBytes();
         this.microblockHashes[this.height] = mbHash;
 
+        // we increase the height of the vb
+        this.height += 1;
 
 
 
@@ -321,15 +336,14 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
         const { headerData, bodyData } = microblock.serialize();
         await this.provider.storeMicroblock(
             mbHash,
-            this.getIdentifier().toBytes(),
+            this.identifier,
             this.getType(),
             this.height,
             headerData,
             bodyData
         )
 
-        // we increase the height of the vb
-        this.height += 1;
+
 
     }
 

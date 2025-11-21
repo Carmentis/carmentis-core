@@ -29,4 +29,8 @@ export class Logger {
     static getMicroblockLogger() {
         return this.getLogger(['microblock'])
     }
+
+    static getVirtualBlockchainLogger() {
+        return this.getLogger(['virtual-blockchain'])
+    }
 }

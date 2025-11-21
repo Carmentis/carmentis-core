@@ -4,6 +4,18 @@ import {Microblock} from "../microblock/Microblock";
 import {ApplicationLedgerStateUpdateRequestHandler} from "./ApplicationLedgerStateUpdateRequestHandler";
 import {MlKemPrivateDecryptionKey} from "../../crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 import {Utils} from "../../utils/utils";
+import {configure, getConsoleSink} from "@logtape/logtape";
+
+
+beforeAll(async () => {
+    await configure({
+        sinks: { console: getConsoleSink() },
+        loggers: [
+            { category: '@cmts-dev/carmentis-sdk', lowestLevel: 'debug', sinks: ['console']  }
+        ]
+    })
+})
+
 
 describe('ApplicationLedgerStateUpdateRequest', () => {
     it('should create a microblock', async () => {

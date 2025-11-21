@@ -50,8 +50,9 @@ import {IExternalProvider} from "./IExternalProvider";
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
  */
 export class Provider {
-    externalProvider: IExternalProvider;
-    internalProvider: IInternalProvider;
+    private logger = Logger.getProviderLogger();
+    private externalProvider: IExternalProvider;
+    private internalProvider: IInternalProvider;
 
     constructor(internalProvider: IInternalProvider, externalProvider: IExternalProvider) {
         this.internalProvider = internalProvider;
@@ -135,8 +136,16 @@ export class Provider {
     }
 
     async storeMicroblock(hash: Uint8Array, virtualBlockchainId: Uint8Array, virtualBlockchainType: number, height: number, headerData: Uint8Array, bodyData: Uint8Array) {
+        Assertion.assert(virtualBlockchainId instanceof Uint8Array, `virtualBlockchainId must be an Uint8Array: got ${typeof virtualBlockchainId}`);
+        Assertion.assert(headerData instanceof Uint8Array, `headerData must be an Uint8Array: got ${typeof headerData}`);
+        Assertion.assert(bodyData instanceof Uint8Array, `bodyData must be an Uint8Array: got ${typeof bodyData}`);
         Assertion.assert(headerData.length > 0, "headerData must not be empty");
         Assertion.assert(bodyData.length > 0, "bodyData must not be empty");
+        this.logger.debug(`Storing microblock: microblock hash={microblockHash}, vbId={vbId}, height={height}`, () => ({
+            microblockHash: Utils.binaryToHexa(hash),
+            vbId: Utils.binaryToHexa(virtualBlockchainId),
+            height
+        }));
         await this.internalProvider.setMicroblockVbInformation(
             hash,
             BlockchainUtils.encodeMicroblockVbInformation(virtualBlockchainType, virtualBlockchainId)

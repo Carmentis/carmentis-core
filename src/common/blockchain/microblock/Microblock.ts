@@ -628,7 +628,7 @@ export class Microblock {
      * @param {number} sectionCount - The number of sections to include in the signed data.
      * @return {boolean} Returns true if the signature is successfully verified; otherwise, returns false.
      */
-    verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas?: boolean, sectionCount?: number) {
+    verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas?: boolean, sectionCount?: number): boolean {
         const shouldIncludeGas = typeof includeGas === 'boolean' ? includeGas : true;
         const numberOfSectionsToIncludeInSignature = sectionCount || this.sections.length - 1;
         const signedData = this.serializeForSigning(

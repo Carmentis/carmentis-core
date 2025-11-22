@@ -334,9 +334,23 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
         // we now load private channels that might be protected (encrypted)
         const logger = Logger.getLogger([ApplicationLedgerVb.name]);
         if (hostPrivateDecryptionKey instanceof AbstractPrivateDecryptionKey) {
+            // we attempt to identify the current actor
+            let currentActorId: number | undefined;
             try {
-                // we attempt to identify the current actor
-                const currentActorId = await this.getActorIdAssociatedWithKeyInProvider();
+                currentActorId = await this.getActorIdAssociatedWithKeyInProvider();
+            } catch (e) {
+                if (e instanceof CurrentActorNotFoundError) {
+                    // This case occurs when the current actor is not found in the application ledger
+                    // which happen when an external actor attempts to read the content of the application ledger.
+                    const logger = Logger.getLogger([ApplicationLedgerVb.name]);
+                    logger.debug("Unabled to recover private channels: {e}", {e})
+                } else {
+                    throw e;
+                }
+            }
+
+            // if the current actor is found, then we attempt to decrypt the private channels
+            if (typeof currentActorId === 'number') {
                 const privateChannelDataSections = microblock.getPrivateChannelDataSections();
                 for (const section of privateChannelDataSections) {
                     const {channelId, encryptedData, merkleRootHash} = section.object;
@@ -345,8 +359,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
                         const channelSectionKey = this.deriveChannelSectionKey(channelKey, height, channelId);
                         const channelSectionIv = this.deriveChannelSectionIv(channelKey, height, channelId);
                         const data = Crypto.Aes.decryptGcm(channelSectionKey, encryptedData, channelSectionIv);
-                        // TODO: might need to move on the decryptGcm method
-                        if (data === false) throw new DecryptionError("Failed to decrypt encrypted section data");
 
                         logger.debug(`Allowed to access private channel {channelName} (channel id={channelId})`, () => ({
                             channelName: this.getChannelNameById(channelId),
@@ -371,16 +383,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
                         }
                     }
                 }
-            } catch (e) {
-                if (e instanceof CurrentActorNotFoundError) {
-                    // This case occurs when the current actor is not found in the application ledger
-                    // which happen when an external actor attempts to read the content of the application ledger.
-                    const logger = Logger.getLogger([ApplicationLedgerVb.name]);
-                    logger.debug("Unabled to recover private channels: {e}", {e})
-                } else {
-                    throw e;
-                }
             }
+
 
         } else {
             console.warn("No private channel loaded: no private decryption key provided.")

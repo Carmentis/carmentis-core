@@ -1,5 +1,6 @@
 import {gcm} from "@noble/ciphers/aes";
 import {Logger} from "../utils/Logger";
+import {DecryptionError} from "../errors/carmentis-error";
 
 const logger = Logger.getLogger(["crypto", "aes-gcm"])
 export const Aes = {
@@ -7,14 +8,14 @@ export const Aes = {
   decryptGcm
 };
 
-function encryptGcm(key: any, data: any, iv: any) {
+function encryptGcm(key: Uint8Array, data: Uint8Array, iv: Uint8Array) {
   const stream = gcm(key, iv);
   const encrypted = stream.encrypt(data);
 
   return encrypted;
 }
 
-function decryptGcm(key: any, data: any, iv: any) {
+function decryptGcm(key: Uint8Array, data: Uint8Array, iv: Uint8Array) {
   try {
     const stream = gcm(key, iv);
     const decrypted = stream.decrypt(data);
@@ -23,6 +24,6 @@ function decryptGcm(key: any, data: any, iv: any) {
   }
   catch(e) {
       logger.warn('{e}', {e});
+      throw new DecryptionError()
   }
-  return false;
 }

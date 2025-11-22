@@ -154,7 +154,7 @@ export class MicroblockChecker {
         // check the microblock timestamp
         const microblock = this.verificationState.microblock;
         currentTimestamp = currentTimestamp || Utils.getTimestampInSeconds();
-        const result = microblock.isTemporalyCloseTo(currentTimestamp);
+        const result = microblock.isTemporallyCloseTo(currentTimestamp);
 
         // raise an error if the timestamp is too far in the past
         if (result === TimestampValidationResult.TOO_FAR_IN_THE_PAST)

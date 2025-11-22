@@ -650,7 +650,7 @@ export class Microblock {
      * VALID if the timestamp is within the range, TOO_FAR_IN_THE_PAST if it's too far in the past,
      * or TOO_FAR_IN_THE_FUTURE if it's too far in the future.
      */
-    isTemporalyCloseTo(referenceTimestamp: number = Utils.getTimestampInSeconds()): TimestampValidationResult {
+    isTemporallyCloseTo(referenceTimestamp: number = Utils.getTimestampInSeconds()): TimestampValidationResult {
         // check if too far in the past
         const isTooFarInPast = this.header.timestamp < referenceTimestamp - CHAIN.MAX_MICROBLOCK_PAST_DELAY;
         if (isTooFarInPast) {

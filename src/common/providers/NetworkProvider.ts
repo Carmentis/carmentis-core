@@ -29,10 +29,13 @@ import {CometBFTErrorCode} from "../errors/CometBFTErrorCode";
 import {RPCNodeStatusResponseSchema} from "./nodeRpc/RPCNodeStatusResponseSchema";
 import {Logger} from "../utils/Logger";
 import {IExternalProvider} from "./IExternalProvider";
+import {CMTSToken} from "../economics/currencies/token";
 
 export class NetworkProvider implements IExternalProvider {
     private static staticLogger = Logger.getNetworkProviderLogger();
     private logger = NetworkProvider.staticLogger;
+    private requestLogger = NetworkProvider.staticLogger.getChild("request");
+    private responseLogger = NetworkProvider.staticLogger.getChild("response");
 
     static createFromUrl(url: string): NetworkProvider {
         const logger = NetworkProvider.staticLogger;
@@ -48,17 +51,26 @@ export class NetworkProvider implements IExternalProvider {
     constructor(private readonly nodeUrl: string) {}
 
     async sendSerializedMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
-        this.logger.debug(`sendSerializedMicroblock -> header {headerDataLength} bytes, body {bodyDataLength} bytes`, () => ({
-            headerDataLength: headerData.length, bodyDataLength: bodyData.length
+        this.requestLogger.debug(`Sending serialized microblock -> header {headerDataLength} bytes, body {bodyDataLength} bytes`, () => ({
+            headerDataLength: headerData.length,
+            bodyDataLength: bodyData.length
         }));
+
         // TODO(microblock): use a centralized manner to construct the tx data
-        const answer = await this.broadcastTx(Utils.binaryFrom(headerData, bodyData));
-        this.logger.debug(`sendSerializedMicroblock <- {*}`, () => ({answer}));
+        const serializedMicroblock = Utils.binaryFrom(headerData, bodyData);
+        const answer = await this.broadcastTx(serializedMicroblock);
+
+        this.responseLogger.debug(`Received response: <- {data}`, () => ({
+            data: answer?.data
+        }));
         return answer;
     }
 
-    async awaitMicroblockAnchoring(hash: any) {
-        this.logger.debug(`awaitMicroblockAnchoring -> hash: {hash}`, () => ({ hash: Utils.binaryToHexa(hash) }));
+    async awaitMicroblockAnchoring(hash: Uint8Array) {
+        this.requestLogger.debug(`Awaiting microblock {hash} to be published...`, () => ({
+            hash: Utils.binaryToHexa(hash)
+        }));
+
         const answer = await this.abciQuery<MicroblockInformationSchema>(
             SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
             {
@@ -69,63 +81,91 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getChainInformation() {
-        this.logger.debug(`getChainInformation -> requesting chain information`);
+        this.requestLogger.debug(`Requesting chain information`);
+
         const answer = await this.abciQuery<ChainInformationDTO>(
             SCHEMAS.MSG_GET_CHAIN_INFORMATION,
             {}
         );
-        this.logger.debug(`getChainInformation <- received chain information`);
+
+        this.responseLogger.debug(`Received chain information: {answer}`, () => ({
+            answer
+        }));
         return answer;
     }
 
     async getBlockInformation(height: number) {
-        this.logger.debug(`getBlockInformation -> height: ${height}`);
+        this.requestLogger.debug(`Requesting block information at height: ${height}`);
+
         const answer = await this.abciQuery<BlockInformationDTO>(
             SCHEMAS.MSG_GET_BLOCK_INFORMATION,
             {
                 height
             }
         );
+
+        this.responseLogger.debug(`Received block information at height ${height}: {answer}`, () => ({
+            answer
+        }))
         return answer;
     }
 
     async getBlockContent(height: number) {
-        this.logger.debug(`getBlockContent -> height: ${height}`);
+        this.requestLogger.debug(`Requesting block content for height ${height}`);
+
         const answer = await this.abciQuery<BlockContentDTO>(
             SCHEMAS.MSG_GET_BLOCK_CONTENT,
             {
                 height
             }
         );
+
+        this.responseLogger.debug(`Received block content for height ${height}: ${answer.microblocks.length} microblocks received`);
         return answer;
     }
 
     async getValidatorNodeByAddress(address: Uint8Array) {
-        this.logger.debug(`getValidatorNodeByAddress -> address: {address}`, () => ({address: Utils.binaryToHexa(address)}));
+        this.requestLogger.debug(`Requesting validator node id for address {address}`, () => ({
+            address: Utils.binaryToHexa(address)}
+        ));
+
         const answer = await this.abciQuery<ValidatorNodeDTO>(
             SCHEMAS.MSG_GET_VALIDATOR_NODE_BY_ADDRESS,
             {
                 address
             }
         );
-        this.logger.debug(`getValidatorNodeByAddress <- received validator node data`);
+
+        this.responseLogger.debug(`Receiving validator node id {id}`, () => ({
+            id: Utils.binaryToHexa(address)
+        }));
         return answer;
     }
 
     async getAccountState(accountHash: Uint8Array) {
-        this.logger.debug(`getAccountState -> accountHash: {accountHash}`, () => ({accountHash: Utils.binaryToHexa(accountHash)}));
+        this.requestLogger.debug(`Requesting account state for account hash {accountHash}`, () => ({
+            accountHash: Utils.binaryToHexa(accountHash)
+        }));
+
         const answer = await this.abciQuery<AccountStateDTO>(
             SCHEMAS.MSG_GET_ACCOUNT_STATE,
             {
                 accountHash
             }
         );
-        this.logger.debug(`getAccountState <- received account state`);
+
+        this.responseLogger.debug(`Receiving account state: height={height}, balance={balance}, lastHistoryHash={lastHistoryHash}`, () => {
+            const height = answer.height;
+            const balance = CMTSToken.createAtomic(answer.balance).toString();
+            const lastHistoryHash = Utils.binaryToHexa(answer.lastHistoryHash);
+            return {height, balance, lastHistoryHash}
+        });
         return answer;
     }
 
     async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number) {
-        this.logger.debug(`getAccountHistory -> accountHash: ${Utils.binaryToHexa(accountHash)}, lastHistoryHash: ${Utils.binaryToHexa(lastHistoryHash)}, maxRecords: ${maxRecords}`);
+        this.requestLogger.debug(`Requesting account history for account hash: ${Utils.binaryToHexa(accountHash)}, lastHistoryHash: ${Utils.binaryToHexa(lastHistoryHash)}, maxRecords: ${maxRecords}`);
+
         const answer = await this.abciQuery<AccountHistoryInterface>(
             SCHEMAS.MSG_GET_ACCOUNT_HISTORY,
             {
@@ -134,65 +174,79 @@ export class NetworkProvider implements IExternalProvider {
                 maxRecords
             }
         );
-        this.logger.debug(`getAccountHistory <- received account history`);
+
+        this.responseLogger.debug(`Receiving account history with ${answer.list.length} entries` );
         return answer;
     }
 
     async getAccountByPublicKeyHash(publicKeyHash: Uint8Array) {
-        this.logger.debug(`getAccountByPublicKeyHash -> publicKeyHash: ${Utils.binaryToHexa(publicKeyHash)}`);
+        this.requestLogger.debug(`Requesting account hash by public key hash: ${Utils.binaryToHexa(publicKeyHash)}`);
+
         const answer = await this.abciQuery<AccountHash>(
             SCHEMAS.MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
             {
                 publicKeyHash
             }
         );
-        this.logger.debug(`getAccountByPublicKeyHash <- received account hash {accountHash}`, () => ({
+
+        this.responseLogger.debug(`Received account hash {accountHash}`, () => ({
             accountHash: Utils.binaryToHexa(answer.accountHash)
         }));
         return AccountHashSchema.parse(answer);
     }
 
     async getObjectList(type: number) {
-        this.logger.debug(`getObjectList -> type: ${type}`);
+        this.requestLogger.debug(`Requesting list of objects of type ${type}`);
+
         const answer = await this.abciQuery<ObjectList>(
             SCHEMAS.MSG_GET_OBJECT_LIST,
             {
                 type
             }
         );
-        this.logger.debug(`getObjectList <- received object list (${answer.list.length} elements)`);
+
+        this.responseLogger.debug(`Receiving object lists with ${answer.list.length} elements)`);
         return answer;
     }
 
     async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema | null>  {
-        this.logger.debug(`getMicroblockInformation -> hash: ${Utils.binaryToHexa(hash)}`);
+        this.requestLogger.debug(`Requesting microblock information for hash ${Utils.binaryToHexa(hash)}`);
+
         const answer = await this.abciQuery<MicroblockInformationSchema>(
             SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
             {
                 hash
             }
         );
-        this.logger.debug(`getMicroblockInformation <- received microblock information`);
+
+        this.responseLogger.debug(`Received microblock information: header size={headerSize}, vbType={vbType}, vbId={vbId}`, () => ({
+            headerSize: answer.header.length,
+            vbType: answer.virtualBlockchainType,
+            vbId: Utils.binaryToHexa(answer.virtualBlockchainId),
+        }));
         return answer;
     }
 
     async getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroBlockBodys | null>  {
-        this.logger.debug(`getMicroblockBodys -> {*}`, () => ({
-            count: hashes.length,
+        this.requestLogger.debug(`Requesting microblock bodys for microblock hashes ${hashes.length}`);
+        this.requestLogger.debug(`Lisf of requsested hashes: ${hashes}`, () => ({
             hashes: hashes.map(h => Utils.binaryToHexa(h))
-        }));
+        }))
+
         const answer = await this.abciQuery<MicroBlockBodys>(
             SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
             {
                 hashes
             }
         );
-        this.logger.debug(`getMicroblockBodys <- {*}`, () => ({count: answer.list.length}));
+
+        this.responseLogger.debug(`getMicroblockBodys <- {*}`, () => ({count: answer.list.length}));
         return answer;
     }
 
     async getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number) {
-        this.logger.debug(`getVirtualBlockchainUpdate -> virtualBlockchainId: ${Utils.binaryToHexa(virtualBlockchainId)}, knownHeight: ${knownHeight}`);
+        this.requestLogger.debug(`Request virtual blockchain update for virtualBlockchainId: ${Utils.binaryToHexa(virtualBlockchainId)}, knownHeight: ${knownHeight}`);
+
         const answer = await this.abciQuery<VirtualBlockchainUpdateInterface>(
             SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE,
             {
@@ -200,20 +254,27 @@ export class NetworkProvider implements IExternalProvider {
                 knownHeight
             }
         );
-        this.logger.debug(`getVirtualBlockchainUpdate <- received virtual blockchain update`);
+
+        this.responseLogger.debug(`Receiving virtual blockchain update: {answer}`, () => ({
+            answer
+        }));
         return answer;
     }
 
-    async getVirtualBlockchainState(virtualBlockchainId: any) {
-        const idStr = virtualBlockchainId instanceof Uint8Array ? Utils.binaryToHexa(virtualBlockchainId) : String(virtualBlockchainId);
-        this.logger.debug(`getVirtualBlockchainState -> virtualBlockchainId: ${idStr}`);
+    async getVirtualBlockchainState(virtualBlockchainId: Uint8Array) {
+        //const idStr = virtualBlockchainId instanceof Uint8Array ? Utils.binaryToHexa(virtualBlockchainId) : String(virtualBlockchainId);
+        this.requestLogger.debug(`Requesting virtual blockchain state for vb id {vbId}`, () => ({
+            vbId: Utils.binaryToHexa(virtualBlockchainId)
+        }));
+
         const answer = await this.abciQuery<MsgVirtualBlockchainState>(
             SCHEMAS.MSG_GET_VIRTUAL_BLOCKCHAIN_STATE,
             {
                 virtualBlockchainId
             }
         );
-        this.logger.debug(`getVirtualBlockchainState <- received virtual blockchain state`);
+
+        this.responseLogger.debug(`Receiving virtual blockchain state: ${answer.stateData.length} bytes`);
         return answer;
     }
 
@@ -287,9 +348,9 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async abciQuery<T = object>(msgId: number, msgData: object): Promise<T> {
-        this.logger.debug(`abciQuery -> {*}`, () => ({msgId, msgData}));
+        this.requestLogger.debug(`abciQuery for msg id {msgId} and data {msgData}`, () => ({msgId, msgData}));
         const result = await NetworkProvider.sendABCIQueryToNodeServer(msgId, msgData, this.nodeUrl);
-        this.logger.debug(`abciQuery <- {*}`, () => ({result}));
+        //this.responseLogger.debug(`abciQuery response: `, () => ({result}));
         return result as T;
     }
 
@@ -309,8 +370,8 @@ export class NetworkProvider implements IExternalProvider {
         // @ts-ignore
         const rawBase64EncodedResponse = responseData?.result?.response?.value;
         if (typeof rawBase64EncodedResponse !== "string") {
-            console.error("Invalid response type detected:", responseData)
-            console.log("rawBase64EncodedResponse: ", rawBase64EncodedResponse);
+            this.staticLogger.error("Invalid response type detected:", responseData)
+            this.staticLogger.error("rawBase64EncodedResponse: ", rawBase64EncodedResponse);
             throw new NodeError("Invalid response detected")
         }
         const binary = Base64.decodeBinary(rawBase64EncodedResponse);
@@ -341,12 +402,17 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getGenesisSnapshot(): Promise<GenesisSnapshotDTO> {
-        this.logger.debug(`getGenesisSnapshot -> requesting genesis snapshot`);
-        const result = await NetworkProvider.sendABCIQueryToNodeServer<GenesisSnapshotDTO>(
+        this.requestLogger.debug(`Requesting genesis snapshot`);
+
+        const answer = await NetworkProvider.sendABCIQueryToNodeServer<GenesisSnapshotDTO>(
             SCHEMAS.MSG_GET_GENESIS_SNAPSHOT,
             {},
             this.nodeUrl
         );
-        return result;
+
+        this.responseLogger.debug(`Received genesis snapshots containing {chunksNumber}`, () => ({
+            chunksNumber: answer.base64EncodedChunks.length,
+        }));
+        return answer;
     }
 }

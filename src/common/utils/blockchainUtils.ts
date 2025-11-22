@@ -23,7 +23,7 @@ export const BlockchainUtils = {
   Takes a list of consecutive microblock headers in binary format and in anti-chronological order.
   Returns an object with a flag telling if the hash chain is valid and the list of microblock hashes (also in anti-chronological order).
 */
-function checkHeaderList(headers: any) {
+function checkHeaderList(headers: Uint8Array[]) {
   const hashes = [];
   let expectedHash = null;
 

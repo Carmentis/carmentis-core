@@ -17,7 +17,7 @@ import {
     ObjectList,
     OrganizationVBState,
     ProtocolVBState,
-    ValidatorNodeVBState
+    ValidatorNodeVBState, VirtualBlockchainStateInterface
 } from "../type/types";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
@@ -262,16 +262,20 @@ export class Provider {
 
     }
 
+    /**
+     * Returns the virtual blockchain content (state and hashes) from the internal and external providers.
+     *
+     * @param virtualBlockchainId The identifier of the virtual blockchain.
+     */
     async getVirtualBlockchainContent(virtualBlockchainId: Uint8Array) {
-        let microblockHashes: string | any[] = [];
-        let state;
+        let microblockHashes: Uint8Array[] = [];
+        let state: VirtualBlockchainStateInterface | null = null;
 
-        // get the state of this VB from our internal provider
-        const stateData = await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
-
-        // if found, make sure that we still have all the microblock headers up to the height associated to this state
+        // We start by retrieving the virtual blockchain state locally.
+        // If found, we make sure that we still have all the microblock headers up to the height associated to this state
         // and that they are consistent
-        if(stateData) {
+        const stateData = await this.internalProvider.getVirtualBlockchainState(virtualBlockchainId);
+        if (stateData !== null) {
             state = BlockchainUtils.decodeVirtualBlockchainState(stateData);
             let height = state.height;
             let microblockHash = state.lastMicroblockHash;
@@ -279,8 +283,7 @@ export class Provider {
 
             while(height) {
                 const header = await this.internalProvider.getMicroblockHeader(microblockHash);
-
-                if(!header) {
+                if (!header) {
                     break;
                 }
                 headers.push(header);
@@ -288,22 +291,20 @@ export class Provider {
                 height--;
             }
 
-            if(height == 0) {
+            if (height == 0) {
                 const check = BlockchainUtils.checkHeaderList(headers);
-
-                if(check.valid) {
+                if (check.valid) {
                     check.hashes.reverse();
-
                     if(Utils.binaryIsEqual(check.hashes[0], virtualBlockchainId)) {
                         microblockHashes = check.hashes;
+                    } else {
+                        this.logger.warning("WARNING - genesis microblock hash from internal storage does not match VB identifier");
                     }
-                    else {
-                        console.error("WARNING - genesis microblock hash from internal storage does not match VB identifier");
-                    }
+                } else {
+                    this.logger.warning("WARNING - inconsistent hash chain in internal storage");
                 }
-                else {
-                    console.error("WARNING - inconsistent hash chain in internal storage");
-                }
+            } else {
+                // TODO: we can do a check, even for incomplete hashes
             }
         }
 
@@ -314,16 +315,13 @@ export class Provider {
             knownHeight
         );
 
-        if(!vbUpdate.exists) {
-            return null;
-        }
-
-        if(vbUpdate.changed) {
+        if (!vbUpdate.exists) return null;
+        if (vbUpdate.changed) {
             // check the consistency of the new headers
             const check = BlockchainUtils.checkHeaderList(vbUpdate.headers);
 
             if(!check.valid) {
-                throw `received headers are inconsistent`;
+                throw new Error(`received headers are inconsistent`);
             }
 
             // make sure that the 'previous hash' field of the first new microblock matches the last known hash
@@ -332,7 +330,7 @@ export class Provider {
                 const linkedHash = BlockchainUtils.previousHashFromHeader(firstNewHeader);
 
                 if(!Utils.binaryIsEqual(linkedHash, microblockHashes[knownHeight - 1])) {
-                    throw `received headers do not link properly to the last known header`;
+                    throw new Error(`received headers do not link properly to the last known header`);
                 }
             }
 
@@ -359,6 +357,9 @@ export class Provider {
             // add the new hashes to the hash list
             microblockHashes = [ ...microblockHashes, ...check.hashes.reverse() ];
         }
+
+        //
+        if (state === null) return null;
 
         return { state, microblockHashes };
     }

@@ -2,7 +2,6 @@ import {Provider} from "./Provider";
 import {NullNetworkProvider} from "./NullNetworkProvider";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
-import {KeyedProvider} from "./KeyedProvider";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 /**
@@ -24,17 +23,5 @@ export class ProviderFactory {
      * @param {string} nodeUrl*/
     static createInMemoryProviderWithExternalProvider(nodeUrl: string): Provider {
         return new Provider(new MemoryProvider(), NetworkProvider.createFromUrl(nodeUrl));
-    }
-
-
-    /**
-     * Creates a keyed provider using an external network provider. The provider contains a built-in in-memory provider to handle cache.
-     *
-     * @param {PrivateSignatureKey} privateKey - The private signature key used for signing or authentication.
-     * @param {string} nodeUrl - The URL of the external network node provider.
-     * @return {Provider} An instance of a Provider configured with an in-memory provider and the specified external network provider.
-     */
-    static createKeyedProviderExternalProvider(privateKey: PrivateSignatureKey, nodeUrl: string): Provider {
-        return new KeyedProvider(privateKey, new MemoryProvider(), NetworkProvider.createFromUrl(nodeUrl));
     }
 }

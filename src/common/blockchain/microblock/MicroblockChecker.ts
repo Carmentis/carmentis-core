@@ -38,16 +38,16 @@ export class MicroblockChecker {
 
     constructor(
         private readonly provider: Provider,
-        private readonly serializedData: Uint8Array
+        private readonly serializedMicroblock: Uint8Array
     ) {}
 
     async reconstructMicroblockAndVirtualBlockchainOrFail() {
         if (this.verificationState.isMicroblockParsingCompleted)
             throw new IllegalStateError("You have already called parseMicroblock() method. You can only call it once.")
 
-            // Parse the serialized microblock into header and body
+        // Parse the serialized microblock into header and body
         const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(
-            this.serializedData
+            this.serializedMicroblock
         );
 
         // Parse the header

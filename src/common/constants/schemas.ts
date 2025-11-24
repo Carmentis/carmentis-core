@@ -320,22 +320,23 @@ export const BLOCK_CONTENT = {
  * TODO: DO NOT USE THIS VARIABLE!!! DECODE THEN EXTRACT INSTEAD OF JUST EXTRACTING
  * @deprecated Th
  */
-export const MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET = 12;
-export const MICROBLOCK_HEADER_BODY_HASH_OFFSET = 59;
-export const MICROBLOCK_HEADER_SIZE = 91;
+export const MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET = 13;
+export const MICROBLOCK_HEADER_BODY_HASH_OFFSET = 60;
+export const MICROBLOCK_HEADER_SIZE = 92;
 
 export const MICROBLOCK_HEADER: Schema = {
   label: 'MicroblockHeader',
   definition: [
     { name: 'magicString',     type: DATA.TYPE_STRING, size: 4 }, // +0
     { name: 'protocolVersion', type: DATA.TYPE_UINT16 },          // +4
-    { name: 'height',          type: DATA.TYPE_UINT48 },          // +6
-    { name: 'previousHash',    type: DATA.TYPE_BIN256 },          // +12
-    { name: 'timestamp',       type: DATA.TYPE_UINT48 },          // +44
-    { name: 'gas',             type: DATA.TYPE_UINT24 },          // +50
-    { name: 'gasPrice',        type: DATA.TYPE_UINT32 },          // +53
-      { name: 'localStateUpdaterVersion',        type: DATA.TYPE_UINT16 }, // +57
-      { name: 'bodyHash',        type: DATA.TYPE_BIN256 },           // + 59
+    { name: 'microblockType',  type: DATA.TYPE_UINT8 },           // +6
+    { name: 'height',          type: DATA.TYPE_UINT48 },          // +7
+    { name: 'previousHash',    type: DATA.TYPE_BIN256 },          // +13
+    { name: 'timestamp',       type: DATA.TYPE_UINT48 },          // +45
+    { name: 'gas',             type: DATA.TYPE_UINT24 },          // +51
+    { name: 'gasPrice',        type: DATA.TYPE_UINT32 },          // +54
+      { name: 'localStateUpdaterVersion',        type: DATA.TYPE_UINT16 }, // +58
+      { name: 'bodyHash',        type: DATA.TYPE_BIN256 },           // + 60
   ]
 };
 

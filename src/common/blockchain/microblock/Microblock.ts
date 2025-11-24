@@ -147,14 +147,25 @@ export class Microblock {
     };
 
 
-    static loadFromSerializedMicroblock(expectedMbType: VirtualBlockchainType, serializedMicroblock: Uint8Array) {
+    static loadFromSerializedMicroblock(expectedMbType: VirtualBlockchainType | null, serializedMicroblock: Uint8Array) {
         const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(serializedMicroblock);
         return Microblock.loadFromSerializedHeaderAndBody(expectedMbType, serializedHeader, serializedBody);
     }
 
-    static loadFromSerializedHeaderAndBody(expectedMbType: VirtualBlockchainType, serializedHeader: Uint8Array, serializedBody: Uint8Array): Microblock {
+    static loadFromSerializedHeaderAndBody(expectedMbType: VirtualBlockchainType | null, serializedHeader: Uint8Array, serializedBody: Uint8Array): Microblock {
         const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
-        const mb = new Microblock(expectedMbType);
+
+        // Extract microblock type from header
+        const microblockType = header.microblockType;
+
+        // Validate that expected type matches if provided
+        if (expectedMbType !== null && expectedMbType !== microblockType) {
+            throw new CarmentisError(
+                `Microblock type mismatch: expected ${expectedMbType}, got ${microblockType} from header`
+            );
+        }
+
+        const mb = new Microblock(microblockType);
         mb.header = header;
 
         // Validate basic header fields
@@ -186,7 +197,7 @@ export class Microblock {
         // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
         const body = bodyUnserializer.unserialize(serializedBody).body;
         for (const {type, data} of body) {
-            const sectionSchema = SECTIONS.DEF[expectedMbType][type];
+            const sectionSchema = SECTIONS.DEF[microblockType][type];
             const unserializer = new SchemaUnserializer(sectionSchema);
             const object = unserializer.unserialize(data);
 
@@ -311,6 +322,7 @@ export class Microblock {
             localStateUpdaterVersion: LocalStateUpdaterFactory.defaultLocalStateUpdaterVersionByVbType(type),
             magicString: CHAIN.MAGIC_STRING,
             protocolVersion: CHAIN.PROTOCOL_VERSION,
+            microblockType: type,
             height: 1,
             previousHash: Microblock.generatePreviousHashForGenesisMicroblock(type, defaultExpirationDay),
             timestamp: defaultTimestampInSeconds,
@@ -347,6 +359,7 @@ export class Microblock {
             localStateUpdaterVersion: 1,
             magicString: CHAIN.MAGIC_STRING,
             protocolVersion: CHAIN.PROTOCOL_VERSION,
+            microblockType: this.type,
             height: height,
             previousHash: previousHash,
             timestamp: Utils.getTimestampInSeconds(),

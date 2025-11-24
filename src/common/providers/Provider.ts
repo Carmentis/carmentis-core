@@ -19,9 +19,6 @@ import {
     ProtocolVBState,
     ValidatorNodeVBState, VirtualBlockchainStateInterface
 } from "../type/types";
-import {MemoryProvider} from "./MemoryProvider";
-import {NetworkProvider} from "./NetworkProvider";
-import {KeyedProvider} from "./KeyedProvider";
 import {Hash} from "../entities/Hash";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
@@ -45,11 +42,12 @@ import {ProtocolVb} from "../blockchain/virtualBlockchains/ProtocolVb";
 import {Assertion} from "../utils/Assertion";
 import {IInternalProvider} from "./IInternalProvider";
 import {IExternalProvider} from "./IExternalProvider";
+import {IProvider} from "./IProvider";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
  */
-export class Provider {
+export class Provider implements IProvider {
     private logger = Logger.getProviderLogger();
     private externalProvider: IExternalProvider;
     private internalProvider: IInternalProvider;
@@ -57,16 +55,6 @@ export class Provider {
     constructor(internalProvider: IInternalProvider, externalProvider: IExternalProvider) {
         this.internalProvider = internalProvider;
         this.externalProvider = externalProvider;
-    }
-
-    isKeyed(): this is KeyedProvider { return false; }
-
-    getPrivateSignatureKey(): PrivateSignatureKey {
-        throw new NotAuthenticatedError();
-    }
-
-    getPublicSignatureKey(): PublicSignatureKey {
-        throw new NotAuthenticatedError();
     }
 
     async sendMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {

@@ -12,6 +12,8 @@ import {ThrownErrorMicroblockSearchFailureFallback} from "./fallbacks/ThrownErro
 import {Height} from "../../type/Height";
 import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {Logger} from "../../utils/Logger";
+import {IProvider} from "../../providers/IProvider";
+import {OnMicroblockInsertionEventListener} from "./events/OnMicroblockInsertedEventListener";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -28,24 +30,58 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
     protected localState: LocalState;
     private height: number;
     private identifier: Uint8Array | undefined;
-    private microblockHashes: Uint8Array[];
-    provider: Provider;
+
+    /**
+     * Represents a mapping between block heights and their corresponding microblock hashes.
+     * The height is represented as a key, and for each height, the value is the microblock hash
+     * in the form of a Uint8Array.
+     *
+     * This map is used to store and retrieve microblock hashes efficiently by their associated heights.
+     * It provides a mechanism to maintain and reference the relationship between a blockchain height
+     * and its microblock hash.
+     */
+    private microblockHashByHeight: Map<Height, Uint8Array>;
+
+    /**
+     * A Map that associates block heights with corresponding Microblocks.
+     *
+     * The `microblockByHeight` variable is used to efficiently retrieve
+     * a Microblock based on its height in the blockchain. The key represents
+     * the height of the block in the blockchain, where the height is a unique
+     * identifier for the relative position of a block. The value is the Microblock
+     * found at the specified height.
+     */
+    private microblockByHeight: Map<Height, Microblock>;
+
+    private provider: IProvider;
     private type: number;
     private expirationDay: number;
+
+    /**
+     * A fallback mechanism for handling microblock retrieval failures.
+     * @private
+     */
     private microblockSearchFailureFallback: IMicroblockSearchFailureFallback;
 
+    private onMicroblockInsertionEventListeners: OnMicroblockInsertionEventListener[] = [];
+
     constructor(
-        provider: Provider,
+        provider: IProvider,
         type: VirtualBlockchainType,
         localState: LocalState,
     ) {
         this.localState = localState;
         this.provider = provider;
-        this.microblockHashes = [];
+        this.microblockHashByHeight = new Map();
+        this.microblockByHeight = new Map<Height, Microblock>();
         this.type = type;
         this.expirationDay = 0;
         this.height = 0;
         this.microblockSearchFailureFallback = new ThrownErrorMicroblockSearchFailureFallback();
+    }
+
+    addOnMicroblockInsertionEventListener(listener: OnMicroblockInsertionEventListener) {
+        this.onMicroblockInsertionEventListeners.push(listener);
     }
 
     /**
@@ -119,7 +155,11 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
     }
 
     setMicroblockHashes(microblockHashes: Uint8Array[]) {
-        this.microblockHashes = microblockHashes;
+        let currentHeight = 1;
+        for (const hash of microblockHashes) {
+            this.microblockHashByHeight.set(currentHeight, hash);
+            currentHeight++;
+        }
     }
 
     setExpirationDay(day: number) {
@@ -248,26 +288,33 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
             height
         );
 
+        // if the virtual blockchain already contains the microblock, we return it directly
+        const microblockContainedInCurrentVbInstance = this.microblockByHeight.get(height);
+        if (microblockContainedInCurrentVbInstance !== undefined) return microblockContainedInCurrentVbInstance;
+
         // otherwise, the height is within the virtual blockchain range, we can safely retrieve the microblock
-        const hash = this.microblockHashes[height - 1];
-        const isValidHashType = hash instanceof Uint8Array;
-        if (!isValidHashType) {
-            throw new MicroBlockNotFoundInVirtualBlockchainAtHeightError(this.getIdentifier(), height);
-        }
+        const microblockHash = this.microblockHashByHeight.get(height);
+        if (microblockHash === undefined) throw new MicroBlockNotFoundInVirtualBlockchainAtHeightError(this.getIdentifier(), height);
 
         // load the content of the microblock from the provider
-        const info = await this.provider.getMicroblockInformation(hash);
+        const info = await this.provider.getMicroblockInformation(microblockHash);
         if (info === null) {
             const encoder = EncoderFactory.bytesToHexEncoder();
-            throw new Error(`Unable to load microblock information from hash ${encoder.encode(hash)} (height ${height})`);
+            throw new Error(`Unable to load microblock information from hash ${encoder.encode(microblockHash)} (height ${height})`);
         }
 
-        const bodyList = await this.provider.getMicroblockBodys([ hash ]);
+        const bodyList = await this.provider.getMicroblockBodys([ microblockHash ]);
         const serializedHeader = info.header;
         const serializedBody = bodyList[0].body;
         const microblock = Microblock.loadFromSerializedHeaderAndBody(this.type, serializedHeader, serializedBody )
-        //const microblock = new Microblock(this.type);
-        //microblock.load(info.header, bodyList[0].body);
+
+        // we store the microblock in the map
+        this.microblockByHeight.set(height, microblock);
+
+        // we notify the listeners that a new microblock has been inserted in the virtual blockchain
+        for(const listener of this.onMicroblockInsertionEventListeners) {
+            listener.onMicroblockInserted(this, microblock);
+        }
 
         return microblock;
     }
@@ -323,16 +370,20 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
             this.identifier = microblock.getHash().toBytes();
         }
 
-        // we update the list of microblock hashes
-        const mbHash = microblock.getHash().toBytes();
-        this.microblockHashes[this.height] = mbHash;
+
 
         // we increase the height of the vb
         this.height += 1;
 
+        // we update the microblocks
+        const mbHash = microblock.getHash().toBytes();
+        this.microblockHashByHeight.set(this.height, mbHash);
+        this.microblockByHeight.set(this.height, microblock);
+
 
 
         // we store the microblock
+        /*
         const { headerData, bodyData } = microblock.serialize();
         await this.provider.storeMicroblock(
             mbHash,
@@ -342,6 +393,7 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
             headerData,
             bodyData
         )
+         */
 
 
 

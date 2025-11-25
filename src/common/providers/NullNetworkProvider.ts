@@ -1,4 +1,4 @@
-import { MicroblockInformationSchema, ChainInformationDTO, BlockInformationDTO, BlockContentDTO, ValidatorNodeDTO, AccountStateDTO, AccountHistoryInterface, AccountHash, ObjectList, MicroBlockBodys, VirtualBlockchainUpdateInterface, MsgVirtualBlockchainState, GenesisSnapshotDTO } from "../common";
+import { MicroblockInformationSchema, ChainInformationDTO, BlockInformationDTO, BlockContentDTO, ValidatorNodeDTO, AccountStateDTO, AccountHistoryInterface, AccountHash, ObjectList, MicroblockBodyListResponse, VirtualBlockchainUpdateInterface, MsgVirtualBlockchainState, GenesisSnapshotDTO } from "../common";
 import {IExternalProvider} from "./IExternalProvider";
 
 /**
@@ -43,13 +43,13 @@ export class NullNetworkProvider implements IExternalProvider {
         return Promise.resolve(null);
     }
 
-    getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroBlockBodys | null > {
+    getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroblockBodyListResponse | null > {
         return Promise.resolve(null);
     }
     getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number): Promise<VirtualBlockchainUpdateInterface> {
         return Promise.resolve({ exists: true, changed: false });
     }
-    getVirtualBlockchainState(virtualBlockchainId: any): Promise<MsgVirtualBlockchainState> {
+    getSerializedVirtualBlockchainState(virtualBlockchainId: any): Promise<Uint8Array> {
         throw new Error("Method not implemented.");
     }
     broadcastTx(data: Uint8Array): Promise<any> {

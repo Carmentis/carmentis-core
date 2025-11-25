@@ -345,7 +345,7 @@ export interface ValidatorNodeDeclarationSection {
 /**
  * @see {VN_DESCRIPTION}
  */
-export interface ValidatorNodeDescriptionSection {
+export interface ValidatorNodeCometbftPublicKeyDeclarationSection {
     cometPublicKeyType: string,
     cometPublicKey: string
 }

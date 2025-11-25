@@ -27,7 +27,7 @@ describe('Chain test', () => {
         // we load the genesis account information
         const accounts = await provider.getAllAccounts();
         expect(accounts.length).toBeGreaterThan(0);
-        genesisAccountId = await provider.getAccountHashFromPublicKey(issuerPrivateKey.getPublicKey());
+        genesisAccountId = await provider.getAccountIdFromPublicKey(issuerPrivateKey.getPublicKey());
     });
 
     it("creating an account", async () => {

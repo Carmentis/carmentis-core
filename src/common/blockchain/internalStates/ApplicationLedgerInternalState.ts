@@ -1,22 +1,22 @@
-import {ApplicationLedgerActor, ApplicationLedgerLocalStateObject} from "../../type/types";
+import {ApplicationLedgerActor, ApplicationLedgerInternalStateObject} from "../../type/types";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {ActorNotDefinedError, ChannelAlreadyDefinedError, ChannelNotDefinedError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
 
-export class ApplicationLedgerLocalState {
+export class ApplicationLedgerInternalState {
     private static UNDEFINED_APPLICATION_ID = new Uint8Array(0);
 
-    constructor(private localState: ApplicationLedgerLocalStateObject) {
+    constructor(private internalState: ApplicationLedgerInternalStateObject) {
     }
 
-    static createFromLocalState(localState: ApplicationLedgerLocalStateObject) {
-        return new ApplicationLedgerLocalState(localState);
+    static createFromLocalState(internalState: ApplicationLedgerInternalStateObject) {
+        return new ApplicationLedgerInternalState(internalState);
     }
 
 
     static createInitialState() {
-        return new ApplicationLedgerLocalState({
+        return new ApplicationLedgerInternalState({
             actors: [],
             allowedPkeSchemeIds: [],
             allowedSignatureSchemeIds: [],
@@ -25,37 +25,37 @@ export class ApplicationLedgerLocalState {
         })
     }
 
-    clone(): ApplicationLedgerLocalState {
-        return new ApplicationLedgerLocalState(structuredClone(this.localState))
+    clone(): ApplicationLedgerInternalState {
+        return new ApplicationLedgerInternalState(structuredClone(this.internalState))
     }
 
     createActor(createdActor: ApplicationLedgerActor) {
-        this.localState.actors.push(createdActor);
+        this.internalState.actors.push(createdActor);
     }
 
     createActorWithId(actorId: number, createdActor: ApplicationLedgerActor) {
         if (this.isActorDefinedById(actorId)) throw new ActorNotDefinedError(`Id: ${actorId}`);
-        this.localState.actors[actorId] = createdActor;
+        this.internalState.actors[actorId] = createdActor;
     }
 
     setAllowedSignatureSchemeIds(schemeIds: SignatureSchemeId[]) {
-        this.localState.allowedSignatureSchemeIds = schemeIds;
+        this.internalState.allowedSignatureSchemeIds = schemeIds;
     }
 
     setAllowedPkeSchemeIds(schemeIds: PublicKeyEncryptionSchemeId[]) {
-        this.localState.allowedPkeSchemeIds = schemeIds
+        this.internalState.allowedPkeSchemeIds = schemeIds
     }
 
     setApplicationId(applicationId: Uint8Array) {
-        this.localState.applicationId = applicationId;
+        this.internalState.applicationId = applicationId;
     }
 
     isChannelDefinedById(channelId: number) {
-        return this.localState.channels[channelId] !== undefined
+        return this.internalState.channels[channelId] !== undefined
     }
 
     isChannelDefinedByName(channelName: string)  {
-        return this.localState.channels.some(channel => channel.name === channelName)
+        return this.internalState.channels.some(channel => channel.name === channelName)
     }
 
     createChannel(createdChannel: {name: string; isPrivate: boolean; creatorId: number}) {
@@ -66,52 +66,52 @@ export class ApplicationLedgerLocalState {
         if (this.isChannelDefinedByName(createdChannel.name)) throw new ChannelAlreadyDefinedError(createdChannel.name);
 
         // create the channel
-        this.localState.channels.push(createdChannel);
+        this.internalState.channels.push(createdChannel);
     }
 
     createChannelWithId(channelId: number, createdChannel: { name: string; isPrivate: boolean; creatorId: number }) {
         if (this.isChannelDefinedById(channelId)) throw new ChannelAlreadyDefinedError(`Id: ${channelId}`);
         if (this.isActorDefinedById(createdChannel.creatorId)) throw new ActorNotDefinedError(`Id: ${createdChannel.creatorId}`);
         if (this.isChannelDefinedByName(createdChannel.name)) throw new ChannelAlreadyDefinedError(createdChannel.name);
-        this.localState.channels[channelId] = createdChannel;
+        this.internalState.channels[channelId] = createdChannel;
     }
 
     isActorDefinedByName(name: string) {
-        return this.localState.actors.some(actor => actor.name === name);
+        return this.internalState.actors.some(actor => actor.name === name);
     }
 
     isActorDefinedById(actorId: number) {
-        return this.localState.actors[actorId] !== undefined;
+        return this.internalState.actors[actorId] !== undefined;
     }
 
     getAllowedSignatureSchemes(): SignatureSchemeId[] {
-        return this.localState.allowedSignatureSchemeIds;
+        return this.internalState.allowedSignatureSchemeIds;
     }
 
     getAllowedPkeSchemes(): PublicKeyEncryptionSchemeId[] {
-        return this.localState.allowedPkeSchemeIds;
+        return this.internalState.allowedPkeSchemeIds;
     }
 
     getNumberOfActors() {
-        return this.localState.actors.length;
+        return this.internalState.actors.length;
     }
 
     getActorById(actorId: number) {
-        const actor = this.localState.actors[actorId];
+        const actor = this.internalState.actors[actorId];
         if (actor === undefined) throw new ActorNotDefinedError(`ID: ${actorId}`);
         return actor;
     }
 
     getNumberOfChannels() {
-        return this.localState.channels.length;
+        return this.internalState.channels.length;
     }
 
     getApplicationId(): Hash {
-        return Hash.from(this.localState.applicationId);
+        return Hash.from(this.internalState.applicationId);
     }
 
     getChannelIdFromChannelName(channelName: string): number {
-        const id = this.localState.channels.findIndex(c => c.name === channelName);
+        const id = this.internalState.channels.findIndex(c => c.name === channelName);
         if (id === undefined) throw new ChannelNotDefinedError(channelName);
         return id;
     }
@@ -122,19 +122,19 @@ export class ApplicationLedgerLocalState {
     }
 
     getChannelFromChannelId(channelId: number) {
-        const channel = this.localState.channels[channelId];
+        const channel = this.internalState.channels[channelId];
         if (channel === undefined) throw new ChannelNotDefinedError(`ID: ${channelId}`);
         return channel;
     }
 
     getActorByName(name: string) {
-        const actor = this.localState.actors.find(a => a.name === name);
+        const actor = this.internalState.actors.find(a => a.name === name);
         if (actor === undefined) throw new ActorNotDefinedError(name);
         return actor;
     }
 
     getActorIdByName(name: string): number {
-        const actorIndex = this.localState.actors.findIndex(a => a.name === name);
+        const actorIndex = this.internalState.actors.findIndex(a => a.name === name);
         if (actorIndex === -1) throw new ActorNotDefinedError(name);
         return actorIndex;
     }
@@ -143,12 +143,12 @@ export class ApplicationLedgerLocalState {
 
     updateActor(actorId: number, updatedActor: ApplicationLedgerActor) {
         if (!this.isActorDefinedById(actorId)) throw new ActorNotDefinedError(`Id: ${actorId}`);
-        this.localState.actors[actorId] = updatedActor;
+        this.internalState.actors[actorId] = updatedActor;
     }
 
     updateChannel(channelId: number, updatedChannel: { name: string; isPrivate: boolean; creatorId: number }) {
         if (!this.isChannelDefinedById(channelId)) throw new ChannelNotDefinedError(`Id: ${channelId}`);
-        this.localState.channels[channelId] = updatedChannel;
+        this.internalState.channels[channelId] = updatedChannel;
     }
 
 }

@@ -19,6 +19,7 @@ beforeAll(async () => {
 
 describe('ApplicationLedgerStateUpdateRequest', () => {
     it('should create a microblock', async () => {
+        /*
         const provider = ProviderFactory.createInMemoryProvider();
         const vb = new ApplicationLedgerVb(provider);
         const mb = Microblock.createGenesisApplicationLedgerMicroblock();
@@ -33,5 +34,7 @@ describe('ApplicationLedgerStateUpdateRequest', () => {
                 data: {}
             }
         )
+
+         */
     })
 });

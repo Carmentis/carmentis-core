@@ -16,105 +16,69 @@ import {MicroblockHeaderObject} from "../../type/types";
 import {Optional} from "../../entities/Optional";
 import {IllegalStateError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
+import {IProvider} from "../../providers/IProvider";
+import {BlockchainUtils} from "../../utils/blockchainUtils";
 
 type MicroblockCheckerState =
     { isMicroblockParsingCompleted: false } |
     {
         isMicroblockParsingCompleted: true,
-        microblock: Microblock,
         virtualBlockchain: VirtualBlockchain,
     }
 /**
  * This class is responsible for checking the validity of a microblock.
  * An improved version of MicroblockImporter with cleaner separation of concerns.
  */
-export class MicroblockChecker {
+export class MicroblockConsistencyChecker {
     private _error: Optional<Error> = Optional.none();
     private hash!: Uint8Array;
-    private headerData!: Uint8Array;
-    private bodyData!: Uint8Array;
     private header!: MicroblockHeaderObject;
     private verificationState: MicroblockCheckerState = { isMicroblockParsingCompleted: false };
 
     constructor(
-        private readonly provider: Provider,
-        private readonly serializedMicroblock: Uint8Array
+        private readonly provider: IProvider,
+        private readonly checkedMicroblock: Microblock
     ) {}
 
-    async reconstructMicroblockAndVirtualBlockchainOrFail() {
+    async checkVirtualBlockchainConsistencyOrFail() {
         if (this.verificationState.isMicroblockParsingCompleted)
             throw new IllegalStateError("You have already called parseMicroblock() method. You can only call it once.")
 
-        // Parse the serialized microblock into header and body
-        const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(
-            this.serializedMicroblock
-        );
-
-        // Parse the header
-        const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
-
         // Validate body hash
-        const hashScheme = CryptoSchemeFactory.createDefaultCryptographicHash();
-        const bodyHash = hashScheme.hash(serializedBody);
-        if (!Utils.binaryIsEqual(bodyHash, header.bodyHash)) {
-            throw new Error(`inconsistent body hash`);
+        const isDeclaringConsistentBodyHash = this.checkedMicroblock.isDeclaringConsistentBodyHash();
+        if (!isDeclaringConsistentBodyHash) {
+            throw new Error(`inconsistent body hash detected for microblock hash ${Utils.binaryToHexa(this.checkedMicroblock.getHashAsBytes())}`);
         }
 
         // Determine VB type and handle VB loading/creation
-        let type: number;
+        let type: VirtualBlockchainType = this.checkedMicroblock.getType();
         let expirationDay = 0;
-        let vbIdentifier: Uint8Array = new Uint8Array();
-        if (header.height > 1) {
-            // Load existing VB
-            const previousMicroblockInfo = await this.provider.getMicroblockInformation(header.previousHash);
-            if (!previousMicroblockInfo) {
-                throw new Error(`previous microblock ${Utils.binaryToHexa(header.previousHash)} not found`);
-            }
-
-            const previousHeader = BlockchainSerializer.unserializeMicroblockHeader(previousMicroblockInfo.header)
-            if (header.height != previousHeader.height + 1) {
-                throw new Error(`inconsistent microblock height (expected ${previousHeader.height + 1}, got ${header.height})`);
-            }
-
-            type = previousMicroblockInfo.virtualBlockchainType;
-            vbIdentifier = previousMicroblockInfo.virtualBlockchainId;
-        } else {
+        let vbId: Hash;
+        const previousHash = this.checkedMicroblock.getPreviousHash().toBytes();
+        if (this.checkedMicroblock.isGenesisMicroblock()) {
             // Genesis microblock - extract type and expiration day from previousHash field
-            const genesisPreviousHash = header.previousHash;
+            const genesisPreviousHash = previousHash;
             type = Microblock.extractTypeFromGenesisPreviousHash(genesisPreviousHash)
-            expirationDay = Microblock.extractExpirationDayFromGenesisPreviousHash(genesisPreviousHash)
+            vbId = this.checkedMicroblock.getHash();
+        } else {
+            // load the microblock information of the previous block
+            const previousMicroblockHeader = await this.provider.getMicroblockHeader(Hash.from(previousHash));
+            if (!previousMicroblockHeader) {
+                throw new Error(`previous microblock ${Utils.binaryToHexa(previousHash)} not found`);
+            }
+            if (this.checkedMicroblock.getHeight() != previousMicroblockHeader.height + 1) {
+                throw new Error(`inconsistent microblock height (expected ${previousMicroblockHeader.height + 1}, got ${this.checkedMicroblock.getHeight()})`);
+            }
+
+            //type = previousMicroblockInfo.virtualBlockchainType;
+            const previousBlockHash = BlockchainUtils.computeMicroblockHashFromHeader(previousMicroblockHeader);
+            vbId = await this.provider.getVirtualBlockchainIdContainingMicroblock(Hash.from(previousBlockHash))
         }
 
-        // parse the block
-        const microblock = Microblock.loadFromSerializedHeaderAndBody(type, serializedHeader, serializedBody);
 
         // Instantiate the appropriate VB class
         let vb: VirtualBlockchain;
-        const vbId = Hash.from(vbIdentifier)
-        if (header.height > 1) {
-            switch (type) {
-                case VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN:
-                    vb = await this.provider.loadOrganizationVirtualBlockchain(vbId)
-                    break;
-                case VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN:
-                    vb = await this.provider.loadAccountVirtualBlockchain(vbId)
-                    break;
-                case VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN:
-                    vb = await this.provider.loadApplicationVirtualBlockchain(vbId)
-                    break;
-                case VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN:
-                    vb = await this.provider.loadValidatorNodeVirtualBlockchain(vbId)
-                    break;
-                case VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN:
-                    vb = await this.provider.loadProtocolVirtualBlockchain(vbId)
-                    break;
-                case VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN:
-                    vb = await this.provider.loadApplicationLedgerVirtualBlockchain(vbId)
-                    break;
-                default:
-                    throw new Error(`Unknown virtual blockchain type: ${type}`);
-            }
-        } else {
+        if (this.checkedMicroblock.isGenesisMicroblock()) {
             switch (type) {
                 case VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN:
                     vb = new OrganizationVb(this.provider)
@@ -137,13 +101,39 @@ export class MicroblockChecker {
                 default:
                     throw new Error(`Unknown virtual blockchain type: ${type}`);
             }
+            const genesisPreviousHash = this.checkedMicroblock.getPreviousHash().toBytes();
+            expirationDay = Microblock.extractExpirationDayFromGenesisPreviousHash(genesisPreviousHash)
             vb.setExpirationDay(expirationDay);
+        } else {
+            switch (type) {
+                case VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN:
+                    vb = await this.provider.loadOrganizationVirtualBlockchain(vbId)
+                    break;
+                case VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN:
+                    vb = await this.provider.loadAccountVirtualBlockchain(vbId)
+                    break;
+                case VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN:
+                    vb = await this.provider.loadApplicationVirtualBlockchain(vbId)
+                    break;
+                case VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN:
+                    vb = await this.provider.loadValidatorNodeVirtualBlockchain(vbId)
+                    break;
+                case VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN:
+                    vb = await this.provider.loadProtocolVirtualBlockchain(vbId)
+                    break;
+                case VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN:
+                    vb = await this.provider.loadApplicationLedgerVirtualBlockchain(vbId)
+                    break;
+                default:
+                    throw new Error(`Unknown virtual blockchain type: ${type}`);
+            }
         }
+            // TODO assert the type
 
         // we finally update the state of the virtual blockchain by adding the parsed microblock inside the vb
-        await vb.appendMicroBlock(microblock)
+        await vb.appendMicroBlock(this.checkedMicroblock)
 
-        this.verificationState = { isMicroblockParsingCompleted: true, microblock, virtualBlockchain: vb };
+        this.verificationState = { isMicroblockParsingCompleted: true, virtualBlockchain: vb };
     }
 
 
@@ -152,7 +142,7 @@ export class MicroblockChecker {
             throw new IllegalStateError("You have already called reconstructMicroblockAndVirtualBlockchain() method. You can only call it once.")
 
         // check the microblock timestamp
-        const microblock = this.verificationState.microblock;
+        const microblock = this.checkedMicroblock;
         currentTimestamp = currentTimestamp || Utils.getTimestampInSeconds();
         const result = microblock.isTemporallyCloseTo(currentTimestamp);
 
@@ -172,7 +162,7 @@ export class MicroblockChecker {
         if (this.verificationState.isMicroblockParsingCompleted === false)
             throw new IllegalStateError("You have already called reconstructMicroblockAndVirtualBlockchain() method. You can only call it once.")
 
-        const microblock = this.verificationState.microblock;
+        const microblock = this.checkedMicroblock;
         const result = microblock.isDeclaringConsistentGas();
         if (result) {
             const expectedGas = microblock.computeGas().getAmountAsAtomic();
@@ -182,10 +172,10 @@ export class MicroblockChecker {
         }
     }
 
-    /**
+    /*
      * Finalizes the verification by storing the microblock and updating the VB state.
      * This method incorporates the logic from the store() method of MicroblockImporter.
-     */
+     *
     async finalize(): Promise<void> {
         const vbId = this.virtualBlockchain.getId();
         const vb = this.virtualBlockchain; // Cast to access private properties
@@ -207,6 +197,8 @@ export class MicroblockChecker {
         );
     }
 
+     */
+
     private get virtualBlockchain() {
         if (this.verificationState.isMicroblockParsingCompleted) {
             return this.verificationState.virtualBlockchain
@@ -215,13 +207,6 @@ export class MicroblockChecker {
         }
     }
 
-    private get microblock() {
-        if (this.verificationState.isMicroblockParsingCompleted) {
-            return this.verificationState.microblock
-        } else {
-            throw new IllegalStateError('Microblock not initialized.')
-        }
-    }
 
     /**
      * Get the virtual blockchain instance.
@@ -234,7 +219,7 @@ export class MicroblockChecker {
      * Get the microblock instance.
      */
     getMicroblock(): Microblock {
-        return this.microblock;
+        return this.checkedMicroblock;
     }
 
     /**

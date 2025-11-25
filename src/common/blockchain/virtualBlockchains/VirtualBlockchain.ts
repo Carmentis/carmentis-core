@@ -53,7 +53,7 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
      */
     private microblockByHeight: Map<Height, Microblock>;
 
-    private provider: IProvider;
+    protected provider: IProvider;
     private type: number;
     private expirationDay: number;
 
@@ -170,21 +170,6 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
     }
 
 
-
-    /*
-    getState(): CustomState {
-        if (!this.state) {
-            this.state = this.getInitialState();
-        }
-        return this.state;
-    }
-
-    protected getInitialState(): CustomState {
-        throw new Error("State is undefined and no initial state has been defined.");
-    }
-
-     */
-
     /**
      * Retrieves the genesis seed by extracting it from the previous hash of the first microblock.
      *
@@ -296,17 +281,17 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
         const microblockHash = this.microblockHashByHeight.get(height);
         if (microblockHash === undefined) throw new MicroBlockNotFoundInVirtualBlockchainAtHeightError(this.getIdentifier(), height);
 
-        // load the content of the microblock from the provider
-        const info = await this.provider.getMicroblockInformation(microblockHash);
-        if (info === null) {
+        // load the header and the body of the microblock from the provider
+        const microblockHeader = await this.provider.getMicroblockHeader(Hash.from(microblockHash));
+        if (microblockHeader === null) {
             const encoder = EncoderFactory.bytesToHexEncoder();
             throw new Error(`Unable to load microblock information from hash ${encoder.encode(microblockHash)} (height ${height})`);
         }
+        const microblockBody = await this.provider.getMicroblockBody(Hash.from(microblockHash));
+        if (microblockBody === null) throw new Error('Unable to load the microblock body')
 
-        const bodyList = await this.provider.getMicroblockBodys([ microblockHash ]);
-        const serializedHeader = info.header;
-        const serializedBody = bodyList[0].body;
-        const microblock = Microblock.loadFromSerializedHeaderAndBody(this.type, serializedHeader, serializedBody )
+        // instantiate the microblock
+        const microblock = Microblock.loadFromHeaderAndBody(microblockHeader, microblockBody, this.type )
 
         // we store the microblock in the map
         this.microblockByHeight.set(height, microblock);

@@ -6,20 +6,21 @@ import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {IllegalStateError, SectionNotFoundError} from "../../errors/carmentis-error";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {AccountMicroblockStructureChecker} from "../structureCheckers/AccountMicroblockStructureChecker";
-import {AccountLocalState} from "../localStates/AccountLocalState";
 import {Microblock} from "../microblock/Microblock";
-import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {INITIAL_OFFER} from "../../constants/economics";
 import {CMTSToken} from "../../economics/currencies/token";
+import {IProvider} from "../../providers/IProvider";
+import {AccountInternalState} from "../internalStates/AccountInternalState";
+import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 
-export class AccountVb extends VirtualBlockchain<AccountLocalState> {
+export class AccountVb extends VirtualBlockchain<AccountInternalState> {
 
-    constructor(provider: Provider, state: AccountLocalState = AccountLocalState.createInitialState()) {
+    constructor(provider: IProvider, state: AccountInternalState = AccountInternalState.createInitialState()) {
         super(provider, VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN, state );
     }
 
-    protected async updateLocalState(state: AccountLocalState, microblock: Microblock): Promise<AccountLocalState> {
-        const localStateUpdater = LocalStateUpdaterFactory.createAccountLocalStateUpdater(
+    protected async updateLocalState(state: AccountInternalState, microblock: Microblock): Promise<AccountInternalState> {
+        const localStateUpdater = InternalStateUpdaterFactory.createAccountInternalStateUpdater(
             microblock.getLocalStateUpdateVersion()
         );
         return localStateUpdater.updateState(state, microblock);
@@ -46,22 +47,6 @@ export class AccountVb extends VirtualBlockchain<AccountLocalState> {
         const section = mb.getAccountPublicKeySection();
         const factory = new CryptoSchemeFactory();
         return factory.createPublicSignatureKey(schemeId, section.object.publicKey);
-    }
-
-    private getSignatureSchemeId() {
-        if (this.provider.isKeyed()) {
-            return this.getPrivateSignatureKey().getSignatureSchemeId();
-        } else {
-            throw new IllegalStateError("Cannot get signature scheme ID without a keyed provider.")
-        }
-    }
-
-    private getPrivateSignatureKey() {
-        if (this.provider.isKeyed()) {
-            return this.provider.getPrivateSignatureKey();
-        } else {
-            throw new IllegalStateError("Cannot get private signature key without a keyed provider.")
-        }
     }
 
     async isIssuer() {

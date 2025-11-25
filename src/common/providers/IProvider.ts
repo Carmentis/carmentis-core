@@ -1,4 +1,4 @@
-import {MicroblockInformationSchema} from "../type/types";
+import {MicroblockBody, MicroblockHeaderObject, VirtualBlockchainState} from "../type/types";
 import {Hash} from "../entities/Hash";
 import {ValidatorNodeVb} from "../blockchain/virtualBlockchains/ValidatorNodeVb";
 import {AccountVb} from "../blockchain/virtualBlockchains/AccountVb";
@@ -6,10 +6,34 @@ import {ApplicationLedgerVb} from "../blockchain/virtualBlockchains/ApplicationL
 import {ApplicationVb} from "../blockchain/virtualBlockchains/ApplicationVb";
 import {OrganizationVb} from "../blockchain/virtualBlockchains/OrganizationVb";
 import {ProtocolVb} from "../blockchain/virtualBlockchains/ProtocolVb";
+import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
+import {VirtualBlockchainStatus} from "../type/VirtualBlockchainStatus";
 
 export interface IProvider {
-    getMicroblockInformation(microblockHash: Uint8Array): Promise<MicroblockInformationSchema|null> ;
-    getMicroblockBodys(microblockHashes: Uint8Array[]):  Promise<{hash: Uint8Array<ArrayBufferLike>, body: Uint8Array<ArrayBufferLike>}[]>;
+    getVirtualBlockchainIdContainingMicroblock(microblockHash: Hash): Promise<Hash>;
+    getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeaderObject|null>;
+    getMicroblockBody(microblockHash: Hash): Promise<MicroblockBody|null>;
+    getListOfMicroblockBody(microblockHashes: Uint8Array[]):  Promise<MicroblockBody[]>;
+
+    /**
+     * Returns the state of the virtual blockchain.
+     *
+     * When returns null, it means that the virtual blockchain does not exist.
+     *
+     * Note: It should not be confused with an internal state, which is a blockchain-type-specific state.
+     *
+     * @param virtualBlockchainId
+     */
+    getVirtualBlockchainState(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainState | null>
+
+    /**
+     * Returns the status of the virtual blockchains.
+     *
+     * This method returns the virtual blockchain state and the list of microblock hashes composing the virtual blockchain.
+     * @param virtualBlockchainId
+     */
+    getVirtualBlockchainStatus(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainStatus | null>
+    getAccountIdFromPublicKey(publicKey: PublicSignatureKey): Promise<Hash>;
     loadProtocolVirtualBlockchain(protocolId: Hash): Promise<ProtocolVb>;
     loadValidatorNodeVirtualBlockchain(validatorNodeId: Hash): Promise<ValidatorNodeVb>;
     loadAccountVirtualBlockchain(accountId: Hash): Promise<AccountVb>;

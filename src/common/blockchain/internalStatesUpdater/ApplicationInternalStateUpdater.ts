@@ -1,10 +1,11 @@
-import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
-import {Microblock} from "../microblock/Microblock";
-import {ApplicationLocalState} from "../localStates/ApplicationLocalState";
-import {SectionNotFoundError} from "../../errors/carmentis-error";
 
-export class ApplicationLocalStateUpdater implements ILocalStateUpdater<ApplicationLocalState> {
-    updateState(prevState: ApplicationLocalState, microblock: Microblock): ApplicationLocalState {
+import {Microblock} from "../microblock/Microblock";
+import {SectionNotFoundError} from "../../errors/carmentis-error";
+import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
+import {ApplicationInternalState} from "../internalStates/ApplicationInternalState";
+
+export class ApplicationInternalStateUpdater implements IInternalStateUpdater<ApplicationInternalState> {
+    updateState(prevState: ApplicationInternalState, microblock: Microblock): ApplicationInternalState {
         const newState = prevState.clone();
 
         try {

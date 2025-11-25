@@ -3,11 +3,11 @@ export interface IInternalProvider {
 
     getMicroblock(identifier: Uint8Array): Promise<Uint8Array>;
 
-    getMicroblockHeader(identifier: Uint8Array): Promise<Uint8Array | null>;
+    getSerializedMicroblockHeader(identifier: Uint8Array): Promise<Uint8Array | null>;
 
     getMicroblockBody(identifier: Uint8Array): Promise<Uint8Array | null>;
 
-    getVirtualBlockchainState(identifier: Uint8Array): Promise<Uint8Array | null>;
+    getSerializedVirtualBlockchainState(identifier: Uint8Array): Promise<Uint8Array | null>;
 
     getAccountByPublicKeyHash(publicKeyHash: Uint8Array): Promise<Uint8Array | null>;
 
@@ -17,6 +17,6 @@ export interface IInternalProvider {
 
     setMicroblockBody(identifier: Uint8Array, data: Uint8Array): Promise<void>;
 
-    setVirtualBlockchainState(identifier: Uint8Array, data: Uint8Array): Promise<void>;
+    setSerializedVirtualBlockchainState(identifier: Uint8Array, data: Uint8Array): Promise<void>;
 
 }

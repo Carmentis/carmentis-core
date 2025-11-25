@@ -5,27 +5,45 @@ import {ValidatorNodeMicroblockStructureChecker} from "../structureCheckers/Vali
 
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Microblock} from "../microblock/Microblock";
-import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
-import {ValidatorNodeLocalState} from "../localStates/ValidatorNodeLocalState";
+import {IProvider} from "../../providers/IProvider";
+import {IllegalStateError} from "../../errors/carmentis-error";
+import {SectionType} from "../../type/SectionType";
+import {ValidatorNodeCometbftPublicKeyDeclarationSection} from "../../type/sections";
+import {ValidatorNodeInternalState} from "../internalStates/ValidatorNodeInternalState";
+import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 
-export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeLocalState> {
+export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalState> {
 
 
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------
-    constructor(provider: Provider, state: ValidatorNodeLocalState = ValidatorNodeLocalState.createInitialState()) {
+    constructor(provider: IProvider, state: ValidatorNodeInternalState = ValidatorNodeInternalState.createInitialState()) {
         super(provider, VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN, state);
     }
 
-    protected async updateLocalState(state: ValidatorNodeLocalState, microblock: Microblock): Promise<ValidatorNodeLocalState> {
-        const stateUpdater = LocalStateUpdaterFactory.createValidatorNodeLocalStateUpdater(microblock.getLocalStateUpdateVersion());
+    protected async updateLocalState(state: ValidatorNodeInternalState, microblock: Microblock): Promise<ValidatorNodeInternalState> {
+        const stateUpdater = InternalStateUpdaterFactory.createValidatorNodeInternalStateUpdater(microblock.getLocalStateUpdateVersion());
         return await stateUpdater.updateState(state, microblock)
     }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {
         const checker = new ValidatorNodeMicroblockStructureChecker();
         return checker.checkMicroblockStructure(microblock);
+    }
+
+    async getCometbftPublicKeyDeclaration(): Promise<{cometbftPublicKey: string , cometbftPublicKeyType: string}> {
+        const height = this.localState.getCometbftPublicKeyDeclarationHeight();
+        if (height === 0) throw new IllegalStateError("Node has not declared its CometBFT public key yet");
+        const microblock = await this.getMicroblock(height);
+        const section = microblock.getSectionByType<ValidatorNodeCometbftPublicKeyDeclarationSection>(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION);
+        const cometbftPublicKey = section.object.cometPublicKey;
+        const cometbftPublicKeyType = section.object.cometPublicKeyType;
+        return { cometbftPublicKeyType, cometbftPublicKey }
+    }
+
+    getNodeDeclarationHeight(): number {
+        return this.getLocalState().getCometbftPublicKeyDeclarationHeight();
     }
 
     /**

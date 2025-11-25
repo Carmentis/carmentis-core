@@ -11,7 +11,7 @@ import {
     BlockInformationDTO,
     ChainInformationDTO,
     GenesisSnapshotDTO,
-    MicroBlockBodys,
+    MicroblockBodyListResponse,
     MicroblockInformationSchema,
     MsgVirtualBlockchainState,
     ObjectList,
@@ -227,13 +227,13 @@ export class NetworkProvider implements IExternalProvider {
         return answer;
     }
 
-    async getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroBlockBodys | null>  {
+    async getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroblockBodyListResponse | null>  {
         this.requestLogger.debug(`Requesting microblock bodys for microblock hashes ${hashes.length}`);
         this.requestLogger.debug(`Lisf of requsested hashes: ${hashes}`, () => ({
             hashes: hashes.map(h => Utils.binaryToHexa(h))
         }))
 
-        const answer = await this.abciQuery<MicroBlockBodys>(
+        const answer = await this.abciQuery<MicroblockBodyListResponse>(
             SCHEMAS.MSG_GET_MICROBLOCK_BODYS,
             {
                 hashes
@@ -261,7 +261,7 @@ export class NetworkProvider implements IExternalProvider {
         return answer;
     }
 
-    async getVirtualBlockchainState(virtualBlockchainId: Uint8Array) {
+    async getSerializedVirtualBlockchainState(virtualBlockchainId: Uint8Array) {
         //const idStr = virtualBlockchainId instanceof Uint8Array ? Utils.binaryToHexa(virtualBlockchainId) : String(virtualBlockchainId);
         this.requestLogger.debug(`Requesting virtual blockchain state for vb id {vbId}`, () => ({
             vbId: Utils.binaryToHexa(virtualBlockchainId)
@@ -275,7 +275,7 @@ export class NetworkProvider implements IExternalProvider {
         );
 
         this.responseLogger.debug(`Receiving virtual blockchain state: ${answer.stateData.length} bytes`);
-        return answer;
+        return answer.stateData;
     }
 
     /*

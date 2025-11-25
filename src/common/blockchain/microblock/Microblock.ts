@@ -2,7 +2,7 @@ import {CHAIN, ECO, SCHEMAS, SECTIONS} from "../../constants/constants";
 import {SchemaSerializer, SchemaUnserializer} from "../../data/schemaSerializer";
 import {Utils} from "../../utils/utils";
 import {Crypto} from "../../crypto/crypto";
-import {MicroblockHeaderObject} from "../../type/types";
+import {MicroblockBody, MicroblockHeaderObject} from "../../type/types";
 import {Hash} from "../../entities/Hash";
 import {CarmentisError, IllegalStateError, SectionNotFoundError} from "../../errors/carmentis-error";
 import {SectionType} from "../../type/SectionType";
@@ -46,7 +46,7 @@ import {
     ProtocolSignatureSection,
     ProtocolSigSchemeSection,
     ValidatorNodeDeclarationSection,
-    ValidatorNodeDescriptionSection,
+    ValidatorNodeCometbftPublicKeyDeclarationSection,
     ValidatorNodeRpcEndpointSection,
     ValidatorNodeSignatureSection,
     ValidatorNodeSigSchemeSection,
@@ -54,13 +54,13 @@ import {
 } from "../../type/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {BlockchainSerializer} from "../../data/BlockchainSerializer";
-import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {CMTSToken} from "../../economics/currencies/token";
 import {EncoderFactory} from "../../utils/encoder";
 import {Section} from "../../type/Section";
 import {TimestampValidationResult} from "./TimestampValidationResult";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {Logger} from "../../utils/Logger";
+import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -147,19 +147,70 @@ export class Microblock {
     };
 
 
-    static loadFromSerializedMicroblock(expectedMbType: VirtualBlockchainType | null, serializedMicroblock: Uint8Array) {
+    static loadFromSerializedMicroblock(serializedMicroblock: Uint8Array, expectedMbType?: VirtualBlockchainType) {
         const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(serializedMicroblock);
-        return Microblock.loadFromSerializedHeaderAndBody(expectedMbType, serializedHeader, serializedBody);
+        return Microblock.loadFromSerializedHeaderAndBody(serializedHeader, serializedBody, expectedMbType);
     }
 
-    static loadFromSerializedHeaderAndBody(expectedMbType: VirtualBlockchainType | null, serializedHeader: Uint8Array, serializedBody: Uint8Array): Microblock {
+    static loadFromHeaderAndBody(header: MicroblockHeaderObject, body: MicroblockBody, expectedMbType?: VirtualBlockchainType): Microblock {
+        // Validate that expected type matches if provided
+        const microblockType = header.microblockType;
+        if (expectedMbType !== undefined && expectedMbType !== microblockType) {
+            throw new CarmentisError(
+                `Microblock type mismatch: expected ${expectedMbType}, got ${microblockType} from header`
+            );
+        }
+
+        const mb = new Microblock(microblockType);
+        mb.header = header;
+
+        // Validate basic header fields
+        if (header.magicString != CHAIN.MAGIC_STRING) {
+            throw new Error(`magic string '${CHAIN.MAGIC_STRING}' is missing`);
+        }
+        if (header.protocolVersion != CHAIN.PROTOCOL_VERSION) {
+            throw new Error(`invalid protocol version (expected ${CHAIN.PROTOCOL_VERSION}, got ${header.protocolVersion})`);
+        }
+
+
+        // parse the body
+        for (const {type, data} of body.body) {
+            const sectionSchema = SECTIONS.DEF[microblockType][type];
+            const unserializer = new SchemaUnserializer(sectionSchema);
+            const object = unserializer.unserialize(data);
+
+            mb.storeSection(type, object, data);
+        }
+
+
+
+        // we now proceed
+        // we check that the hash of the body is consistent with the body hash contained in the header
+        const computedBodyHash = mb.computeBodyHash();
+        const bodyHashContainedInHeader = header.bodyHash;
+        const areBodyHashMatching = Utils.binaryIsEqual(bodyHashContainedInHeader, computedBodyHash)
+        if (!areBodyHashMatching) {
+            const encoder = EncoderFactory.bytesToHexEncoder();
+            throw new CarmentisError(
+                `Body hash in the header is different of the locally computed body hash: header.bodyHash=${encoder.encode(bodyHashContainedInHeader)}, computed=${encoder.encode(computedBodyHash)}`
+            );
+        }
+
+        // we compute the hash of the microblock being the hash of the serialized header and assign the gas price
+        mb.setMicroblockHash(mb.computeHash());
+        mb.gasPrice = header.gasPrice;
+
+        return mb;
+    }
+
+    static loadFromSerializedHeaderAndBody(serializedHeader: Uint8Array, serializedBody: Uint8Array, expectedMbType?: VirtualBlockchainType): Microblock {
         const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
 
         // Extract microblock type from header
         const microblockType = header.microblockType;
 
         // Validate that expected type matches if provided
-        if (expectedMbType !== null && expectedMbType !== microblockType) {
+        if (expectedMbType !== undefined && expectedMbType !== microblockType) {
             throw new CarmentisError(
                 `Microblock type mismatch: expected ${expectedMbType}, got ${microblockType} from header`
             );
@@ -319,7 +370,7 @@ export class Microblock {
         const defaultTimestampInSeconds = Math.floor(Date.now() / 1000);
         const defaultGasPrice = CMTSToken.zero().getAmountAsAtomic();
         const initialHeader : MicroblockHeaderObject = {
-            localStateUpdaterVersion: LocalStateUpdaterFactory.defaultLocalStateUpdaterVersionByVbType(type),
+            localStateUpdaterVersion: InternalStateUpdaterFactory.defaultInternalStateUpdaterVersionByVbType(type),
             magicString: CHAIN.MAGIC_STRING,
             protocolVersion: CHAIN.PROTOCOL_VERSION,
             microblockType: type,
@@ -699,10 +750,11 @@ export class Microblock {
     computeFees() {
         const gas = this.getGas();
         const gasPrice = this.getGasPrice();
-        return Math.floor(
+        const fees = Math.floor(
             (gas.getAmountAsAtomic() * gasPrice.getAmountAsAtomic()) /
             ECO.GAS_UNIT,
         );
+        return CMTSToken.createAtomic(fees);
     }
 
     /**
@@ -989,10 +1041,10 @@ export class Microblock {
     }
 
     /**
-     * Adds a validator node description section.
+     * Adds a validator node cometbft public key declaration section.
      */
-    addValidatorNodeDescriptionSection(object: ValidatorNodeDescriptionSection) {
-        return this.addSection(SectionType.VN_DESCRIPTION, object);
+    addValidatorNodeCometbftPublicKeyDeclarationSection(object: ValidatorNodeCometbftPublicKeyDeclarationSection) {
+        return this.addSection(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION, object);
     }
 
     /**
@@ -1246,7 +1298,7 @@ export class Microblock {
     }
 
     getValidatorNodeDescriptionSection() {
-        return this.getSectionByType<ValidatorNodeDescriptionSection>(SectionType.VN_DESCRIPTION);
+        return this.getSectionByType<ValidatorNodeCometbftPublicKeyDeclarationSection>(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION);
     }
 
     getValidatorNodeRpcEndpointSection() {
@@ -1386,5 +1438,31 @@ export class Microblock {
             genesisPreviousHash[3] << 8 |
             genesisPreviousHash[4];
         return expirationDay;
+    }
+
+    getBodyHashInHeader() {
+        return this.header.bodyHash;
+    }
+
+    isDeclaringConsistentBodyHash() {
+        const bodyHash = this.computeBodyHash();
+        return Utils.binaryIsEqual(bodyHash, this.header.bodyHash)
+    }
+
+    isGenesisMicroblock() {
+        return this.getHeight() === 1;
+    }
+
+    setBodyHash(bodyHash: Uint8Array<ArrayBufferLike>) {
+        this.header.bodyHash = bodyHash;
+    }
+
+    computeHash() {
+        const {microblockHash} = this.serialize();
+        return microblockHash;
+    }
+
+    setMicroblockHash(hash: Uint8Array) {
+        this.hash = hash;
     }
 }

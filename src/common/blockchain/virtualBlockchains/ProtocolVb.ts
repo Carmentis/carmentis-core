@@ -5,11 +5,12 @@ import {Provider} from "../../providers/Provider";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {ProtocolMicroblockStructureChecker} from "../structureCheckers/ProtocolMicroblockStructureChecker";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
-import {ProtocolLocalState} from "../localStates/ProtocolLocalState";
-import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {Microblock} from "../microblock/Microblock";
+import {IProvider} from "../../providers/IProvider";
+import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
+import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 
-export class ProtocolVb extends VirtualBlockchain<ProtocolLocalState> {
+export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {
 
     // ------------------------------------------
     // Static methods
@@ -18,7 +19,7 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolLocalState> {
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------
-    constructor(provider: Provider, state: ProtocolLocalState = ProtocolLocalState.createInitialState()) {
+    constructor(provider: IProvider, state: ProtocolInternalState = ProtocolInternalState.createInitialState()) {
         super(provider, VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN, state);
     }
 
@@ -27,8 +28,8 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolLocalState> {
         return checker.checkMicroblockStructure(microblock);
     }
 
-    protected async updateLocalState(state:ProtocolLocalState, microblock: Microblock) {
-        const localStateUpdater = LocalStateUpdaterFactory.createProtocolLocalStateUpdater(microblock.getLocalStateUpdateVersion());
+    protected async updateLocalState(state:ProtocolInternalState, microblock: Microblock) {
+        const localStateUpdater = InternalStateUpdaterFactory.createProtocolInternalStateUpdater(microblock.getLocalStateUpdateVersion());
         return localStateUpdater.updateState(state, microblock);
     }
 
@@ -56,10 +57,10 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolLocalState> {
 
 
     async getPublicKey(): Promise<PublicSignatureKey> {
-        const keyMicroblock = await this.getMicroblock(this.localState.getLocalState().publicKeyHeight);
+        const keyMicroblock = await this.getMicroblock(this.localState.getInternalState().publicKeyHeight);
         const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.PROTOCOL_PUBLIC_KEY).object.publicKey;
         const cryptoFactory = new CryptoSchemeFactory();
-        const signatureSchemeId = this.localState.getLocalState().signatureSchemeId;
+        const signatureSchemeId = this.localState.getInternalState().signatureSchemeId;
         const publicKey = cryptoFactory.createPublicSignatureKey(signatureSchemeId, rawPublicKey)
 
         return publicKey;
@@ -67,8 +68,8 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolLocalState> {
 
     async signatureCallback(microblock: Microblock, section: any) {
         const publicKey = await this.getPublicKey();
-        const feesPayerAccount = await this.provider.getAccountHashByPublicKey(publicKey);
-        microblock.setFeesPayerAccount(feesPayerAccount);
+        const feesPayerAccount = await this.provider.getAccountIdFromPublicKey(publicKey);
+        microblock.setFeesPayerAccount(feesPayerAccount.toBytes());
     }
 
 }

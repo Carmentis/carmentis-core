@@ -17,17 +17,23 @@ import {Assertion} from "../../utils/Assertion";
 import {Logger} from "../../utils/Logger";
 import {HKDF} from "../../crypto/kdf/HKDF";
 import {AES256GCMSymmetricEncryptionKey} from "../../crypto/encryption/symmetric-encryption/encryption-interface";
+import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 
 export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedgerMicroblockBuilder {
 
-    static async createFromVirtualBlockchain(vb: ApplicationLedgerVb) {
+    static async createFromVirtualBlockchain(vb: ApplicationLedgerVb, authorPrivateSignatureKey: PrivateSignatureKey) {
         const copyVb = structuredClone(vb);
         const mb = await copyVb.createMicroblock();
-        return new ApplicationLedgerStateUpdateRequestHandler(mb, copyVb)
+        return new ApplicationLedgerStateUpdateRequestHandler(mb, copyVb, authorPrivateSignatureKey)
     }
 
 
-    constructor(mbUnderConstruction: Microblock, vb: ApplicationLedgerVb) {
+
+    constructor(
+        mbUnderConstruction: Microblock,
+        vb: ApplicationLedgerVb,
+        private readonly authorPrivateSignatureKey: PrivateSignatureKey
+    ) {
         super(mbUnderConstruction, vb);
     }
 
@@ -78,11 +84,10 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         const authorName = object.author;
         const authorId = this.getActorIdFromActorName(authorName);
         if (isBuildingGenesisMicroBlock) {
-            const authorPublicSignatureKey = this.vb.provider.getPrivateSignatureKey().getPublicKey();
             const authorPublicEncryptionKey = hostPrivateDecryptionKey.getPublicKey();
             await this.subscribeActor(
                 authorName,
-                authorPublicSignatureKey,
+                this.authorPrivateSignatureKey.getPublicKey(),
                 authorPublicEncryptionKey
             );
         }
@@ -145,7 +150,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         for (const channelData of channelDataList) {
             const {isPrivate: isPrivateChannel, channelId} = channelData;
             if (isPrivateChannel) {
-                const channelKey = await this.vb.getChannelKey(authorId, channelId, hostPrivateDecryptionKey);
+                const channelKey = await this.vb.getChannelKey(authorId, channelId, this.authorPrivateSignatureKey, hostPrivateDecryptionKey);
                 const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, this.vb.getHeight(), channelId);
                 const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, this.vb.getHeight(), channelId);
                 const encryptedData = Crypto.Aes.encryptGcm(channelSectionKey, channelData.data, channelSectionIv);
@@ -193,7 +198,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId} for channel ${channelName}`)
 
 
-        const authorId = await this.vb.getActorIdAssociatedWithKeyInProvider();
+        const authorId = await this.vb.getActorIdByPublicSignatureKey(this.authorPrivateSignatureKey.getPublicKey());
         const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
         const guestId = actorId; // the guest is the actor assigned to the channel
 
@@ -230,7 +235,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
 
 
         // we encrypt the channel key using the shared secret key
-        const channelKey = await this.vb.getChannelKey(hostId, channelId, hostPrivateDecryptionKey);
+        const channelKey = await this.vb.getChannelKey(hostId, channelId, this.authorPrivateSignatureKey, hostPrivateDecryptionKey);
         const encryptedChannelKey = hostGuestSharedKey.encrypt(channelKey);
 
         // we log the result

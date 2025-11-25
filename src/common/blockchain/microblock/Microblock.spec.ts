@@ -93,7 +93,6 @@ describe('Microblock.loadSerializedMicroblock', () => {
             const serializedData = microblock.serialize();
             expect(serializedData.bodyData).toBeInstanceOf(Uint8Array)
             const recoveredMicroblock = Microblock.loadFromSerializedHeaderAndBody(
-                null,
                 serializedData.headerData,
                 serializedData.bodyData
             );

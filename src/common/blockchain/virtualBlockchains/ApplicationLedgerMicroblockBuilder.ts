@@ -1,19 +1,19 @@
 import {ApplicationLedgerVb} from "./ApplicationLedgerVb";
 import {Microblock} from "../microblock/Microblock";
 import {MicroBlockNotFoundInVirtualBlockchainAtHeightError} from "../../errors/carmentis-error";
-import {IApplicationLedgerLocalStateUpdater} from "../localStates/ILocalStateUpdater";
-import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {Section} from "../../type/Section";
 import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
 import {Height} from "../../common";
 import {VirtualBlockchain} from "./VirtualBlockchain";
+import {IApplicationLedgerInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
+import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 
 
 export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFailureFallback {
 
-    private stateUpdater: IApplicationLedgerLocalStateUpdater;
+    private stateUpdater: IApplicationLedgerInternalStateUpdater;
     constructor(protected mbUnderConstruction: Microblock, protected vb: ApplicationLedgerVb) {
-        this.stateUpdater = LocalStateUpdaterFactory.createApplicationLedgerLocalStateUpdater(
+        this.stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(
             mbUnderConstruction.getLocalStateUpdateVersion()
         );
     }

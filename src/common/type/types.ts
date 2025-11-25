@@ -46,32 +46,32 @@ export interface MerkleProof {
     witnesses: string;
 }
 
-export interface ProtocolVBState {
+export interface ProtocolVBInternalStateObject {
     signatureSchemeId: number;
     publicKeyHeight: number;
     variables: { variableName: string, variableValue: string }[]
 }
 
-export interface AccountVBState {
+export interface AccountVBInternalStateObject {
     signatureSchemeId: number;
     publicKeyHeight: number;
 }
 
-export interface OrganizationVBState {
+export interface OrganizationVBInternalStateObject {
     signatureSchemeId: number;
     publicKeyHeight: number;
     descriptionHeight: number;
 }
 
-export interface ValidatorNodeVBState {
+export interface ValidatorNodeVBInternalStateObject {
     signatureSchemeId: number;
     organizationId: Uint8Array;
-    descriptionHeight: number;
+    cometbftPublicKeyDeclarationHeight: number;
     rpcEndpointHeight: number;
-    networkIntegrationHeight: number;
+    lastKnownVotingPower: number;
 }
 
-export interface ApplicationVBState {
+export interface ApplicationVBInternalStateObject {
     signatureSchemeId: number;
     organizationId: Uint8Array;
     descriptionHeight: number;
@@ -121,7 +121,7 @@ export interface ApplicationLedgerActor {
 /**
  * Describes the local state of the application ledger.
  */
-export interface ApplicationLedgerLocalStateObject {
+export interface ApplicationLedgerInternalStateObject {
     allowedSignatureSchemeIds: number[];
     allowedPkeSchemeIds: number[];
     applicationId: Uint8Array;
@@ -202,13 +202,14 @@ export interface MicroblockInformationSchema {
     header: Uint8Array;
 }
 
-export interface MicroBlockBody {
+
+export interface MicroblockBodyResponse {
     hash: Uint8Array,
     body: Uint8Array
 }
 
-export interface MicroBlockBodys {
-    list: MicroBlockBody[];
+export interface MicroblockBodyListResponse {
+    list: MicroblockBodyResponse[];
 }
 
 export type VirtualBlockchainUpdateInterface =
@@ -217,12 +218,21 @@ export type VirtualBlockchainUpdateInterface =
     { exists: true, changed: true, stateData: Uint8Array, headers: Uint8Array[] }
 
 
-export interface VirtualBlockchainStateInterface<CustomState = object> {
+
+export interface VirtualBlockchainState<InternalState = unknown> {
     type: number,
     height: number,
     expirationDay: number,
     lastMicroblockHash: Uint8Array,
-    customState: CustomState
+    internalState: InternalState
+}
+
+export interface VirtualBlockchainStateDto {
+    type: number,
+    height: number,
+    expirationDay: number,
+    lastMicroblockHash: Uint8Array,
+    serializedInternalState: Uint8Array
 }
 
 

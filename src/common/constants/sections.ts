@@ -170,7 +170,7 @@ ACCOUNT[ACCOUNT_SIGNATURE] = {
 // ============================================================================================================================ //
 export const VN_SIG_SCHEME          = SectionType.VN_SIG_SCHEME;
 export const VN_DECLARATION         = SectionType.VN_DECLARATION;
-export const VN_DESCRIPTION         = SectionType.VN_DESCRIPTION;
+export const VN_COMETBFT_PUBLIC_KEY_DECLARATION         = SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION;
 export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
 export const VN_VOTING_POWER_UPDATE = SectionType.VN_VOTING_POWER_UPDATE;
 export const VN_SIGNATURE           = SectionType.VN_SIGNATURE;
@@ -191,8 +191,8 @@ VALIDATOR_NODE[VN_DECLARATION] = {
   ]
 };
 
-VALIDATOR_NODE[VN_DESCRIPTION] = {
-  label: 'VN_DESCRIPTION',
+VALIDATOR_NODE[VN_COMETBFT_PUBLIC_KEY_DECLARATION] = {
+  label: 'VN_COMETBFT_PUBLIC_KEY_DECLARATION',
   definition: [
     { name: 'cometPublicKeyType', type: DATA.TYPE_STRING },
     { name: 'cometPublicKey',     type: DATA.TYPE_STRING }

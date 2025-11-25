@@ -1,6 +1,6 @@
 import {
     AccountHash, AccountHistoryInterface, AccountStateDTO, BlockContentDTO, BlockInformationDTO, ChainInformationDTO,
-    GenesisSnapshotDTO, MicroBlockBodys,
+    GenesisSnapshotDTO, MicroblockBodyListResponse,
     MicroblockInformationSchema,
     MsgVirtualBlockchainState, ObjectList, ValidatorNodeDTO,
     VirtualBlockchainUpdateInterface
@@ -29,11 +29,11 @@ export interface IExternalProvider {
 
     getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema | null> ;
 
-    getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroBlockBodys  | null>;
+    getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroblockBodyListResponse  | null>;
 
     getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number): Promise<VirtualBlockchainUpdateInterface>;
 
-    getVirtualBlockchainState(virtualBlockchainId: any): Promise<MsgVirtualBlockchainState>;
+    getSerializedVirtualBlockchainState(virtualBlockchainId: any): Promise<Uint8Array>;
 
     broadcastTx(data: Uint8Array): Promise<any>;
 

@@ -1,6 +1,4 @@
 import {Microblock} from "../microblock/Microblock";
-import {IApplicationLedgerLocalStateUpdater, ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
-import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
 import {SectionType} from "../../type/SectionType";
 import {
     ActorAlreadyDefinedError,
@@ -21,9 +19,11 @@ import {
     ApplicationLedgerSharedKeySection
 } from "../../type/sections";
 import {Section} from "../../type/Section";
+import {IApplicationLedgerInternalStateUpdater, IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
+import {ApplicationLedgerInternalState} from "../internalStates/ApplicationLedgerInternalState";
 
-export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<ApplicationLedgerLocalState>, IApplicationLedgerLocalStateUpdater {
-    async updateState(prevState: ApplicationLedgerLocalState, microblock: Microblock): Promise<ApplicationLedgerLocalState> {
+export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<ApplicationLedgerInternalState>, IApplicationLedgerInternalStateUpdater {
+    async updateState(prevState: ApplicationLedgerInternalState, microblock: Microblock): Promise<ApplicationLedgerInternalState> {
         const newState = prevState.clone();
         const mbHeight = microblock.getHeight();
         for (const section of microblock.getAllSections()) {
@@ -32,7 +32,7 @@ export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<Applicat
         return newState;
     }
 
-    async updateStateFromSection(prevState: ApplicationLedgerLocalState, section: Section, mbHeight: number): Promise<ApplicationLedgerLocalState> {
+    async updateStateFromSection(prevState: ApplicationLedgerInternalState, section: Section, mbHeight: number): Promise<ApplicationLedgerInternalState> {
         const newState = prevState.clone();
         switch (section.type) {
             case SectionType.APP_LEDGER_ALLOWED_SIG_SCHEMES:
@@ -78,21 +78,21 @@ export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<Applicat
     /**
      Section callbacks
      */
-    async allowedSignatureSchemesCallback(section: Section, localState: ApplicationLedgerLocalState) {
+    async allowedSignatureSchemesCallback(section: Section, localState: ApplicationLedgerInternalState) {
         localState.setAllowedSignatureSchemeIds(section.object.schemeIds)
         //localState.allowedSignatureSchemeIds = section.object.schemeIds;
     }
 
-    async allowedPkeSchemesCallback(section: Section, localState: ApplicationLedgerLocalState) {
+    async allowedPkeSchemesCallback(section: Section, localState: ApplicationLedgerInternalState) {
         localState.setAllowedSignatureSchemeIds(section.object.schemeIds)
         //localState.allowedPkeSchemeIds = section.object.schemeIds;
     }
 
-    async declarationCallback(section: Section<ApplicationLedgerDeclarationSection>, localState: ApplicationLedgerLocalState) {
+    async declarationCallback(section: Section<ApplicationLedgerDeclarationSection>, localState: ApplicationLedgerInternalState) {
         localState.setApplicationId(section.object.applicationId);
     }
 
-    async actorCreationCallback(section: Section<ApplicationLedgerActorCreationSection>, localState: ApplicationLedgerLocalState) {
+    async actorCreationCallback(section: Section<ApplicationLedgerActorCreationSection>, localState: ApplicationLedgerInternalState) {
         const {id: createdActorId, name: createdActorName} = section.object;
         
         // ensure the number of actors is consistent with the actor identifier
@@ -114,7 +114,7 @@ export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<Applicat
         });
     }
 
-    async actorSubscriptionCallback(mbHeight: number, section: Section, localState: ApplicationLedgerLocalState) {
+    async actorSubscriptionCallback(mbHeight: number, section: Section, localState: ApplicationLedgerInternalState) {
         const actor = localState.getActorById(section.object.actorId); // I have remove - 1 because it causes invalid actorId
 
         if (actor === undefined) {
@@ -149,7 +149,7 @@ export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<Applicat
         actor.pkeKeyHeight = mbHeight;
     }
 
-    async channelCreationCallback(section: Section, localState: ApplicationLedgerLocalState) {
+    async channelCreationCallback(section: Section, localState: ApplicationLedgerInternalState) {
         // ensure provided channel identifier is consistent with the number of channels
         if (section.object.id != localState.getNumberOfChannels()) {
             throw new InvalidChannelError(section.object.id);
@@ -167,7 +167,7 @@ export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<Applicat
         });
     }
 
-    async sharedSecretCallback(mbHeight: number, section: Section<ApplicationLedgerSharedKeySection>, localState: ApplicationLedgerLocalState) {
+    async sharedSecretCallback(mbHeight: number, section: Section<ApplicationLedgerSharedKeySection>, localState: ApplicationLedgerInternalState) {
         // TODO: check that there is no shared secret yet
         // TODO: check that there host and guest already exists
         // Here
@@ -188,7 +188,7 @@ export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<Applicat
         })
     }
 
-    async invitationCallback(height: number, section: Section<ApplicationLedgerChannelInvitationSection>, localState: ApplicationLedgerLocalState) {
+    async invitationCallback(height: number, section: Section<ApplicationLedgerChannelInvitationSection>, localState: ApplicationLedgerInternalState) {
         // TODO: check that the actor is not already in the channel
         // Here
 
@@ -203,13 +203,13 @@ export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<Applicat
         logger.debug("Updated state after channel invitation callback: {state}", {state: localState})
     }
 
-    async publicChannelDataCallback(section: Section, localState: ApplicationLedgerLocalState) {
+    async publicChannelDataCallback(section: Section, localState: ApplicationLedgerInternalState) {
         if (!localState.isChannelDefinedById(section.object.channelId)) {
             throw new ChannelNotDefinedError(`invalid channel ID ${section.object.channelId}`);
         }
     }
 
-    async privateChannelDataCallback(section: Section, localState: ApplicationLedgerLocalState) {
+    async privateChannelDataCallback(section: Section, localState: ApplicationLedgerInternalState) {
         if (!localState.isChannelDefinedById(section.object.channelId)) {
             throw new ChannelNotDefinedError(`invalid channel ID ${section.object.channelId}`);
         }
@@ -219,7 +219,7 @@ export class AppLedgerLocalStateUpdaterV1 implements ILocalStateUpdater<Applicat
     }
 
     /*
-    async authorSignatureCallback(microblock: Microblock, section: Section, localState: ApplicationLedgerLocalState) {
+    async authorSignatureCallback(microblock: Microblock, section: Section, localState: ApplicationLedgerInternalState) {
         const application = new Application({provider: this.provider});
         await application._load(localState.applicationId);
         const publicKey = await application.getOrganizationPublicKey();

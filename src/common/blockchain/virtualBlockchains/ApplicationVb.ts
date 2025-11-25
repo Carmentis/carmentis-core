@@ -2,23 +2,24 @@ import {VirtualBlockchain} from "./VirtualBlockchain";
 import {Provider} from "../../providers/Provider";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {Microblock} from "../microblock/Microblock";
-import {ApplicationLocalState} from "../localStates/ApplicationLocalState";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {ApplicationMicroblockStructureChecker} from "../structureCheckers/ApplicationMicroblockStructureChecker";
-import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
+import {IProvider} from "../../providers/IProvider";
+import {ApplicationInternalState} from "../internalStates/ApplicationInternalState";
+import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 
-export class ApplicationVb extends VirtualBlockchain<ApplicationLocalState> {
+export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
     
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------
-    constructor(provider: Provider,  state: ApplicationLocalState = ApplicationLocalState.createInitialState()) {
+    constructor(provider: IProvider,  state: ApplicationInternalState = ApplicationInternalState.createInitialState()) {
         super(provider, VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN, state);
     }
 
 
-    protected async updateLocalState(state: ApplicationLocalState, microblock: Microblock) {
-        const localStateUpdater = LocalStateUpdaterFactory.createApplicationLocalStateUpdater(microblock.getLocalStateUpdateVersion());
+    protected async updateLocalState(state: ApplicationInternalState, microblock: Microblock) {
+        const localStateUpdater = InternalStateUpdaterFactory.createApplicationInternalStateUpdater(microblock.getLocalStateUpdateVersion());
         return localStateUpdater.updateState(state, microblock);
     }
     
@@ -50,7 +51,7 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationLocalState> {
         const object = this.createSignature(privateKey);
         await this.addSection(SECTIONS.APP_SIGNATURE, object);
     }
-     */
+
 
 
     async signatureCallback(microblock: Microblock, section: any) {
@@ -59,4 +60,9 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationLocalState> {
         microblock.setFeesPayerAccount(feesPayerAccount);
     }
 
+     */
+
+    getOrganizationId() {
+        return this.localState.getOrganizationId()
+    }
 }

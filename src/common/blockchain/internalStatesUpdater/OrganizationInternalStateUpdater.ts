@@ -1,5 +1,4 @@
-import {ILocalStateUpdater} from "../localStates/ILocalStateUpdater";
-import {OrganizationLocalState} from "../localStates/OrganizationLocalState";
+
 import {Microblock} from "../microblock/Microblock";
 import {SectionType} from "../../type/SectionType";
 import {
@@ -7,9 +6,11 @@ import {
     OrganizationPublicKeySection,
     OrganizationSigSchemeSection
 } from "../../type/sections";
+import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
+import {OrganizationInternalState} from "../internalStates/OrganizationInternalState";
 
-export class OrganizationLocalStateUpdater implements ILocalStateUpdater<OrganizationLocalState> {
-    updateState(localState: OrganizationLocalState, microblock: Microblock): OrganizationLocalState {
+export class OrganizationInternalStateUpdater implements IInternalStateUpdater<OrganizationInternalState> {
+    updateState(localState: OrganizationInternalState, microblock: Microblock): OrganizationInternalState {
         // update the organization signature scheme id
         const signatureSchemeIdSections = microblock.getSections<OrganizationSigSchemeSection>(
             s => s.type === SectionType.ORG_SIG_SCHEME

@@ -71,6 +71,6 @@ export class ProofVerificationResult {
      * @throws {IllegalParameterError} If a block at the specified height is not found.
      */
     async getRecordContainedInBlockAtHeight<T>(blockHeight: Height, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<T> {
-       return await this.appLedger.getRecord(blockHeight, hostPrivateDecryptionKey) as T
+       throw new Error("Not implemented")
     }
 }

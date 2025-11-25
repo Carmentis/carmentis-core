@@ -42,7 +42,7 @@ export class MemoryProvider implements IInternalProvider {
         return new Uint8Array();
     }
 
-    async getMicroblockHeader(identifier: Uint8Array) {
+    async getSerializedMicroblockHeader(identifier: Uint8Array) {
         const result = await MemoryProvider.get(this.microblockHeaderStore, identifier);
         this.logger.debug(`getMicroblockHeader identifier=${Utils.binaryToHexa(identifier)} -> ${result ? result.length : 0} bytes`);
         return result;
@@ -54,7 +54,7 @@ export class MemoryProvider implements IInternalProvider {
         return result;
     }
 
-    async getVirtualBlockchainState(identifier: Uint8Array) {
+    async getSerializedVirtualBlockchainState(identifier: Uint8Array) {
         const result = await MemoryProvider.get(this.virtualBlockchainStateStore, identifier);
         this.logger.debug(`getVirtualBlockchainState identifier=${Utils.binaryToHexa(identifier)} -> ${result ? result.length : 0} bytes`);
         return result;
@@ -80,7 +80,7 @@ export class MemoryProvider implements IInternalProvider {
         return await MemoryProvider.set(this.microblockBodyStore, identifier, data);
     }
 
-    async setVirtualBlockchainState(identifier: Uint8Array, data: Uint8Array) {
+    async setSerializedVirtualBlockchainState(identifier: Uint8Array, data: Uint8Array) {
         this.logger.debug(`setVirtualBlockchainState identifier=${Utils.binaryToHexa(identifier)} -> ${data.length} bytes`);
         return await MemoryProvider.set(this.virtualBlockchainStateStore, identifier, data);
     }

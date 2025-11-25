@@ -26,7 +26,6 @@ import {Logger} from "../../utils/Logger";
 import {Crypto} from "../../crypto/crypto";
 import {Assertion} from "../../utils/Assertion";
 import {CryptoEncoderFactory} from "../../crypto/CryptoEncoderFactory";
-import {ApplicationLedgerLocalState} from "../localStates/ApplicationLedgerLocalState";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {
     ApplicationLedgerMicroblockStructureChecker
@@ -41,15 +40,18 @@ import {Hash} from "../../entities/Hash";
 import {Height} from "../../type/Height";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
 import {SectionType} from "../../type/SectionType";
-import {LocalStateUpdaterFactory} from "../localStatesUpdater/LocalStateUpdaterFactory";
 import {Section} from "../../type/Section";
+import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
+import {IProvider} from "../../providers/IProvider";
+import {ApplicationLedgerInternalState} from "../internalStates/ApplicationLedgerInternalState";
+import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 
-export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLocalState> {
+export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInternalState> {
 
     // ------------------------------------------
     // Static methods
     // ------------------------------------------
-    static createApplicationLedgerVirtualBlockchain(provider: Provider) {
+    static createApplicationLedgerVirtualBlockchain(provider: IProvider) {
         return new ApplicationLedgerVb(provider);
     }
 
@@ -58,13 +60,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
     // Instance implementation
     // ------------------------------------------
 
-    constructor(provider: Provider, state: ApplicationLedgerLocalState = ApplicationLedgerLocalState.createInitialState()) {
+    constructor(provider: IProvider, state: ApplicationLedgerInternalState = ApplicationLedgerInternalState.createInitialState()) {
         super(provider, VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN, state )
     }
     
 
-    protected async updateLocalState(state: ApplicationLedgerLocalState, microblock: Microblock) {
-        const stateUpdater = LocalStateUpdaterFactory.createApplicationLedgerLocalStateUpdater(microblock.getLocalStateUpdateVersion());
+    protected async updateLocalState(state: ApplicationLedgerInternalState, microblock: Microblock) {
+        const stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(microblock.getLocalStateUpdateVersion());
         return stateUpdater.updateState(this.localState, microblock);
     }
     
@@ -74,7 +76,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
     }
 
 
-    setLocalState(state: ApplicationLedgerLocalState) {
+    setLocalState(state: ApplicationLedgerInternalState) {
         this.localState = state;
     }
 
@@ -274,8 +276,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
 
     async getOrganizationId(): Promise<Hash> {
         const applicationId = this.getApplicationId();
-        const applicationLocalState = await this.provider.getApplicationLocalStateFromId(applicationId);
-        const orgId = applicationLocalState.getOrganizationId();
+        const applicationVb = await this.provider.loadApplicationVirtualBlockchain(applicationId);
+        const orgId = applicationVb.getOrganizationId();
         return orgId;
     }
 
@@ -316,7 +318,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
         return this.localState.getNumberOfActors()
     }
 
-    private async getMicroblockIntermediateRepresentation(height: number, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey) {
+    private async getMicroblockIntermediateRepresentation(height: number, hostPrivateSignatureKey?: PrivateSignatureKey, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey) {
         const microblock = await this.getMicroblock(height);
         const listOfChannels: { channelId: number, data: object, merkleRootHash?: string }[] = [];
 
@@ -333,11 +335,14 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
 
         // we now load private channels that might be protected (encrypted)
         const logger = Logger.getLogger([ApplicationLedgerVb.name]);
-        if (hostPrivateDecryptionKey instanceof AbstractPrivateDecryptionKey) {
+        if (
+            hostPrivateSignatureKey !== undefined &&
+            hostPrivateDecryptionKey instanceof AbstractPrivateDecryptionKey
+        ) {
             // we attempt to identify the current actor
             let currentActorId: number | undefined;
             try {
-                currentActorId = await this.getActorIdAssociatedWithKeyInProvider();
+                currentActorId = await this.getActorIdByPublicSignatureKey(hostPrivateSignatureKey.getPublicKey())
             } catch (e) {
                 if (e instanceof CurrentActorNotFoundError) {
                     // This case occurs when the current actor is not found in the application ledger
@@ -355,7 +360,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
                 for (const section of privateChannelDataSections) {
                     const {channelId, encryptedData, merkleRootHash} = section.object;
                     try {
-                        const channelKey = await this.getChannelKey(currentActorId, channelId, hostPrivateDecryptionKey);
+                        const channelKey = await this.getChannelKey(currentActorId, channelId, hostPrivateSignatureKey, hostPrivateDecryptionKey);
                         const channelSectionKey = this.deriveChannelSectionKey(channelKey, height, channelId);
                         const channelSectionIv = this.deriveChannelSectionIv(channelKey, height, channelId);
                         const data = Crypto.Aes.decryptGcm(channelSectionKey, encryptedData, channelSectionIv);
@@ -435,7 +440,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
      * @throws NoSharedSecretError Occurs when no shared secret key has been found.
      * @throws DecryptionError Occurs when one of the encrypted channel key or encrypted shared key cannot be decrypted.
      */
-    async getChannelKey(actorId: number, channelId: number, actorPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+    async getChannelKey(actorId: number, channelId: number, hostPrivateSignatureKey: PrivateSignatureKey, actorPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
         // defensive programming
         Assertion.assert(typeof actorId === 'number', 'Expected actor id with type number')
         Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId}`)
@@ -456,7 +461,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
             }
         }))
         if (creatorId === actorId) {
-            const channelKey = await this.deriveChannelKey(channelId);
+            const channelKey = await this.deriveChannelKey(hostPrivateSignatureKey, channelId);
             logger.debug(`Channel key derived from private signature key for channel ${channelId}: ${channelKey}`)
             return channelKey;
         }
@@ -470,12 +475,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
 
     /**
      * Returns a channel key derived directly from the private key of the current actor.
+     * @param myPrivateSignatureKey
      * @param channelId
      */
-    async deriveChannelKey(channelId: number) {
+    async deriveChannelKey(myPrivateSignatureKey: PrivateSignatureKey, channelId: number) {
 
         // TODO: change the way we derive the channel key!!!!!!
-        const myPrivateSignatureKey = this.provider.getPrivateSignatureKey();
         const myPrivateSignatureKeyBytes = myPrivateSignatureKey.getPrivateKeyAsBytes();
         const genesisSeed = await this.getGenesisSeed();
         const salt = new Uint8Array();
@@ -582,21 +587,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
     }
 
 
-    /**
-     * Identifies and retrieves the actor ID associated with the current public signature key in the provider.
-     * It validates the keyed provider, retrieves the public signature key, and checks against actor subscription data
-     */
-    async getActorIdAssociatedWithKeyInProvider() {
-        const myPublicSignatureKey = this.provider.getPublicSignatureKey();
-        return this.getActorIdByPublicSignatureKey(myPublicSignatureKey)
-    }
-
-
 
     /**
      * Exports a proof containing intermediate representations for all microblocks up to the current height of the virtual blockchain.
      *
      * @param {Object} customInfo - Custom information to include in the proof.
+     * @param hostPrivateSignatureKey
      * @param hostPrivateDecryptionKey
      * @param {string} customInfo.author - The author of the proof file.
      * @return {Promise<Object>} A promise that resolves to an object containing metadata and the exported proof data.
@@ -609,13 +605,15 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
      * @return {number} return.proofs[].height - The height of the microblock.
      * @return {Object} return.proofs[].data - The proof data for the corresponding microblock.
      */
-    async exportProof(customInfo: {
-        author: string
-    }, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey): Promise<Proof> {
+    async exportProof(
+        customInfo: { author: string },
+        hostPrivateSignatureKey: PrivateSignatureKey,
+        hostPrivateDecryptionKey: AbstractPrivateDecryptionKey
+    ): Promise<Proof> {
         const proofs = [];
 
         for (let height = 1; height <= this.getHeight(); height++) {
-            const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateDecryptionKey);
+            const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateSignatureKey, hostPrivateDecryptionKey);
 
             proofs.push({
                 height: height,
@@ -639,15 +637,20 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
     /**
      *
      * @param proofObject
+     * @param hostPrivateSignatureKey
      * @param hostPrivateDecryptionKey
      * @throws ProofVerificationFailedError Occurs when the provided proof is not verified.
      */
-    async importProof(proofObject: Proof, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey): Promise<ImportedProof[]> {
+    async importProof(
+        proofObject: Proof,
+        hostPrivateSignatureKey?: PrivateSignatureKey,
+        hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey
+    ): Promise<ImportedProof[]> {
         const data: ImportedProof[] = [];
 
         for (let height = 1; height <= this.getHeight(); height++) {
             const proof = proofObject.proofs.find((proof: any) => proof.height == height);
-            const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateDecryptionKey);
+            const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateSignatureKey, hostPrivateDecryptionKey);
             const merkleData = ir.importFromProof(proof?.data);
 
             // TODO: check Merkle root hash
@@ -682,11 +685,16 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerLoca
      * and exporting it to JSON.
      *
      * @param {Height} height - The height at which the record is to be fetched.
+     * @param hostPrivateSignatureKey
      * @param {AbstractPrivateDecryptionKey} [hostPrivateDecryptionKey] - Optional private decryption key for the host.
      * @return {Promise<T>} A promise that resolves with the exported record in JSON format.
      */
-    async getRecord<T = any>(height: Height, hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey) {
-        const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateDecryptionKey);
+    async getRecord<T = any>(
+        height: Height,
+        hostPrivateSignatureKey?: PrivateSignatureKey,
+        hostPrivateDecryptionKey?: AbstractPrivateDecryptionKey
+    ) {
+        const ir = await this.getMicroblockIntermediateRepresentation(height, hostPrivateSignatureKey, hostPrivateDecryptionKey);
         return ir.exportToJson() as T;
     }
 

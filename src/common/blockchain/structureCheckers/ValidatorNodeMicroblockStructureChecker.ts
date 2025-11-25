@@ -20,12 +20,12 @@ export class ValidatorNodeMicroblockStructureChecker implements IMicroblockStruc
                 SECTIONS.AT_LEAST_ONE,
                 checker.isFirstBlock() ? 
                     [
-                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ],
+                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_COMETBFT_PUBLIC_KEY_DECLARATION ],
                         [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_RPC_ENDPOINT ]
                     ]
                 :
                     [
-                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_DESCRIPTION ],
+                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_COMETBFT_PUBLIC_KEY_DECLARATION ],
                         [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_RPC_ENDPOINT ],
                         [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_VOTING_POWER_UPDATE ]
                     ]

@@ -1,11 +1,12 @@
 import {AccountVBInternalStateObject} from "../../type/types";
+import {IInternalState} from "./IInternalState";
 
-export class AccountInternalState {
+export class AccountInternalState implements IInternalState {
     constructor(private internalState: AccountVBInternalStateObject) {
     }
 
-    static createFromLocalState(localState: AccountVBInternalStateObject) {
-        return new AccountInternalState(localState);
+    static createFromObject(internalState: unknown) {
+        return new AccountInternalState(<AccountVBInternalStateObject>internalState);
     }
 
     static createInitialState() {
@@ -15,7 +16,7 @@ export class AccountInternalState {
         });
     }
 
-    getLocalState(): AccountVBInternalStateObject {
+    toObject(): AccountVBInternalStateObject {
         return this.internalState;
     }
 

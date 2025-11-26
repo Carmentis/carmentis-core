@@ -95,10 +95,7 @@ export class BlockchainUtils {
 
     /**
      *
-     * @param type
-     * @param height
-     * @param lastMicroblockHash
-     * @param internalStateObject
+     * @param vbState
      */
     static encodeVirtualBlockchainState(vbState: VirtualBlockchainState) {
         const stateObject: VirtualBlockchainStateDto = {

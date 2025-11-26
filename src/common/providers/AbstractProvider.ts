@@ -11,6 +11,8 @@ import {ProtocolVb} from "../blockchain/virtualBlockchains/ProtocolVb";
 import {VirtualBlockchain} from "../blockchain/virtualBlockchains/VirtualBlockchain";
 import {VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
 import {VirtualBlockchainStatus} from "../type/VirtualBlockchainStatus";
+import {ProtocolInternalState} from "../blockchain/internalStates/ProtocolInternalState";
+import {InternalStateFactory} from "../blockchain/internalStates/InternalStateFactory";
 
 export abstract class AbstractProvider implements IProvider {
 
@@ -75,7 +77,12 @@ export abstract class AbstractProvider implements IProvider {
         vb.setHeight(vbState.state.height) //this.height = content.state.height;
         vb.setExpirationDay(vbState.state.expirationDay) //this.expirationDay = content.state.expirationDay;
         vb.setMicroblockHashes(vbState.microblockHashes) // this.microblockHashes = content.microblockHashes;
-        vb.setLocalState(vbState.state.internalState);
+        vb.setInternalState(
+            InternalStateFactory.createInternalStateFromObject(
+                vb.getType(),
+                vbState.state.internalState
+            )
+        );
     }
 
 

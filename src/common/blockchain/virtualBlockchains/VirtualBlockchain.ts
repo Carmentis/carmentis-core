@@ -14,6 +14,9 @@ import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {Logger} from "../../utils/Logger";
 import {IProvider} from "../../providers/IProvider";
 import {OnMicroblockInsertionEventListener} from "./events/OnMicroblockInsertedEventListener";
+import {VirtualBlockchainState} from "../../type/types";
+import {IInternalState} from "../internalStates/IInternalState";
+import {BlockchainUtils} from "../../utils/blockchainUtils";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -23,11 +26,12 @@ import {OnMicroblockInsertionEventListener} from "./events/OnMicroblockInsertedE
  *
  * This class is intended to be subclassed to implement specific behavior for varied virtual blockchain types.
  */
-export abstract class VirtualBlockchain<LocalState = unknown> {
+export abstract class VirtualBlockchain<InternalState extends IInternalState = IInternalState> {
     public static INITIAL_HEIGHT = 1;
-    private static logger = Logger.getVirtualBlockchainLogger();
+    private static staticLogger = Logger.getVirtualBlockchainLogger();
+    private logger =  VirtualBlockchain.staticLogger;
 
-    protected localState: LocalState;
+    protected internalState: InternalState;
     private height: number;
     private identifier: Uint8Array | undefined;
 
@@ -68,9 +72,9 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
     constructor(
         provider: IProvider,
         type: VirtualBlockchainType,
-        localState: LocalState,
+        localState: InternalState,
     ) {
-        this.localState = localState;
+        this.internalState = localState;
         this.provider = provider;
         this.microblockHashByHeight = new Map();
         this.microblockByHeight = new Map<Height, Microblock>();
@@ -99,15 +103,15 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
      * @param {Microblock} microblock - The microblock containing new data to update the local state.
      * @return {Promise<LocalState>} A promise that resolves to the updated local state.
      */
-    protected abstract updateLocalState(state: LocalState, microblock: Microblock): Promise<LocalState>;
+    protected abstract updateLocalState(state: InternalState, microblock: Microblock): Promise<InternalState>;
 
     /**
      * Retrieves the local state of the current instance.
      *
      * @return {LocalState} The local state associated with this instance.
      */
-    getLocalState(): LocalState {
-        return this.localState;
+    getInternalState(): InternalState {
+        return this.internalState;
     }
 
     /**
@@ -116,8 +120,8 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
      * @param {LocalState} localState - The new local state object to be set.
      * @return {void} Does not return a value.
      */
-    setLocalState(localState: LocalState): void {
-        this.localState = localState;
+    setInternalState(localState: InternalState): void {
+        this.internalState = localState;
     };
 
     /**
@@ -168,6 +172,27 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
         }
         this.expirationDay = day;
     }
+
+    async getVirtualBlockchainState(): Promise<VirtualBlockchainState> {
+        const height = this.getHeight();
+        const lastMicroblock = await this.getLastMicroblock();
+        const vbState: VirtualBlockchainState = {
+            expirationDay: this.getExpirationDay(),
+            height: height,
+            internalState: this.internalState.toObject(),
+            lastMicroblockHash: lastMicroblock.getHash().toBytes(),
+            type: this.getType()
+        };
+        console.log(vbState);
+        return vbState
+    }
+
+    async getSerializedVirtualBlockchainState(): Promise<Uint8Array> {
+        return BlockchainUtils.encodeVirtualBlockchainState(
+            await this.getVirtualBlockchainState()
+        )
+    }
+
 
 
     /**
@@ -348,7 +373,7 @@ export abstract class VirtualBlockchain<LocalState = unknown> {
         if (!isValid) throw new IllegalParameterError("Provided microblock has an invalid structure")
 
         // TODO update the previous hash of the microblock if possible
-        this.localState = await this.updateLocalState(this.localState, microblock);
+        this.internalState = await this.updateLocalState(this.internalState, microblock);
 
         // if the current state of the vb is empty (no microblock), then update the identifier
         if (this.identifier === undefined) {

@@ -29,7 +29,7 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
     }
 
     async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
-        const organizationId = this.localState.getOrganizationId();
+        const organizationId = this.internalState.getOrganizationId();
         const organization = await this.provider.loadOrganizationVirtualBlockchain(organizationId);
         return await organization.getPublicKey();
     }
@@ -63,6 +63,6 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
      */
 
     getOrganizationId() {
-        return this.localState.getOrganizationId()
+        return this.internalState.getOrganizationId()
     }
 }

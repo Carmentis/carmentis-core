@@ -4,8 +4,8 @@ export class OrganizationInternalState {
     constructor(private internalState: OrganizationVBInternalStateObject) {
     }
 
-    static createFromInternalState(localState: OrganizationVBInternalStateObject) {
-        return new OrganizationInternalState(localState);
+    static createFromObject(localState: unknown) {
+        return new OrganizationInternalState(<OrganizationVBInternalStateObject>localState);
     }
 
     static createInitialState() {
@@ -16,7 +16,7 @@ export class OrganizationInternalState {
         });
     }
 
-    getInternalState(): OrganizationVBInternalStateObject {
+    toObject(): OrganizationVBInternalStateObject {
         return this.internalState;
     }
 

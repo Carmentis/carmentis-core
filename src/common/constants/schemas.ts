@@ -160,7 +160,7 @@ export const VIRTUAL_BLOCKCHAIN_STATE: Schema = {
     { name: 'expirationDay',      type: DATA.TYPE_UINT32 },
     { name: 'height',             type: DATA.TYPE_UINT48 },
     { name: 'lastMicroblockHash', type: DATA.TYPE_BIN256 },
-    { name: 'internalState',        type: DATA.TYPE_BINARY }
+    { name: 'serializedInternalState',        type: DATA.TYPE_BINARY }
   ]
 };
 

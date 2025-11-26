@@ -33,7 +33,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
     }
 
     async getCometbftPublicKeyDeclaration(): Promise<{cometbftPublicKey: string , cometbftPublicKeyType: string}> {
-        const height = this.localState.getCometbftPublicKeyDeclarationHeight();
+        const height = this.internalState.getCometbftPublicKeyDeclarationHeight();
         if (height === 0) throw new IllegalStateError("Node has not declared its CometBFT public key yet");
         const microblock = await this.getMicroblock(height);
         const section = microblock.getSectionByType<ValidatorNodeCometbftPublicKeyDeclarationSection>(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION);
@@ -43,7 +43,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
     }
 
     getNodeDeclarationHeight(): number {
-        return this.getLocalState().getCometbftPublicKeyDeclarationHeight();
+        return this.getInternalState().getCometbftPublicKeyDeclarationHeight();
     }
 
     /**
@@ -118,7 +118,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
     
 
     async getOrganizationVirtualBlockchain() {
-        const orgId = this.localState.getOrganizationId();
+        const orgId = this.internalState.getOrganizationId();
         return await this.provider.loadOrganizationVirtualBlockchain(orgId);
     }
 

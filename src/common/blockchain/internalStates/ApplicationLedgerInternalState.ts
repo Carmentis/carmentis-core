@@ -3,15 +3,16 @@ import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {ActorNotDefinedError, ChannelAlreadyDefinedError, ChannelNotDefinedError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
+import {IInternalState} from "./IInternalState";
 
-export class ApplicationLedgerInternalState {
+export class ApplicationLedgerInternalState implements IInternalState {
     private static UNDEFINED_APPLICATION_ID = new Uint8Array(0);
 
     constructor(private internalState: ApplicationLedgerInternalStateObject) {
     }
 
-    static createFromLocalState(internalState: ApplicationLedgerInternalStateObject) {
-        return new ApplicationLedgerInternalState(internalState);
+    static createFromObject(internalState: unknown) {
+        return new ApplicationLedgerInternalState(<ApplicationLedgerInternalStateObject>internalState);
     }
 
 
@@ -23,6 +24,10 @@ export class ApplicationLedgerInternalState {
             applicationId: this.UNDEFINED_APPLICATION_ID,
             channels: []
         })
+    }
+
+    toObject(): object {
+        return this.internalState
     }
 
     clone(): ApplicationLedgerInternalState {

@@ -41,8 +41,8 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
      * @return {Promise<PublicSignatureKey>} A promise that resolves to a public signature key object.
      */
     async getPublicKey() {
-        const publicKeyDeclarationHeight = this.localState.getPublicKeyHeight();
-        const schemeId = this.localState.getPublicKeySchemeId();
+        const publicKeyDeclarationHeight = this.internalState.getPublicKeyHeight();
+        const schemeId = this.internalState.getPublicKeySchemeId();
         const mb = await this.getMicroblock(publicKeyDeclarationHeight);
         const section = mb.getAccountPublicKeySection();
         const factory = new CryptoSchemeFactory();

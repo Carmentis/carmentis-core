@@ -6,8 +6,8 @@ export class ValidatorNodeInternalState {
     constructor(private internalState: ValidatorNodeVBInternalStateObject) {
     }
 
-    static createFromInternalState(localState: ValidatorNodeVBInternalStateObject) {
-        return new ValidatorNodeInternalState(localState);
+    static createFromObject(localState: unknown) {
+        return new ValidatorNodeInternalState(<ValidatorNodeVBInternalStateObject>localState);
     }
 
     static createInitialState() {
@@ -18,6 +18,10 @@ export class ValidatorNodeInternalState {
             rpcEndpointHeight: 0,
             signatureSchemeId: 0
         });
+    }
+
+    toObject() {
+        return this.internalState
     }
 
     getOrganizationId() {

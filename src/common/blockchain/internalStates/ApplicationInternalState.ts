@@ -1,13 +1,14 @@
 import {ApplicationVBInternalStateObject} from "../../type/types";
 import {Utils} from "../../utils/utils";
 import {Hash} from "../../entities/Hash";
+import {IInternalState} from "./IInternalState";
 
-export class ApplicationInternalState {
+export class ApplicationInternalState implements IInternalState {
     constructor(private internalState: ApplicationVBInternalStateObject) {
     }
 
-    static createFromInternalState(internalState: ApplicationVBInternalStateObject) {
-        return new ApplicationInternalState(internalState);
+    static createFromObject(internalState: unknown) {
+        return new ApplicationInternalState(<ApplicationVBInternalStateObject>internalState);
     }
 
     static createInitialState() {
@@ -22,7 +23,7 @@ export class ApplicationInternalState {
         return new ApplicationInternalState({...this.internalState})
     }
 
-    getLocalState(): ApplicationVBInternalStateObject {
+    toObject(): ApplicationVBInternalStateObject {
         return this.internalState;
     }
 

@@ -116,8 +116,8 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState>
      */
 
     async getPublicKey(): Promise<PublicSignatureKey> {
-        const publicKeyDefinitionHeight = this.localState.getPublicKeyDefinitionHeight();
-        const publicSignatureKeySchemeId = this.localState.getPublicSignatureKeySchemeId();
+        const publicKeyDefinitionHeight = this.internalState.getPublicKeyDefinitionHeight();
+        const publicSignatureKeySchemeId = this.internalState.getPublicSignatureKeySchemeId();
         const keyMicroblock = await this.getMicroblock(publicKeyDefinitionHeight);
         const section = keyMicroblock.getOrganizationPublicKeySection();
         const rawPublicKey = section.object.publicKey;
@@ -127,7 +127,7 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState>
     }
 
     async getDescription() : Promise<OrganizationDescriptionSection> {
-        const descriptionHeight = this.localState.getDescriptionHeight();
+        const descriptionHeight = this.internalState.getDescriptionHeight();
         const microblock = await this.getMicroblock(descriptionHeight);
         const section = microblock.getOrganizationDescriptionSection();
         return section.object;

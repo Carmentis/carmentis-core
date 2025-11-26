@@ -1,11 +1,12 @@
 import {ProtocolVBInternalStateObject} from "../../type/types";
+import {IInternalState} from "./IInternalState";
 
-export class ProtocolInternalState {
+export class ProtocolInternalState implements IInternalState {
     constructor(private internalState: ProtocolVBInternalStateObject) {
     }
 
-    static createFromInternalState(localState: ProtocolVBInternalStateObject) {
-        return new ProtocolInternalState(localState);
+    static createFromObject(localState: unknown) {
+        return new ProtocolInternalState(<ProtocolVBInternalStateObject>localState);
     }
 
     static createInitialState() {
@@ -16,7 +17,7 @@ export class ProtocolInternalState {
         });
     }
 
-    getInternalState(): ProtocolVBInternalStateObject {
+    toObject(): ProtocolVBInternalStateObject {
         return this.internalState;
     }
 

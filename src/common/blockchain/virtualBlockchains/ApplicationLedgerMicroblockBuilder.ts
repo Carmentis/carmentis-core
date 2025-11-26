@@ -29,9 +29,9 @@ export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFail
     }
 
     protected async updateStateWithSection(section: Section) {
-        this.vb.setLocalState(
+        this.vb.setInternalState(
             await this.stateUpdater.updateStateFromSection(
-                this.vb.getLocalState(),
+                this.vb.getInternalState(),
                 section,
                 this.mbUnderConstruction.getHeight()
             )
@@ -39,7 +39,7 @@ export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFail
     }
 
     protected getLocalState() {
-        return this.vb.getLocalState();
+        return this.vb.getInternalState();
     }
 
 

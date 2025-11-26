@@ -9,8 +9,8 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
     constructor() {}
 
     async updateState(prevState: AccountInternalState, microblock: Microblock) {
-        const newState = AccountInternalState.createFromLocalState({
-            ...prevState.getLocalState()
+        const newState = AccountInternalState.createFromObject({
+            ...prevState.toObject()
         });
 
         // Process all sections in the microblock

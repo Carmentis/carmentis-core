@@ -4,8 +4,9 @@ import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encry
 import {BinaryToStringEncoderInterface} from "../utils/BinaryToStringEncoderInterface";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
 import {SeedEncoder} from "../utils/SeedEncoder";
+import {ICryptoKeyHandler} from "./ICryptoKeyHandler";
 
-export class ActorCrypto {
+export class ActorCrypto implements ICryptoKeyHandler {
     constructor(private readonly actorSeed: Uint8Array) {}
 
     static createFromAccountSeedAndVbSeed(accountSeed: Uint8Array, vbSeed: Uint8Array) {
@@ -19,6 +20,10 @@ export class ActorCrypto {
 
     encode( encoder: BinaryToStringEncoderInterface = new SeedEncoder()): string {
         return encoder.encode(this.actorSeed);
+    }
+
+    getSeedAsBytes(): Uint8Array {
+        return this.actorSeed
     }
 
     getPrivateSignatureKey(schemeId: SignatureSchemeId) {

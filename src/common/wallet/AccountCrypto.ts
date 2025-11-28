@@ -6,12 +6,13 @@ import {PublicKeyEncryptionSchemeId} from "../crypto/encryption/public-key-encry
 import {SeedEncoder} from "../utils/SeedEncoder";
 import {BinaryToStringEncoderInterface} from "../utils/BinaryToStringEncoderInterface";
 import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {ICryptoKeyHandler} from "./ICryptoKeyHandler";
 
 /**
  * Represents the cryptographic operations handled by an account.
  * An account is derived from a wallet ('s seed) and a nonce unique for each account.
  */
-export class AccountCrypto {
+export class AccountCrypto implements ICryptoKeyHandler {
 
     static createFromWalletSeedAndNonce(walletSeed: Uint8Array, accountNonce: number) {
         const inputSeed = Utils.binaryFrom(walletSeed, accountNonce);
@@ -75,6 +76,10 @@ export class AccountCrypto {
     static encoderStringAsBytes(data: string): Uint8Array {
         const encoder = new TextEncoder();
         return encoder.encode(data);
+    }
+
+    getSeedAsBytes(): Uint8Array {
+        return this.accountSeed
     }
 
     getAccountSeed() {

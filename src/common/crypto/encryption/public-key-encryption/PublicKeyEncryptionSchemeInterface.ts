@@ -11,11 +11,11 @@ export abstract class AbstractPublicKeyEncryptionScheme {
 
 export abstract class AbstractPublicEncryptionKey {
     abstract getScheme(): AbstractPublicKeyEncryptionScheme;
-    abstract encrypt( message: Uint8Array ): Uint8Array;
-    abstract getRawPublicKey(): Uint8Array;
+    abstract encrypt( message: Uint8Array ): Promise<Uint8Array>;
+    abstract getRawPublicKey(): Promise<Uint8Array>;
 
-    encode(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
-        return encoder.encode(this.getRawPublicKey());
+    async encode(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): Promise<string> {
+        return encoder.encode(await this.getRawPublicKey());
     }
 
     getSchemeId() {
@@ -25,9 +25,9 @@ export abstract class AbstractPublicEncryptionKey {
 
 export abstract class AbstractPrivateDecryptionKey  {
     abstract getScheme(): AbstractPublicKeyEncryptionScheme;
-    abstract decrypt(ciphertext: Uint8Array): Uint8Array;
+    abstract decrypt(ciphertext: Uint8Array): Promise<Uint8Array>;
     abstract getRawPrivateKey(): Uint8Array;
-    abstract getPublicKey(): AbstractPublicEncryptionKey;
+    abstract getPublicKey(): Promise<AbstractPublicEncryptionKey>;
     encode(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
         return encoder.encode(this.getRawPrivateKey());
     }

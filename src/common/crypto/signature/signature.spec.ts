@@ -1,52 +1,51 @@
 import {toBytes} from "@noble/ciphers/utils";
 import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
-import {MLDSA65PrivateSignatureKey} from "./ml-dsa-65";
+import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./ml-dsa-65";
 import {BytesSignatureEncoder} from "./signature-encoder";
 import {HCVSignatureEncoder} from "./HCVSignatureEncoder";
 import {SignatureSchemeId} from "./SignatureSchemeId";
 
 describe('ML DSA 65 Signature', () => {
-    test("Signature verification", () => {
-        const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const publicKey = privateKey.getPublicKey();
-        const msg  = toBytes("Hello world");
-        const signature = privateKey.sign(msg);
-        expect(publicKey.verify(msg, signature)).toBe(true);
+    test("Signature verification", async () => {
+        const privateKey = await MLDSA65PrivateSignatureKey.gen();
+        const publicKey = await privateKey.getPublicKey();
+        const msg = toBytes("Hello world");
+        const signature = await privateKey.sign(msg);
+        expect(await publicKey.verify(msg, signature)).toBe(true);
     })
 
-    test("Signature verification after encoding using encoder", () => {
-        const privateKey = MLDSA65PrivateSignatureKey.gen();
+    test("Signature verification after encoding using encoder", async () => {
+        const privateKey = await MLDSA65PrivateSignatureKey.gen();
         const encoder = new BytesSignatureEncoder();
-        const publicKey = privateKey.getPublicKey();
-        const decodedPublicKey = encoder.decodePublicKey(
-            encoder.encodePublicKey(publicKey)
+        const publicKey = await privateKey.getPublicKey();
+        const decodedPublicKey = await encoder.decodePublicKey(
+            await encoder.encodePublicKey(publicKey)
         );
 
         const msg  = toBytes("Hello world");
-        const signature = privateKey.sign(msg);
-        expect(decodedPublicKey.verify(msg, signature)).toBe(true);
+        const signature = await privateKey.sign(msg);
+        expect(await decodedPublicKey.verify(msg, signature)).toBe(true);
     })
 
-    test("Signature verification after encoding using factory", () => {
-        const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const rawPublicKey = privateKey.getPublicKey().getPublicKeyAsBytes();
+    test("Signature verification after encoding using factory", async () => {
+        const privateKey = await MLDSA65PrivateSignatureKey.gen();
+        const rawPublicKey = await (await privateKey.getPublicKey()).getPublicKeyAsBytes();
 
         const cryptoFactory = new CryptoSchemeFactory();
-        const publicKey = cryptoFactory.createPublicSignatureKey(SignatureSchemeId.ML_DSA_65, rawPublicKey);
+        const publicKey = await cryptoFactory.createPublicSignatureKey(SignatureSchemeId.ML_DSA_65, rawPublicKey);
         const msg  = toBytes("Hello world");
-        const signature = privateKey.sign(msg);
-        expect(publicKey.verify(msg, signature)).toBe(true);
+        const signature = await privateKey.sign(msg);
+        expect(await publicKey.verify(msg, signature)).toBe(true);
     })
 
-    test("Invalid factory usage", () => {
-        const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const rawPublicKey = privateKey.getPublicKey().getPublicKeyAsBytes();
+    test("Invalid factory usage", async () => {
+        const privateKey = await MLDSA65PrivateSignatureKey.gen();
+        const rawPublicKey = await (await privateKey.getPublicKey()).getPublicKeyAsBytes();
 
         const cryptoFactory = new CryptoSchemeFactory();
-        expect(() => cryptoFactory.createPublicSignatureKey(-1, rawPublicKey)).toThrow();
+        await expect(cryptoFactory.createPublicSignatureKey(-1, rawPublicKey)).rejects.toThrow();
     })
 })
-
 
 describe('Secp256k1 Signature', () => {
     test("Signature verification", () => {
@@ -63,38 +62,41 @@ describe('Secp256k1 Signature', () => {
 
 
 describe('Generic signature encoder', () => {
-    test("", () => {
+    test("", async () => {
         const encoder = new BytesSignatureEncoder();
 
-        const privateKey = MLDSA65PrivateSignatureKey.gen();
-        const publicKey = privateKey.getPublicKey();
-        const rawPublicKey = encoder.encodePublicKey(publicKey);
-        const publicKey2 = encoder.decodePublicKey(rawPublicKey);
+        const privateKey = await MLDSA65PrivateSignatureKey.gen();
+        const publicKey = await privateKey.getPublicKey();
+        const rawPublicKey = await encoder.encodePublicKey(publicKey);
+        const publicKey2 = await encoder.decodePublicKey(rawPublicKey);
         expect(publicKey2.getPublicKeyAsBytes()).toEqual(publicKey.getPublicKeyAsBytes());
         expect(publicKey2.getSignatureSchemeId()).toEqual(publicKey.getSignatureSchemeId());
     })
 })
 
 describe('HCV signature encoder', () => {
+    let privateKey: MLDSA65PrivateSignatureKey;
+    let publicKey: MLDSA65PublicSignatureKey;
 
+    beforeAll(async () => {
+      privateKey = await MLDSA65PrivateSignatureKey.gen();
+      publicKey = await privateKey.getPublicKey();
+    });
 
-    const privateKey = MLDSA65PrivateSignatureKey.gen();
-    const publicKey = privateKey.getPublicKey();
-
-    test("With base64 encoder", () => {
+    test("With base64 encoder", async () => {
         const encoder = HCVSignatureEncoder.createBase64HCVSignatureEncoder();
-        const recoveredPublicKey = encoder.decodePublicKey(encoder.encodePublicKey(publicKey));
+        const recoveredPublicKey = await encoder.decodePublicKey(await encoder.encodePublicKey(publicKey));
         const recoveredPrivateKey = encoder.decodePrivateKey(encoder.encodePrivateKey(privateKey));
         expect(publicKey.getPublicKeyAsBytes()).toEqual(recoveredPublicKey.getPublicKeyAsBytes());
         expect(privateKey.getPrivateKeyAsBytes()).toEqual(recoveredPrivateKey.getPrivateKeyAsBytes());
         expect(privateKey.getSignatureSchemeId()).toEqual(recoveredPrivateKey.getSignatureSchemeId());
     })
 
-    test("With Hex encoder", () => {
+    test("With Hex encoder", async () => {
         const encoder = HCVSignatureEncoder.createHexHCVSignatureEncoder();
-        const recoveredPublicKey = encoder.decodePublicKey(encoder.encodePublicKey(publicKey));
+        const recoveredPublicKey = await encoder.decodePublicKey(await encoder.encodePublicKey(publicKey));
         const recoveredPrivateKey = encoder.decodePrivateKey(encoder.encodePrivateKey(privateKey));
-        expect(publicKey.getPublicKeyAsBytes()).toEqual(recoveredPublicKey.getPublicKeyAsBytes());
+        expect(await publicKey.getPublicKeyAsBytes()).toEqual(await recoveredPublicKey.getPublicKeyAsBytes());
         expect(privateKey.getPrivateKeyAsBytes()).toEqual(recoveredPrivateKey.getPrivateKeyAsBytes());
         expect(privateKey.getSignatureSchemeId()).toEqual(recoveredPrivateKey.getSignatureSchemeId());
     })

@@ -45,11 +45,11 @@ export class Secp256k1PublicSignatureKey extends BasePublicSignatureKey {
         super();
     }
 
-    getPublicKeyAsBytes(): Uint8Array {
+    async getPublicKeyAsBytes(): Promise<Uint8Array> {
         return this.publicKey;
     }
 
-    verify(data: Uint8Array, signature: Uint8Array): boolean {
+    async verify(data: Uint8Array, signature: Uint8Array): Promise<boolean> {
         const msgHash = sha256(data);
         return verify(signature, msgHash, this.publicKey);
     }
@@ -97,7 +97,7 @@ export class Secp256k1PrivateSignatureKey extends BasePrivateSignatureKey {
         return new Secp256k1PrivateSignatureKey(etc.bytesToHex(seed))
     }
 
-    getPublicKey(): PublicSignatureKey {
+    async getPublicKey(): Promise<PublicSignatureKey> {
         return new Secp256k1PublicSignatureKey(getPublicKey(this.privateKey));
     }
 
@@ -106,7 +106,7 @@ export class Secp256k1PrivateSignatureKey extends BasePrivateSignatureKey {
         throw new Error("Invalid private key format: expected Uint8Array, got " + typeof this.privateKey + " instead.");
     }
 
-    sign(data: Uint8Array): Uint8Array {
+    async sign(data: Uint8Array): Promise<Uint8Array> {
         const msgHash = sha256(data);
         return sign(msgHash, this.privateKey).toCompactRawBytes();
     }

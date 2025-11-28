@@ -36,17 +36,17 @@ export abstract class wiWallet<T> {
      * @param object
      * @returns {*}
      */
-    signAuthenticationByPublicKey(privateKey: PrivateSignatureKey, object: any) {
+    async signAuthenticationByPublicKey(privateKey: PrivateSignatureKey, object: any) {
         /*
         let publicKey = crypto.secp256k1.publicKeyFromPrivateKey(privateKey),
             signature = crypto.secp256k1.sign(privateKey, object.challenge);
          */
         const challenge = object.challenge;
-        const signature = privateKey.sign(challenge);
+        const signature = await privateKey.sign(challenge);
         const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
 
         let answerObject = {
-            publicKey: signatureEncoder.encodePublicKey(privateKey.getPublicKey()),
+            publicKey: signatureEncoder.encodePublicKey(await privateKey.getPublicKey()),
             signature: signatureEncoder.encodeSignature(signature),
         };
 
@@ -100,12 +100,11 @@ export abstract class wiWallet<T> {
             // TODO: decide the signature and pke scheme id
             // derive the actor public signature key
             const signatureSchemeId = SignatureSchemeId.SECP256K1;
-            const actorSignaturePublicKey = actorCrypto.getPublicSignatureKey(signatureSchemeId);
+            const actorSignaturePublicKey = await actorCrypto.getPublicSignatureKey(signatureSchemeId);
 
             // derive the actor public encryption key
             const pkeSchemeId = PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM;
-            const actorPublicEncryptionKey = actorCrypto.getPublicEncryptionKey(pkeSchemeId);
-
+            const actorPublicEncryptionKey = await actorCrypto.getPublicEncryptionKey(pkeSchemeId);
 
             // send the actor key to the operator and awaits for the response
             const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();

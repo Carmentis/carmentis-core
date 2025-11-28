@@ -342,7 +342,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
             // we attempt to identify the current actor
             let currentActorId: number | undefined;
             try {
-                currentActorId = await this.getActorIdByPublicSignatureKey(hostPrivateSignatureKey.getPublicKey())
+                currentActorId = await this.getActorIdByPublicSignatureKey(await hostPrivateSignatureKey.getPublicKey())
             } catch (e) {
                 if (e instanceof CurrentActorNotFoundError) {
                     // This case occurs when the current actor is not found in the application ledger
@@ -560,7 +560,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         );
         const encryptedSharedKey = sharedSecretSection.object.encryptedSharedKey;
         const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
-            actorPrivateDecryptionKey.decrypt(encryptedSharedKey)
+            await actorPrivateDecryptionKey.decrypt(encryptedSharedKey)
         );
         const channelKey = hostGuestSharedKey.decrypt(encryptedChannelKey);
         return channelKey;

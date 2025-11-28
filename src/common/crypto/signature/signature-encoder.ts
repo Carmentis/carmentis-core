@@ -28,15 +28,15 @@ export class BytesSignatureEncoder implements SignatureEncoderInterface<Uint8Arr
     }
 
 
-    encodePublicKey(publicKey: PublicSignatureKey): Uint8Array {
+    async encodePublicKey(publicKey: PublicSignatureKey): Promise<Uint8Array> {
         return utf8ToBytes(JSON.stringify({
             signatureSchemeId: publicKey.getSignatureSchemeId(),
-            publicKey: bytesToHex(publicKey.getPublicKeyAsBytes())
+            publicKey: bytesToHex(await publicKey.getPublicKeyAsBytes())
         }));
     }
     
     
-    decodePublicKey(publicKey: Uint8Array): PublicSignatureKey {
+    async decodePublicKey(publicKey: Uint8Array): Promise<PublicSignatureKey> {
         const items = JSON.parse(bytesToUtf8(publicKey));
         if (items && typeof items.signatureSchemeId === "number" && typeof items.publicKey === "string") {
             const rawPublicKey = hexToBytes(items.publicKey);
@@ -108,9 +108,9 @@ export class StringSignatureEncoder implements SignatureEncoderInterface<string>
      * @param {PublicSignatureKey} publicKey - The public signature key to be encoded.
      * @return {string} The encoded string representation of the public signature key.
      */
-    encodePublicKey(publicKey: PublicSignatureKey): string {
+    async encodePublicKey(publicKey: PublicSignatureKey): Promise<string> {
         return this.bytesEncoder.encode(
-            this.signatureEncoder.encodePublicKey(publicKey)
+            await this.signatureEncoder.encodePublicKey(publicKey)
         )
     }
 
@@ -120,7 +120,7 @@ export class StringSignatureEncoder implements SignatureEncoderInterface<string>
      * @param {string} publicKey - The public key string to be decoded.
      * @return {PublicSignatureKey} The decoded PublicSignatureKey object.
      */
-    decodePublicKey(publicKey: string): PublicSignatureKey {
+    async decodePublicKey(publicKey: string): Promise<PublicSignatureKey> {
         return this.signatureEncoder.decodePublicKey(
             this.bytesEncoder.decode(publicKey)
         )

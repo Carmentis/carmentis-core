@@ -33,6 +33,4 @@ export class MlKemCiphertextEncoder {
     decode(ciphertext: Uint8Array) : MlKemCiphertextType {
         return this.deserializer.unserialize(ciphertext);
     }
-
-
 }

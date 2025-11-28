@@ -67,8 +67,8 @@ export class AccountCrypto {
         return CryptoSchemeFactory.createPrivateDecryptionKey( schemeId, seed );
     }
 
-    getPublicEncryptionKey(schemeId: PublicKeyEncryptionSchemeId) {
-        const privateDecryptionKey = this.getPrivateDecryptionKey(schemeId);
+    async getPublicEncryptionKey(schemeId: PublicKeyEncryptionSchemeId) {
+        const privateDecryptionKey = await this.getPrivateDecryptionKey(schemeId);
         return privateDecryptionKey.getPublicKey();
     }
 

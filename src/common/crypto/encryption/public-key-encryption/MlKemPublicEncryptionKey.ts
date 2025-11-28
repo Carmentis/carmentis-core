@@ -13,15 +13,15 @@ export class MlKemPublicEncryptionKey extends AbstractPublicEncryptionKey {
         super();
     }
 
-    encrypt(message: Uint8Array): Uint8Array {
+    async encrypt(message: Uint8Array): Promise<Uint8Array> {
         const {cipherText: encryptedSharedSecret, sharedSecret} = ml_kem768.encapsulate(this.publicKey);
         const cipher = AES256GCMSymmetricEncryptionKey.createFromBytes(sharedSecret);
-        const encryptedMessage = cipher.encrypt(message);
+        const encryptedMessage = await cipher.encrypt(message);
         const encoder = new MlKemCiphertextEncoder();
         return encoder.encode(encryptedSharedSecret, encryptedMessage);
     }
 
-    getRawPublicKey(): Uint8Array {
+    async getRawPublicKey(): Promise<Uint8Array> {
         return this.publicKey;
     }
 

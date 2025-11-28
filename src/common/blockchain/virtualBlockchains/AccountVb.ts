@@ -65,7 +65,7 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
             schemeId: accountOwnerPublicKey.getSignatureSchemeId()
         });
         mb.addAccountPublicKeySection({
-            publicKey: accountOwnerPublicKey.getPublicKeyAsBytes()
+            publicKey: await accountOwnerPublicKey.getPublicKeyAsBytes()
         });
         mb.addAccountCreationSection({
             amount: initialAmount.getAmountAsAtomic(),
@@ -95,7 +95,7 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
             schemeId: publicKey.getSignatureSchemeId()
         });
         microblock.addAccountPublicKeySection({
-            publicKey: publicKey.getPublicKeyAsBytes()
+            publicKey: await publicKey.getPublicKeyAsBytes()
         });
         microblock.addAccountTokenIssuanceSection({
             amount: INITIAL_OFFER
@@ -103,8 +103,8 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
         return microblock;
     }
 
-    static sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
-        const signature = microblock.sign(privateSignatureKey, true);
+    static async sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
+        const signature = await microblock.sign(privateSignatureKey, true);
         microblock.addAccountSignatureSection({ signature });
     }
 

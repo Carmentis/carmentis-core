@@ -14,11 +14,11 @@ import {SignatureSchemeId} from "./SignatureSchemeId";
 export abstract class BasePrivateSignatureKey implements PrivateSignatureKey {
     abstract getPrivateKeyAsBytes(): Uint8Array;
 
-    abstract sign(data: Uint8Array): Uint8Array;
+    abstract sign(data: Uint8Array): Promise<Uint8Array>;
 
     abstract getScheme(): SignatureScheme;
 
-    abstract getPublicKey(): PublicSignatureKey;
+    abstract getPublicKey(): Promise<PublicSignatureKey>;
 
     getPrivateKeyAsString(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
         return encoder.encode(this.getPrivateKeyAsBytes())

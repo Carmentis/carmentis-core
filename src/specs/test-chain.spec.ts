@@ -11,38 +11,37 @@ import {CMTSToken} from "../common/economics/currencies/token";
 
 const NODE_URL = "http://localhost:26657";
 
-describe('Chain test', () => {
+describe('Chain test', async () => {
     const TEST_TIMEOUT = 45000;
 
     // init the content
-    const nodeUrl = "http://localhost:26657";
+    const nodeUrl = NODE_URL;
     const sigEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
     const issuerPrivateKey = sigEncoder.decodePrivateKey('SIG:SECP256K1:SK{2e3b5c0e850dce63adb3ee46866c691d2731d92ad8108fbf8cd8c86f6a124bb6}');
-    console.log(`Issuer public key: ${sigEncoder.encodePublicKey(issuerPrivateKey.getPublicKey())}`)
+    console.log(`Issuer public key: ${sigEncoder.encodePublicKey(await issuerPrivateKey.getPublicKey())}`)
     const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
-
 
     let genesisAccountId: Hash;
     beforeAll(async () => {
         // we load the genesis account information
         const accounts = await provider.getAllAccounts();
         expect(accounts.length).toBeGreaterThan(0);
-        genesisAccountId = await provider.getAccountIdFromPublicKey(issuerPrivateKey.getPublicKey());
+        genesisAccountId = await provider.getAccountIdFromPublicKey(await issuerPrivateKey.getPublicKey());
     });
 
     it("creating an account", async () => {
-        const firstAccountPrivateKey = MLDSA65PrivateSignatureKey.gen();
+        const firstAccountPrivateKey = await MLDSA65PrivateSignatureKey.gen();
         const firstAccountCreationMb = Microblock.createGenesisAccountMicroblock();
         firstAccountCreationMb.addAccountCreationSection({
             amount: CMTSToken.zero().getAmountAsAtomic(),
             sellerAccount: genesisAccountId.toBytes()
         });
         firstAccountCreationMb.addAccountPublicKeySection({
-            publicKey: firstAccountPrivateKey.getPublicKey().getPublicKeyAsBytes()
+            publicKey: await (await firstAccountPrivateKey.getPublicKey()).getPublicKeyAsBytes()
         })
         firstAccountCreationMb.setFeesPayerAccount(genesisAccountId.toBytes());
         const signingData = firstAccountCreationMb.serializeForSigning(true);
-        const signature = firstAccountPrivateKey.sign(signingData);
+        const signature = await firstAccountPrivateKey.sign(signingData);
         firstAccountCreationMb.addAccountSignatureSection({ signature })
         console.log(firstAccountCreationMb.toString())
         provider.publishMicroblock( firstAccountCreationMb );

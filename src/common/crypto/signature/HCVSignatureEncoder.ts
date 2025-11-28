@@ -49,7 +49,7 @@ export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
         throw new Error("Invalid private key format: no signature scheme key found");
     }
 
-    decodePublicKey(publicKey: string): PublicSignatureKey {
+    async decodePublicKey(publicKey: string): Promise<PublicSignatureKey> {
         const result = HCVCodec.decode(publicKey);
         for (const {algoId, label} of HCVSignatureEncoder.SIG_SCHEME_KEYS) {
             const matches = result.matchesKeys(
@@ -58,7 +58,7 @@ export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
                 HCVSignatureEncoder.PK_SIGNATURE_KEY
             );
             if (matches) {
-                return CryptoSchemeFactory.createPublicSignatureKey(algoId, this.stringEncoder.decode(result.getValue()));
+                return await CryptoSchemeFactory.createPublicSignatureKey(algoId, this.stringEncoder.decode(result.getValue()));
             }
         }
         throw new Error("Invalid private key format: no signature scheme key found");
@@ -82,13 +82,13 @@ export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
         )
     }
 
-    encodePublicKey(publicKey: PublicSignatureKey): string {
+    async encodePublicKey(publicKey: PublicSignatureKey): Promise<string> {
         const algoIdKey = this.getSignatureSchemeKey(publicKey.getScheme());
         return HCVCodec.encode(
             HCVSignatureEncoder.SIGNATURE_KEY,
             algoIdKey,
             HCVSignatureEncoder.PK_SIGNATURE_KEY,
-            this.stringEncoder.encode(publicKey.getPublicKeyAsBytes())
+            this.stringEncoder.encode(await publicKey.getPublicKeyAsBytes())
         );
     }
 

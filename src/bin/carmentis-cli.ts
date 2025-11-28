@@ -46,7 +46,7 @@ class GenerateSigKeypairCommand extends Command {
         const exportStrategy = createExportStrategyFromStrategyName(specifiedStrategyName);
 
         if (this.scheme === "mldsa") {
-            const privateKey = MLDSA65PrivateSignatureKey.gen();
+            const privateKey = await MLDSA65PrivateSignatureKey.gen();
             exportStrategy.export(privateKey, outputFilename);
         } else if (this.scheme === "secp256k1") {
             const privateKey = Secp256k1PrivateSignatureKey.gen();

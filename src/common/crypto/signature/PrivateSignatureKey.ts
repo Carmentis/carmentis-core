@@ -13,9 +13,9 @@ import {SignatureSchemeId} from "./SignatureSchemeId";
 export interface PrivateSignatureKey {
     getScheme(): SignatureScheme;
 
-    getPublicKey(): PublicSignatureKey;
+    getPublicKey(): Promise<PublicSignatureKey>;
 
-    sign(data: Uint8Array): Uint8Array;
+    sign(data: Uint8Array): Promise<Uint8Array>;
 
     getPrivateKeyAsBytes(): Uint8Array;
 

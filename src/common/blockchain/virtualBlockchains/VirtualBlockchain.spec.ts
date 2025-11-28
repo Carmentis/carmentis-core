@@ -17,9 +17,6 @@ beforeAll(async () => {
 
 describe("virtualBlockchain.appendMicroblock", () => {
     it('should correctly add a microblock', async () => {
-
-
-
         const provider = ProviderFactory.createInMemoryProvider();
         const accountVb = new AccountVb(provider);
         expect(accountVb.isEmpty()).toBeTruthy();
@@ -27,11 +24,11 @@ describe("virtualBlockchain.appendMicroblock", () => {
 
         // create an initial microblock
         const sk = Secp256k1PrivateSignatureKey.gen();
-        const pk = sk.getPublicKey();
+        const pk = await sk.getPublicKey();
         const microblock = await AccountVb.createIssuerAccountCreationMicroblock(
             pk
         );
-        const signature = microblock.sign(sk);
+        const signature = await microblock.sign(sk);
         microblock.addAccountSignatureSection({ signature });
         await accountVb.appendMicroBlock(microblock)
         expect(accountVb.getHeight()).toEqual(1)

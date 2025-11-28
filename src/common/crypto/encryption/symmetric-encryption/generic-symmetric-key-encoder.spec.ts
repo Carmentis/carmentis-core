@@ -10,8 +10,8 @@ describe('GenericSymmetricKeyEncoder', () => {
     });
 
     describe('AES-256-CGM correct encoding', () => {
-        it('should correctly encode a symmetric encryption key into Uint8Array', () => {
-            const key = AES256GCMSymmetricEncryptionKey.generate();
+        it('should correctly encode a symmetric encryption key into Uint8Array', async () => {
+            const key = await AES256GCMSymmetricEncryptionKey.generate();
             const encodedKey = encoder.encodeAsUint8Array(key);
             const decodedKey = encoder.decodeFromUint8Array(encodedKey);
             expect(key.getSymmetricEncryptionSchemeId()).toBe(SymmetricEncryptionSchemeId.AES_256_GCM);

@@ -10,13 +10,13 @@ import {SignatureSchemeId} from "./SignatureSchemeId";
  * It serves as a foundation for specific public signature key implementations.
  */
 export abstract class BasePublicSignatureKey implements PublicSignatureKey {
-    getPublicKeyAsString(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
-        return encoder.encode(this.getPublicKeyAsBytes());
+    async getPublicKeyAsString(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): Promise<string> {
+        return encoder.encode(await this.getPublicKeyAsBytes());
     }
 
-    abstract getPublicKeyAsBytes(): Uint8Array;
+    abstract getPublicKeyAsBytes(): Promise<Uint8Array>;
 
-    abstract verify(data: Uint8Array, signature: Uint8Array): boolean;
+    abstract verify(data: Uint8Array, signature: Uint8Array): Promise<boolean>;
 
     abstract getScheme(): SignatureScheme;
 

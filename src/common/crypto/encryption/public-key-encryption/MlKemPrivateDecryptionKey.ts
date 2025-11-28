@@ -12,7 +12,7 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
      * Generates a private decryption key from a seed.
      * @param seed
      */
-    static genFromSeed(seed: Uint8Array) {
+    static async genFromSeed(seed: Uint8Array) {
         if (seed.length !== 64) {
             throw new Error(`Seed must be 64 bytes long: got length: ${seed?.length} bytes`);
         }
@@ -22,7 +22,7 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
     /**
      * Generates a random private decryption key.
      */
-    static gen() {
+    static async gen() {
         const random = randomBytes(64);
         return new MlKemPrivateDecryptionKey(random);
     }
@@ -45,7 +45,7 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
         return new MlKemPublicKeyEncryptionScheme();
     }
 
-    getPublicKey(): MlKemPublicEncryptionKey {
+    async getPublicKey(): Promise<MlKemPublicEncryptionKey> {
         return new MlKemPublicEncryptionKey(this.publicKey);
     }
 
@@ -53,7 +53,7 @@ export class MlKemPrivateDecryptionKey extends AbstractPrivateDecryptionKey {
         return this.privateKey;
     }
 
-    decrypt(ciphertext: Uint8Array): Uint8Array {
+    async decrypt(ciphertext: Uint8Array): Promise<Uint8Array> {
         try {
             const encoder = new MlKemCiphertextEncoder();
             const {

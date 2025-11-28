@@ -44,8 +44,8 @@ export class MLDSA65PublicSignatureKey extends BasePublicSignatureKey {
         super();
     }
 
-    getPublicKeyAsString(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): string {
-        return encoder.encode(this.getPublicKeyAsBytes())
+    async getPublicKeyAsString(encoder: EncoderInterface<Uint8Array, string> = EncoderFactory.defaultBytesToStringEncoder()): Promise<string> {
+        return encoder.encode(await this.getPublicKeyAsBytes())
     }
 
     /**
@@ -55,7 +55,7 @@ export class MLDSA65PublicSignatureKey extends BasePublicSignatureKey {
      * @param {Uint8Array} signature - The signature of the data to be verified.
      * @return {boolean} Returns true if the verification is successful, otherwise false.
      */
-    verify(data: Uint8Array, signature: Uint8Array): boolean {
+    async verify(data: Uint8Array, signature: Uint8Array): Promise<boolean> {
         return ml_dsa65.verify(
             this.publicKey,
             data,
@@ -68,7 +68,7 @@ export class MLDSA65PublicSignatureKey extends BasePublicSignatureKey {
      *
      * @return {Uint8Array} The public key in its raw byte form.
      */
-    getPublicKeyAsBytes(): Uint8Array {
+    async getPublicKeyAsBytes(): Promise<Uint8Array> {
         return this.publicKey;
     }
 
@@ -88,7 +88,7 @@ export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
      *
      * @return {MLDSA65PrivateSignatureKey} A new instance of MLDSA65PrivateSignatureKey initialized with a randomly generated seed.
      */
-    public static gen(): MLDSA65PrivateSignatureKey {
+    public static async gen(): Promise<MLDSA65PrivateSignatureKey> {
         const seed = randomBytes(32);
         return new MLDSA65PrivateSignatureKey(seed);
     }
@@ -119,7 +119,7 @@ export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
      *
      * @return {MLDSA65PublicSignatureKey} The public signature key.
      */
-    getPublicKey(): MLDSA65PublicSignatureKey {
+    async getPublicKey(): Promise<MLDSA65PublicSignatureKey> {
         return new MLDSA65PublicSignatureKey(this.verificationKey);
     }
 
@@ -131,9 +131,9 @@ export class MLDSA65PrivateSignatureKey extends BasePrivateSignatureKey {
      * Signs the provided data using the signature key.
      *
      * @param {Uint8Array} data - The data to be signed.
-     * @return {Uint8Array} The generated signature for the provided data.
+     * @return {Promise<Uint8Array>} The generated signature for the provided data.
      */
-    sign(data: Uint8Array): Uint8Array {
+    async sign(data: Uint8Array): Promise<Uint8Array> {
         return ml_dsa65.sign(
             this.signatureKey,
             data

@@ -16,7 +16,7 @@ export interface SignatureEncoderInterface<T> {
      * @param {PublicSignatureKey} publicKey - The public signature key that needs to be encoded.
      * @return {T} The encoded representation of the public signature key.
      */
-    encodePublicKey(publicKey: PublicSignatureKey): T;
+    encodePublicKey(publicKey: PublicSignatureKey): Promise<T>;
 
     /**
      * Decodes a given public key object into a public signature key.
@@ -24,7 +24,7 @@ export interface SignatureEncoderInterface<T> {
      * @param {T} publicKey - The public key object that needs to be decoded.
      * @return {PublicSignatureKey} The decoded public signature key.
      */
-    decodePublicKey(publicKey: T): PublicSignatureKey;
+    decodePublicKey(publicKey: T): Promise<PublicSignatureKey>;
 
     /**
      * Encodes the given private key into a specific format.

@@ -32,8 +32,6 @@ import {PrivateSignatureKey} from "./signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "./signature/SignatureSchemeId";
 
 export class CryptoSchemeFactory {
-
-
     static createPrivateSignatureKey( schemeId: number, seed: Uint8Array ): PrivateSignatureKey {
         switch (schemeId) {
             case SignatureSchemeId.SECP256K1: return new Secp256k1PrivateSignatureKey(seed);
@@ -57,7 +55,6 @@ export class CryptoSchemeFactory {
         );
          */
         const actorSeed = new Uint8Array([...walletSeed, ...vbSeed])
-
 
         switch (schemeId) {
             case SignatureSchemeId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(actorSeed);
@@ -111,12 +108,11 @@ export class CryptoSchemeFactory {
         }
     }
 
-
-    createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): PublicSignatureKey {
+    async createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): Promise<PublicSignatureKey> {
        return CryptoSchemeFactory.createPublicSignatureKey(schemeId, publicKey);
     }
 
-    static createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): PublicSignatureKey {
+    static async createPublicSignatureKey( schemeId: number, publicKey: Uint8Array ): Promise<PublicSignatureKey> {
         switch (schemeId) {
             case SignatureSchemeId.SECP256K1: return new Secp256k1PublicSignatureKey(publicKey);
             case SignatureSchemeId.ML_DSA_65: return new MLDSA65PublicSignatureKey(publicKey);
@@ -124,17 +120,16 @@ export class CryptoSchemeFactory {
         }
     }
 
-    static createPublicEncryptionKey( schemeId: number, publicKey: Uint8Array ): AbstractPublicEncryptionKey {
+    static async createPublicEncryptionKey( schemeId: number, publicKey: Uint8Array ): Promise<AbstractPublicEncryptionKey> {
         switch (schemeId) {
             case PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM: return new MlKemPublicEncryptionKey(publicKey)
             default: throw Error(`Not supported scheme ID: ${schemeId}`)
         }
     }
 
-
-    static createPrivateDecryptionKey(schemeId: number, privateKeyOrSeed: Uint8Array): AbstractPrivateDecryptionKey {
+    static async createPrivateDecryptionKey(schemeId: number, privateKeyOrSeed: Uint8Array): Promise<AbstractPrivateDecryptionKey> {
         switch (schemeId) {
-            case PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM: return MlKemPrivateDecryptionKey.genFromSeed(privateKeyOrSeed)
+            case PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM: return await MlKemPrivateDecryptionKey.genFromSeed(privateKeyOrSeed)
             default: throw Error(`Not supported scheme ID: ${schemeId}`)
         }
     }

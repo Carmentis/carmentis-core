@@ -110,7 +110,7 @@ export class Provider extends AbstractProvider {
         publicKey: PublicSignatureKey,
         hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
     ) {
-        const rawPublicKey = publicKey.getPublicKeyAsBytes();
+        const rawPublicKey = await publicKey.getPublicKeyAsBytes();
         const publicKeyHash = hashScheme.hash(rawPublicKey);
         return await this.getAccountByPublicKeyHash(publicKeyHash);
     }
@@ -406,7 +406,7 @@ export class Provider extends AbstractProvider {
     async getAccountIdFromPublicKey(publicKey: PublicSignatureKey) {
         const hashScheme = new Sha256CryptographicHash();
         const answer = await this.externalProvider.getAccountByPublicKeyHash(
-            hashScheme.hash(publicKey.getPublicKeyAsBytes())
+            hashScheme.hash(await publicKey.getPublicKeyAsBytes())
         );
         return Hash.from(answer.accountHash);
     }

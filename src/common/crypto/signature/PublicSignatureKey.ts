@@ -23,11 +23,11 @@ import {SignatureSchemeId} from "./SignatureSchemeId";
 export interface PublicSignatureKey {
     getScheme(): SignatureScheme;
 
-    verify(data: Uint8Array, signature: Uint8Array): boolean;
+    verify(data: Uint8Array, signature: Uint8Array): Promise<boolean>;
 
-    getPublicKeyAsBytes(): Uint8Array;
+    getPublicKeyAsBytes(): Promise<Uint8Array>;
 
-    getPublicKeyAsString(encoder?: EncoderInterface<Uint8Array, string>): string;
+    getPublicKeyAsString(encoder?: EncoderInterface<Uint8Array, string>): Promise<string>;
 
     getSignatureSchemeId(): SignatureSchemeId;
 }

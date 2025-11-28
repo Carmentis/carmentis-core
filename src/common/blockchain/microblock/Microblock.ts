@@ -671,7 +671,7 @@ export class Microblock {
      * @param {boolean} includeGas - A flag indicating whether gas-related data should be included in the signature.
      * @return {Uint8Array} The generated digital signature as a byte array.
      */
-    sign(privateKey: PrivateSignatureKey, includeGas: boolean = true): Uint8Array {
+    async sign(privateKey: PrivateSignatureKey, includeGas: boolean = true): Promise<Uint8Array> {
         const signatureSize = privateKey.getSignatureSize()
         const signedData = this.serializeForSigning(
             includeGas,
@@ -679,7 +679,7 @@ export class Microblock {
             signatureSize
         );
 
-        const signature = privateKey.sign(signedData)
+        const signature = await privateKey.sign(signedData)
         return signature
     }
 
@@ -692,7 +692,7 @@ export class Microblock {
      * @param {number} sectionCount - The number of sections to include in the signed data.
      * @return {boolean} Returns true if the signature is successfully verified; otherwise, returns false.
      */
-    verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas?: boolean, sectionCount?: number): boolean {
+    async verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas?: boolean, sectionCount?: number): Promise<boolean> {
         const shouldIncludeGas = typeof includeGas === 'boolean' ? includeGas : true;
         const numberOfSectionsToIncludeInSignature = sectionCount || this.sections.length - 1;
         const signedData = this.serializeForSigning(
@@ -701,7 +701,7 @@ export class Microblock {
             0
         );
 
-        return publicKey.verify(signedData, signature);
+        return await publicKey.verify(signedData, signature);
     }
 
     /**

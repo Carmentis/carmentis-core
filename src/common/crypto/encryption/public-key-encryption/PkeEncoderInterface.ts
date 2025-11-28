@@ -4,8 +4,8 @@ import {AbstractPrivateDecryptionKey, AbstractPublicEncryptionKey} from "./Publi
 export interface PublicEncryptionKeyEncoderInterface extends EncoderInterface<AbstractPublicEncryptionKey, string> {}
 export interface PrivateDecryptionKeyEncoderInterface extends EncoderInterface<AbstractPrivateDecryptionKey, string> {}
 export interface PkeEncoderInterface {
-    encodePublicEncryptionKey(key: AbstractPublicEncryptionKey): string;
-    encodePrivateDecryptionKey(key: AbstractPrivateDecryptionKey): string;
-    decodePublicEncryptionKey(key: string): AbstractPublicEncryptionKey;
-    decodePrivateDecryptionKey(key: string): AbstractPrivateDecryptionKey;
+    encodePublicEncryptionKey(key: AbstractPublicEncryptionKey): Promise<string>;
+    encodePrivateDecryptionKey(key: AbstractPrivateDecryptionKey): Promise<string>;
+    decodePublicEncryptionKey(key: string): Promise<AbstractPublicEncryptionKey>;
+    decodePrivateDecryptionKey(key: string): Promise<AbstractPrivateDecryptionKey>;
 }

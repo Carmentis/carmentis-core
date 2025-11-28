@@ -24,16 +24,16 @@ export interface SymmetricEncryptionKey  {
      * Encrypts the given plaintext using a predefined encryption algorithm.
      *
      * @param {Uint8Array} plaintext - The plaintext data to be encrypted.
-     * @return {Uint8Array} The encrypted data as a Uint8Array.
+     * @return {Promise<Uint8Array>} The encrypted data as a Uint8Array.
      */
-    encrypt(plaintext: Uint8Array): Uint8Array;
+    encrypt(plaintext: Uint8Array): Promise<Uint8Array>;
     /**
      * Decrypts the given ciphertext and returns the resulting plaintext.
      *
      * @param {Uint8Array} ciphertext - The encrypted data to be decrypted.
-     * @return {Uint8Array} The decrypted plaintext as a Uint8Array.
+     * @return {Promise<Uint8Array>} The decrypted plaintext as a Uint8Array.
      */
-    decrypt(ciphertext: Uint8Array): Uint8Array;
+    decrypt(ciphertext: Uint8Array): Promise<Uint8Array>;
     /**
      * Retrieves the raw secret key as a Uint8Array.
      *
@@ -59,7 +59,6 @@ export enum SymmetricEncryptionSchemeId {
     AES_256_GCM,
 }
 
-
 export class AES256GCMSymmetricEncryptionScheme implements SymmetricEncryptionKeyScheme {
     private static KEY_LENGTH_IN_BYTES = 32;
 
@@ -74,7 +73,6 @@ export class AES256GCMSymmetricEncryptionScheme implements SymmetricEncryptionKe
     getDefaultKeyLength(): number {
         return AES256GCMSymmetricEncryptionScheme.KEY_LENGTH_IN_BYTES;
     }
-
 }
 
 /**
@@ -93,7 +91,7 @@ export class AES256GCMSymmetricEncryptionKey implements SymmetricEncryptionKey {
      *
      * @return {AES256GCMSymmetricEncryptionKey} An instance of AES256GCMSymmetricEncryptionKey containing a randomly generated 256-bit encryption key.
      */
-    public static generate(): AES256GCMSymmetricEncryptionKey {
+    public static async generate(): Promise<AES256GCMSymmetricEncryptionKey> {
         const key = new Uint8Array(32);
         crypto.getRandomValues(key);
         return new AES256GCMSymmetricEncryptionKey(key);
@@ -108,7 +106,6 @@ export class AES256GCMSymmetricEncryptionKey implements SymmetricEncryptionKey {
     public static createFromBytes(keyBytes: Uint8Array): AES256GCMSymmetricEncryptionKey {
         return new AES256GCMSymmetricEncryptionKey(keyBytes);
     }
-
 
     /**
      * Retrieves the raw secret key as a Uint8Array.
@@ -137,7 +134,7 @@ export class AES256GCMSymmetricEncryptionKey implements SymmetricEncryptionKey {
      * @param {Uint8Array} plaintext - The plaintext data to be encrypted.
      * @return {Uint8Array} A Uint8Array containing the IV followed by the encrypted ciphertext.
      */
-    encrypt(plaintext: Uint8Array): Uint8Array {
+    async encrypt(plaintext: Uint8Array): Promise<Uint8Array> {
         const iv = new Uint8Array(12);
         crypto.getRandomValues(iv);
         const stream = gcm(this.key, iv);
@@ -154,7 +151,7 @@ export class AES256GCMSymmetricEncryptionKey implements SymmetricEncryptionKey {
      * @param {Uint8Array} ciphertext - The encrypted data to be decrypted. The first 12 bytes are assumed to be the initialization vector (IV), and the rest is the encrypted content.
      * @return {Uint8Array} The decrypted plaintext as a Uint8Array.
      */
-    decrypt(ciphertext: Uint8Array): Uint8Array {
+    async decrypt(ciphertext: Uint8Array): Promise<Uint8Array> {
         try {
             const iv = ciphertext.slice(0, 12);
             const encrypted = ciphertext.slice(12);
@@ -186,10 +183,10 @@ export class ExtendedSymmetricEncryptionKey implements SymmetricEncryptionKey {
      * @param {string} plaintext - The plain text string to be encrypted.
      * @return {string} The Base64-encoded string representation of the encrypted data.
      */
-    public encryptString(plaintext: string): string {
+    public async encryptString(plaintext: string): Promise<string> {
         const encoder = new TextEncoder();
         const bytes = encoder.encode(plaintext);
-        const encrypted = this.encrypt(bytes);
+        const encrypted = await this.encrypt(bytes);
         return Buffer.from(encrypted).toString('base64');
     }
 
@@ -199,9 +196,9 @@ export class ExtendedSymmetricEncryptionKey implements SymmetricEncryptionKey {
      * @param ciphertext The Base64 encoded string to be decrypted.
      * @return The decrypted string.
      */
-    public decryptString(ciphertext: string): string {
+    public async decryptString(ciphertext: string): Promise<string> {
         const encrypted = Buffer.from(ciphertext, 'base64');
-        const decrypted = this.decrypt(encrypted);
+        const decrypted = await this.decrypt(encrypted);
         const decoder = new TextDecoder();
         return decoder.decode(decrypted);
     }
@@ -221,7 +218,7 @@ export class ExtendedSymmetricEncryptionKey implements SymmetricEncryptionKey {
      * @param {Uint8Array} plaintext - The data to be encrypted.
      * @return {Uint8Array} The encrypted ciphertext as a Uint8Array.
      */
-    encrypt(plaintext: Uint8Array): Uint8Array {
+    async encrypt(plaintext: Uint8Array): Promise<Uint8Array> {
         return this.wrappedKey.encrypt(plaintext);
     }
 
@@ -231,7 +228,7 @@ export class ExtendedSymmetricEncryptionKey implements SymmetricEncryptionKey {
      * @param {Uint8Array} ciphertext - The ciphertext to be decrypted.
      * @return {Uint8Array} The decrypted plaintext as a Uint8Array.
      */
-    decrypt(ciphertext: Uint8Array): Uint8Array {
+    async decrypt(ciphertext: Uint8Array): Promise<Uint8Array> {
         return this.wrappedKey.decrypt(ciphertext);
     }
 

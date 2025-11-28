@@ -24,7 +24,7 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
 
     constructor(private readonly  stringEncoder: EncoderInterface<Uint8Array, string>) {}
 
-    decodePrivateDecryptionKey(privateKey: string): AbstractPrivateDecryptionKey {
+    async decodePrivateDecryptionKey(privateKey: string): Promise<AbstractPrivateDecryptionKey> {
         const result = HCVCodec.decode(privateKey);
         for (const {algoId, label} of HCVPkeEncoder.PKE_SCHEMES) {
             const matches = result.matchesKeys(
@@ -33,13 +33,13 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
                 HCVPkeEncoder.SK_PKE_KEY
             );
             if (matches) {
-                return CryptoSchemeFactory.createPrivateDecryptionKey(algoId, this.stringEncoder.decode(result.getValue()));
+                return await CryptoSchemeFactory.createPrivateDecryptionKey(algoId, this.stringEncoder.decode(result.getValue()));
             }
         }
         throw new Error("Invalid private key format: no scheme key found");
     }
 
-    decodePublicEncryptionKey(publicKey: string): AbstractPublicEncryptionKey {
+    async decodePublicEncryptionKey(publicKey: string): Promise<AbstractPublicEncryptionKey> {
         const result = HCVCodec.decode(publicKey);
         for (const {algoId, label} of HCVPkeEncoder.PKE_SCHEMES) {
             const matches = result.matchesKeys(
@@ -54,7 +54,7 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
         throw new Error("Invalid private key format: no scheme key found");
     }
 
-    encodePrivateDecryptionKey(privateKey: AbstractPrivateDecryptionKey): string {
+    async encodePrivateDecryptionKey(privateKey: AbstractPrivateDecryptionKey): Promise<string> {
         // Note: we currently only support the ML-KEM scheme
         return HCVCodec.encode(
             HCVPkeEncoder.PKE_KEY,
@@ -64,12 +64,12 @@ export class HCVPkeEncoder implements PkeEncoderInterface {
         )
     }
 
-    encodePublicEncryptionKey(key: AbstractPublicEncryptionKey): string {
+    async encodePublicEncryptionKey(key: AbstractPublicEncryptionKey): Promise<string> {
         return HCVCodec.encode(
             HCVPkeEncoder.PKE_KEY,
             "MLKEM768AES256GCM",
             HCVPkeEncoder.PK_PKE_KEY,
-            this.stringEncoder.encode(key.getRawPublicKey())
+            this.stringEncoder.encode(await key.getRawPublicKey())
         )
     }
 }

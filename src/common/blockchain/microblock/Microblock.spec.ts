@@ -111,38 +111,38 @@ describe('Microblock.loadSerializedMicroblock', () => {
 
 
 describe('Microblock.verifySignature', () => {
-    it("should verify a valid signature", () => {
+    it("should verify a valid signature", async () => {
         const sk = Secp256k1PrivateSignatureKey.gen();
-        const pk = sk.getPublicKey();
+        const pk = await sk.getPublicKey();
         const mb = Microblock.createGenesisAccountMicroblock();
         mb.addAccountPublicKeySection({
-            publicKey: pk.getPublicKeyAsBytes()
+            publicKey: await pk.getPublicKeyAsBytes()
         });
-        const signature = mb.sign(sk);
+        const signature = await mb.sign(sk);
         expect(signature).toBeInstanceOf(Uint8Array)
         mb.addAccountSignatureSection({ signature });
         expect(mb.verifySignature(pk, signature)).toBe(true)
     })
 
-    it("should verify a valid signature for a microblock signed twice", () => {
+    it("should verify a valid signature for a microblock signed twice", async () => {
         const sk = Secp256k1PrivateSignatureKey.gen();
-        const pk = sk.getPublicKey();
+        const pk = await sk.getPublicKey();
 
         // create the microblock with a single section
         const mb = Microblock.createGenesisAccountMicroblock();
         mb.addAccountPublicKeySection({
-            publicKey: pk.getPublicKeyAsBytes()
+            publicKey: await pk.getPublicKeyAsBytes()
         });
 
         // sign the microblock a first time
-        const firstSignature = mb.sign(sk);
+        const firstSignature = await mb.sign(sk);
         expect(firstSignature).toBeInstanceOf(Uint8Array)
         mb.addAccountSignatureSection({ signature: firstSignature });
         expect(mb.verifySignature(pk, firstSignature)).toBe(true)
 
 
         // sign the microblock a second time
-        const secondSignature = mb.sign(sk);
+        const secondSignature = await mb.sign(sk);
         expect(secondSignature).toBeInstanceOf(Uint8Array)
         mb.addAccountSignatureSection({ signature: secondSignature });
         expect(mb.verifySignature(pk, firstSignature)).toBe(false)

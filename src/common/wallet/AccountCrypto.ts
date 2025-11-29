@@ -52,12 +52,12 @@ export class AccountCrypto implements ICryptoKeyHandler {
         return CryptoSchemeFactory.createPrivateSignatureKey( schemeId, seed );
     }
 
-    getPublicSignatureKey(schemeId: SignatureSchemeId) {
+    async getPublicSignatureKey(schemeId: SignatureSchemeId) {
         const privateKey = this.getPrivateSignatureKey(schemeId);
         return privateKey.getPublicKey();
     }
 
-    getPrivateDecryptionKey(schemeId: PublicKeyEncryptionSchemeId) {
+    async getPrivateDecryptionKey(schemeId: PublicKeyEncryptionSchemeId) {
         const kdf = CryptoSchemeFactory.createDefaultKDF();
         const info = AccountCrypto.encoderStringAsBytes(`PKE_${schemeId}`);
         const seed = kdf.deriveKeyNoSalt(

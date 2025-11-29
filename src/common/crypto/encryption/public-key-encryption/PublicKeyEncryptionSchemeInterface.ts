@@ -17,9 +17,9 @@ export abstract class AbstractPublicKeyEncryptionScheme implements PublicKeyEncr
 
 export interface PublicEncryptionKey {
     getScheme(): PublicKeyEncryptionScheme;
-    encrypt( message: Uint8Array ): Uint8Array;
-    getRawPublicKey(): Uint8Array;
-    encode(encoder?: EncoderInterface<Uint8Array, string>): string;
+    encrypt( message: Uint8Array ): Promise<Uint8Array>;
+    getRawPublicKey(): Promise<Uint8Array>;
+    encode(encoder?: EncoderInterface<Uint8Array, string>): Promise<string>;
 }
 
 export abstract class AbstractPublicEncryptionKey implements PublicEncryptionKey {
@@ -39,11 +39,11 @@ export abstract class AbstractPublicEncryptionKey implements PublicEncryptionKey
 export interface PrivateDecryptionKey {
     getScheme(): AbstractPublicKeyEncryptionScheme;
 
-    decrypt(ciphertext: Uint8Array): Uint8Array;
+    decrypt(ciphertext: Uint8Array): Promise<Uint8Array>;
 
     getRawPrivateKey(): Uint8Array;
 
-    getPublicKey(): AbstractPublicEncryptionKey;
+    getPublicKey(): Promise<AbstractPublicEncryptionKey>;
 
     encode(encoder: EncoderInterface<Uint8Array, string>): string;
 

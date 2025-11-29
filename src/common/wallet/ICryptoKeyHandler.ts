@@ -9,8 +9,8 @@ import {
 
 export interface ICryptoKeyHandler {
     getPrivateSignatureKey(schemeId: SignatureSchemeId): PrivateSignatureKey;
-    getPublicSignatureKey(schemeId: SignatureSchemeId): PublicSignatureKey;
-    getPrivateDecryptionKey(schemeId: PublicKeyEncryptionSchemeId): PrivateDecryptionKey;
-    getPublicEncryptionKey(schemeId: PublicKeyEncryptionSchemeId): PublicEncryptionKey;
+    getPublicSignatureKey(schemeId: SignatureSchemeId): Promise<PublicSignatureKey>;
+    getPrivateDecryptionKey(schemeId: PublicKeyEncryptionSchemeId): Promise<PrivateDecryptionKey>;
+    getPublicEncryptionKey(schemeId: PublicKeyEncryptionSchemeId): Promise<PublicEncryptionKey>;
     getSeedAsBytes(): Uint8Array;
 }

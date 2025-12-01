@@ -8,7 +8,7 @@ import {
 } from "../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 
 export interface ICryptoKeyHandler {
-    getPrivateSignatureKey(schemeId: SignatureSchemeId): PrivateSignatureKey;
+    getPrivateSignatureKey(schemeId: SignatureSchemeId): Promise<PrivateSignatureKey>;
     getPublicSignatureKey(schemeId: SignatureSchemeId): Promise<PublicSignatureKey>;
     getPrivateDecryptionKey(schemeId: PublicKeyEncryptionSchemeId): Promise<PrivateDecryptionKey>;
     getPublicEncryptionKey(schemeId: PublicKeyEncryptionSchemeId): Promise<PublicEncryptionKey>;

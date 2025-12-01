@@ -40,7 +40,7 @@ export class AccountCrypto implements ICryptoKeyHandler {
         return ActorCrypto.createFromAccountSeedAndVbSeed(this.accountSeed, vbSeed);
     }
 
-    getPrivateSignatureKey(schemeId: SignatureSchemeId) {
+    async getPrivateSignatureKey(schemeId: SignatureSchemeId) {
         const kdf = CryptoSchemeFactory.createDefaultKDF();
         const scheme = CryptoSchemeFactory.createSignatureScheme(schemeId);
         const info = AccountCrypto.encoderStringAsBytes(`SIG_${schemeId}`);
@@ -53,7 +53,7 @@ export class AccountCrypto implements ICryptoKeyHandler {
     }
 
     async getPublicSignatureKey(schemeId: SignatureSchemeId) {
-        const privateKey = this.getPrivateSignatureKey(schemeId);
+        const privateKey = await this.getPrivateSignatureKey(schemeId);
         return privateKey.getPublicKey();
     }
 

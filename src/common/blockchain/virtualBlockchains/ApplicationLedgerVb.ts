@@ -337,8 +337,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         // we now load private channels that might be protected (encrypted)
         const logger = Logger.getLogger([ApplicationLedgerVb.name]);
         if ( hostIdentity !== undefined ) {
-            const hostPrivateSignatureKey = hostIdentity.getPrivateSignatureKey(SignatureSchemeId.SECP256K1);
-            const hostPublicSignatureKey = hostPrivateSignatureKey.getPublicKey();
+            const hostPrivateSignatureKey = await hostIdentity.getPrivateSignatureKey(SignatureSchemeId.SECP256K1);
+            const hostPublicSignatureKey = await hostPrivateSignatureKey.getPublicKey();
 
             // we attempt to identify the current actor
             let currentActorId: number | undefined;
@@ -452,7 +452,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         // if the actor id is the creator of the channel, then we have to derive the channel key locally...
         const state = this.internalState;
         const creatorId = state.getChannelCreatorIdFromChannelId(channelId);
-        const actorPrivateDecryptionKey = hostIdentity.getPrivateDecryptionKey(PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM);
+        const actorPrivateDecryptionKey = await hostIdentity.getPrivateDecryptionKey(PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM);
         if (creatorId === actorId) {
             const channelKey = await this.deriveChannelKey(
                 hostIdentity.getSeedAsBytes(),
@@ -555,7 +555,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         );
         const encryptedSharedKey = sharedSecretSection.object.encryptedSharedKey;
         const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
-            actorPrivateDecryptionKey.decrypt(encryptedSharedKey)
+            await actorPrivateDecryptionKey.decrypt(encryptedSharedKey)
         );
         const channelKey = hostGuestSharedKey.decrypt(encryptedChannelKey);
         return channelKey;

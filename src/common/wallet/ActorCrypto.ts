@@ -26,7 +26,7 @@ export class ActorCrypto implements ICryptoKeyHandler {
         return this.actorSeed
     }
 
-    getPrivateSignatureKey(schemeId: SignatureSchemeId) {
+    async getPrivateSignatureKey(schemeId: SignatureSchemeId) {
         const kdf = CryptoSchemeFactory.createDefaultKDF();
         const info = this.encoderStringAsBytes("SIG");
         const seed = kdf.deriveKeyNoSalt(
@@ -37,8 +37,8 @@ export class ActorCrypto implements ICryptoKeyHandler {
         return CryptoSchemeFactory.createPrivateSignatureKey( schemeId, seed );
     }
 
-    getPublicSignatureKey(schemeId: SignatureSchemeId) {
-        const privateKey = this.getPrivateSignatureKey(schemeId);
+    async getPublicSignatureKey(schemeId: SignatureSchemeId) {
+        const privateKey = await this.getPrivateSignatureKey(schemeId);
         return privateKey.getPublicKey();
     }
 

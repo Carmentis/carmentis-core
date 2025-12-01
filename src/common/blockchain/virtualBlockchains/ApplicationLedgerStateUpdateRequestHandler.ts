@@ -18,6 +18,9 @@ import {Logger} from "../../utils/Logger";
 import {HKDF} from "../../crypto/kdf/HKDF";
 import {AES256GCMSymmetricEncryptionKey} from "../../crypto/encryption/symmetric-encryption/encryption-interface";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
+import {ICryptoKeyHandler} from "../../wallet/ICryptoKeyHandler";
+import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 
 export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedgerMicroblockBuilder {
 
@@ -28,6 +31,8 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
     }
 
 
+    private usedSignatureSchemeId: SignatureSchemeId = SignatureSchemeId.SECP256K1;
+    private usedPkeSchemeId: PublicKeyEncryptionSchemeId = PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM;
 
     constructor(
         mbUnderConstruction: Microblock,
@@ -41,11 +46,21 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         return this.getLocalState()
     }
 
+    private getActorPrivateSignatureKey(actorIdentity: ICryptoKeyHandler) {
+        return actorIdentity.getPrivateSignatureKey(this.usedSignatureSchemeId);
+    }
+
+    private getActorPrivateDecryptionKey(actorIdentity: ICryptoKeyHandler) {
+        return actorIdentity.getPrivateDecryptionKey(this.usedPkeSchemeId);
+    }
+
 
     async createMicroblockFromStateUpdateRequest(
-        hostPrivateDecryptionKey: AbstractPrivateDecryptionKey,
+        hostIdentity: ICryptoKeyHandler,
         object: AppLedgerStateUpdateRequest
     ) {
+        const hostPrivateDecryptionKey = this.getActorPrivateDecryptionKey(hostIdentity);
+        const hostPrivateSignatureKey = this.getActorPrivateSignatureKey(hostIdentity);
         const validator = new SchemaValidator(SCHEMAS.RECORD_DESCRIPTION);
         validator.validate(object);
 
@@ -84,10 +99,10 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         const authorName = object.author;
         const authorId = this.getActorIdFromActorName(authorName);
         if (isBuildingGenesisMicroBlock) {
-            const authorPublicEncryptionKey = await hostPrivateDecryptionKey.getPublicKey();
+            const authorPublicEncryptionKey = hostPrivateDecryptionKey.getPublicKey();
             await this.subscribeActor(
                 authorName,
-                await this.authorPrivateSignatureKey.getPublicKey(),
+                this.authorPrivateSignatureKey.getPublicKey(),
                 authorPublicEncryptionKey
             );
         }
@@ -128,7 +143,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
             await this.inviteActorOnChannel(
                 actorName,
                 channelName,
-                hostPrivateDecryptionKey
+                hostIdentity
             )
         }
 
@@ -150,7 +165,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         for (const channelData of channelDataList) {
             const {isPrivate: isPrivateChannel, channelId} = channelData;
             if (isPrivateChannel) {
-                const channelKey = await this.vb.getChannelKey(authorId, channelId, this.authorPrivateSignatureKey, hostPrivateDecryptionKey);
+                const channelKey = await this.vb.getChannelKey(authorId, channelId, hostIdentity);
                 const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, this.vb.getHeight(), channelId);
                 const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, this.vb.getHeight(), channelId);
                 const encryptedData = Crypto.Aes.encryptGcm(channelSectionKey, channelData.data, channelSectionIv);
@@ -191,12 +206,14 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         return this.mbUnderConstruction
     }
 
-    async inviteActorOnChannel(actorName: string, channelName: string, hostPrivateDecryptionKey: AbstractPrivateDecryptionKey) {
+
+    async inviteActorOnChannel(actorName: string, channelName: string, actorIdentity: ICryptoKeyHandler) {
         const channelId = this.state.getChannelIdFromChannelName(channelName);
         const actorId = this.getActorIdFromActorName(actorName);
         Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId} for channel ${channelName}`)
 
-        const authorId = await this.vb.getActorIdByPublicSignatureKey(await this.authorPrivateSignatureKey.getPublicKey());
+
+        const authorId = await this.vb.getActorIdByPublicSignatureKey(this.authorPrivateSignatureKey.getPublicKey());
         const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
         const guestId = actorId; // the guest is the actor assigned to the channel
 
@@ -211,13 +228,15 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
             await this.vb.getExistingSharedKey(hostId, guestId) ||
             await this.vb.getExistingSharedKey(guestId, hostId);
 
+
         // if we have found the (encrypted) shared secret key, then we *attempt* to decrypt it, otherwise
         // there is no shared secret key and then we create a new one
         let hostGuestSharedKey: AES256GCMSymmetricEncryptionKey;
+        const hostPrivateDecryptionKey = this.getActorPrivateDecryptionKey(actorIdentity);
         if (hostGuestEncryptedSharedKey !== undefined) {
             try {
                 hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
-                    await hostPrivateDecryptionKey.decrypt(hostGuestEncryptedSharedKey)
+                    hostPrivateDecryptionKey.decrypt(hostGuestEncryptedSharedKey)
                 );
             } catch (e) {
                 if (e instanceof DecryptionError) {
@@ -230,9 +249,10 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
             hostGuestSharedKey = await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
         }
 
+
         // we encrypt the channel key using the shared secret key
-        const channelKey = await this.vb.getChannelKey(hostId, channelId, this.authorPrivateSignatureKey, hostPrivateDecryptionKey);
-        const encryptedChannelKey = await hostGuestSharedKey.encrypt(channelKey);
+        const channelKey = await this.vb.getChannelKey(hostId, channelId, actorIdentity);
+        const encryptedChannelKey = hostGuestSharedKey.encrypt(channelKey);
 
         // we log the result
         const logger = Logger.getLogger([ApplicationLedgerVb.name]);
@@ -297,9 +317,10 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         const vbGenesisSeed = await this.getGenesisSeed();
         const hostGuestSharedKey = ApplicationLedgerStateUpdateRequestHandler.deriveHostGuestSharedKey(hostPrivateDecryptionKey, vbGenesisSeed.toBytes(), guestId);
 
+
         // we encrypt the shared key with the guest's public key
         const guestPublicEncryptionKey = await this.vb.getPublicEncryptionKeyByActorId(guestId);
-        const encryptedSharedKey = await guestPublicEncryptionKey.encrypt(hostGuestSharedKey.getRawSecretKey());
+        const encryptedSharedKey = guestPublicEncryptionKey.encrypt(hostGuestSharedKey.getRawSecretKey());
         return {encryptedSharedKey, hostGuestSharedKey}
     }
 
@@ -345,9 +366,9 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
             actorType: unknownActorType,
             organizationId: nullOrganizationId,
             signatureSchemeId: actorPublicSignatureKey.getSignatureSchemeId(),
-            signaturePublicKey: await actorPublicSignatureKey.getPublicKeyAsBytes(),
+            signaturePublicKey: actorPublicSignatureKey.getPublicKeyAsBytes(),
             pkeSchemeId: actorPublicEncryptionKey.getSchemeId(),
-            pkePublicKey: await actorPublicEncryptionKey.getRawPublicKey(),
+            pkePublicKey: actorPublicEncryptionKey.getRawPublicKey(),
         });
         await this.updateStateWithSection(addedSection);
     }

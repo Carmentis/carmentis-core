@@ -19,8 +19,6 @@ export interface PrivateSignatureKey {
 
     getPrivateKeyAsBytes(): Uint8Array;
 
-    getPrivateKeyAsString(encoder?: EncoderInterface<Uint8Array, string>): string;
-
     getSignatureSchemeId(): SignatureSchemeId;
 
     getSignatureSize(): number;

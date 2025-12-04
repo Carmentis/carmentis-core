@@ -40,29 +40,6 @@ export class CryptoSchemeFactory {
         }
     }
 
-    /**
-     * @deprecated Use CryptoSchemeFactory.createVirtualBlockchainPrivateSignature instead.
-     * @param schemeId
-     * @param walletSeed
-     * @param vbSeed
-     */
-    createVirtualBlockchainPrivateSignatureScheme( schemeId: SignatureSchemeId, walletSeed: Uint8Array , vbSeed: Uint8Array ): PrivateSignatureKey {
-        // TODO: implement correctly instead of just hashing
-        /*
-        const hash = CryptoSchemeFactory.createDefaultCryptographicHash();
-        const actorSeed = hash.hash(
-            new Uint8Array([...walletSeed, ...vbSeed])
-        );
-         */
-        const actorSeed = new Uint8Array([...walletSeed, ...vbSeed])
-
-        switch (schemeId) {
-            case SignatureSchemeId.ML_DSA_65: return new MLDSA65PrivateSignatureKey(actorSeed);
-            case SignatureSchemeId.SECP256K1: return Secp256k1PrivateSignatureKey.genFromSeed(actorSeed);
-            default: throw `Not supported signature scheme ID: ${schemeId}`
-        }
-    }
-
     static createVirtualBlockchainPrivateSignature( kdf: KeyDerivationFunction, schemeId: SignatureSchemeId, walletSeed: Uint8Array , vbSeed: Uint8Array ): PrivateSignatureKey {
         const actorSeed = new Uint8Array([...walletSeed, ...vbSeed])
         const encoder = new TextEncoder();

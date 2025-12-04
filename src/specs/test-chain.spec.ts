@@ -2,7 +2,7 @@ import {describe, expect} from '@jest/globals';
 import {MLDSA65PrivateSignatureKey} from "../common/crypto/signature/ml-dsa-65";
 import {Hash} from "../common/entities/Hash";
 import {MlKemPrivateDecryptionKey} from "../common/crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
-import {CryptoEncoderFactory} from "../common/crypto/CryptoEncoderFactory";
+import {CryptoEncoderFactory} from "../common/crypto/encoder/CryptoEncoderFactory";
 import {ProviderFactory} from "../common/providers/ProviderFactory";
 import {Secp256k1PrivateSignatureKey} from "../common/crypto/signature/secp256k1";
 import {Logger} from "../common/utils/Logger";
@@ -17,7 +17,7 @@ describe('Chain test', async () => {
     // init the content
     const nodeUrl = NODE_URL;
     const sigEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
-    const issuerPrivateKey = sigEncoder.decodePrivateKey('SIG:SECP256K1:SK{2e3b5c0e850dce63adb3ee46866c691d2731d92ad8108fbf8cd8c86f6a124bb6}');
+    const issuerPrivateKey = await sigEncoder.decodePrivateKey('SIG:SECP256K1:SK{2e3b5c0e850dce63adb3ee46866c691d2731d92ad8108fbf8cd8c86f6a124bb6}');
     console.log(`Issuer public key: ${sigEncoder.encodePublicKey(await issuerPrivateKey.getPublicKey())}`)
     const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
 

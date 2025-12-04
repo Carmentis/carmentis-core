@@ -1,11 +1,13 @@
-import {EncoderFactory, EncoderInterface} from "../../utils/encoder";
-import {HCVCodec} from "../../utils/HCVCodec";
-import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
-import {SignatureEncoderInterface} from "./SignatureEncoderInterface";
-import {PublicSignatureKey} from "./PublicSignatureKey";
-import {SignatureScheme} from "./SignatureScheme";
-import {PrivateSignatureKey} from "./PrivateSignatureKey";
-import {SignatureSchemeId} from "./SignatureSchemeId";
+export {}
+/*
+import {EncoderFactory, EncoderInterface} from "../../../../utils/encoder";
+import {HCVCodec} from "../../../../utils/HCVCodec";
+import {CryptoSchemeFactory} from "../../../CryptoSchemeFactory";
+import {SignatureEncoderInterface} from "../SignatureEncoderInterface";
+import {PublicSignatureKey} from "../../../signature/PublicSignatureKey";
+import {SignatureScheme} from "../../../signature/SignatureScheme";
+import {PrivateSignatureKey} from "../../../signature/PrivateSignatureKey";
+import {SignatureSchemeId} from "../../../signature/SignatureSchemeId";
 
 export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
 
@@ -34,7 +36,7 @@ export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
         return this.stringEncoder.decode(message);
     }
 
-    decodePrivateKey(privateKey: string): PrivateSignatureKey {
+    async decodePrivateKey(privateKey: string) {
         const result = HCVCodec.decode(privateKey);
         for (const {algoId, label} of HCVSignatureEncoder.SIG_SCHEME_KEYS) {
             const matches = result.matchesKeys(
@@ -72,7 +74,7 @@ export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
         return this.stringEncoder.encode(message);
     }
 
-    encodePrivateKey(privateKey: PrivateSignatureKey): string {
+    async encodePrivateKey(privateKey: PrivateSignatureKey) {
         const algoIdKey = this.getSignatureSchemeKey(privateKey.getScheme());
         return HCVCodec.encode(
             HCVSignatureEncoder.SIGNATURE_KEY,
@@ -106,3 +108,4 @@ export class HCVSignatureEncoder implements SignatureEncoderInterface<string> {
     }
 
 }
+*/

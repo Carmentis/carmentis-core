@@ -27,7 +27,5 @@ export interface PublicSignatureKey {
 
     getPublicKeyAsBytes(): Promise<Uint8Array>;
 
-    getPublicKeyAsString(encoder?: EncoderInterface<Uint8Array, string>): Promise<string>;
-
     getSignatureSchemeId(): SignatureSchemeId;
 }

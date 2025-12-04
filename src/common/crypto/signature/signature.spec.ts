@@ -1,9 +1,8 @@
 import {toBytes} from "@noble/ciphers/utils";
 import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./ml-dsa-65";
-import {BytesSignatureEncoder} from "./signature-encoder";
-import {HCVSignatureEncoder} from "./HCVSignatureEncoder";
 import {SignatureSchemeId} from "./SignatureSchemeId";
+import {BytesSignatureEncoder} from "../encoder/signature/BytesSignatureEncoder";
 
 describe('ML DSA 65 Signature', () => {
     test("Signature verification", async () => {
@@ -74,6 +73,7 @@ describe('Generic signature encoder', () => {
     })
 })
 
+/*
 describe('HCV signature encoder', () => {
     let privateKey: MLDSA65PrivateSignatureKey;
     let publicKey: MLDSA65PublicSignatureKey;
@@ -101,3 +101,5 @@ describe('HCV signature encoder', () => {
         expect(privateKey.getSignatureSchemeId()).toEqual(recoveredPrivateKey.getSignatureSchemeId());
     })
 })
+
+ */

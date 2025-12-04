@@ -1,5 +1,5 @@
-import {PublicSignatureKey} from "./PublicSignatureKey";
-import {PrivateSignatureKey} from "./PrivateSignatureKey";
+import {PublicSignatureKey} from "../../signature/PublicSignatureKey";
+import {PrivateSignatureKey} from "../../signature/PrivateSignatureKey";
 
 /**
  * An interface for encoding and decoding cryptographic signature keys and signatures.
@@ -32,7 +32,7 @@ export interface SignatureEncoderInterface<T> {
      * @param {PrivateSignatureKey} privateKey - The private key to be encoded.
      * @return {T} The encoded representation of the private key.
      */
-    encodePrivateKey(privateKey: PrivateSignatureKey): T;
+    encodePrivateKey(privateKey: PrivateSignatureKey): Promise<T>;
 
     /**
      * Decodes the provided private key and returns a private signature key object.
@@ -40,7 +40,7 @@ export interface SignatureEncoderInterface<T> {
      * @param {T} privateKey - The private key to decode.
      * @return {PrivateSignatureKey} A decoded private signature key object.
      */
-    decodePrivateKey(privateKey: T): PrivateSignatureKey;
+    decodePrivateKey(privateKey: T): Promise<PrivateSignatureKey>;
 
     /**
      * Encodes a given digital signature into a specific format.

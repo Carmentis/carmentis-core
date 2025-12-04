@@ -1,7 +1,6 @@
 import * as SCHEMAS from "../../common/constants/schemas";
 import {SchemaUnserializer} from "../../common/data/schemaSerializer";
 import * as network from "../../common/network/network";
-import {StringSignatureEncoder} from "../../common/crypto/signature/signature-encoder";
 import {AccountCrypto} from "../../common/wallet/AccountCrypto";
 import {HCVPkeEncoder} from "../../common/crypto/encryption/public-key-encryption/HCVPkeEncoder";
 import {
@@ -9,6 +8,7 @@ import {
 } from "../../common/crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {PrivateSignatureKey} from "../../common/crypto/signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "../../common/crypto/signature/SignatureSchemeId";
+import {CryptoEncoderFactory} from "../../common/crypto/encoder/CryptoEncoderFactory";
 
 export abstract class wiWallet<T> {
 
@@ -43,7 +43,7 @@ export abstract class wiWallet<T> {
          */
         const challenge = object.challenge;
         const signature = await privateKey.sign(challenge);
-        const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+        const signatureEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
 
         let answerObject = {
             publicKey: signatureEncoder.encodePublicKey(await privateKey.getPublicKey()),
@@ -107,7 +107,7 @@ export abstract class wiWallet<T> {
             const actorPublicEncryptionKey = await actorCrypto.getPublicEncryptionKey(pkeSchemeId);
 
             // send the actor key to the operator and awaits for the response
-            const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+            const signatureEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
             const pkeEncoder = HCVPkeEncoder.createBase64HCVPkeEncoder();
             answer = await network.sendWalletToOperatorMessage<{data: Uint8Array}>(
                 object.serverUrl,

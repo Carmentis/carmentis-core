@@ -148,7 +148,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
     getLastMicroblock(): Promise<Microblock> {
         return this.getMicroblock(this.getHeight())
     }
-    
 
     setHeight(height: number) {
         this.height = height;
@@ -192,8 +191,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
             await this.getVirtualBlockchainState()
         )
     }
-
-
 
     /**
      * Retrieves the genesis seed by extracting it from the previous hash of the first microblock.
@@ -245,8 +242,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         //this.sectionCallbacks.set(sectionType, callback.bind(this));
     }
 
-
-
     /*
     async importMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
         this.currentMicroblock = new Microblock(this.type);
@@ -287,10 +282,10 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
      * @throws {Error} If the microblock information cannot be loaded.
      */
     async getMicroblock(height: Height): Promise<Microblock> {
-        // if the provided height is strictly lower then we raise an error
+        // if the provided height is strictly lower, then we raise an error
         if (height < 1) throw new IllegalParameterError(`Cannot retrieve microblock at height strictly lower than 1: got ${height}`);
 
-        // in case the asked height is strictly highest than the current height, we call the fallback method
+        // in case the asked height is strictly higher than the current height, we call the fallback method
         // because it might be to access a block not contained in the virtual blockchain but under construction.
         const currentVbHeight = this.getHeight();
         if (currentVbHeight < height) return await this.microblockSearchFailureFallback.onMicroblockSearchFailureForExceedingHeight(
@@ -349,7 +344,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         return this.getHeight() === 0;
     }
 
-
     /**
      * Appends a microblock to the current structure, updating the identifier and height if necessary.
      *
@@ -380,8 +374,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
             this.identifier = microblock.getHash().toBytes();
         }
 
-
-
         // we increase the height of the vb
         this.height += 1;
 
@@ -389,8 +381,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         const mbHash = microblock.getHash().toBytes();
         this.microblockHashByHeight.set(this.height, mbHash);
         this.microblockByHeight.set(this.height, microblock);
-
-
 
         // we store the microblock
         /*
@@ -404,9 +394,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
             bodyData
         )
          */
-
-
-
     }
 
     setMicroblockSearchFailureFallback(fallback: IMicroblockSearchFailureFallback) {
@@ -523,7 +510,4 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
     }
 
      */
-
-
-
 }

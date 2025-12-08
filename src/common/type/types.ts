@@ -285,8 +285,8 @@ export interface AccountVestingTransfer {
     amount: number;
     publicReference: string;
     privateReference: string;
-    cliffPeriod: number;
-    vestingPeriod: number;
+    cliffDurationDays: number;
+    vestingDurationDays: number;
 }
 
 export interface AccountEscrowTransfer {

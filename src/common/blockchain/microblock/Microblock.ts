@@ -1210,6 +1210,7 @@ export class Microblock {
         return section
     }
     
+    // Organization sections
     getOrganizationDescriptionSection() {
         return this.getSectionByType<OrganizationDescriptionSection>(SectionType.ORG_DESCRIPTION);
     }

@@ -121,7 +121,7 @@ export const RECORD_DESCRIPTION: Schema = {
     { name: 'maskableFields',      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_MASKABLE_FIELD },
     { name: 'author',              type: DATA.TYPE_STRING },
     { name: 'endorser',            type: DATA.TYPE_STRING, optional: true },
-      { name: 'approvalMessage',            type: DATA.TYPE_STRING, optional: true },
+    { name: 'approvalMessage',     type: DATA.TYPE_STRING, optional: true },
   ]
 };
 
@@ -133,7 +133,16 @@ export const ACCOUNT_STATE: Schema = {
   definition: [
     { name: 'height',          type: DATA.TYPE_UINT48 },
     { name: 'balance',         type: DATA.TYPE_UINT48 },
-    { name: 'lastHistoryHash', type: DATA.TYPE_BIN256 }
+    { name: 'lastHistoryHash', type: DATA.TYPE_BIN256 },
+    {
+        name: 'locks',
+        type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+        definition: [
+            { name: 'type',       type: DATA.TYPE_UINT8 },
+            { name: 'amount',     type: DATA.TYPE_UINT48 },
+            { name: 'parameters', type: DATA.TYPE_BINARY }
+        ]
+    }
   ]
 };
 
@@ -156,11 +165,11 @@ export const ACCOUNT_HISTORY: Schema = {
 export const VIRTUAL_BLOCKCHAIN_STATE: Schema = {
   label: 'VirtualBlockchainState',
   definition: [
-    { name: 'type',               type: DATA.TYPE_UINT8 },
-    { name: 'expirationDay',      type: DATA.TYPE_UINT32 },
-    { name: 'height',             type: DATA.TYPE_UINT48 },
-    { name: 'lastMicroblockHash', type: DATA.TYPE_BIN256 },
-    { name: 'serializedInternalState',        type: DATA.TYPE_BINARY }
+    { name: 'type',                    type: DATA.TYPE_UINT8 },
+    { name: 'expirationDay',           type: DATA.TYPE_UINT32 },
+    { name: 'height',                  type: DATA.TYPE_UINT48 },
+    { name: 'lastMicroblockHash',      type: DATA.TYPE_BIN256 },
+    { name: 'serializedInternalState', type: DATA.TYPE_BINARY }
   ]
 };
 

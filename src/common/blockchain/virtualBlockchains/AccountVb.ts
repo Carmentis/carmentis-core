@@ -108,8 +108,6 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
         microblock.addAccountSignatureSection({ signature });
     }
 
-
-
     /**
      Update methods
      */

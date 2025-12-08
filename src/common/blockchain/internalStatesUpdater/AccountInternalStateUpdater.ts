@@ -1,4 +1,3 @@
-
 import {Microblock} from "../microblock/Microblock";
 import {ECO, SECTIONS} from "../../constants/constants";
 import {Section} from "../../type/Section";
@@ -77,6 +76,17 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
     }
 
     private async vestingTransferCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
+        if(section.object.cliffDurationDays < 0) {
+            throw new Error(`The cliff duration must be greater than or equal to 0`);
+        }
+        if(section.object.vestingDurationDays <= 0) {
+            throw new Error(`The vesting duration must be greater than 0`);
+        }
+        if(section.object.amount <= 0) {
+            throw new Error(`The amount must be greater than 0`);
+        }
+
+        // TODO: check that the vesting para
         // FIXME: to be completed
         //const payeeVb = new AccountVb({ provider: this.provider });
         //await payeeVb.load(section.object.account);

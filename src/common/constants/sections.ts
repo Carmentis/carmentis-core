@@ -130,12 +130,12 @@ ACCOUNT[ACCOUNT_TRANSFER] = {
 ACCOUNT[ACCOUNT_VESTING_TRANSFER] = {
   label: 'ACCOUNT_VESTING_TRANSFER',
   definition: [
-    { name: 'account',          type: DATA.TYPE_BIN256 },
-    { name: 'amount',           type: DATA.TYPE_UINT48 },
-    { name: 'publicReference',  type: DATA.TYPE_STRING },
-    { name: 'privateReference', type: DATA.TYPE_STRING },
-    { name: 'cliffPeriod',      type: DATA.TYPE_UINT16 },
-    { name: 'vestingPeriod',    type: DATA.TYPE_UINT16 }
+    { name: 'account',             type: DATA.TYPE_BIN256 },
+    { name: 'amount',              type: DATA.TYPE_UINT48 },
+    { name: 'publicReference',     type: DATA.TYPE_STRING },
+    { name: 'privateReference',    type: DATA.TYPE_STRING },
+    { name: 'cliffDurationDays',   type: DATA.TYPE_UINT16 },
+    { name: 'vestingDurationDays', type: DATA.TYPE_UINT16 }
   ]
 };
 

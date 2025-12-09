@@ -20,12 +20,16 @@ export const BK_PAID_BLOCK_FEES = 0x2;
 export const BK_SENT_ISSUANCE   = 0x4;
 export const BK_SALE            = 0x6;
 export const BK_SENT_PAYMENT    = 0x8;
+export const BK_SENT_VESTING    = 0xA;
+export const BK_SENT_ESCROW     = 0xC;
 
 export const BK_EARNED_TX_FEES    = BK_PLUS | BK_PAID_TX_FEES;
 export const BK_EARNED_BLOCK_FEES = BK_PLUS | BK_PAID_BLOCK_FEES;
 export const BK_RECEIVED_ISSUANCE = BK_PLUS | BK_SENT_ISSUANCE;
 export const BK_PURCHASE          = BK_PLUS | BK_SALE;
 export const BK_RECEIVED_PAYMENT  = BK_PLUS | BK_SENT_PAYMENT;
+export const BK_RECEIVED_VESTING  = BK_PLUS | BK_SENT_VESTING;
+export const BK_RECEIVED_ESCROW   = BK_PLUS | BK_SENT_ESCROW;
 
 export const BK_REF_BLOCK      = 0;
 export const BK_REF_MICROBLOCK = 1;
@@ -41,7 +45,11 @@ export const BK_REFERENCES = [
   /* BK_SALE              */ BK_REF_SECTION,
   /* BK_PURCHASE          */ BK_REF_SECTION,
   /* BK_SENT_PAYMENT      */ BK_REF_SECTION,
-  /* BK_RECEIVED_PAYMENT  */ BK_REF_SECTION
+  /* BK_RECEIVED_PAYMENT  */ BK_REF_SECTION,
+  /* BK_SENT_VESTING      */ BK_REF_SECTION,
+  /* BK_RECEIVED_VESTING  */ BK_REF_SECTION,
+  /* BK_SENT_ESCROW       */ BK_REF_SECTION,
+  /* BK_RECEIVED_ESCROW   */ BK_REF_SECTION
 ];
 
 export const BK_NAMES = [
@@ -54,22 +62,22 @@ export const BK_NAMES = [
   /* BK_SALE              */ "Sale",
   /* BK_PURCHASE          */ "Purchase",
   /* BK_SENT_PAYMENT      */ "Sent payment",
-  /* BK_RECEIVED_PAYMENT  */ "Received payment"
+  /* BK_RECEIVED_PAYMENT  */ "Received payment",
+  /* BK_SENT_VESTING      */ "Sent vesting",
+  /* BK_RECEIVED_VESTING  */ "Received vesting",
+  /* BK_SENT_ESCROW       */ "Sent escrow",
+  /* BK_RECEIVED_ESCROW   */ "Received escrow"
 ];
 
 // account types
 export const ACCOUNT_BURNT_TOKENS  = 0x00;
 export const ACCOUNT_STANDARD      = 0x01;
 export const ACCOUNT_BLOCK_FEES    = 0x02;
-export const ACCOUNT_LOCKED_TOKENS = 0x03;
-export const ACCOUNT_ESCROW        = 0x04;
 
 export const ACCOUNT_NAMES = [
   "Burnt tokens account",
   "Standard account",
-  "Block fees account",
-  "Locked tokens account",
-  "Escrow account"
+  "Block fees account"
 ];
 
 export const ACCOUNT_ALLOWED_TRANSFERS = [
@@ -82,6 +90,10 @@ export const ACCOUNT_ALLOWED_TRANSFERS = [
     1 << BK_RECEIVED_ISSUANCE |
     1 << BK_RECEIVED_PAYMENT |
     1 << BK_SENT_PAYMENT |
+    1 << BK_RECEIVED_VESTING |
+    1 << BK_SENT_VESTING |
+    1 << BK_RECEIVED_ESCROW |
+    1 << BK_SENT_ESCROW |
     1 << BK_SALE |
     1 << BK_PURCHASE |
     1 << BK_EARNED_BLOCK_FEES |
@@ -92,15 +104,5 @@ export const ACCOUNT_ALLOWED_TRANSFERS = [
   (
     1 << BK_EARNED_TX_FEES |
     1 << BK_PAID_BLOCK_FEES
-  ),
-
-  // ACCOUNT_LOCKED_TOKENS
-  (
-    0
-  ),
-
-  // ACCOUNT_ESCROW
-  (
-    1 << BK_RECEIVED_PAYMENT
   )
 ];

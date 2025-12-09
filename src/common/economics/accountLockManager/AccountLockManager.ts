@@ -30,7 +30,7 @@ export class AccountLockManager {
     }
 
     setLocks(locks: Lock[]) {
-        this.locks = locks;
+        this.locks = [...locks];
     }
 
     getLocks() {

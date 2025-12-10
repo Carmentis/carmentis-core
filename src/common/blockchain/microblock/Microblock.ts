@@ -645,7 +645,7 @@ export class Microblock {
      * @return {Uint8Array} The generated digital signature as a byte array.
      */
     async sign(privateKey: PrivateSignatureKey, includeGas: boolean = true): Promise<Uint8Array> {
-        const signedData = this.serializeForSigning(includeGas);
+        const signedData = this.serializeForSigning(includeGas, false);
         const signature = await privateKey.sign(signedData)
         return signature
     }
@@ -661,7 +661,7 @@ export class Microblock {
     async verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas: boolean = true): Promise<boolean> {
         //const shouldIncludeGas = typeof includeGas === 'boolean' ? includeGas : true;
         //const numberOfSectionsToIncludeInSignature = sectionCount || this.sections.length - 1;
-        const signedData = this.serializeForSigning(includeGas);
+        const signedData = this.serializeForSigning(includeGas, true);
         return await publicKey.verify(signedData, signature);
     }
 
@@ -722,22 +722,24 @@ export class Microblock {
      *
      * @return {Uint8Array} The serialized binary representation of the microblock for signing.
      */
-    serializeForSigning(includeGas: boolean): Uint8Array {
+    serializeForSigning(includeGas: boolean, shouldBeSigned: boolean = false): Uint8Array {
         // this.setGasData(includeGas, extraBytes);
-        const signedHeader: MicroblockHeaderObject = {
-            ...this.header,
-            gas: includeGas ? this.header.gas : 0,
-            gasPrice: includeGas ? this.header.gasPrice : 0
-        }
-        const headerData = BlockchainSerializer.serializeMicroblockHeader(signedHeader);
-        //const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
-        //const headerData = serializer.serialize(this.header);
         const numberOfSections = this.sections.length;
         const sections = this.sections.slice(
             0,
-            this.isLastSectionSignature() ?  numberOfSections - 1 : numberOfSections
+            shouldBeSigned && this.isLastSectionSignature() ?  numberOfSections - 1 : numberOfSections
         );
 
+        const signedHeader: MicroblockHeaderObject = {
+            ...this.header,
+            gas: includeGas ? this.header.gas : 0,
+            gasPrice: includeGas ? this.header.gasPrice : 0,
+            bodyHash: Microblock.computeBodyHashFromSections(sections)
+        }
+        const headerData = BlockchainSerializer.serializeMicroblockHeader(signedHeader);
+        return headerData
+
+        /*
         // TODO: find another way
 
         const headerHash = headerData.slice(0, SCHEMAS.MICROBLOCK_HEADER_BODY_HASH_OFFSET);
@@ -747,6 +749,8 @@ export class Microblock {
             ...sectionHashes
         );
         return serializedMbForSigning;
+
+         */
     }
 
     /**

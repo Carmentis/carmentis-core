@@ -62,6 +62,7 @@ export abstract class AbstractProvider implements IProvider {
     abstract getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeaderObject | null>;
     abstract getVirtualBlockchainIdContainingMicroblock(microblockHash: Hash): Promise<Hash>;
     abstract getVirtualBlockchainState(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainState | null>;
+    abstract getProtocolVariables(): Promise<ProtocolInternalState>;
 
 
     private async initializeVirtualBlockchain(vb :VirtualBlockchain, vbId: Hash) {

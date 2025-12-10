@@ -19,7 +19,7 @@ const PK_SIGNATURE_KEY = "PK";
 export abstract class BaseHCVSignatureDecoder implements ISignatureDecodeHandler {
 
     private static logger = Logger.getLogger(["HCVSignatureDecoder"])
-    protected bytesEncoder = EncoderFactory.bytesToBase64Encoder();
+    protected bytesEncoder = EncoderFactory.bytesToHexEncoder();
 
     /**
      * Creates a new BaseHCVSignatureDecoder.

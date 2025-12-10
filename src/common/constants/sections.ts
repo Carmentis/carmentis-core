@@ -1,6 +1,7 @@
 import * as DATA from './data';
-import {CONTRACT_SCHEMA, Schema} from './schemas';
+import {CONTRACT_SCHEMA, PROTOCOL_VARIABLES, Schema} from './schemas';
 import {SectionType} from '../type/SectionType';
+import {Section} from "../type/Section";
 
 // ============================================================================================================================ //
 //  Constraints                                                                                                                 //
@@ -19,64 +20,59 @@ export const CONSTRAINT_NAMES = [
   'any number of sections'
 ];
 
+export const SIGNATURE     = SectionType.SIGNATURE;
+export const SIGNATURE_SCHEMA = {
+    label: 'SIGNATURE',
+    definition: [
+        { name: 'schemeId', type: DATA.TYPE_UINT8 },
+        { name: 'signature', type: DATA.TYPE_BINARY }
+    ]
+};
+
 // ============================================================================================================================ //
 //  Protocol                                                                                                                    //
 // ============================================================================================================================ //
-export const PROTOCOL_SIG_SCHEME      = SectionType.PROTOCOL_SIG_SCHEME;
 export const PROTOCOL_PUBLIC_KEY      = SectionType.PROTOCOL_PUBLIC_KEY;
-export const PROTOCOL_PROTOCOL_UPDATE = SectionType.PROTOCOL_PROTOCOL_UPDATE;
-export const PROTOCOL_NODE_UPDATE     = SectionType.PROTOCOL_NODE_UPDATE;
+export const PROTOCOL_UPDATE = SectionType.PROTOCOL_UPDATE;
 export const PROTOCOL_SIGNATURE       = SectionType.PROTOCOL_SIGNATURE;
 
 const PROTOCOL: Schema[] = [] as const;
-
+/*
 PROTOCOL[PROTOCOL_SIG_SCHEME] = {
   label: 'PROTOCOL_SIG_SCHEME',
   definition: [
     { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
+ */
 
 PROTOCOL[PROTOCOL_PUBLIC_KEY] = {
   label: 'PROTOCOL_PUBLIC_KEY',
   definition: [
-    { name: 'publicKey', type: DATA.TYPE_BINARY }
+      { name: 'schemeId', type: DATA.TYPE_UINT8 },
+      { name: 'publicKey', type: DATA.TYPE_BINARY }
   ]
 };
 
-PROTOCOL[PROTOCOL_PROTOCOL_UPDATE] = {
-  label: 'PROTOCOL_PROTOCOL_UPDATE',
+
+
+PROTOCOL[PROTOCOL_UPDATE] = {
+  label: 'PROTOCOL_VARIABLES_UPDATE',
   definition: [
-    { name: 'effectiveUtcTimestamp', type: DATA.TYPE_UINT48 },
-    { name: 'version',               type: DATA.TYPE_UINT16 },
-    { name: 'codeName',              type: DATA.TYPE_STRING },
-    { name: 'changeLog',             type: DATA.TYPE_STRING },
-    { name: 'contracts',             type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: CONTRACT_SCHEMA }
+      {name: 'protocolVersion', type: DATA.TYPE_UINT16},
+      {name: 'protocolVersionName', type: DATA.TYPE_STRING},
+      {name: 'changeLog', type: DATA.TYPE_STRING},
+      {name: 'protocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES }
   ]
 };
 
-PROTOCOL[PROTOCOL_NODE_UPDATE] = {
-  label: 'PROTOCOL_NODE_UPDATE',
-  definition: [
-    { name: 'organizationId',     type: DATA.TYPE_BIN256 },
-    { name: 'version',            type: DATA.TYPE_STRING },
-    { name: 'maxProtocolVersion', type: DATA.TYPE_UINT16 },
-    { name: 'changeLog',          type: DATA.TYPE_STRING },
-    { name: 'url',                type: DATA.TYPE_STRING }
-  ]
-};
 
-PROTOCOL[PROTOCOL_SIGNATURE] = {
-  label: 'PROTOCOL_SIGNATURE',
-  definition: [
-    { name: 'signature', type: DATA.TYPE_BINARY }
-  ]
-};
+PROTOCOL[PROTOCOL_SIGNATURE] = SIGNATURE_SCHEMA
 
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
-export const ACCOUNT_SIG_SCHEME        = SectionType.ACCOUNT_SIG_SCHEME;
+//export const ACCOUNT_SIG_SCHEME        = SectionType.ACCOUNT_SIG_SCHEME;
 export const ACCOUNT_PUBLIC_KEY        = SectionType.ACCOUNT_PUBLIC_KEY;
 export const ACCOUNT_TOKEN_ISSUANCE    = SectionType.ACCOUNT_TOKEN_ISSUANCE;
 export const ACCOUNT_CREATION          = SectionType.ACCOUNT_CREATION;
@@ -88,18 +84,20 @@ export const ACCOUNT_STAKE             = SectionType.ACCOUNT_STAKE;
 export const ACCOUNT_SIGNATURE         = SectionType.ACCOUNT_SIGNATURE;
 
 const ACCOUNT: Schema[] = [] as const;
-
+/*
 ACCOUNT[ACCOUNT_SIG_SCHEME] = {
   label: 'ACCOUNT_SIG_SCHEME',
   definition: [
     { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
+ */
 
 ACCOUNT[ACCOUNT_PUBLIC_KEY] = {
   label: 'ACCOUNT_PUBLIC_KEY',
   definition: [
-    { name: 'publicKey', type: DATA.TYPE_BINARY }
+    { name: 'publicKey', type: DATA.TYPE_BINARY },
+      { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
 
@@ -170,17 +168,11 @@ ACCOUNT[ACCOUNT_STAKE] = {
   ]
 };
 
-ACCOUNT[ACCOUNT_SIGNATURE] = {
-  label: 'ACCOUNT_SIGNATURE',
-  definition: [
-    { name: 'signature', type: DATA.TYPE_BINARY }
-  ]
-};
+ACCOUNT[ACCOUNT_SIGNATURE] = SIGNATURE_SCHEMA
 
 // ============================================================================================================================ //
 //  Validator node                                                                                                              //
 // ============================================================================================================================ //
-export const VN_SIG_SCHEME          = SectionType.VN_SIG_SCHEME;
 export const VN_DECLARATION         = SectionType.VN_DECLARATION;
 export const VN_COMETBFT_PUBLIC_KEY_DECLARATION         = SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION;
 export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
@@ -189,12 +181,7 @@ export const VN_SIGNATURE           = SectionType.VN_SIGNATURE;
 
 const VALIDATOR_NODE: Schema[] = [] as const;
 
-VALIDATOR_NODE[VN_SIG_SCHEME] = {
-  label: 'VN_SIG_SCHEME',
-  definition: [
-    { name: 'schemeId', type: DATA.TYPE_UINT8 }
-  ]
-};
+
 
 VALIDATOR_NODE[VN_DECLARATION] = {
   label: 'VN_DECLARATION',
@@ -225,17 +212,11 @@ VALIDATOR_NODE[VN_VOTING_POWER_UPDATE] = {
   ]
 };
 
-VALIDATOR_NODE[VN_SIGNATURE] = {
-  label: 'VN_SIGNATURE',
-  definition: [
-    { name: 'signature', type: DATA.TYPE_BINARY }
-  ]
-};
+VALIDATOR_NODE[VN_SIGNATURE] = SIGNATURE_SCHEMA
 
 // ============================================================================================================================ //
 //  Organization                                                                                                                //
 // ============================================================================================================================ //
-export const ORG_SIG_SCHEME    = SectionType.ORG_SIG_SCHEME;
 export const ORG_PUBLIC_KEY    = SectionType.ORG_PUBLIC_KEY;
 export const ORG_DESCRIPTION   = SectionType.ORG_DESCRIPTION;
 export const ORG_SERVER        = SectionType.ORG_SERVER;
@@ -243,17 +224,11 @@ export const ORG_SIGNATURE     = SectionType.ORG_SIGNATURE;
 
 const ORGANIZATION: Schema[] = [] as const;
 
-ORGANIZATION[ORG_SIG_SCHEME] = {
-  label: 'ORG_SIG_SCHEME',
-  definition: [
-    { name: 'schemeId', type: DATA.TYPE_UINT8 }
-  ]
-};
-
 ORGANIZATION[ORG_PUBLIC_KEY] = {
   label: 'ORG_PUBLIC_KEY',
   definition: [
-    { name: 'publicKey', type: DATA.TYPE_BINARY }
+      { name: 'publicKey', type: DATA.TYPE_BINARY },
+      { name: 'schemeId', type: DATA.TYPE_UINT8 }
   ]
 };
 
@@ -274,29 +249,18 @@ ORGANIZATION[ORG_SERVER] = {
   ]
 };
 
-ORGANIZATION[ORG_SIGNATURE] = {
-  label: 'ORG_SIGNATURE',
-  definition: [
-    { name: 'signature', type: DATA.TYPE_BINARY }
-  ]
-};
+ORGANIZATION[ORG_SIGNATURE] = SIGNATURE_SCHEMA
 
 // ============================================================================================================================ //
 //  Application                                                                                                                 //
 // ============================================================================================================================ //
-export const APP_SIG_SCHEME  = SectionType.APP_SIG_SCHEME;
+
 export const APP_DECLARATION = SectionType.APP_DECLARATION;
 export const APP_DESCRIPTION = SectionType.APP_DESCRIPTION;
 export const APP_SIGNATURE   = SectionType.APP_SIGNATURE;
 
 const APPLICATION: Schema[] = [] as const;
 
-APPLICATION[APP_SIG_SCHEME] = {
-  label: 'APP_SIG_SCHEME',
-  definition: [
-    { name: 'schemeId', type: DATA.TYPE_UINT8 }
-  ]
-};
 
 APPLICATION[APP_DECLARATION] = {
   label: 'APP_DECLARATION',
@@ -315,12 +279,7 @@ APPLICATION[APP_DESCRIPTION] = {
   ]
 };
 
-APPLICATION[APP_SIGNATURE] = {
-  label: 'APP_SIGNATURE',
-  definition: [
-    { name: 'signature', type: DATA.TYPE_BINARY }
-  ]
-};
+APPLICATION[APP_SIGNATURE] = SIGNATURE_SCHEMA
 
 // ============================================================================================================================ //
 //  Application ledger                                                                                                          //
@@ -446,19 +405,9 @@ APP_LEDGER[APP_LEDGER_ENDORSEMENT_REQUEST] = {
   ]
 };
 
-APP_LEDGER[APP_LEDGER_ENDORSER_SIGNATURE] = {
-  label: 'APP_LEDGER_ENDORSER_SIGNATURE',
-  definition: [
-    { name: 'signature', type: DATA.TYPE_BINARY }
-  ]
-};
+APP_LEDGER[APP_LEDGER_ENDORSER_SIGNATURE] = SIGNATURE_SCHEMA
 
-APP_LEDGER[APP_LEDGER_AUTHOR_SIGNATURE] = {
-  label: 'APP_LEDGER_AUTHOR_SIGNATURE',
-  definition: [
-    { name: 'signature', type: DATA.TYPE_BINARY }
-  ]
-};
+APP_LEDGER[APP_LEDGER_AUTHOR_SIGNATURE] = SIGNATURE_SCHEMA
 
 export const ALL_SECTIONS_SCHEMAS = {
   ...PROTOCOL,

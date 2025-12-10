@@ -10,6 +10,9 @@
     "checkJs": false,                 // Enable type checking in JavaScript
     "strict": true,                   // Ensure strict type checking,
     "esModuleInterop": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "inlineSourceMap": false,
   },
   "include": ["src/**/*"],           // Specify the source files
   "exclude": ["node_modules", "dist"] // Exclude unnecessary files

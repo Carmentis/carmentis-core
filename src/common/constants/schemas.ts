@@ -176,9 +176,41 @@ export const VIRTUAL_BLOCKCHAIN_STATE: Schema = {
 // ============================================================================================================================ //
 //  Protocol VB state                                                                                                           //
 // ============================================================================================================================ //
-const PROTOCOL_VB_STATE: Schema = {
+export const PROTOCOL_VARIABLES: Schema = {
+    label: 'PROTOCOL_VARIABLES',
+    definition: [
+        {name: 'protocolVersionName', type: DATA.TYPE_STRING},
+        {name: 'protocolVersion', type: DATA.TYPE_UINT16},
+        {name: 'feesCalculationVersion', type: DATA.TYPE_UINT16},
+        {name: 'globalStateUpdaterVersion', type: DATA.TYPE_UINT16},
+        {name: 'applicationLedgerInternalStateUpdaterVersion', type: DATA.TYPE_UINT16},
+        {name: 'applicationInternalStateUpdaterVersion', type: DATA.TYPE_UINT16},
+        {name: 'organizationInternalStateUpdaterVersion', type: DATA.TYPE_UINT16},
+        {name: 'validatorNodeInternalStateUpdaterVersion', type: DATA.TYPE_UINT16},
+        {name: 'accountInternalStateUpdaterVersion', type: DATA.TYPE_UINT16},
+        {name: 'protocolInternalStateUpdaterVersion', type: DATA.TYPE_UINT16}
+    ]
+}
+
+export const PROTOCOL_VB_STATE: Schema = {
   label: 'ProtocolVbState',
   definition: [
+      { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
+      { name: 'publicKeyHeight',   type: DATA.TYPE_UINT48 },
+      { name: 'currentProtocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES },
+      {
+          name: 'protocolUpdates',
+          type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+          schema: {
+              label: 'PROTOCOL_UPDATE',
+              definition: [
+                  { name: 'protocolVersion', type: DATA.TYPE_UINT16 },
+                  { name: 'changeLog', type: DATA.TYPE_STRING },
+                  { name: 'protocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES },
+                  { name: 'protocolVersionName', type: DATA.TYPE_STRING }
+              ]
+          }
+      }
   ]
 };
 

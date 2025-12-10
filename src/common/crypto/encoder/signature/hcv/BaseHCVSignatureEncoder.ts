@@ -17,7 +17,7 @@ const PK_SIGNATURE_KEY = "PK";
  * SIG:SECP256K1:PK:<base64_public_key>
  */
 export abstract class BaseHCVSignatureEncoder implements ISignatureEncoderHandler {
-    protected bytesEncoder = EncoderFactory.bytesToBase64Encoder();
+    protected bytesEncoder = EncoderFactory.bytesToHexEncoder();
 
     /**
      * Creates a new BaseHCVSignatureEncoder.

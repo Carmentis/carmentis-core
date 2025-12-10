@@ -7,18 +7,6 @@ import {ApplicationInternalState} from "../internalStates/ApplicationInternalSta
 export class ApplicationInternalStateUpdater implements IInternalStateUpdater<ApplicationInternalState> {
     updateState(prevState: ApplicationInternalState, microblock: Microblock): ApplicationInternalState {
         const newState = prevState.clone();
-
-        try {
-            const section = microblock.getApplicationSignatureSchemeSection();
-            newState.setSignatureSchemeId(section.object.schemeId);
-        } catch (e) {
-            if (e instanceof SectionNotFoundError) {
-
-            } else {
-                throw e;
-            }
-        }
-
         try {
             const section = microblock.getApplicationDeclarationSection();
             newState.setOrganizationId(section.object.organizationId);

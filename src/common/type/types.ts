@@ -1,4 +1,6 @@
 import {z} from "zod";
+import {ProtocolUpdateSection} from "./sections";
+import {ProtocolVariables} from "./ProtocolVariables";
 
 export interface ImportedProof {
     height: number;
@@ -46,11 +48,34 @@ export interface MerkleProof {
     witnesses: string;
 }
 
+
+
+
+
+
+
+
+
+
 export interface ProtocolVBInternalStateObject {
     signatureSchemeId: number;
     publicKeyHeight: number;
-    variables: { variableName: string, variableValue: string }[]
+    currentProtocolVariables: ProtocolVariables;
+    protocolUpdates: ProtocolUpdateSection[]
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export interface AccountVBInternalStateObject {
     signatureSchemeId: number;
@@ -172,7 +197,7 @@ export interface ValidatorNodeDTO {
 
 export interface MicroblockHeaderObject {
     magicString: string;
-    protocolVersion: number;
+    protocolVersion: number; // local state updater version
     microblockType: number;
     height: number;
     previousHash: Uint8Array;

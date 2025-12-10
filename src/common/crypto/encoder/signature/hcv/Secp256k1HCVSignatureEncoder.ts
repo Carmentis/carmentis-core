@@ -1,7 +1,8 @@
 import {NativeHCVSignatureEncoder} from "./NativeHCVSignatureEncoder";
 import {PrivateSignatureKey} from "../../../signature/PrivateSignatureKey";
 import {PublicSignatureKey} from "../../../signature/PublicSignatureKey";
-import {Secp256k1PrivateSignatureKey, Secp256k1PublicSignatureKey} from "../../../signature/secp256k1";
+import {Secp256k1PublicSignatureKey} from "../../../signature/secp256k1/Secp256k1PublicSignatureKey";
+import {Secp256k1PrivateSignatureKey} from "../../../signature/secp256k1/Secp256k1PrivateSignatureKey";
 
 /**
  * HCV encoder for Secp256k1 signature keys.

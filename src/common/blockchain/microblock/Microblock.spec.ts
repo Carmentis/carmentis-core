@@ -3,7 +3,8 @@ import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Hash} from "../../entities/Hash";
 import {Utils} from "../../utils/utils";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
-import {Secp256k1PrivateSignatureKey} from "../../crypto/signature/secp256k1";
+
+import {Secp256k1PrivateSignatureKey} from "../../crypto/signature/secp256k1/Secp256k1PrivateSignatureKey";
 
 describe('Microblock.createGenesisAccountMicroblock', () => {
     it('should create a genesis microblock of type ACCOUNT_VIRTUAL_BLOCKCHAIN', () => {
@@ -116,12 +117,13 @@ describe('Microblock.verifySignature', () => {
         const pk = await sk.getPublicKey();
         const mb = Microblock.createGenesisAccountMicroblock();
         mb.addAccountPublicKeySection({
-            publicKey: await pk.getPublicKeyAsBytes()
+            publicKey: await pk.getPublicKeyAsBytes(),
+            schemeId: pk.getSignatureSchemeId()
         });
         const signature = await mb.sign(sk);
         expect(signature).toBeInstanceOf(Uint8Array)
-        mb.addAccountSignatureSection({ signature });
-        expect(mb.verifySignature(pk, signature)).toBe(true)
+        mb.addAccountSignatureSection({ signature, schemeId: sk.getSignatureSchemeId() });
+        expect(await mb.verifySignature(pk, signature)).toBe(true)
     })
 
     it("should verify a valid signature for a microblock signed twice", async () => {
@@ -131,23 +133,24 @@ describe('Microblock.verifySignature', () => {
         // create the microblock with a single section
         const mb = Microblock.createGenesisAccountMicroblock();
         mb.addAccountPublicKeySection({
-            publicKey: await pk.getPublicKeyAsBytes()
+            publicKey: await pk.getPublicKeyAsBytes(),
+            schemeId: pk.getSignatureSchemeId(),
         });
 
         // sign the microblock a first time
         const firstSignature = await mb.sign(sk);
         expect(firstSignature).toBeInstanceOf(Uint8Array)
-        mb.addAccountSignatureSection({ signature: firstSignature });
-        expect(mb.verifySignature(pk, firstSignature)).toBe(true)
+        mb.addAccountSignatureSection({ signature: firstSignature, schemeId: sk.getSignatureSchemeId() });
+        expect(await mb.verifySignature(pk, firstSignature)).toBe(true)
 
 
         // sign the microblock a second time
         const secondSignature = await mb.sign(sk);
         expect(secondSignature).toBeInstanceOf(Uint8Array)
-        mb.addAccountSignatureSection({ signature: secondSignature });
-        expect(mb.verifySignature(pk, firstSignature)).toBe(false)
-        expect(mb.verifySignature(pk, secondSignature)).toBe(true)
-        expect(mb.verifySignature(pk, secondSignature)).toBe(true)
+        mb.addAccountSignatureSection({ signature: secondSignature, schemeId: sk.getSignatureSchemeId() });
+        expect(await mb.verifySignature(pk, firstSignature)).toBe(false)
+        expect(await mb.verifySignature(pk, secondSignature)).toBe(true)
+        expect(await mb.verifySignature(pk, secondSignature)).toBe(true)
 
         // pop the last signature
         expect(mb.getNumberOfSections()).toBe(3)
@@ -155,7 +158,17 @@ describe('Microblock.verifySignature', () => {
         expect(mb.getNumberOfSections()).toBe(2)
 
         // verify the signatures
-        expect(mb.verifySignature(pk, firstSignature)).toBe(true)
-        expect(mb.verifySignature(pk, secondSignature)).toBe(false)
+        expect(await mb.verifySignature(pk, firstSignature)).toBe(true)
+        expect(await mb.verifySignature(pk, secondSignature)).toBe(false)
+    })
+
+    it("Recovers the fees payer account after deserializing", async () => {
+        const mb = Microblock.createGenesisAccountMicroblock();
+        const feesPayerAccount = new Uint8Array([1, 2, 3, 4])
+        mb.setFeesPayerAccount(feesPayerAccount);
+        const {microblockData: serializedMicroblock} = mb.serialize();
+        const recoveredMicroblock = Microblock.loadFromSerializedMicroblock(serializedMicroblock);
+        expect(recoveredMicroblock.getFeesPayerAccount()).toBeInstanceOf(Uint8Array)
+        expect(recoveredMicroblock.getFeesPayerAccount()).toEqual(feesPayerAccount);
     })
 })

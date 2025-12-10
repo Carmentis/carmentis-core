@@ -29,6 +29,7 @@ export default [
                 compilerOptions: {
                     target: 'es6',
                 },
+                sourceMap: true,
                 allowJs: true, // Autoriser les fichiers .js
                 include: ["src/**/*.ts", "src/**/*.js"], // Inclure JS et TS,
                 exclude: ['node_modules/**'],

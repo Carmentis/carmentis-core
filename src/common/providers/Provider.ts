@@ -27,6 +27,7 @@ import {IInternalProvider} from "./IInternalProvider";
 import {IExternalProvider} from "./IExternalProvider";
 import {VirtualBlockchainStatus} from "../type/VirtualBlockchainStatus";
 import {AbstractProvider} from "./AbstractProvider";
+import {ProtocolInternalState} from "../blockchain/internalStates/ProtocolInternalState";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -113,6 +114,28 @@ export class Provider extends AbstractProvider {
         const rawPublicKey = await publicKey.getPublicKeyAsBytes();
         const publicKeyHash = hashScheme.hash(rawPublicKey);
         return await this.getAccountByPublicKeyHash(publicKeyHash);
+    }
+
+    async getProtocolVariables(): Promise<ProtocolInternalState> {
+        const id = await this.getProtocolVirtualBlockchainId();
+        const state = await this.getVirtualBlockchainState(id.toBytes());
+        if (state === null) {
+          throw new Error(`Cannot get protocol parameters from the internal provider`);
+        }
+        return state.internalState as ProtocolInternalState;
+    }
+
+    async getProtocolVirtualBlockchainId(): Promise<Hash> {
+        const list = await this.getObjectList(VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN);
+        const foundVirtualBlockchainCount = list.list.length;
+        if (foundVirtualBlockchainCount === 0) {
+            this.logger.error('No protocol virtual blockchain found: Expecting exactly one protocol virtual blockchain.')
+            throw new Error("No protocol virtual blockchain found");
+        }
+        if (foundVirtualBlockchainCount !== 1) {
+            this.logger.warning("Found " + foundVirtualBlockchainCount + " protocol virtual blockchains, expecting exactly one");
+        }
+        return Hash.from(list.list[0])
     }
 
 

@@ -7,11 +7,6 @@ export class AccountMicroblockStructureChecker implements IMicroblockStructureCh
     checkMicroblockStructure(microblock: Microblock): boolean {
         try {
             const checker = new StructureChecker(microblock);
-
-            checker.expects(
-                checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-                SECTIONS.ACCOUNT_SIG_SCHEME
-            );
             checker.expects(
                 checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.AT_MOST_ONE,
                 SECTIONS.ACCOUNT_PUBLIC_KEY

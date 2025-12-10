@@ -7,11 +7,6 @@ export class ValidatorNodeMicroblockStructureChecker implements IMicroblockStruc
     checkMicroblockStructure(microblock: Microblock): boolean {
         try {
             const checker = new StructureChecker(microblock);
-
-            checker.expects(
-                checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-                SECTIONS.VN_SIG_SCHEME
-            );
             checker.expects(
                 checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
                 SECTIONS.VN_DECLARATION

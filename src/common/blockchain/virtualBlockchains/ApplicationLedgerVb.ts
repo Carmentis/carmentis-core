@@ -46,6 +46,7 @@ import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStat
 import {ICryptoKeyHandler} from "../../wallet/ICryptoKeyHandler";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
+import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInternalState> {
 
@@ -66,8 +67,11 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     }
     
 
-    protected async updateLocalState(state: ApplicationLedgerInternalState, microblock: Microblock) {
-        const stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(microblock.getLocalStateUpdateVersion());
+    protected async updateInternalState(protocolState: ProtocolInternalState, state: ApplicationLedgerInternalState, microblock: Microblock) {
+        const applicationLedgerInternalStateUpdaterVersion = protocolState.getApplicationLedgerInternalStateUpdaterVersion();
+        const stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(
+            applicationLedgerInternalStateUpdaterVersion
+        );
         return stateUpdater.updateState(this.internalState, microblock);
     }
     

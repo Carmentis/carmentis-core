@@ -8,6 +8,7 @@ import {OrganizationVb} from "../blockchain/virtualBlockchains/OrganizationVb";
 import {ProtocolVb} from "../blockchain/virtualBlockchains/ProtocolVb";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {VirtualBlockchainStatus} from "../type/VirtualBlockchainStatus";
+import {ProtocolInternalState} from "../blockchain/internalStates/ProtocolInternalState";
 
 export interface IProvider {
     getVirtualBlockchainIdContainingMicroblock(microblockHash: Hash): Promise<Hash>;
@@ -40,4 +41,11 @@ export interface IProvider {
     loadApplicationLedgerVirtualBlockchain(appLedgerId: Hash): Promise<ApplicationLedgerVb>;
     loadApplicationVirtualBlockchain(applicationId: Hash): Promise<ApplicationVb>;
     loadOrganizationVirtualBlockchain(organizationId: Hash): Promise<OrganizationVb>;
+
+    /**
+     * Returns the rules of the protocol.
+     *
+     * Note that the protocol parameters are defined in the internal state of the protocol virtual blockchain.
+     */
+    getProtocolVariables(): Promise<ProtocolInternalState>;
 }

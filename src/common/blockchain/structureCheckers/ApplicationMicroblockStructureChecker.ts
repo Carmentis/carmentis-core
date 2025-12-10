@@ -10,10 +10,6 @@ export class ApplicationMicroblockStructureChecker implements IMicroblockStructu
 
             checker.expects(
                 checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-                SECTIONS.APP_SIG_SCHEME
-            );
-            checker.expects(
-                checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
                 SECTIONS.APP_DECLARATION
             );
             checker.group(

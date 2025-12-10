@@ -4,7 +4,12 @@ import {Utils} from "../../utils/utils";
 import {Crypto} from "../../crypto/crypto";
 import {MicroblockBody, MicroblockHeaderObject} from "../../type/types";
 import {Hash} from "../../entities/Hash";
-import {CarmentisError, IllegalStateError, SectionNotFoundError} from "../../errors/carmentis-error";
+import {
+    CarmentisError,
+    IllegalParameterError,
+    IllegalStateError,
+    SectionNotFoundError
+} from "../../errors/carmentis-error";
 import {SectionType} from "../../type/SectionType";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {
@@ -12,7 +17,6 @@ import {
     AccountEscrowTransferSection,
     AccountPublicKeySection,
     AccountSignatureSection,
-    AccountSigSchemeSection,
     AccountStakeSection,
     AccountTokenIssuanceSection,
     AccountTransferSection,
@@ -37,16 +41,13 @@ import {
     ApplicationSigSchemeSection,
     OrganizationDescriptionSection,
     OrganizationPublicKeySection,
-    OrganizationServerSection,
     OrganizationSignatureSection,
-    OrganizationSigSchemeSection,
     ProtocolNodeUpdateSection,
-    ProtocolProtocolUpdateSection,
     ProtocolPublicKeySection,
-    ProtocolSignatureSection,
-    ProtocolSigSchemeSection,
-    ValidatorNodeDeclarationSection,
+    ProtocolSignatureSection, ProtocolUpdateSection,
+    SignatureSection,
     ValidatorNodeCometbftPublicKeyDeclarationSection,
+    ValidatorNodeDeclarationSection,
     ValidatorNodeRpcEndpointSection,
     ValidatorNodeSignatureSection,
     ValidatorNodeSigSchemeSection,
@@ -198,7 +199,6 @@ export class Microblock {
 
         // we compute the hash of the microblock being the hash of the serialized header and assign the gas price
         mb.setMicroblockHash(mb.computeHash());
-        mb.gasPrice = header.gasPrice;
 
         return mb;
     }
@@ -230,7 +230,6 @@ export class Microblock {
 
         // we compute the hash of the microblock being the hash of the serialized header and assign the gas price
         mb.hash = Crypto.Hashes.sha256AsBinary(serializedHeader);
-        mb.gasPrice = header.gasPrice;
 
         // we check that the hash of the body is consistent with the body hash contained in the header
         const computedBodyHash = Crypto.Hashes.sha256AsBinary(serializedBody);
@@ -291,7 +290,8 @@ export class Microblock {
      * @returns {Uint8Array} The generated previous hash
      * @private
      */
-    private static generatePreviousHashForGenesisMicroblock(mbType: VirtualBlockchainType, expirationDay = 0) {
+    private static generatePreviousHashForGenesisMicroblock(mbType: VirtualBlockchainType, expirationDay: number = 0): Uint8Array {
+        // TODO(crypto): Use a longer seed
         const genesisSeed = Crypto.Random.getBytes(24);
 
         const previousHash = Utils.getNullHash();
@@ -312,11 +312,6 @@ export class Microblock {
     // ------------------------------------------
     // Instance implementation
     // ------------------------------------------
-
-    /**
-     * Represents the price of gas.
-     */
-    private gasPrice: number;
 
     /**
      * A variable representing binary data encoded as a `Uint8Array`.
@@ -378,13 +373,12 @@ export class Microblock {
             previousHash: Microblock.generatePreviousHashForGenesisMicroblock(type, defaultExpirationDay),
             timestamp: defaultTimestampInSeconds,
             gas: 0,
-            gasPrice: 0,
+            gasPrice: defaultGasPrice,
             bodyHash: Microblock.computeInitialBodyHash()
         };
 
         this.type = type;
         this.sections = [];
-        this.gasPrice = defaultGasPrice;
         this.feesPayerAccount = null;
         this.header = initialHeader;
         this.hash = Microblock.computeMicroblockHash(initialHeader);
@@ -403,7 +397,7 @@ export class Microblock {
         if (height == 1) {
           previousHash = Microblock.generatePreviousHashForGenesisMicroblock(this.type, expirationDay);
         } else if (previousHash === null) {
-            throw `previous hash not provided`;
+            throw new Error(`previous hash not provided`);
         }
 
         this.header = {
@@ -418,17 +412,28 @@ export class Microblock {
             gasPrice: 0,
             bodyHash: Utils.getNullHash()
         };
+        this.hash = Microblock.computeMicroblockHash(this.header)
     }
-
 
     /**
-     * Sets the local state updater version.
-     * @param {number} localStateUpdaterVersion - The version number to set
+     * Returns true if the microblock is signed, false otherwise.
+     *
+     * A microblock is considered signed if the *last* section contains a digital signature.
      */
-    setLocalStateUpdaterVersion(localStateUpdaterVersion: number) {
-        this.header.localStateUpdaterVersion = localStateUpdaterVersion;
+    isSigned() {
+        if (this.sections.length == 0) return false;
+        return this.sections[this.sections.length - 1].type === SectionType.SIGNATURE;
     }
 
+    /**
+     * Returns the size of the microblock in bytes.
+     *
+     * The size does not include the last section of the microblock when the last section is the signature section.
+     */
+    getSizeInBytes(): number {
+        // TODO: exclude the size of the last section when it is the signature section
+        return this.serialize().microblockData.length;
+    }
 
 
     /**
@@ -436,39 +441,8 @@ export class Microblock {
      */
     updateTimestamp() {
         this.header.timestamp = Utils.getTimestampInSeconds();
+        this.hash = Microblock.computeMicroblockHash(this.header)
     }
-
-    /**
-     Loads a microblock from its header data and body data.
-     @deprecated
-     */
-    load(headerData: any, bodyData: any) {
-        const headerUnserializer = new SchemaUnserializer<MicroblockHeaderObject>(SCHEMAS.MICROBLOCK_HEADER);
-
-        this.header = headerUnserializer.unserialize(headerData);
-
-        const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
-
-        if (!Utils.binaryIsEqual(this.header.bodyHash, bodyHash)) {
-            throw new CarmentisError(`Body hash in the header is different of the locally computed body hash`);
-        }
-
-        this.hash = Crypto.Hashes.sha256AsBinary(headerData);
-        this.gasPrice = this.header.gasPrice;
-
-        const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY);
-        // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
-        const body = bodyUnserializer.unserialize(bodyData).body;
-
-        for (const {type, data} of body) {
-            const sectionSchema = SECTIONS.DEF[this.type][type];
-            const unserializer = new SchemaUnserializer(sectionSchema);
-            const object = unserializer.unserialize(data);
-
-            this.storeSection(type, object, data);
-        }
-    }
-
 
 
     /**
@@ -513,14 +487,17 @@ export class Microblock {
 
     setGas(gas: CMTSToken) {
         this.header.gas = gas.getAmountAsAtomic();
+        this.hash = Microblock.computeMicroblockHash(this.header)
     }
 
     setHeight(number: number) {
         this.header.height = number;
+        this.hash = Microblock.computeMicroblockHash(this.header)
     }
 
     setGasPrice(gasPrice: CMTSToken) {
         this.header.gasPrice = gasPrice.getAmountAsAtomic();
+        this.hash = Microblock.computeMicroblockHash(this.header)
     }
 
     getGasPrice(): CMTSToken {
@@ -539,6 +516,7 @@ export class Microblock {
 
     setTimestamp(timestamp: number) {
         this.header.timestamp = timestamp;
+        this.hash = Microblock.computeMicroblockHash(this.header)
     }
 
     setFeesPayerAccount(accountHash: Uint8Array) {
@@ -586,13 +564,9 @@ export class Microblock {
             body: this.sections.map(({ type, data }) => ({type, data}))
         };
 
-        // TODO: should not update the state here
-        //this.setGasData(true);
-
         const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
         const bodyData = bodySerializer.serialize(body);
         const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
-
 
         const headerSerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
         const headerData = headerSerializer.serialize(this.header);
@@ -602,7 +576,6 @@ export class Microblock {
             headerData,
             bodyData
         )
-
 
         return {microblockHash, headerData, bodyHash, bodyData, microblockData};
     }
@@ -672,13 +645,7 @@ export class Microblock {
      * @return {Uint8Array} The generated digital signature as a byte array.
      */
     async sign(privateKey: PrivateSignatureKey, includeGas: boolean = true): Promise<Uint8Array> {
-        const signatureSize = privateKey.getSignatureSize()
-        const signedData = this.serializeForSigning(
-            includeGas,
-            this.sections.length,
-            signatureSize
-        );
-
+        const signedData = this.serializeForSigning(includeGas);
         const signature = await privateKey.sign(signedData)
         return signature
     }
@@ -688,20 +655,38 @@ export class Microblock {
      *
      * @param {PublicSignatureKey} publicKey - The public key used to verify the signature.
      * @param {string} signature - The signature to be verified.
-     * @param {boolean} includeGas - Indicates whether to include gas-related data in the signed payload.
-     * @param {number} sectionCount - The number of sections to include in the signed data.
+     * @param {boolean} includeGas - Should includes the gas in the signature verification.
      * @return {boolean} Returns true if the signature is successfully verified; otherwise, returns false.
      */
-    async verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas?: boolean, sectionCount?: number): Promise<boolean> {
-        const shouldIncludeGas = typeof includeGas === 'boolean' ? includeGas : true;
-        const numberOfSectionsToIncludeInSignature = sectionCount || this.sections.length - 1;
-        const signedData = this.serializeForSigning(
-            shouldIncludeGas,
-            numberOfSectionsToIncludeInSignature,
-            0
-        );
-
+    async verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas: boolean = true): Promise<boolean> {
+        //const shouldIncludeGas = typeof includeGas === 'boolean' ? includeGas : true;
+        //const numberOfSectionsToIncludeInSignature = sectionCount || this.sections.length - 1;
+        const signedData = this.serializeForSigning(includeGas);
         return await publicKey.verify(signedData, signature);
+    }
+
+    /**
+     * Verifies the signature of the last signature section using the provided public key.
+     *
+     * @param {PublicSignatureKey} publicKey - The public key used to verify the signature.
+     * @param {boolean} [includeGas=true] - Optional flag to indicate if gas calculations should be included during verification.
+     * @return {Promise<boolean>} A promise that resolves to a boolean indicating whether the signature verification was successful.
+     */
+    async verify(publicKey: PublicSignatureKey, includeGas: boolean = true) {
+        const signatureSection = this.getLastSignatureSection();
+        const signature = signatureSection.object.signature;
+        return await this.verifySignature(publicKey, signature, includeGas);
+    }
+
+    /**
+     * Returns the number of signatures contained within the microblock.
+     */
+    getNumberOfSignatures(): number {
+        return this.sections.filter(section => section.type === SectionType.SIGNATURE).length;
+    }
+
+    private isLastSectionSignature(): boolean {
+        return this.sections[this.sections.length - 1].type === SectionType.SIGNATURE;
     }
 
     /**
@@ -731,55 +716,30 @@ export class Microblock {
     }
 
     /**
-     * Validates if the declared gas amount matches the computed gas amount.
-     *
-     * @return {boolean} Returns true if the declared gas is equal to the expected gas, otherwise false.
-     */
-    isDeclaringConsistentGas(): boolean {
-        const mb = this;
-        const declaredGas = mb.getGas().getAmountAsAtomic();
-        const expectedGas = mb.computeGas().getAmountAsAtomic();
-        return declaredGas === expectedGas;
-    }
-
-    /**
-     * Computes the total fees based on the gas amount and gas price.
-     *
-     * @return {number} The calculated fees as an atomic value.
-     */
-    computeFees() {
-        const gas = this.getGas();
-        const gasPrice = this.getGasPrice();
-        const fees = Math.floor(
-            (gas.getAmountAsAtomic() * gasPrice.getAmountAsAtomic()) /
-            ECO.GAS_UNIT,
-        );
-        return CMTSToken.createAtomic(fees);
-    }
-
-    /**
      * Serializes the microblock data for signing purposes.
      * The method includes the header data and a specified number of section hashes.
      * Optionally includes gas-related data in the serialization based on the input.
      *
-     * @param {boolean} includeGas - Indicates whether gas-related data should be included in the serialization.
-     * @param {number} sectionCount - The number of sections to include in the serialized output.
-     * @param {number} extraBytes - Additional bytes for gas data to be factored in if includeGas is true.
      * @return {Uint8Array} The serialized binary representation of the microblock for signing.
      */
-    serializeForSigning(includeGas: boolean, sectionCount?: number, extraBytes: number = 0): Uint8Array {
+    serializeForSigning(includeGas: boolean): Uint8Array {
         // this.setGasData(includeGas, extraBytes);
         const signedHeader: MicroblockHeaderObject = {
             ...this.header,
-            gas: includeGas ? this.computeGas(extraBytes).getAmountAsAtomic() : 0,
+            gas: includeGas ? this.header.gas : 0,
             gasPrice: includeGas ? this.header.gasPrice : 0
         }
         const headerData = BlockchainSerializer.serializeMicroblockHeader(signedHeader);
         //const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
         //const headerData = serializer.serialize(this.header);
-        const sections = this.sections.slice(0, sectionCount || this.sections.length);
+        const numberOfSections = this.sections.length;
+        const sections = this.sections.slice(
+            0,
+            this.isLastSectionSignature() ?  numberOfSections - 1 : numberOfSections
+        );
 
         // TODO: find another way
+
         const headerHash = headerData.slice(0, SCHEMAS.MICROBLOCK_HEADER_BODY_HASH_OFFSET);
         const sectionHashes = sections.map((section) => section.hash);
         const serializedMbForSigning = Utils.binaryFrom(
@@ -806,21 +766,6 @@ export class Microblock {
         return this.sections.findIndex(section => section.type === sectionType);
     }
 
-    /**
-     *
-     *  Sets the gas data to either 0 or to their actual values.
-     *  @deprecated
-     */
-    setGasData(includeGas: boolean, extraBytes = 0) {
-        if (includeGas) {
-            this.header.gas = this.computeGas(extraBytes).getAmountAsAtomic();
-            this.header.gasPrice = this.gasPrice;
-        } else {
-            this.header.gas = 0;
-            this.header.gasPrice = 0;
-        }
-    }
-
 
     computeGas(extraBytes = 0) {
         const totalSize = this.sections.reduce((total: number, section: Section) =>
@@ -843,11 +788,56 @@ export class Microblock {
     }
 
     /**
+     * Updates the current microblock to be considered as the successor of the
+     * provided microblock.
+     *
+     * Note that this method only works if both microblock are sharing the same type.
+     * @param microblock
+     */
+    setAsSuccessorOf(microblock: Microblock) {
+        // we cannot handle succession if microblocks have different types
+        const thisType = this.getType();
+        const otherType = microblock.getType();
+        if (thisType !== otherType)
+            throw new IllegalParameterError(
+                `Cannot make this microblock the successor: expected microblock of type ${thisType}, got ${otherType}`
+            )
+
+        // to make this microblock of the successor of the provided microblock, we need to update
+        // the previous hash and the height of the microblock
+        this.setPreviousHash(microblock.getHash());
+        this.setHeight(microblock.getHeight() + 1);
+
+        // we update the hash of the microblock (we do not have to update the body hash because it only implies modification in the header)
+        this.hash = Microblock.computeMicroblockHash(this.header)
+    }
+
+    /**
      * Returns the number of sections having the specified type in the microblock.
      * @param sectionType
      */
     countSectionsByType(sectionType: SectionType): number {
         return this.sections.filter(s => s.type === sectionType).length;
+    }
+
+    /**
+     * Seals the microblock by signing it with the provided private key. Optionally, the fees payer account
+     * can be set before sealing the microblock.
+     *
+     * @param {PrivateSignatureKey} privateKey - The private key used to sign the microblock.
+     * @param {Uint8Array} [feesPayerAccount] - An optional account identifying the payer for transaction fees.
+     * @return {Promise<void>} A promise that resolves when the microblock has been successfully sealed.
+     * @throws {IllegalStateError} If the microblock is already signed.
+     */
+    async seal(privateKey: PrivateSignatureKey, feesPayerAccount?: Uint8Array) {
+        if (this.isSigned()) throw new IllegalStateError("Microblock is already signed");
+        if (feesPayerAccount) this.setFeesPayerAccount(feesPayerAccount);
+        const signature = await this.sign(privateKey, true);
+        const signatureSectionObject: SignatureSection = {
+            signature,
+            schemeId: privateKey.getSignatureSchemeId()
+        }
+        this.addSection(SectionType.SIGNATURE, signatureSectionObject);
     }
 
 
@@ -891,13 +881,6 @@ export class Microblock {
     }
 
     /**
-     * Adds an organization signature scheme section.
-     */
-    addOrganizationSignatureSchemeSection(object: OrganizationSigSchemeSection) {
-        return this.addSection(SectionType.ORG_SIG_SCHEME, object);
-    }
-
-    /**
      * Adds an organization public key section.
      */
     addOrganizationPublicKeySection(object: OrganizationPublicKeySection) {
@@ -917,21 +900,7 @@ export class Microblock {
     addOrganizationSignatureSection(object: OrganizationSignatureSection) {
         return this.addSection(SectionType.ORG_SIGNATURE, object);
     }
-
-    /**
-     * Adds an organization server section.
-     */
-    addOrganizationServerSection(object: OrganizationServerSection) {
-        return this.addSection(SectionType.ORG_SERVER, object);
-    }
-
     // Protocol sections
-    /**
-     * Adds a protocol signature scheme section.
-     */
-    addProtocolSignatureSchemeSection(object: ProtocolSigSchemeSection) {
-        return this.addSection(SectionType.PROTOCOL_SIG_SCHEME, object);
-    }
 
     /**
      * Adds a protocol public key section.
@@ -943,16 +912,11 @@ export class Microblock {
     /**
      * Adds a protocol protocol update section.
      */
-    addProtocolProtocolUpdateSection(object: ProtocolProtocolUpdateSection) {
-        return this.addSection(SectionType.PROTOCOL_PROTOCOL_UPDATE, object);
+    addProtocolUpdateSection(object: ProtocolUpdateSection) {
+        return this.addSection(SectionType.PROTOCOL_UPDATE, object);
     }
 
-    /**
-     * Adds a protocol node update section.
-     */
-    addProtocolNodeUpdateSection(object: ProtocolNodeUpdateSection) {
-        return this.addSection(SectionType.PROTOCOL_NODE_UPDATE, object);
-    }
+
 
     /**
      * Adds a protocol signature section.
@@ -962,12 +926,6 @@ export class Microblock {
     }
 
     // Account sections
-    /**
-     * Adds an account signature scheme section.
-     */
-    addAccountSignatureSchemeSection(object: AccountSigSchemeSection) {
-        return this.addSection(SectionType.ACCOUNT_SIG_SCHEME, object);
-    }
 
     /**
      * Adds an account public key section.
@@ -1027,13 +985,6 @@ export class Microblock {
 
     // Validator Node sections
     /**
-     * Adds a validator node signature scheme section.
-     */
-    addValidatorNodeSignatureSchemeSection(object: ValidatorNodeSigSchemeSection) {
-        return this.addSection(SectionType.VN_SIG_SCHEME, object);
-    }
-
-    /**
      * Adds a validator node declaration section.
      */
     addValidatorNodeDeclarationSection(object: ValidatorNodeDeclarationSection) {
@@ -1069,12 +1020,7 @@ export class Microblock {
     }
 
     // Application sections
-    /**
-     * Adds an application signature scheme section.
-     */
-    addApplicationSignatureSchemeSection(object: ApplicationSigSchemeSection) {
-        return this.addSection(SectionType.APP_SIG_SCHEME, object);
-    }
+
 
     /**
      * Adds an application declaration section.
@@ -1215,10 +1161,6 @@ export class Microblock {
         return this.getSectionByType<OrganizationDescriptionSection>(SectionType.ORG_DESCRIPTION);
     }
 
-    getOrganizationSignatureSchemeSection() {
-        return this.getSectionByType<OrganizationSigSchemeSection>(SectionType.ORG_SIG_SCHEME);
-    }
-
     getOrganizationPublicKeySection() {
         return this.getSectionByType<OrganizationPublicKeySection>(SectionType.ORG_PUBLIC_KEY);
     }
@@ -1227,34 +1169,17 @@ export class Microblock {
         return this.getSectionByType<OrganizationSignatureSection>(SectionType.ORG_SIGNATURE);
     }
 
-    getOrganizationServerSection() {
-        return this.getSectionByType<OrganizationServerSection>(SectionType.ORG_SERVER);
-    }
-
-    // Protocol sections
-    getProtocolSignatureSchemeSection() {
-        return this.getSectionByType<ProtocolSigSchemeSection>(SectionType.PROTOCOL_SIG_SCHEME);
-    }
 
     getProtocolPublicKeySection() {
         return this.getSectionByType<ProtocolPublicKeySection>(SectionType.PROTOCOL_PUBLIC_KEY);
     }
 
-    getProtocolProtocolUpdateSection() {
-        return this.getSectionByType<ProtocolProtocolUpdateSection>(SectionType.PROTOCOL_PROTOCOL_UPDATE);
-    }
-
-    getProtocolNodeUpdateSection() {
-        return this.getSectionByType<ProtocolNodeUpdateSection>(SectionType.PROTOCOL_NODE_UPDATE);
+    getProtocolUpdateSection() {
+        return this.getSectionByType<ProtocolUpdateSection>(SectionType.PROTOCOL_UPDATE);
     }
 
     getProtocolSignatureSection() {
         return this.getSectionByType<ProtocolSignatureSection>(SectionType.PROTOCOL_SIGNATURE);
-    }
-
-    // Account sections
-    getAccountSignatureSchemeSection() {
-        return this.getSectionByType<AccountSigSchemeSection>(SectionType.ACCOUNT_SIG_SCHEME);
     }
 
     getAccountPublicKeySection() {
@@ -1290,10 +1215,6 @@ export class Microblock {
     }
 
     // Validator Node sections
-    getValidatorNodeSignatureSchemeSection() {
-        return this.getSectionByType<ValidatorNodeSigSchemeSection>(SectionType.VN_SIG_SCHEME);
-    }
-
     getValidatorNodeDeclarationSection() {
         return this.getSectionByType<ValidatorNodeDeclarationSection>(SectionType.VN_DECLARATION);
     }
@@ -1315,9 +1236,6 @@ export class Microblock {
     }
 
     // Application sections
-    getApplicationSignatureSchemeSection() {
-        return this.getSectionByType<ApplicationSigSchemeSection>(SectionType.APP_SIG_SCHEME);
-    }
 
     getApplicationDeclarationSection() {
         return this.getSectionByType<ApplicationDeclarationSection>(SectionType.APP_DECLARATION);
@@ -1394,6 +1312,7 @@ export class Microblock {
         output += `  Hash: ${encoder.encode(this.hash)}\n`;
         output += `  Fees payer account: ${this.feesPayerAccount ? encoder.encode(this.feesPayerAccount) : "Null"}\n`;
         output += `  Header:\n`;
+        output += `    Microblock type: ${this.header.microblockType} or ${this.type}\n`;
         output += `    Magic String: ${this.header.magicString}\n`;
         output += `    Protocol Version: ${this.header.protocolVersion}\n`;
         output += `    Height: ${this.header.height}\n`;
@@ -1465,5 +1384,10 @@ export class Microblock {
 
     setMicroblockHash(hash: Uint8Array) {
         this.hash = hash;
+    }
+
+    getLastSignatureSection(): Section<SignatureSection> {
+        if (this.isSigned()) return this.sections[this.sections.length - 1];
+        throw new Error('Microblock is not signed: signature section not found');
     }
 }

@@ -4,7 +4,6 @@ import {
     ACCOUNT_CREATION,
     ACCOUNT_ESCROW_TRANSFER,
     ACCOUNT_PUBLIC_KEY,
-    ACCOUNT_SIG_SCHEME,
     ACCOUNT_SIGNATURE,
     ACCOUNT_STAKE,
     ACCOUNT_TOKEN_ISSUANCE,
@@ -13,14 +12,17 @@ import {
     ORG_DESCRIPTION,
     ORG_PUBLIC_KEY,
     ORG_SERVER,
-    ORG_SIG_SCHEME,
     ORG_SIGNATURE,
-    PROTOCOL_NODE_UPDATE,
-    PROTOCOL_PROTOCOL_UPDATE,
     PROTOCOL_PUBLIC_KEY,
-    PROTOCOL_SIG_SCHEME,
     PROTOCOL_SIGNATURE
 } from "../constants/sections";
+import {ProtocolVariables} from "./ProtocolVariables";
+
+export interface SignatureSection {
+    schemeId: SignatureSchemeId,
+    signature: Uint8Array
+}
+
 
 // ---------------------------------------------------------------------------
 // ProtocolVB Sections
@@ -42,7 +44,7 @@ PROTOCOL[PROTOCOL_PUBLIC_KEY] = {
     ]
 };
 
-PROTOCOL[PROTOCOL_PROTOCOL_UPDATE] = {
+PROTOCOL[_UPDATE] = {
     label: 'PROTOCOL_PROTOCOL_UPDATE',
     definition: [
         { name: 'effectiveUtcTimestamp', type: DATA.TYPE_UINT48 },
@@ -72,30 +74,26 @@ PROTOCOL[PROTOCOL_SIGNATURE] = {
 };
  */
 
-/**
- * @see {PROTOCOL_SIG_SCHEME}
- */
-export interface ProtocolSigSchemeSection {
-    schemeId: SignatureSchemeId
-}
 
 /**
  * @see {PROTOCOL_PUBLIC_KEY}
  */
 export interface ProtocolPublicKeySection {
-    publicKey: Uint8Array
+    publicKey: Uint8Array,
+    schemeId: SignatureSchemeId
 }
 
+
 /**
- * @see {PROTOCOL_PROTOCOL_UPDATE}
+ * @see {PROTOCOL_UPDATE}
  */
-export interface ProtocolProtocolUpdateSection {
-    effectiveUtcTimestamp: number,
-    version: number,
-    codeName: string,
-    changeLog: string,
-    contracts: any[]
+export interface ProtocolUpdateSection {
+    protocolVersion: number;
+    protocolVersionName: string;
+    changeLog: string;
+    protocolVariables: ProtocolVariables;
 }
+
 
 /**
  * @see {PROTOCOL_NODE_UPDATE}
@@ -111,9 +109,7 @@ export interface ProtocolNodeUpdateSection {
 /**
  * @see {PROTOCOL_SIGNATURE}
  */
-export interface ProtocolSignatureSection {
-    signature: Uint8Array
-}
+export type ProtocolSignatureSection = SignatureSection
 
 
 // ---------------------------------------------------------------------------
@@ -202,18 +198,14 @@ ACCOUNT[ACCOUNT_SIGNATURE] = {
 
  */
 
-/**
- * @see {ACCOUNT_SIG_SCHEME}
- */
-export interface AccountSigSchemeSection {
-    schemeId: SignatureSchemeId
-}
+
 
 /**
  * @see {ACCOUNT_PUBLIC_KEY}
  */
 export interface AccountPublicKeySection {
-    publicKey: Uint8Array
+    publicKey: Uint8Array,
+    schemeId: SignatureSchemeId
 }
 
 /**
@@ -278,10 +270,7 @@ export interface AccountStakeSection {
 /**
  * @see {ACCOUNT_SIGNATURE}
  */
-export interface AccountSignatureSection {
-    signature: Uint8Array
-}
-
+export type AccountSignatureSection = SignatureSection
 
 // ---------------------------------------------------------------------------
 // ValidatorNodeVb Sections
@@ -370,10 +359,7 @@ export interface ValidatorNodeVotingPowerUpdateSection {
 /**
  * @see {VN_SIGNATURE}
  */
-export interface ValidatorNodeSignatureSection {
-    signature: Uint8Array
-}
-
+export type ValidatorNodeSignatureSection = SignatureSection
 
 
 // ---------------------------------------------------------------------------
@@ -414,18 +400,14 @@ ORGANIZATION[ORG_SIGNATURE] = {
  */
 
 
-/**
- * @see {ORG_SIG_SCHEME}
- */
-export interface OrganizationSigSchemeSection {
-    schemeId: SignatureSchemeId
-}
+
 
 /**
  * @see {ORG_PUBLIC_KEY}
  */
 export interface OrganizationPublicKeySection {
-    publicKey: Uint8Array
+    publicKey: Uint8Array,
+    schemeId: SignatureSchemeId
 }
 
 /**
@@ -454,9 +436,9 @@ export interface OrganizationServerSection {
 /**
  * @see {ORG_SIGNATURE}
  */
-export interface OrganizationSignatureSection {
-    signature: Uint8Array
-}
+export type OrganizationSignatureSection = SignatureSection
+
+
 
 
 // ---------------------------------------------------------------------------
@@ -524,9 +506,7 @@ export interface ApplicationDeclarationSection {
 /**
  * @see {APP_SIGNATURE}
  */
-export interface ApplicationSignatureSection {
-    signature: Uint8Array
-}
+export type ApplicationSignatureSection = SignatureSection
 
 
 
@@ -698,16 +678,12 @@ export interface ApplicationLedgerEndorsementRequestSection {
 /**
  * @see {APP_LEDGER_ENDORSER_SIGNATURE}
  */
-export interface ApplicationLedgerEndorserSignatureSection {
-    signature: Uint8Array
-}
+export type ApplicationLedgerEndorserSignatureSection = SignatureSection
 
 /**
  * @see {APP_LEDGER_AUTHOR_SIGNATURE}
  */
-export interface ApplicationLedgerAuthorSignatureSection {
-    signature: Uint8Array
-}
+export type ApplicationLedgerAuthorSignatureSection = SignatureSection
 
 
 /**

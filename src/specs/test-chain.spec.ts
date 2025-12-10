@@ -4,10 +4,10 @@ import {Hash} from "../common/entities/Hash";
 import {MlKemPrivateDecryptionKey} from "../common/crypto/encryption/public-key-encryption/MlKemPrivateDecryptionKey";
 import {CryptoEncoderFactory} from "../common/crypto/encoder/CryptoEncoderFactory";
 import {ProviderFactory} from "../common/providers/ProviderFactory";
-import {Secp256k1PrivateSignatureKey} from "../common/crypto/signature/secp256k1";
 import {Logger} from "../common/utils/Logger";
 import {Microblock} from "../common/blockchain/microblock/Microblock";
 import {CMTSToken} from "../common/economics/currencies/token";
+import {Secp256k1PrivateSignatureKey} from "../common/crypto/signature/secp256k1/Secp256k1PrivateSignatureKey";
 
 const NODE_URL = "http://localhost:26657";
 
@@ -36,15 +36,14 @@ describe('Chain test', async () => {
             amount: CMTSToken.zero().getAmountAsAtomic(),
             sellerAccount: genesisAccountId.toBytes()
         });
+        const firstAccountPublicKey = await firstAccountPrivateKey.getPublicKey();
         firstAccountCreationMb.addAccountPublicKeySection({
-            publicKey: await (await firstAccountPrivateKey.getPublicKey()).getPublicKeyAsBytes()
+            publicKey: await firstAccountPublicKey.getPublicKeyAsBytes(),
+            schemeId: firstAccountPublicKey.getSignatureSchemeId(),
         })
-        firstAccountCreationMb.setFeesPayerAccount(genesisAccountId.toBytes());
-        const signingData = firstAccountCreationMb.serializeForSigning(true);
-        const signature = await firstAccountPrivateKey.sign(signingData);
-        firstAccountCreationMb.addAccountSignatureSection({ signature })
+        await firstAccountCreationMb.seal(firstAccountPrivateKey, genesisAccountId.toBytes())
         console.log(firstAccountCreationMb.toString())
-        provider.publishMicroblock( firstAccountCreationMb );
+        await provider.publishMicroblock( firstAccountCreationMb );
 
         expect(1).toEqual(1)
     })

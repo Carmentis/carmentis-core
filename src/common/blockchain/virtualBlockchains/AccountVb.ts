@@ -12,6 +12,7 @@ import {CMTSToken} from "../../economics/currencies/token";
 import {IProvider} from "../../providers/IProvider";
 import {AccountInternalState} from "../internalStates/AccountInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
+import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 
 export class AccountVb extends VirtualBlockchain<AccountInternalState> {
 
@@ -19,9 +20,10 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
         super(provider, VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN, state );
     }
 
-    protected async updateLocalState(state: AccountInternalState, microblock: Microblock): Promise<AccountInternalState> {
+    protected async updateInternalState(protocolState: ProtocolInternalState, state: AccountInternalState, microblock: Microblock): Promise<AccountInternalState> {
+        const accountInternalStateUpdaterVersion = protocolState.getAccountInternalStateUpdaterVersion();
         const localStateUpdater = InternalStateUpdaterFactory.createAccountInternalStateUpdater(
-            microblock.getLocalStateUpdateVersion()
+            accountInternalStateUpdaterVersion
         );
         return localStateUpdater.updateState(state, microblock);
     }
@@ -61,11 +63,9 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
 
     static async createAccountCreationMicroblock(accountOwnerPublicKey: PublicSignatureKey, initialAmount: CMTSToken, sellerAccountId: Uint8Array, accountName: string = '') {
         const mb = Microblock.createGenesisAccountMicroblock();
-        mb.addAccountSignatureSchemeSection({
-            schemeId: accountOwnerPublicKey.getSignatureSchemeId()
-        });
         mb.addAccountPublicKeySection({
-            publicKey: await accountOwnerPublicKey.getPublicKeyAsBytes()
+            publicKey: await accountOwnerPublicKey.getPublicKeyAsBytes(),
+            schemeId: accountOwnerPublicKey.getSignatureSchemeId()
         });
         mb.addAccountCreationSection({
             amount: initialAmount.getAmountAsAtomic(),
@@ -91,11 +91,9 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
         // we use in priority the default public key, if provided, or the keyed provider's public key
         const publicKey = genesisPublicKey;
         const microblock = Microblock.createGenesisAccountMicroblock();
-        microblock.addAccountSignatureSchemeSection({
-            schemeId: publicKey.getSignatureSchemeId()
-        });
         microblock.addAccountPublicKeySection({
-            publicKey: await publicKey.getPublicKeyAsBytes()
+            publicKey: await publicKey.getPublicKeyAsBytes(),
+            schemeId: publicKey.getSignatureSchemeId()
         });
         microblock.addAccountTokenIssuanceSection({
             amount: INITIAL_OFFER
@@ -103,10 +101,6 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
         return microblock;
     }
 
-    static async sealMicroblockUsingPrivateSignatureKey(microblock: Microblock, privateSignatureKey: PrivateSignatureKey) {
-        const signature = await microblock.sign(privateSignatureKey, true);
-        microblock.addAccountSignatureSection({ signature });
-    }
 
     /**
      Update methods

@@ -13,12 +13,10 @@ import {OrganizationInternalState} from "../internalStates/OrganizationInternalS
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {ValidatorNodeInternalState} from "../internalStates/ValidatorNodeInternalState";
 
+
 export class InternalStateUpdaterFactory {
     static createApplicationLedgerInternalStateUpdater(internalStateVersion: number): IApplicationLedgerInternalStateUpdater {
-        switch (internalStateVersion) {
-            case 1: return new AppLedgerLocalStateUpdaterV1;
-            default: throw new IllegalParameterError("Unknown application local state version");
-        }
+        return new AppLedgerLocalStateUpdaterV1;
     }
 
     static createAccountInternalStateUpdater(internalStateVersion: number): IInternalStateUpdater<AccountInternalState> {
@@ -38,11 +36,7 @@ export class InternalStateUpdaterFactory {
     }
 
     static createProtocolInternalStateUpdater(internalStateVersion: number): IInternalStateUpdater<ProtocolInternalState> {
-        switch (internalStateVersion) {
-            case 1: return new ProtocolInternalStateUpdater()
-            default:
-                throw new IllegalParameterError("Unknown protocol local state version");
-        }
+        return new ProtocolInternalStateUpdater()
     }
 
     static createValidatorNodeInternalStateUpdater(internalStateVersion: number): IInternalStateUpdater<ValidatorNodeInternalState> {

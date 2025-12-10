@@ -6,13 +6,6 @@ import {SignatureSchemeId} from "./SignatureSchemeId";
  */
 export interface SignatureScheme {
     getSignatureSchemeId(): SignatureSchemeId;
-
-    /**
-     * @deprecated Use getSignatureSchemeId instead.
-     */
-    getSignatureAlgorithmId(): SignatureSchemeId;
-
-    getSignatureSize(): number;
-
     expectedSeedSize(): number;
+    getSignatureSize(): number;
 }

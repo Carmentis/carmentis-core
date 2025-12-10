@@ -7,6 +7,7 @@ import {ApplicationMicroblockStructureChecker} from "../structureCheckers/Applic
 import {IProvider} from "../../providers/IProvider";
 import {ApplicationInternalState} from "../internalStates/ApplicationInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
+import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 
 export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
     
@@ -18,8 +19,11 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
     }
 
 
-    protected async updateLocalState(state: ApplicationInternalState, microblock: Microblock) {
-        const localStateUpdater = InternalStateUpdaterFactory.createApplicationInternalStateUpdater(microblock.getLocalStateUpdateVersion());
+    protected async updateInternalState(protocolState: ProtocolInternalState, state: ApplicationInternalState, microblock: Microblock) {
+        const stateUpdaterVersion = protocolState.getApplicationInternalStateUpdaterVersion();
+        const localStateUpdater = InternalStateUpdaterFactory.createApplicationInternalStateUpdater(
+            stateUpdaterVersion
+        );
         return localStateUpdater.updateState(state, microblock);
     }
     

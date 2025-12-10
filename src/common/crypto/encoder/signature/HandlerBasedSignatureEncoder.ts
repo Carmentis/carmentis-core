@@ -32,7 +32,7 @@ export class HandlerBasedSignatureEncoder implements SignatureEncoderInterface<s
 
 
     constructor(
-        private bytesEncoder: BinaryToStringEncoderInterface = EncoderFactory.bytesToBase64Encoder()
+        private bytesEncoder: BinaryToStringEncoderInterface = EncoderFactory.bytesToHexEncoder()
     ) {}
 
 

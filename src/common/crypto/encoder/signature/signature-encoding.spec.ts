@@ -1,9 +1,10 @@
-import {Secp256k1PrivateSignatureKey, Secp256k1PublicSignatureKey} from "../../signature/secp256k1";
 import {HandlerBasedSignatureEncoder} from "./HandlerBasedSignatureEncoder";
 import {PrivateSignatureKey} from "../../signature/PrivateSignatureKey";
 import {PublicSignatureKey} from "../../signature/PublicSignatureKey";
 import {MLDSA65PrivateSignatureKey} from "../../signature/ml-dsa-65";
 import {PkmsSecp256k1PrivateSignatureKey} from "../../signature/pkms/PkmsSecp256k1PrivateSignatureKey";
+import {Secp256k1PublicSignatureKey} from "../../signature/secp256k1/Secp256k1PublicSignatureKey";
+import {Secp256k1PrivateSignatureKey} from "../../signature/secp256k1/Secp256k1PrivateSignatureKey";
 
 describe("Encoding", () => {
     const encoder = new HandlerBasedSignatureEncoder();

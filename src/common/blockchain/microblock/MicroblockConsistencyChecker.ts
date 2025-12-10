@@ -18,6 +18,8 @@ import {IllegalStateError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
 import {IProvider} from "../../providers/IProvider";
 import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {FeesCalculationFormulaFactory} from "../feesCalculator/FeesCalcuationFormulaFactory";
+import {IFeesFormula} from "../feesCalculator/IFeesFormula";
 
 type MicroblockCheckerState =
     { isMicroblockParsingCompleted: false } |
@@ -158,46 +160,27 @@ export class MicroblockConsistencyChecker {
     /**
      * Verifies that the declared gas matches the computed gas.
      */
-    checkGasOrFail(): void {
+    async checkGasOrFail(feesCalculationFormula?: IFeesFormula): Promise<void> {
         if (this.verificationState.isMicroblockParsingCompleted === false)
             throw new IllegalStateError("You have already called reconstructMicroblockAndVirtualBlockchain() method. You can only call it once.")
 
         const microblock = this.checkedMicroblock;
-        const result = microblock.isDeclaringConsistentGas();
-        if (result) {
-            const expectedGas = microblock.computeGas().getAmountAsAtomic();
-            const declaredGas = microblock.getGas().getAmountAsAtomic()
-            throw new Error(`inconsistent gas value in microblock header (expected ${expectedGas}, got ${declaredGas})`)
-
+        const signatureSection = microblock.getLastSignatureSection();
+        const usedSchemeId = signatureSection.object.schemeId;
+        const usedFeesCalculationFormula = feesCalculationFormula === undefined ?
+            await this.getFeesCalculationFormulaFromProvider() : feesCalculationFormula;
+        const declaredGas = microblock.getGas();
+        const expectedGas = await usedFeesCalculationFormula.computeFees(usedSchemeId, microblock);
+        if (!expectedGas.equals(declaredGas)) {
+            throw new Error(`inconsistent gas value in microblock header (expected ${expectedGas.toString()}, got ${declaredGas.toString()})`)
         }
     }
 
-    /*
-     * Finalizes the verification by storing the microblock and updating the VB state.
-     * This method incorporates the logic from the store() method of MicroblockImporter.
-     *
-    async finalize(): Promise<void> {
-        const vbId = this.virtualBlockchain.getId();
-        const vb = this.virtualBlockchain; // Cast to access private properties
-        await this.provider.storeMicroblock(
-            this.hash,
-            vbId,
-            vb.getType(),
-            vb.getHeight(),
-            this.headerData,
-            this.bodyData
-        );
-        await this.provider.updateVirtualBlockchainState(
-            vbId,
-            vb.getType(),
-            vb.getExpirationDay(),
-            vb.getHeight(),
-            this.hash,
-            vb.getLocalState() as object
-        );
+    private async getFeesCalculationFormulaFromProvider() {
+        const protocolParameters = await this.provider.getProtocolVariables();
+        const feesCalculationVersion = protocolParameters.getFeesCalculationVersion();
+        return FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(feesCalculationVersion);
     }
-
-     */
 
     private get virtualBlockchain() {
         if (this.verificationState.isMicroblockParsingCompleted) {

@@ -8,11 +8,6 @@ import {
 } from "./encryption/symmetric-encryption/encryption-interface";
 import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey, MLDSA65SignatureScheme} from "./signature/ml-dsa-65";
 import {CryptographicHash, CryptographicHashSchemeId, Sha256CryptographicHash} from "./hash/hash-interface";
-import {
-    Secp256k1PrivateSignatureKey,
-    Secp256k1PublicSignatureKey,
-    Secp256k1SignatureScheme
-} from "./signature/secp256k1";
 
 import {PBKDF2} from "./kdf/PBKDF2";
 import {PasswordBasedKeyDerivationFunction} from "./kdf/PasswordBasedKeyDerivationFunction";
@@ -30,6 +25,9 @@ import {PublicSignatureKey} from "./signature/PublicSignatureKey";
 import {SignatureScheme} from "./signature/SignatureScheme";
 import {PrivateSignatureKey} from "./signature/PrivateSignatureKey";
 import {SignatureSchemeId} from "./signature/SignatureSchemeId";
+import {Secp256k1SignatureScheme} from "./signature/secp256k1/Secp256k1SignatureScheme";
+import {Secp256k1PublicSignatureKey} from "./signature/secp256k1/Secp256k1PublicSignatureKey";
+import {Secp256k1PrivateSignatureKey} from "./signature/secp256k1/Secp256k1PrivateSignatureKey";
 
 export class CryptoSchemeFactory {
     static createPrivateSignatureKey( schemeId: number, seed: Uint8Array ): PrivateSignatureKey {

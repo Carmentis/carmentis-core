@@ -33,4 +33,8 @@ export class Logger {
     static getVirtualBlockchainLogger() {
         return this.getLogger(['virtual-blockchain'])
     }
+
+    static getInternalStateUpdaterLogger(name: string) {
+        return this.getLogger(['internal-state-updater', name])
+    }
 }

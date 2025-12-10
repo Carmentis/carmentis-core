@@ -4,25 +4,12 @@ import {SectionType} from "../../type/SectionType";
 import {
     OrganizationDescriptionSection,
     OrganizationPublicKeySection,
-    OrganizationSigSchemeSection
 } from "../../type/sections";
 import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {OrganizationInternalState} from "../internalStates/OrganizationInternalState";
 
 export class OrganizationInternalStateUpdater implements IInternalStateUpdater<OrganizationInternalState> {
     updateState(localState: OrganizationInternalState, microblock: Microblock): OrganizationInternalState {
-        // update the organization signature scheme id
-        const signatureSchemeIdSections = microblock.getSections<OrganizationSigSchemeSection>(
-            s => s.type === SectionType.ORG_SIG_SCHEME
-        );
-        if (signatureSchemeIdSections.length !== 0) {
-            if (signatureSchemeIdSections.length !== 1) throw new Error('Cannot accept multiple signature schemes');
-            const section = signatureSchemeIdSections[0];
-            const {schemeId} = section.object;
-            // TODO: check signature scheme id is valid
-            localState.updateSignatureScheme(schemeId);
-        }
-
         // update height where the public key is defined
         const signaturePublicKeyDefinitionSections = microblock.getSections<OrganizationPublicKeySection>(
             s => s.type === SectionType.ORG_PUBLIC_KEY
@@ -30,6 +17,7 @@ export class OrganizationInternalStateUpdater implements IInternalStateUpdater<O
         if (signaturePublicKeyDefinitionSections.length !== 0) {
             if (signaturePublicKeyDefinitionSections.length !== 1) throw new Error('Cannot accept multiple signature public keys');
             localState.updateDescriptionHeight(microblock.getHeight());
+            localState.updateSignatureScheme(microblock.getHeight());
         }
 
         // update the description

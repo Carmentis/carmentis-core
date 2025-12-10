@@ -2,9 +2,10 @@ import {PrivateSignatureKey} from "../PrivateSignatureKey";
 import {PublicSignatureKey} from "../PublicSignatureKey";
 import {SignatureSchemeId} from "../SignatureSchemeId";
 import {SignatureScheme} from "../SignatureScheme";
-import {Secp256k1PublicSignatureKey, Secp256k1SignatureScheme} from "../secp256k1";
 import {IPkmsCredentialProvider} from "./pkmsCredentialProvider/IPkmsCredentialProvider";
 import {EnvApiKeyPkmsCredentialProvider} from "./pkmsCredentialProvider/EnvApiKeyPkmsCredentialProvider";
+import {Secp256k1SignatureScheme} from "../secp256k1/Secp256k1SignatureScheme";
+import {Secp256k1PublicSignatureKey} from "../secp256k1/Secp256k1PublicSignatureKey";
 
 export interface PKMSClientOptions {
     host: string
@@ -13,6 +14,9 @@ export interface PKMSClientOptions {
 const DEFAULT_PKMS_HOST = "https://pkms.admin.carmentis.io"
 export class PkmsSecp256k1PrivateSignatureKey implements PrivateSignatureKey {
 
+    public static createFromKeyId(keyId: string) {
+        return new PkmsSecp256k1PrivateSignatureKey(keyId);
+    }
     private credentialProvider: IPkmsCredentialProvider = new EnvApiKeyPkmsCredentialProvider();
 
     constructor(private readonly keyId: string, private options: PKMSClientOptions = {host: DEFAULT_PKMS_HOST}) {
@@ -37,8 +41,11 @@ export class PkmsSecp256k1PrivateSignatureKey implements PrivateSignatureKey {
                 "Content-Type": "application/json"
             },
         });
+        if (!getPublicKeyResponse.ok) throw new Error(`Failed to fetch public key with id ${this.keyId} at ${this.options.host}: ${getPublicKeyResponse.statusText}.`)
         const body = await getPublicKeyResponse.json();
-        const publicKey = new Uint8Array(Buffer.from(body.publicKey, 'base64'));
+        const base64EncodedPublicKey = body.publicKey;
+        if (base64EncodedPublicKey === undefined) throw new Error(`Failed to fetch public key: no "publicKey" field found in response body.`)
+        const publicKey = new Uint8Array(Buffer.from(base64EncodedPublicKey, 'base64'));
         return new PkmsSecp256k1PublicSignatureKey(publicKey)
     }
 

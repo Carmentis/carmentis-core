@@ -9,6 +9,7 @@ import {OrganizationDescriptionSection} from "../../type/sections";
 import {IProvider} from "../../providers/IProvider";
 import {OrganizationInternalState} from "../internalStates/OrganizationInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
+import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 
 export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState> {
 
@@ -29,10 +30,12 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState>
 
 
 
-    protected async updateLocalState(state: OrganizationInternalState, microblock: Microblock) {
-        const localStateVersion = microblock.getLocalStateUpdateVersion();
-        const localStateUpdater = InternalStateUpdaterFactory.createOrganizationInternalStateUpdater(localStateVersion);
-        return await localStateUpdater.updateState(state, microblock);
+    protected async updateInternalState(protocolState: ProtocolInternalState, state: OrganizationInternalState, microblock: Microblock) {
+        const stateUpdateVersion = protocolState.getOrganizationInternalStateUpdaterVersion();
+        const localStateUpdater = InternalStateUpdaterFactory.createOrganizationInternalStateUpdater(
+                stateUpdateVersion
+            );
+        return localStateUpdater.updateState(state, microblock);
     }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {

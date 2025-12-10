@@ -17,6 +17,8 @@ import {OnMicroblockInsertionEventListener} from "./events/OnMicroblockInsertedE
 import {VirtualBlockchainState} from "../../type/types";
 import {IInternalState} from "../internalStates/IInternalState";
 import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
+import {Utils} from "../../utils/utils";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -103,7 +105,7 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
      * @param {Microblock} microblock - The microblock containing new data to update the local state.
      * @return {Promise<LocalState>} A promise that resolves to the updated local state.
      */
-    protected abstract updateLocalState(state: InternalState, microblock: Microblock): Promise<InternalState>;
+    protected abstract updateInternalState(protocolState: ProtocolInternalState, state: InternalState, microblock: Microblock): Promise<InternalState>;
 
     /**
      * Retrieves the local state of the current instance.
@@ -166,7 +168,7 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
     }
 
     setExpirationDay(day: number) {
-        if(this.height > 1) {
+        if (this.height > 1) {
             throw new Error("The expiration day cannot be changed anymore.");
         }
         this.expirationDay = day;
@@ -174,15 +176,16 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
 
     async getVirtualBlockchainState(): Promise<VirtualBlockchainState> {
         const height = this.getHeight();
-        const lastMicroblock = await this.getLastMicroblock();
+        const lastMicroblockHash = height === 0 ?
+            Utils.getNullHash() :
+            (await this.getLastMicroblock()).getHash().toBytes();
         const vbState: VirtualBlockchainState = {
             expirationDay: this.getExpirationDay(),
             height: height,
             internalState: this.internalState.toObject(),
-            lastMicroblockHash: lastMicroblock.getHash().toBytes(),
+            lastMicroblockHash: lastMicroblockHash,
             type: this.getType()
         };
-        console.log(vbState);
         return vbState
     }
 
@@ -229,39 +232,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
     isVirtualBlockchainIdDefined(): boolean {
         return this.identifier instanceof Uint8Array;
     }
-
-    //abstract checkMicroblockStructure(microblock: any): void;
-
-    /**
-     Registers a callback for a given section type.
-     */
-    registerSectionCallback<T = any>(
-        sectionType: SectionType,
-        callback: (mb: Microblock, section: Section<T>) => void | Promise<void>
-    ) {
-        //this.sectionCallbacks.set(sectionType, callback.bind(this));
-    }
-
-    /*
-    async importMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
-        this.currentMicroblock = new Microblock(this.type);
-        this.currentMicroblock.load(headerData, bodyData);
-        this.checkMicroblockStructure(this.currentMicroblock);
-
-        for(const section of this.currentMicroblock.sections) {
-            await this.processSectionCallback(this.currentMicroblock, section);
-        }
-
-        this.height++;
-
-        if(this.currentMicroblock.header.height == 1) {
-            this.identifier = this.currentMicroblock.hash;
-        }
-
-        return this.currentMicroblock.hash;
-    }
-
-     */
 
     /**
      * Retrieves the first microblock.
@@ -366,8 +336,11 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         const isValid = this.checkMicroblockStructure(microblock);
         if (!isValid) throw new IllegalParameterError("Provided microblock has an invalid structure")
 
+        // should load the local state updater version
+        const protocolState = await this.provider.getProtocolVariables();
+
         // TODO update the previous hash of the microblock if possible
-        this.internalState = await this.updateLocalState(this.internalState, microblock);
+        this.internalState = await this.updateInternalState(protocolState, this.internalState, microblock);
 
         // if the current state of the vb is empty (no microblock), then update the identifier
         if (this.identifier === undefined) {

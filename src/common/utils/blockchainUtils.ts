@@ -125,7 +125,10 @@ export class BlockchainUtils {
         const stateUnserializer = new SchemaUnserializer<VirtualBlockchainStateDto>(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE);
         const stateObject = stateUnserializer.unserialize(data);
         const vbState: VirtualBlockchainState = {
-            ...stateObject,
+            expirationDay: stateObject.expirationDay,
+            lastMicroblockHash: stateObject.lastMicroblockHash,
+            type: stateObject.type,
+            height: stateObject.height,
             internalState: BlockchainUtils.decodeVirtualBlockchainInternalState<object>(
                 stateObject.type,
                 stateObject.serializedInternalState

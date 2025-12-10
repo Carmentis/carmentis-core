@@ -11,6 +11,7 @@ import {SectionType} from "../../type/SectionType";
 import {ValidatorNodeCometbftPublicKeyDeclarationSection} from "../../type/sections";
 import {ValidatorNodeInternalState} from "../internalStates/ValidatorNodeInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
+import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 
 export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalState> {
 
@@ -22,9 +23,12 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
         super(provider, VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN, state);
     }
 
-    protected async updateLocalState(state: ValidatorNodeInternalState, microblock: Microblock): Promise<ValidatorNodeInternalState> {
-        const stateUpdater = InternalStateUpdaterFactory.createValidatorNodeInternalStateUpdater(microblock.getLocalStateUpdateVersion());
-        return await stateUpdater.updateState(state, microblock)
+    protected async updateInternalState(protocolState: ProtocolInternalState, state: ValidatorNodeInternalState, microblock: Microblock): Promise<ValidatorNodeInternalState> {
+        const stateUpdaterVersion = protocolState.getValidatorNodeInternalStateUpdaterVersion();
+        const stateUpdater = InternalStateUpdaterFactory.createValidatorNodeInternalStateUpdater(
+            stateUpdaterVersion
+        );
+        return stateUpdater.updateState(state, microblock);
     }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {

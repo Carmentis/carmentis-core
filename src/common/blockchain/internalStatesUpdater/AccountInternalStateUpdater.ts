@@ -17,9 +17,6 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
         
         for (const section of sections) {
             switch (section.type) {
-                case SECTIONS.ACCOUNT_SIG_SCHEME:
-                    await this.signatureSchemeCallback(newState, microblock, section);
-                    break;
                 case SECTIONS.ACCOUNT_PUBLIC_KEY:
                     await this.publicKeyCallback(newState, microblock, section);
                     break;
@@ -56,6 +53,7 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
 
     private async publicKeyCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
         state.updatePublicKeyHeight(microblock.getHeight());
+        state.updateSignatureScheme(microblock.getHeight());
     }
 
     private async tokenIssuanceCallback(state: AccountInternalState, microblock: Microblock, section: Section) {

@@ -738,19 +738,6 @@ export class Microblock {
         }
         const headerData = BlockchainSerializer.serializeMicroblockHeader(signedHeader);
         return headerData
-
-        /*
-        // TODO: find another way
-
-        const headerHash = headerData.slice(0, SCHEMAS.MICROBLOCK_HEADER_BODY_HASH_OFFSET);
-        const sectionHashes = sections.map((section) => section.hash);
-        const serializedMbForSigning = Utils.binaryFrom(
-            headerHash,
-            ...sectionHashes
-        );
-        return serializedMbForSigning;
-
-         */
     }
 
     /**

@@ -261,7 +261,7 @@ export interface AccountEscrowTransferSection {
     amount: number,
     publicReference: string,
     privateReference: string,
-    agentPublicKey: Uint8Array
+    agentAccount: Uint8Array
 }
 
 /**
@@ -269,7 +269,8 @@ export interface AccountEscrowTransferSection {
  */
 export interface AccountStakeSection {
     amount: number,
-    nodeIdentifier: Uint8Array
+    objectType: number,
+    objectIdentifier: Uint8Array
 }
 
 /**

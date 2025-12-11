@@ -19,7 +19,8 @@ export type VestingParameters = {
 };
 
 export type StakingParameters = {
-    nodeIdentifier: Uint8Array
+    objectType: number,
+    objectIdentifier: Uint8Array
 };
 
 export type Lock =

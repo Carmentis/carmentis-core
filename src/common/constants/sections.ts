@@ -146,15 +146,16 @@ ACCOUNT[ACCOUNT_ESCROW_TRANSFER] = {
     { name: 'amount',           type: DATA.TYPE_UINT48 },
     { name: 'publicReference',  type: DATA.TYPE_STRING },
     { name: 'privateReference', type: DATA.TYPE_STRING },
-    { name: 'agentPublicKey',   type: DATA.TYPE_BINARY }
+    { name: 'agentAccount',     type: DATA.TYPE_BIN256 }
   ]
 };
 
 ACCOUNT[ACCOUNT_STAKE] = {
   label: 'ACCOUNT_STAKE',
   definition: [
-    { name: 'amount',         type: DATA.TYPE_UINT48 },
-    { name: 'nodeIdentifier', type: DATA.TYPE_BIN256 }
+    { name: 'amount',           type: DATA.TYPE_UINT48 },
+    { name: 'objectType',       type: DATA.TYPE_UINT8 },
+    { name: 'objectIdentifier', type: DATA.TYPE_BIN256 }
   ]
 };
 

@@ -38,6 +38,22 @@ export class AccountLockManager {
     }
 
     /**
+     * Returns the staked amount for a given object.
+     */
+    getStakedAmountOnObject(objectType: number, objectIdentifier: Uint8Array) {
+        const entry = this.locks.find((lock) =>
+            lock.type == LockType.Staking &&
+            lock.parameters.objectType == objectType &&
+            Utils.binaryIsEqual(lock.parameters.objectIdentifier, objectIdentifier)
+        );
+
+        if(entry === undefined) {
+            return 0;
+        }
+        return entry.amount;
+    }
+
+    /**
      * Adds a given amount of spendable tokens.
      */
     addSpendableTokens(amount: number) {
@@ -95,9 +111,9 @@ export class AccountLockManager {
     }
 
     /**
-     * Stakes a given amount of tokens for a given node.
+     * Stakes a given amount of tokens for a given object identified by a type and an identifier.
      */
-    stake(amount: number, nodeIdentifier: Uint8Array) {
+    stake(amount: number, objectType: number, objectIdentifier: Uint8Array) {
         const breakdown = this.getBreakdown();
 
         if(amount > breakdown.stakeable) {
@@ -108,18 +124,20 @@ export class AccountLockManager {
             type: LockType.Staking,
             amount,
             parameters: {
-                nodeIdentifier
+                objectType,
+                objectIdentifier
             }
         });
     }
 
     /**
-     * Unstakes tokens for a given node.
+     * Unstakes tokens for a given object.
      */
-    unstake(nodeIdentifier: Uint8Array) {
+    unstake(objectType: number, objectIdentifier: Uint8Array) {
         const lockIndex = this.locks.findIndex((lock) =>
             lock.type == LockType.Staking &&
-            Utils.binaryIsEqual(lock.parameters.nodeIdentifier, nodeIdentifier)
+            lock.parameters.objectType == objectType &&
+            Utils.binaryIsEqual(lock.parameters.objectIdentifier, objectIdentifier)
         );
 
         if(lockIndex == -1) {

@@ -76,15 +76,16 @@ PROTOCOL[PROTOCOL_SIGNATURE] = {
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
-export const ACCOUNT_SIG_SCHEME       = SectionType.ACCOUNT_SIG_SCHEME;
-export const ACCOUNT_PUBLIC_KEY       = SectionType.ACCOUNT_PUBLIC_KEY;
-export const ACCOUNT_TOKEN_ISSUANCE   = SectionType.ACCOUNT_TOKEN_ISSUANCE;
-export const ACCOUNT_CREATION         = SectionType.ACCOUNT_CREATION;
-export const ACCOUNT_TRANSFER         = SectionType.ACCOUNT_TRANSFER;
-export const ACCOUNT_VESTING_TRANSFER = SectionType.ACCOUNT_VESTING_TRANSFER;
-export const ACCOUNT_ESCROW_TRANSFER  = SectionType.ACCOUNT_ESCROW_TRANSFER;
-export const ACCOUNT_STAKE            = SectionType.ACCOUNT_STAKE;
-export const ACCOUNT_SIGNATURE        = SectionType.ACCOUNT_SIGNATURE;
+export const ACCOUNT_SIG_SCHEME        = SectionType.ACCOUNT_SIG_SCHEME;
+export const ACCOUNT_PUBLIC_KEY        = SectionType.ACCOUNT_PUBLIC_KEY;
+export const ACCOUNT_TOKEN_ISSUANCE    = SectionType.ACCOUNT_TOKEN_ISSUANCE;
+export const ACCOUNT_CREATION          = SectionType.ACCOUNT_CREATION;
+export const ACCOUNT_TRANSFER          = SectionType.ACCOUNT_TRANSFER;
+export const ACCOUNT_VESTING_TRANSFER  = SectionType.ACCOUNT_VESTING_TRANSFER;
+export const ACCOUNT_ESCROW_TRANSFER   = SectionType.ACCOUNT_ESCROW_TRANSFER;
+export const ACCOUNT_ESCROW_SETTLEMENT = SectionType.ACCOUNT_ESCROW_SETTLEMENT;
+export const ACCOUNT_STAKE             = SectionType.ACCOUNT_STAKE;
+export const ACCOUNT_SIGNATURE         = SectionType.ACCOUNT_SIGNATURE;
 
 const ACCOUNT: Schema[] = [] as const;
 
@@ -146,7 +147,17 @@ ACCOUNT[ACCOUNT_ESCROW_TRANSFER] = {
     { name: 'amount',           type: DATA.TYPE_UINT48 },
     { name: 'publicReference',  type: DATA.TYPE_STRING },
     { name: 'privateReference', type: DATA.TYPE_STRING },
-    { name: 'agentAccount',     type: DATA.TYPE_BIN256 }
+    { name: 'escrowIdentifier', type: DATA.TYPE_BIN256 },
+    { name: 'agentAccount',     type: DATA.TYPE_BIN256 },
+    { name: 'durationDays',     type: DATA.TYPE_UINT16 }
+  ]
+};
+
+ACCOUNT[ACCOUNT_ESCROW_SETTLEMENT] = {
+  label: 'ACCOUNT_ESCROW_SETTLEMENT',
+  definition: [
+    { name: 'confirmed',        type: DATA.TYPE_BOOLEAN },
+    { name: 'escrowIdentifier', type: DATA.TYPE_BIN256 }
   ]
 };
 
@@ -325,7 +336,7 @@ export const APP_LEDGER_ACTOR_SUBSCRIPTION   = SectionType.APP_LEDGER_ACTOR_SUBS
 export const APP_LEDGER_PUBLIC_CHANNEL_DATA  = SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA;
 export const APP_LEDGER_PRIVATE_CHANNEL_DATA = SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA;
 export const APP_LEDGER_AUTHOR               = SectionType.APP_LEDGER_AUTHOR;
-export const APP_LEDGER_ENDORSEMENT_REQUEST             = SectionType.APP_LEDGER_ENDORSEMENT_REQUEST;
+export const APP_LEDGER_ENDORSEMENT_REQUEST  = SectionType.APP_LEDGER_ENDORSEMENT_REQUEST;
 export const APP_LEDGER_ENDORSER_SIGNATURE   = SectionType.APP_LEDGER_ENDORSER_SIGNATURE;
 export const APP_LEDGER_AUTHOR_SIGNATURE     = SectionType.APP_LEDGER_AUTHOR_SIGNATURE;
 

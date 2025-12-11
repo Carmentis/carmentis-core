@@ -81,7 +81,7 @@ export class AccountLockManager {
     /**
      * Adds escrowed tokens, given an amount, an escrow identifier and an agent public key.
      */
-    addEscrowedTokens(amount: number, escrowIdentifier: Uint8Array, agentPublicKey: any) {
+    addEscrowedTokens(amount: number, escrowIdentifier: Uint8Array, agentAccount: Uint8Array) {
         this.balance += amount;
 
         this.locks.push({
@@ -89,7 +89,7 @@ export class AccountLockManager {
             amount,
             parameters: {
                 escrowIdentifier,
-                agentPublicKey
+                agentAccount
             }
         });
     }

@@ -261,7 +261,9 @@ export interface AccountEscrowTransferSection {
     amount: number,
     publicReference: string,
     privateReference: string,
-    agentAccount: Uint8Array
+    escrowIdentifier: Uint8Array,
+    agentAccount: Uint8Array,
+    durationDays: number
 }
 
 /**

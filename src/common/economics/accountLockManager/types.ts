@@ -8,7 +8,7 @@ export enum LockType {
 
 export type EscrowParameters = {
     escrowIdentifier: Uint8Array,
-    agentPublicKey: any
+    agentAccount: Uint8Array
 };
 
 export type VestingParameters = {

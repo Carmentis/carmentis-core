@@ -202,7 +202,6 @@ export interface MicroblockInformationSchema {
     header: Uint8Array;
 }
 
-
 export interface MicroblockBodyResponse {
     hash: Uint8Array,
     body: Uint8Array
@@ -216,8 +215,6 @@ export type VirtualBlockchainUpdateInterface =
     { exists: false } |
     { exists: true, changed: false } |
     { exists: true, changed: true, stateData: Uint8Array, headers: Uint8Array[] }
-
-
 
 export interface VirtualBlockchainState<InternalState = unknown> {
     type: number,
@@ -234,7 +231,6 @@ export interface VirtualBlockchainStateDto {
     lastMicroblockHash: Uint8Array,
     serializedInternalState: Uint8Array
 }
-
 
 export interface MsgVirtualBlockchainState {
     stateData: Uint8Array
@@ -302,7 +298,6 @@ export interface AccountStake {
     nodeIdentifier: Uint8Array;
 }
  */
-
 
 export interface ObjectList {
     list: Uint8Array[];

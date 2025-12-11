@@ -169,9 +169,12 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
     }
 
     setExpirationDay(day: number) {
+        /*
         if (this.height > 1) {
             throw new Error("The expiration day cannot be changed anymore.");
         }
+
+         */
         this.expirationDay = day;
     }
 

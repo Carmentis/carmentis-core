@@ -24,7 +24,11 @@ export class AccountMicroblockStructureChecker implements IMicroblockStructureCh
                 checker.group(
                     SECTIONS.AT_LEAST_ONE,
                     [
-                        [ SECTIONS.ANY, SECTIONS.ACCOUNT_TRANSFER ]
+                        [ SECTIONS.ANY, SECTIONS.ACCOUNT_TRANSFER ],
+                        [ SECTIONS.ANY, SECTIONS.ACCOUNT_VESTING_TRANSFER ],
+                        [ SECTIONS.ANY, SECTIONS.ACCOUNT_STAKE ],
+                        [ SECTIONS.ANY, SECTIONS.ACCOUNT_ESCROW_TRANSFER ],
+                        [ SECTIONS.ANY, SECTIONS.ACCOUNT_ESCROW_SETTLEMENT ]
                     ]
                 );
             }

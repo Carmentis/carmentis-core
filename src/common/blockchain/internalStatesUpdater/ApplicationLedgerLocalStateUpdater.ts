@@ -15,7 +15,7 @@ import {Logger} from "../../utils/Logger";
 import {
     ApplicationLedgerActorCreationSection,
     ApplicationLedgerChannelInvitationSection,
-    ApplicationLedgerDeclarationSection,
+    ApplicationLedgerCreationSection,
     ApplicationLedgerSharedKeySection
 } from "../../type/sections";
 import {Section} from "../../type/Section";
@@ -41,7 +41,7 @@ export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<Appli
             case SectionType.APP_LEDGER_ALLOWED_PKE_SCHEMES:
                 await this.allowedPkeSchemesCallback(section, newState);
                 break;
-            case SectionType.APP_LEDGER_DECLARATION:
+            case SectionType.APP_LEDGER_CREATION:
                 await this.declarationCallback(section, newState);
                 break;
             case SectionType.APP_LEDGER_ACTOR_CREATION:
@@ -88,7 +88,7 @@ export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<Appli
         //localState.allowedPkeSchemeIds = section.object.schemeIds;
     }
 
-    async declarationCallback(section: Section<ApplicationLedgerDeclarationSection>, localState: ApplicationLedgerInternalState) {
+    async declarationCallback(section: Section<ApplicationLedgerCreationSection>, localState: ApplicationLedgerInternalState) {
         localState.setApplicationId(section.object.applicationId);
     }
 

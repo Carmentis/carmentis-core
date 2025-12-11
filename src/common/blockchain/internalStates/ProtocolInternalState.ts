@@ -1,6 +1,7 @@
 import {ProtocolVBInternalStateObject} from "../../type/types";
 import {IInternalState} from "./IInternalState";
 import {ProtocolVariables} from "../../type/ProtocolVariables";
+import {Utils} from "../../utils/utils";
 
 enum ProtocolName {
     INITIAL_PROTOCOL_VERSION_NAME = "Stockolm"
@@ -21,8 +22,7 @@ export class ProtocolInternalState implements IInternalState {
 
     static createInitialState() {
         return new ProtocolInternalState({
-            signatureSchemeId: 0,
-            publicKeyHeight: 0,
+            organizationId: Utils.getNullHash(),
             currentProtocolVariables: {
                 protocolVersionName: ProtocolName.INITIAL_PROTOCOL_VERSION_NAME,
                 protocolVersion: 1,
@@ -38,6 +38,7 @@ export class ProtocolInternalState implements IInternalState {
             protocolUpdates: []
         });
     }
+
 
     getProtocolVariables() {
         return this.internalState.currentProtocolVariables;

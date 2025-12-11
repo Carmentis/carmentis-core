@@ -32,25 +32,16 @@ export const SIGNATURE_SCHEMA = {
 // ============================================================================================================================ //
 //  Protocol                                                                                                                    //
 // ============================================================================================================================ //
-export const PROTOCOL_PUBLIC_KEY      = SectionType.PROTOCOL_PUBLIC_KEY;
+export const PROTOCOL_CREATION      = SectionType.PROTOCOL_CREATION;
 export const PROTOCOL_UPDATE = SectionType.PROTOCOL_UPDATE;
 export const PROTOCOL_SIGNATURE       = SectionType.PROTOCOL_SIGNATURE;
 
 const PROTOCOL: Schema[] = [] as const;
-/*
-PROTOCOL[PROTOCOL_SIG_SCHEME] = {
-  label: 'PROTOCOL_SIG_SCHEME',
-  definition: [
-    { name: 'schemeId', type: DATA.TYPE_UINT8 }
-  ]
-};
- */
 
-PROTOCOL[PROTOCOL_PUBLIC_KEY] = {
-  label: 'PROTOCOL_PUBLIC_KEY',
+PROTOCOL[PROTOCOL_CREATION] = {
+  label: 'PROTOCOL_CREATION',
   definition: [
-      { name: 'schemeId', type: DATA.TYPE_UINT8 },
-      { name: 'publicKey', type: DATA.TYPE_BINARY }
+      { name: 'organizationId', type: DATA.TYPE_BIN256 },
   ]
 };
 
@@ -173,7 +164,7 @@ ACCOUNT[ACCOUNT_SIGNATURE] = SIGNATURE_SCHEMA
 // ============================================================================================================================ //
 //  Validator node                                                                                                              //
 // ============================================================================================================================ //
-export const VN_DECLARATION         = SectionType.VN_DECLARATION;
+export const VN_CREATION         = SectionType.VN_CREATION;
 export const VN_COMETBFT_PUBLIC_KEY_DECLARATION         = SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION;
 export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
 export const VN_VOTING_POWER_UPDATE = SectionType.VN_VOTING_POWER_UPDATE;
@@ -183,8 +174,8 @@ const VALIDATOR_NODE: Schema[] = [] as const;
 
 
 
-VALIDATOR_NODE[VN_DECLARATION] = {
-  label: 'VN_DECLARATION',
+VALIDATOR_NODE[VN_CREATION] = {
+  label: 'VN_CREATION',
   definition: [
     { name: 'organizationId', type: DATA.TYPE_BIN256 }
   ]
@@ -206,7 +197,7 @@ VALIDATOR_NODE[VN_RPC_ENDPOINT] = {
 };
 
 VALIDATOR_NODE[VN_VOTING_POWER_UPDATE] = {
-  label: 'VN_NETWORK_INTEGRATION',
+  label: 'VN_VOTING_POWER_UPDATE',
   definition: [
     { name: 'votingPower', type: DATA.TYPE_UINT48 }
   ]
@@ -217,18 +208,17 @@ VALIDATOR_NODE[VN_SIGNATURE] = SIGNATURE_SCHEMA
 // ============================================================================================================================ //
 //  Organization                                                                                                                //
 // ============================================================================================================================ //
-export const ORG_PUBLIC_KEY    = SectionType.ORG_PUBLIC_KEY;
+export const ORG_CREATION    = SectionType.ORG_CREATION;
 export const ORG_DESCRIPTION   = SectionType.ORG_DESCRIPTION;
 export const ORG_SERVER        = SectionType.ORG_SERVER;
 export const ORG_SIGNATURE     = SectionType.ORG_SIGNATURE;
 
 const ORGANIZATION: Schema[] = [] as const;
 
-ORGANIZATION[ORG_PUBLIC_KEY] = {
-  label: 'ORG_PUBLIC_KEY',
+ORGANIZATION[ORG_CREATION] = {
+  label: 'ORG_CREATION',
   definition: [
-      { name: 'publicKey', type: DATA.TYPE_BINARY },
-      { name: 'schemeId', type: DATA.TYPE_UINT8 }
+      { name: 'accountId', type: DATA.TYPE_BIN256 },
   ]
 };
 
@@ -255,15 +245,15 @@ ORGANIZATION[ORG_SIGNATURE] = SIGNATURE_SCHEMA
 //  Application                                                                                                                 //
 // ============================================================================================================================ //
 
-export const APP_DECLARATION = SectionType.APP_DECLARATION;
+export const APP_CREATION = SectionType.APP_CREATION;
 export const APP_DESCRIPTION = SectionType.APP_DESCRIPTION;
 export const APP_SIGNATURE   = SectionType.APP_SIGNATURE;
 
 const APPLICATION: Schema[] = [] as const;
 
 
-APPLICATION[APP_DECLARATION] = {
-  label: 'APP_DECLARATION',
+APPLICATION[APP_CREATION] = {
+  label: 'APP_CREATION',
   definition: [
     { name: 'organizationId', type: DATA.TYPE_BIN256 }
   ]
@@ -286,7 +276,7 @@ APPLICATION[APP_SIGNATURE] = SIGNATURE_SCHEMA
 // ============================================================================================================================ //
 export const APP_LEDGER_ALLOWED_SIG_SCHEMES  = SectionType.APP_LEDGER_ALLOWED_SIG_SCHEMES;
 export const APP_LEDGER_ALLOWED_PKE_SCHEMES  = SectionType.APP_LEDGER_ALLOWED_PKE_SCHEMES;
-export const APP_LEDGER_DECLARATION          = SectionType.APP_LEDGER_DECLARATION;
+export const APP_LEDGER_CREATION          = SectionType.APP_LEDGER_CREATION;
 export const APP_LEDGER_ACTOR_CREATION       = SectionType.APP_LEDGER_ACTOR_CREATION;
 export const APP_LEDGER_CHANNEL_CREATION     = SectionType.APP_LEDGER_CHANNEL_CREATION;
 export const APP_LEDGER_SHARED_SECRET        = SectionType.APP_LEDGER_SHARED_SECRET;
@@ -315,8 +305,8 @@ APP_LEDGER[APP_LEDGER_ALLOWED_PKE_SCHEMES] = {
   ]
 };
 
-APP_LEDGER[APP_LEDGER_DECLARATION] = {
-  label: 'APP_LEDGER_DECLARATION',
+APP_LEDGER[APP_LEDGER_CREATION] = {
+  label: 'APP_LEDGER_CREATION',
   definition: [
     { name: 'applicationId', type: DATA.TYPE_BIN256 }
   ]

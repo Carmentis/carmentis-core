@@ -8,7 +8,7 @@ export class ApplicationInternalStateUpdater implements IInternalStateUpdater<Ap
     updateState(prevState: ApplicationInternalState, microblock: Microblock): ApplicationInternalState {
         const newState = prevState.clone();
         try {
-            const section = microblock.getApplicationDeclarationSection();
+            const section = microblock.getApplicationCreationSection();
             newState.setOrganizationId(section.object.organizationId);
         } catch (e) {
             if (e instanceof SectionNotFoundError) {}

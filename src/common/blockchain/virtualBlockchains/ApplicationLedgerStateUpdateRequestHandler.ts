@@ -21,13 +21,14 @@ import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {ICryptoKeyHandler} from "../../wallet/ICryptoKeyHandler";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
+import {Provider} from "../../providers/Provider";
 
 export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedgerMicroblockBuilder {
 
-    static async createFromVirtualBlockchain(vb: ApplicationLedgerVb, authorPrivateSignatureKey: PrivateSignatureKey) {
+    static async createFromVirtualBlockchain(provider: Provider, vb: ApplicationLedgerVb, authorPrivateSignatureKey: PrivateSignatureKey) {
         const copyVb = structuredClone(vb);
         const mb = await copyVb.createMicroblock();
-        return new ApplicationLedgerStateUpdateRequestHandler(mb, copyVb, authorPrivateSignatureKey)
+        return new ApplicationLedgerStateUpdateRequestHandler(mb, copyVb, provider, authorPrivateSignatureKey)
     }
 
 
@@ -37,13 +38,14 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
     constructor(
         mbUnderConstruction: Microblock,
         vb: ApplicationLedgerVb,
+        provider: Provider,
         private readonly authorPrivateSignatureKey: PrivateSignatureKey
     ) {
-        super(mbUnderConstruction, vb);
+        super(mbUnderConstruction, vb, provider);
     }
 
     private get state() {
-        return this.getLocalState()
+        return this.getInternalState()
     }
 
     private getActorPrivateSignatureKey(actorIdentity: ICryptoKeyHandler) {
@@ -75,7 +77,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         const isBuildingGenesisMicroBlock = this.vb.isEmpty();
         if (isBuildingGenesisMicroBlock) {
             // genesis -> link the application ledger with the application id
-            const section = this.mbUnderConstruction.addApplicationLedgerDeclarationSection({
+            const section = this.mbUnderConstruction.addApplicationLedgerCreationSection({
                 applicationId: Utils.binaryFromHexa(object.applicationId)
             });
             await this.updateStateWithSection(section);

@@ -9,7 +9,7 @@ export class OrganizationMicroblockStructureChecker implements IMicroblockStruct
             const checker = new StructureChecker(microblock);
             checker.expects(
                 checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.AT_MOST_ONE,
-                SECTIONS.ORG_PUBLIC_KEY
+                SECTIONS.ORG_CREATION
             );
             checker.group(
                 SECTIONS.AT_LEAST_ONE,

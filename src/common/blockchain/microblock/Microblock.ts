@@ -21,7 +21,7 @@ import {
     AccountTokenIssuanceSection,
     AccountTransferSection,
     AccountVestingTransferSection,
-    ApplicationDeclarationSection,
+    ApplicationCreationSection,
     ApplicationDescriptionSection,
     ApplicationLedgerActorCreationSection,
     ApplicationLedgerActorSubscriptionSection,
@@ -31,26 +31,21 @@ import {
     ApplicationLedgerAuthorSignatureSection,
     ApplicationLedgerChannelCreationSection,
     ApplicationLedgerChannelInvitationSection,
-    ApplicationLedgerDeclarationSection,
+    ApplicationLedgerCreationSection,
     ApplicationLedgerEndorsementRequestSection,
     ApplicationLedgerEndorserSignatureSection,
     ApplicationLedgerPrivateChannelSection,
     ApplicationLedgerPublicChannelSection,
     ApplicationLedgerSharedKeySection,
-    ApplicationSignatureSection,
-    ApplicationSigSchemeSection,
+    ApplicationSignatureSection, OrganizationCreationSection,
     OrganizationDescriptionSection,
-    OrganizationPublicKeySection,
     OrganizationSignatureSection,
-    ProtocolNodeUpdateSection,
-    ProtocolPublicKeySection,
+    ProtocolCreationSection,
     ProtocolSignatureSection, ProtocolUpdateSection,
     SignatureSection,
-    ValidatorNodeCometbftPublicKeyDeclarationSection,
-    ValidatorNodeDeclarationSection,
+    ValidatorNodeCometbftPublicKeyDeclarationSection, ValidatorNodeCreationSection,
     ValidatorNodeRpcEndpointSection,
     ValidatorNodeSignatureSection,
-    ValidatorNodeSigSchemeSection,
     ValidatorNodeVotingPowerUpdateSection
 } from "../../type/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
@@ -350,13 +345,6 @@ export class Microblock {
     private readonly type: VirtualBlockchainType;
 
     /**
-     * Represents the account details responsible for paying applicable fees.
-     * This variable can either hold a `Uint8Array`, containing the account id,
-     * or be `null` if no account is specified.
-     */
-    private feesPayerAccount: Uint8Array | null;
-
-    /**
      * Creates a new Microblock instance.
      * @param {VirtualBlockchainType} type - The type of virtual blockchain this microblock belongs to
      */
@@ -365,7 +353,6 @@ export class Microblock {
         const defaultTimestampInSeconds = Math.floor(Date.now() / 1000);
         const defaultGasPrice = CMTSToken.zero().getAmountAsAtomic();
         const initialHeader : MicroblockHeaderObject = {
-            localStateUpdaterVersion: InternalStateUpdaterFactory.defaultInternalStateUpdaterVersionByVbType(type),
             magicString: CHAIN.MAGIC_STRING,
             protocolVersion: CHAIN.PROTOCOL_VERSION,
             microblockType: type,
@@ -374,12 +361,12 @@ export class Microblock {
             timestamp: defaultTimestampInSeconds,
             gas: 0,
             gasPrice: defaultGasPrice,
-            bodyHash: Microblock.computeInitialBodyHash()
+            bodyHash: Microblock.computeInitialBodyHash(),
+            feesPayerAccount: Utils.getNullHash(),
         };
 
         this.type = type;
         this.sections = [];
-        this.feesPayerAccount = null;
         this.header = initialHeader;
         this.hash = Microblock.computeMicroblockHash(initialHeader);
     }
@@ -401,7 +388,6 @@ export class Microblock {
         }
 
         this.header = {
-            localStateUpdaterVersion: 1,
             magicString: CHAIN.MAGIC_STRING,
             protocolVersion: CHAIN.PROTOCOL_VERSION,
             microblockType: this.type,
@@ -410,7 +396,8 @@ export class Microblock {
             timestamp: Utils.getTimestampInSeconds(),
             gas: 0,
             gasPrice: 0,
-            bodyHash: Utils.getNullHash()
+            bodyHash: Utils.getNullHash(),
+            feesPayerAccount: Utils.getNullHash(),
         };
         this.hash = Microblock.computeMicroblockHash(this.header)
     }
@@ -505,13 +492,11 @@ export class Microblock {
     }
 
     isFeesPayerAccountDefined(): boolean {
-        return this.feesPayerAccount instanceof Uint8Array;
+        return Utils.binaryIsEqual(this.getFeesPayerAccount(), Utils.getNullHash()) == false;
     }
 
     getFeesPayerAccount(): Uint8Array {
-        //if ((this.feesPayerAccount instanceof Uint8Array) == false )
-        //    throw new IllegalStateError("Fees payer account undefined")
-        return <Uint8Array<ArrayBufferLike>>this.feesPayerAccount;
+        return this.header.feesPayerAccount;
     }
 
     setTimestamp(timestamp: number) {
@@ -522,7 +507,8 @@ export class Microblock {
     setFeesPayerAccount(accountHash: Uint8Array) {
         // TODO(correctness): Should ensure that the fees payer account is defined
         //if (!(accountHash instanceof Uint8Array)) throw new TypeError(`Invalid fees payer account type: expected Uint8array, got ${typeof accountHash}`)
-        this.feesPayerAccount = accountHash;
+        this.header.feesPayerAccount = accountHash;
+        this.hash = Microblock.computeMicroblockHash(this.header);
     }
 
    
@@ -554,29 +540,33 @@ export class Microblock {
 
 
 
+    serializeHeader(): Uint8Array {
+        const headerSerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
+        return headerSerializer.serialize(this.header);
+    }
+
+    serializedBody(): Uint8Array {
+        const body = {
+            body: this.sections.map(({ type, data }) => ({type, data}))
+        };
+        const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
+        return bodySerializer.serialize(body);
+    }
+
 
     /**
      Serializes the microblock and returns an object with the microblock hash, the header data,
      the body hash and the body data.
      */
     serialize() {
-        const body = {
-            body: this.sections.map(({ type, data }) => ({type, data}))
-        };
-
-        const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
-        const bodyData = bodySerializer.serialize(body);
+        const bodyData = this.serializedBody();
         const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
-
-        const headerSerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
-        const headerData = headerSerializer.serialize(this.header);
+        const headerData = this.serializeHeader();
         const microblockHash = Crypto.Hashes.sha256AsBinary(headerData);
-
         const microblockData = BlockchainSerializer.serializeMicroblockSerializedHeaderAndBody(
             headerData,
             bodyData
         )
-
         return {microblockHash, headerData, bodyHash, bodyData, microblockData};
     }
 
@@ -772,13 +762,6 @@ export class Microblock {
     }
 
     /**
-     * Returns the version of the local state update version defined in the microblock.
-     */
-    getLocalStateUpdateVersion() {
-        return this.header.localStateUpdaterVersion;
-    }
-
-    /**
      * Updates the current microblock to be considered as the successor of the
      * provided microblock.
      *
@@ -821,7 +804,6 @@ export class Microblock {
      * @throws {IllegalStateError} If the microblock is already signed.
      */
     async seal(privateKey: PrivateSignatureKey, feesPayerAccount?: Uint8Array) {
-        if (this.isSigned()) throw new IllegalStateError("Microblock is already signed");
         if (feesPayerAccount) this.setFeesPayerAccount(feesPayerAccount);
         const signature = await this.sign(privateKey, true);
         const signatureSectionObject: SignatureSection = {
@@ -874,8 +856,8 @@ export class Microblock {
     /**
      * Adds an organization public key section.
      */
-    addOrganizationPublicKeySection(object: OrganizationPublicKeySection) {
-        return this.addSection(SectionType.ORG_PUBLIC_KEY, object);
+    addOrganizationCreationSection(object: OrganizationCreationSection) {
+        return this.addSection(SectionType.ORG_CREATION, object);
     }
 
     /**
@@ -896,8 +878,8 @@ export class Microblock {
     /**
      * Adds a protocol public key section.
      */
-    addProtocolPublicKeySection(object: ProtocolPublicKeySection) {
-        return this.addSection(SectionType.PROTOCOL_PUBLIC_KEY, object);
+    addProtocolCreationSection(object: ProtocolCreationSection) {
+        return this.addSection(SectionType.PROTOCOL_CREATION, object);
     }
 
     /**
@@ -976,10 +958,10 @@ export class Microblock {
 
     // Validator Node sections
     /**
-     * Adds a validator node declaration section.
+     * Adds a validator node creation section.
      */
-    addValidatorNodeDeclarationSection(object: ValidatorNodeDeclarationSection) {
-        return this.addSection(SectionType.VN_DECLARATION, object);
+    addValidatorNodeCreationSection(object: ValidatorNodeCreationSection) {
+        return this.addSection(SectionType.VN_CREATION, object);
     }
 
     /**
@@ -1014,10 +996,10 @@ export class Microblock {
 
 
     /**
-     * Adds an application declaration section.
+     * Adds an application creation section.
      */
-    addApplicationDeclarationSection(object: ApplicationDeclarationSection) {
-        return this.addSection(SectionType.APP_DECLARATION, object);
+    addApplicationCreationSection(object: ApplicationCreationSection) {
+        return this.addSection(SectionType.APP_CREATION, object);
     }
 
     /**
@@ -1050,10 +1032,10 @@ export class Microblock {
     }
 
     /**
-     * Adds an application ledger declaration section.
+     * Adds an application ledger creation section.
      */
-    addApplicationLedgerDeclarationSection(object: ApplicationLedgerDeclarationSection) {
-        return this.addSection(SectionType.APP_LEDGER_DECLARATION, object);
+    addApplicationLedgerCreationSection(object: ApplicationLedgerCreationSection) {
+        return this.addSection(SectionType.APP_LEDGER_CREATION, object);
     }
 
     /**
@@ -1152,8 +1134,8 @@ export class Microblock {
         return this.getSectionByType<OrganizationDescriptionSection>(SectionType.ORG_DESCRIPTION);
     }
 
-    getOrganizationPublicKeySection() {
-        return this.getSectionByType<OrganizationPublicKeySection>(SectionType.ORG_PUBLIC_KEY);
+    getOrganizationCreationSection() {
+        return this.getSectionByType<OrganizationCreationSection>(SectionType.ORG_CREATION);
     }
 
     getOrganizationSignatureSection() {
@@ -1162,7 +1144,7 @@ export class Microblock {
 
 
     getProtocolPublicKeySection() {
-        return this.getSectionByType<ProtocolPublicKeySection>(SectionType.PROTOCOL_PUBLIC_KEY);
+        return this.getSectionByType<ProtocolCreationSection>(SectionType.PROTOCOL_CREATION);
     }
 
     getProtocolUpdateSection() {
@@ -1206,11 +1188,11 @@ export class Microblock {
     }
 
     // Validator Node sections
-    getValidatorNodeDeclarationSection() {
-        return this.getSectionByType<ValidatorNodeDeclarationSection>(SectionType.VN_DECLARATION);
+    getValidatorNodeCreationSection() {
+        return this.getSectionByType<ValidatorNodeCreationSection>(SectionType.VN_CREATION);
     }
 
-    getValidatorNodeDescriptionSection() {
+    getValidatorNodeCometBFTPublicKeyDeclarationSection() {
         return this.getSectionByType<ValidatorNodeCometbftPublicKeyDeclarationSection>(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION);
     }
 
@@ -1228,8 +1210,8 @@ export class Microblock {
 
     // Application sections
 
-    getApplicationDeclarationSection() {
-        return this.getSectionByType<ApplicationDeclarationSection>(SectionType.APP_DECLARATION);
+    getApplicationCreationSection() {
+        return this.getSectionByType<ApplicationCreationSection>(SectionType.APP_CREATION);
     }
 
     getApplicationDescriptionSection() {
@@ -1249,8 +1231,8 @@ export class Microblock {
         return this.getSectionByType<ApplicationLedgerAllowedPkeSchemesSection>(SectionType.APP_LEDGER_ALLOWED_PKE_SCHEMES);
     }
 
-    getApplicationLedgerDeclarationSection() {
-        return this.getSectionByType<ApplicationLedgerDeclarationSection>(SectionType.APP_LEDGER_DECLARATION);
+    getApplicationLedgerCreationSection() {
+        return this.getSectionByType<ApplicationLedgerCreationSection>(SectionType.APP_LEDGER_CREATION);
     }
 
     getApplicationLedgerActorCreationSection() {
@@ -1301,18 +1283,17 @@ export class Microblock {
         const encoder = EncoderFactory.bytesToHexEncoder();
         let output = `Microblock:\n`;
         output += `  Hash: ${encoder.encode(this.hash)}\n`;
-        output += `  Fees payer account: ${this.feesPayerAccount ? encoder.encode(this.feesPayerAccount) : "Null"}\n`;
         output += `  Header:\n`;
         output += `    Microblock type: ${this.header.microblockType} or ${this.type}\n`;
         output += `    Magic String: ${this.header.magicString}\n`;
         output += `    Protocol Version: ${this.header.protocolVersion}\n`;
+        output += `    Fees payer account: ${this.header.feesPayerAccount}\n`;
         output += `    Height: ${this.header.height}\n`;
         output += `    Previous Hash: ${encoder.encode(this.header.previousHash)}\n`;
         output += `    Timestamp: ${this.header.timestamp}\n`;
         output += `    Gas: ${this.header.gas}\n`;
         output += `    Gas Price: ${this.header.gasPrice}\n`;
         output += `    Body Hash: ${encoder.encode(this.header.bodyHash)}\n`;
-        output += `    Local State Updater Version: ${this.header.localStateUpdaterVersion}\n`;
 
         output += `  Sections (${this.sections.length}):\n`;
         this.sections.forEach((section, index) => {

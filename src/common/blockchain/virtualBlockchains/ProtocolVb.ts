@@ -60,20 +60,5 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {
      */
 
 
-    async getPublicKey(): Promise<PublicSignatureKey> {
-        const keyMicroblock = await this.getMicroblock(this.internalState.toObject().publicKeyHeight);
-        const rawPublicKey = keyMicroblock.getSection((section) => section.type == SECTIONS.PROTOCOL_PUBLIC_KEY).object.publicKey;
-        const cryptoFactory = new CryptoSchemeFactory();
-        const signatureSchemeId = this.internalState.toObject().signatureSchemeId;
-        const publicKey = cryptoFactory.createPublicSignatureKey(signatureSchemeId, rawPublicKey)
-
-        return publicKey;
-    }
-
-    async signatureCallback(microblock: Microblock, section: any) {
-        const publicKey = await this.getPublicKey();
-        const feesPayerAccount = await this.provider.getAccountIdFromPublicKey(publicKey);
-        microblock.setFeesPayerAccount(feesPayerAccount.toBytes());
-    }
 
 }

@@ -1,4 +1,6 @@
 import {OrganizationVBInternalStateObject} from "../../type/types";
+import {Utils} from "../../utils/utils";
+import {Hash} from "../../entities/Hash";
 
 export class OrganizationInternalState {
     constructor(private internalState: OrganizationVBInternalStateObject) {
@@ -10,8 +12,7 @@ export class OrganizationInternalState {
 
     static createInitialState() {
         return new OrganizationInternalState({
-            signatureSchemeId: 0,
-            publicKeyHeight: 0,
+            accountId: Utils.getNullHash(),
             descriptionHeight: 0
         });
     }
@@ -20,27 +21,23 @@ export class OrganizationInternalState {
         return this.internalState;
     }
 
-    updateSignatureScheme(signatureSchemeId: number) {
-        this.internalState.signatureSchemeId = signatureSchemeId;
+    getAccountIdAsBytes() {
+        return this.internalState.accountId;
     }
 
-    updatePublicKeyHeight(publicKeyHeight: number) {
-        this.internalState.publicKeyHeight = publicKeyHeight;
+    getAccountId() {
+        return Hash.from(this.internalState.accountId);
     }
 
-    updateDescriptionHeight(descriptionHeight: number) {
-        this.internalState.descriptionHeight = descriptionHeight;
-    }
-
-    getPublicKeyDefinitionHeight() {
-        return this.internalState.publicKeyHeight;
-    }
-
-    getPublicSignatureKeySchemeId() {
-        return this.internalState.signatureSchemeId
+    setAccountId(accountId: Uint8Array) {
+        return this.internalState.accountId = accountId;
     }
 
     getDescriptionHeight() {
         return this.internalState.descriptionHeight;
+    }
+
+    updateDescriptionHeight(height: number) {
+        this.internalState.descriptionHeight = height;
     }
 }

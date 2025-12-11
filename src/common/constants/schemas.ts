@@ -195,8 +195,7 @@ export const PROTOCOL_VARIABLES: Schema = {
 export const PROTOCOL_VB_STATE: Schema = {
   label: 'ProtocolVbState',
   definition: [
-      { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
-      { name: 'publicKeyHeight',   type: DATA.TYPE_UINT48 },
+      { name: 'organizationId', type: DATA.TYPE_BIN256 },
       { name: 'currentProtocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES },
       {
           name: 'protocolUpdates',
@@ -231,7 +230,6 @@ const ACCOUNT_VB_STATE: Schema = {
 const VALIDATOR_NODE_VB_STATE: Schema = {
   label: 'ValidatorNodeVbState',
   definition: [
-    { name: 'signatureSchemeId',        type: DATA.TYPE_UINT8 },
     { name: 'organizationId',           type: DATA.TYPE_BIN256 },
     { name: 'descriptionHeight',        type: DATA.TYPE_UINT48 },
     { name: 'rpcEndpointHeight',        type: DATA.TYPE_UINT48 },
@@ -245,8 +243,7 @@ const VALIDATOR_NODE_VB_STATE: Schema = {
 const ORGANIZATION_VB_STATE: Schema = {
   label: 'OrganizationVbState',
   definition: [
-    { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
-    { name: 'publicKeyHeight',   type: DATA.TYPE_UINT48 },
+    { name: 'accountId', type: DATA.TYPE_BIN256 },
     { name: 'descriptionHeight', type: DATA.TYPE_UINT48 }
   ]
 };
@@ -257,7 +254,6 @@ const ORGANIZATION_VB_STATE: Schema = {
 const APPLICATION_VB_STATE: Schema = {
   label: 'ApplicationVbState',
   definition: [
-    { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
     { name: 'organizationId',    type: DATA.TYPE_BIN256 },
     { name: 'descriptionHeight', type: DATA.TYPE_UINT48 }
   ]
@@ -362,8 +358,8 @@ export const BLOCK_CONTENT = {
  * @deprecated Th
  */
 export const MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET = 13;
-export const MICROBLOCK_HEADER_BODY_HASH_OFFSET = 60;
-export const MICROBLOCK_HEADER_SIZE = 92;
+export const MICROBLOCK_HEADER_BODY_HASH_OFFSET = 58;
+export const MICROBLOCK_HEADER_SIZE = 122;
 
 export const MICROBLOCK_HEADER: Schema = {
   label: 'MicroblockHeader',
@@ -376,8 +372,8 @@ export const MICROBLOCK_HEADER: Schema = {
     { name: 'timestamp',       type: DATA.TYPE_UINT48 },          // +45
     { name: 'gas',             type: DATA.TYPE_UINT24 },          // +51
     { name: 'gasPrice',        type: DATA.TYPE_UINT32 },          // +54
-      { name: 'localStateUpdaterVersion',        type: DATA.TYPE_UINT16 }, // +58
-      { name: 'bodyHash',        type: DATA.TYPE_BIN256 },           // + 60
+      { name: 'bodyHash',        type: DATA.TYPE_BIN256 },           // + 58
+      { name: 'feesPayerAccount', type: DATA.TYPE_BIN256 },         // + 90
   ]
 };
 

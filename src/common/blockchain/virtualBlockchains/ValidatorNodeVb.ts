@@ -126,10 +126,5 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
         return await this.provider.loadOrganizationVirtualBlockchain(orgId);
     }
 
-    async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
-        const orgVb = await this.getOrganizationVirtualBlockchain();
-        return await orgVb.getPublicKey();
-    }
-
 
 }

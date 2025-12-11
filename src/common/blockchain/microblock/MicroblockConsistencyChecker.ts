@@ -134,7 +134,6 @@ export class MicroblockConsistencyChecker {
 
         // we finally update the state of the virtual blockchain by adding the parsed microblock inside the vb
         await vb.appendMicroBlock(this.checkedMicroblock)
-
         this.verificationState = { isMicroblockParsingCompleted: true, virtualBlockchain: vb };
     }
 

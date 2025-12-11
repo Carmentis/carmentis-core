@@ -16,7 +16,6 @@ export class ValidatorNodeInternalState {
             lastKnownVotingPower: 0,
             organizationId: Utils.getNullHash(),
             rpcEndpointHeight: 0,
-            signatureSchemeId: 0
         });
     }
 
@@ -40,10 +39,6 @@ export class ValidatorNodeInternalState {
         return this.internalState.rpcEndpointHeight;
     }
 
-    getSignatureSchemeId() {
-        return this.internalState.signatureSchemeId;
-    }
-
     clone() {
         return structuredClone(this)
     }
@@ -54,5 +49,9 @@ export class ValidatorNodeInternalState {
 
     setCometbftPublicKeyDeclarationHeight(height: number) {
         this.internalState.cometbftPublicKeyDeclarationHeight = height
+    }
+
+    setOrganizationId(organizationId: Uint8Array) {
+        this.internalState.organizationId = organizationId;
     }
 }

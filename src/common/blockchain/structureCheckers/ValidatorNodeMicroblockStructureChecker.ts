@@ -9,7 +9,7 @@ export class ValidatorNodeMicroblockStructureChecker implements IMicroblockStruc
             const checker = new StructureChecker(microblock);
             checker.expects(
                 checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-                SECTIONS.VN_DECLARATION
+                SECTIONS.VN_CREATION
             );
             checker.group(
                 SECTIONS.AT_LEAST_ONE,

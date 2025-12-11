@@ -58,8 +58,7 @@ export interface MerkleProof {
 
 
 export interface ProtocolVBInternalStateObject {
-    signatureSchemeId: number;
-    publicKeyHeight: number;
+    organizationId: Uint8Array,
     currentProtocolVariables: ProtocolVariables;
     protocolUpdates: ProtocolUpdateSection[]
 }
@@ -83,13 +82,11 @@ export interface AccountVBInternalStateObject {
 }
 
 export interface OrganizationVBInternalStateObject {
-    signatureSchemeId: number;
-    publicKeyHeight: number;
+    accountId: Uint8Array;
     descriptionHeight: number;
 }
 
 export interface ValidatorNodeVBInternalStateObject {
-    signatureSchemeId: number;
     organizationId: Uint8Array;
     cometbftPublicKeyDeclarationHeight: number;
     rpcEndpointHeight: number;
@@ -97,7 +94,6 @@ export interface ValidatorNodeVBInternalStateObject {
 }
 
 export interface ApplicationVBInternalStateObject {
-    signatureSchemeId: number;
     organizationId: Uint8Array;
     descriptionHeight: number;
 }
@@ -197,7 +193,7 @@ export interface ValidatorNodeDTO {
 
 export interface MicroblockHeaderObject {
     magicString: string;
-    protocolVersion: number; // local state updater version
+    protocolVersion: number;
     microblockType: number;
     height: number;
     previousHash: Uint8Array;
@@ -205,11 +201,7 @@ export interface MicroblockHeaderObject {
     gas: number;
     gasPrice: number;
     bodyHash: Uint8Array;
-
-    /**
-     * This field is used to determine the local state update version to use.
-     */
-    localStateUpdaterVersion: number
+    feesPayerAccount: Uint8Array
 }
 
 export interface MicroblockSection {

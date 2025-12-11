@@ -3,21 +3,21 @@ import {Microblock} from "../microblock/Microblock";
 import {SectionType} from "../../type/SectionType";
 import {
     OrganizationDescriptionSection,
-    OrganizationPublicKeySection,
+    OrganizationCreationSection,
 } from "../../type/sections";
 import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {OrganizationInternalState} from "../internalStates/OrganizationInternalState";
 
 export class OrganizationInternalStateUpdater implements IInternalStateUpdater<OrganizationInternalState> {
-    updateState(localState: OrganizationInternalState, microblock: Microblock): OrganizationInternalState {
+    updateState(internalState: OrganizationInternalState, microblock: Microblock): OrganizationInternalState {
         // update height where the public key is defined
-        const signaturePublicKeyDefinitionSections = microblock.getSections<OrganizationPublicKeySection>(
-            s => s.type === SectionType.ORG_PUBLIC_KEY
+        const signaturePublicKeyDefinitionSections = microblock.getSections<OrganizationCreationSection>(
+            s => s.type === SectionType.ORG_CREATION
         );
         if (signaturePublicKeyDefinitionSections.length !== 0) {
-            if (signaturePublicKeyDefinitionSections.length !== 1) throw new Error('Cannot accept multiple signature public keys');
-            localState.updateDescriptionHeight(microblock.getHeight());
-            localState.updateSignatureScheme(microblock.getHeight());
+            if (signaturePublicKeyDefinitionSections.length !== 1) throw new Error('Cannot accept multiple signature creation');
+            const section = microblock.getOrganizationCreationSection();
+            internalState.setAccountId(section.object.accountId);
         }
 
         // update the description
@@ -26,10 +26,10 @@ export class OrganizationInternalStateUpdater implements IInternalStateUpdater<O
         );
         if (descSections.length !== 0) {
             if (descSections.length !== 1) throw new Error('Cannot accept multiple descriptions');
-            localState.updateDescriptionHeight(microblock.getHeight())
+            internalState.updateDescriptionHeight(microblock.getHeight())
         }
 
-        return localState;
+        return internalState;
     }
 
     /*

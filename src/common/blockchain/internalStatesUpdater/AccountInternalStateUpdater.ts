@@ -47,10 +47,6 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
         return newState;
     }
 
-    private async signatureSchemeCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
-        state.updateSignatureScheme(section.object.schemeId);
-    }
-
     private async publicKeyCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
         state.updatePublicKeyHeight(microblock.getHeight());
         state.updateSignatureScheme(microblock.getHeight());
@@ -63,7 +59,7 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
     }
 
     private async creationCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
-        microblock.setFeesPayerAccount(section.object.sellerAccount);
+
     }
 
     private async transferCallback(state: AccountInternalState, microblock: Microblock, section: Section) {

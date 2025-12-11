@@ -13,7 +13,6 @@ export class ApplicationInternalState implements IInternalState {
 
     static createInitialState() {
         return new ApplicationInternalState({
-            signatureSchemeId: 0,
             organizationId: Utils.getNullHash(),
             descriptionHeight: 0
         });
@@ -27,9 +26,6 @@ export class ApplicationInternalState implements IInternalState {
         return this.internalState;
     }
 
-    setSignatureSchemeId(signatureSchemeId: number) {
-        this.internalState.signatureSchemeId = signatureSchemeId;
-    }
 
     setOrganizationId(organizationId: Uint8Array) {
         this.internalState.organizationId = organizationId;

@@ -156,6 +156,7 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
     }
 
     setIdentifier(identifier: Uint8Array) {
+        this.logger.debug(`Updating virtual blockchain identifier to ${Utils.binaryToHexa(identifier)}`)
         this.identifier = identifier;
     }
 
@@ -339,7 +340,11 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         // should load the local state updater version
         const protocolState = await this.provider.getProtocolVariables();
 
-        // TODO update the previous hash of the microblock if possible
+        // --update the previous hash of the microblock if possible--
+        // the previous hash is assumed to match otherwise is considered invalid
+        // TODO check previous hash
+
+
         this.internalState = await this.updateInternalState(protocolState, this.internalState, microblock);
 
         // if the current state of the vb is empty (no microblock), then update the identifier

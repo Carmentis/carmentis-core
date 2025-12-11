@@ -10,10 +10,9 @@ import {
     ACCOUNT_TRANSFER,
     ACCOUNT_VESTING_TRANSFER,
     ORG_DESCRIPTION,
-    ORG_PUBLIC_KEY,
     ORG_SERVER,
     ORG_SIGNATURE,
-    PROTOCOL_PUBLIC_KEY,
+    PROTOCOL_CREATION,
     PROTOCOL_SIGNATURE
 } from "../constants/sections";
 import {ProtocolVariables} from "./ProtocolVariables";
@@ -76,11 +75,10 @@ PROTOCOL[PROTOCOL_SIGNATURE] = {
 
 
 /**
- * @see {PROTOCOL_PUBLIC_KEY}
+ * @see {PROTOCOL_CREATION}
  */
-export interface ProtocolPublicKeySection {
-    publicKey: Uint8Array,
-    schemeId: SignatureSchemeId
+export interface ProtocolCreationSection {
+    organizationId: Uint8Array
 }
 
 
@@ -95,16 +93,6 @@ export interface ProtocolUpdateSection {
 }
 
 
-/**
- * @see {PROTOCOL_NODE_UPDATE}
- */
-export interface ProtocolNodeUpdateSection {
-    organizationId: Uint8Array,
-    version: string,
-    maxProtocolVersion: number,
-    changeLog: string,
-    url: string
-}
 
 /**
  * @see {PROTOCOL_SIGNATURE}
@@ -275,62 +263,11 @@ export type AccountSignatureSection = SignatureSection
 // ---------------------------------------------------------------------------
 // ValidatorNodeVb Sections
 // ---------------------------------------------------------------------------
-/*VALIDATOR_NODE[VN_SIG_SCHEME] = {
-  label: 'VN_SIG_SCHEME',
-  definition: [
-    { name: 'schemeId', type: DATA.TYPE_UINT8 }
-  ]
-};
-
-VALIDATOR_NODE[VN_DECLARATION] = {
-  label: 'VN_DECLARATION',
-  definition: [
-    { name: 'organizationId', type: DATA.TYPE_BIN256 }
-  ]
-};
-
-VALIDATOR_NODE[VN_DESCRIPTION] = {
-  label: 'VN_DESCRIPTION',
-  definition: [
-    { name: 'cometPublicKeyType', type: DATA.TYPE_STRING },
-    { name: 'cometPublicKey',     type: DATA.TYPE_STRING }
-  ]
-};
-
-VALIDATOR_NODE[VN_RPC_ENDPOINT] = {
-  label: 'VN_RPC_ENDPOINT',
-  definition: [
-    { name: 'rpcEndpoint', type: DATA.TYPE_STRING }
-  ]
-};
-
-VALIDATOR_NODE[VN_NETWORK_INTEGRATION] = {
-  label: 'VN_NETWORK_INTEGRATION',
-  definition: [
-    { name: 'votingPower', type: DATA.TYPE_UINT48 }
-  ]
-};
-
-VALIDATOR_NODE[VN_SIGNATURE] = {
-  label: 'VN_SIGNATURE',
-  definition: [
-    { name: 'signature', type: DATA.TYPE_BINARY }
-  ]
-};
- */
-
 
 /**
- * @see {VN_SIG_SCHEME}
+ * @see {VN_CREATION}
  */
-export interface ValidatorNodeSigSchemeSection {
-    schemeId: SignatureSchemeId
-}
-
-/**
- * @see {VN_DECLARATION}
- */
-export interface ValidatorNodeDeclarationSection {
+export interface ValidatorNodeCreationSection {
     organizationId: Uint8Array
 }
 
@@ -365,50 +302,15 @@ export type ValidatorNodeSignatureSection = SignatureSection
 // ---------------------------------------------------------------------------
 // Organizations Sections
 // ---------------------------------------------------------------------------
-/*
-ORGANIZATION[ORG_SIG_SCHEME] = {
-    label: 'ORG_SIG_SCHEME',
-    definition: [
-        { name: 'schemeId', type: DATA.TYPE_UINT8 }
-    ]
-};
-
-ORGANIZATION[ORG_PUBLIC_KEY] = {
-    label: 'ORG_PUBLIC_KEY',
-    definition: [
-        { name: 'publicKey', type: DATA.TYPE_BINARY }
-    ]
-};
-
-ORGANIZATION[ORG_DESCRIPTION] = {
-    label: 'ORG_DESCRIPTION',
-    definition: [
-        { name: 'name',        type: DATA.TYPE_STRING },
-        { name: 'city',        type: DATA.TYPE_STRING },
-        { name: 'countryCode', type: DATA.TYPE_STRING, size: 2 },
-        { name: 'website',     type: DATA.TYPE_STRING }
-    ]
-};
-
-ORGANIZATION[ORG_SIGNATURE] = {
-    label: 'ORG_SIGNATURE',
-    definition: [
-        { name: 'signature', type: DATA.TYPE_BINARY }
-    ]
-};
-
- */
-
-
 
 
 /**
- * @see {ORG_PUBLIC_KEY}
+ * @see {ORG_CREATION}
  */
-export interface OrganizationPublicKeySection {
-    publicKey: Uint8Array,
-    schemeId: SignatureSchemeId
+export interface OrganizationCreationSection {
+    accountId: Uint8Array
 }
+
 
 /**
  * @see {ORG_DESCRIPTION}
@@ -480,13 +382,6 @@ APPLICATION[APP_SIGNATURE] = {
  */
 
 /**
- * @see {APP_SIG_SCHEME}
- */
-export interface ApplicationSigSchemeSection {
-    schemeId: SignatureSchemeId
-}
-
-/**
  * @see {APP_DESCRIPTION}
  */
 export interface ApplicationDescriptionSection {
@@ -497,9 +392,9 @@ export interface ApplicationDescriptionSection {
 }
 
 /**
- * @see {APP_DECLARATION}
+ * @see {APP_CREATION}
  */
-export interface ApplicationDeclarationSection {
+export interface ApplicationCreationSection {
     organizationId: Uint8Array
 }
 
@@ -706,9 +601,9 @@ export interface ApplicationLedgerActorCreationSection {
 }
 
 /**
- * @see {APP_LEDGER_DECLARATION}
+ * @see {APP_LEDGER_CREATION}
  */
-export interface ApplicationLedgerDeclarationSection {
+export interface ApplicationLedgerCreationSection {
     applicationId: Uint8Array
 }
 

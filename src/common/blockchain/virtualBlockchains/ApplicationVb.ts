@@ -32,12 +32,6 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
         return checker.checkMicroblockStructure(microblock);
     }
 
-    async getOrganizationPublicKey(): Promise<PublicSignatureKey> {
-        const organizationId = this.internalState.getOrganizationId();
-        const organization = await this.provider.loadOrganizationVirtualBlockchain(organizationId);
-        return await organization.getPublicKey();
-    }
-
     /*
     async setSignatureScheme(object: any) {
         await this.addSection(SECTIONS.APP_SIG_SCHEME, object);

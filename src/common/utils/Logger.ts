@@ -37,4 +37,8 @@ export class Logger {
     static getInternalStateUpdaterLogger(name: string) {
         return this.getLogger(['internal-state-updater', name])
     }
+
+    static getAbstractProviderLogger(name: string) {
+        return this.getLogger(['provider', name])
+    }
 }

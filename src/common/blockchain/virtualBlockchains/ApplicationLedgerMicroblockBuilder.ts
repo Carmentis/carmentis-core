@@ -3,7 +3,7 @@ import {Microblock} from "../microblock/Microblock";
 import {MicroBlockNotFoundInVirtualBlockchainAtHeightError} from "../../errors/carmentis-error";
 import {Section} from "../../type/Section";
 import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
-import {Height} from "../../common";
+import {Height, Provider} from "../../common";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {IApplicationLedgerInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
@@ -11,11 +11,9 @@ import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStat
 
 export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFailureFallback {
 
-    private stateUpdater: IApplicationLedgerInternalStateUpdater;
-    constructor(protected mbUnderConstruction: Microblock, protected vb: ApplicationLedgerVb) {
-        this.stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(
-            mbUnderConstruction.getLocalStateUpdateVersion()
-        );
+    private stateUpdater?: IApplicationLedgerInternalStateUpdater;
+    constructor(protected mbUnderConstruction: Microblock, protected vb: ApplicationLedgerVb, private provider: Provider) {
+
     }
 
     onMicroblockSearchFailureForExceedingHeight(vb: VirtualBlockchain, askedHeight: Height): Promise<Microblock> {
@@ -29,6 +27,15 @@ export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFail
     }
 
     protected async updateStateWithSection(section: Section) {
+        // if not already defined, create the state updater with the current protocol state
+        if (!this.stateUpdater)  {
+            const variables = await this.provider.getProtocolVariables();
+            this.stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(
+                variables.getApplicationLedgerInternalStateUpdaterVersion()
+            );
+        }
+
+        // update the internal state with the new section
         this.vb.setInternalState(
             await this.stateUpdater.updateStateFromSection(
                 this.vb.getInternalState(),
@@ -38,7 +45,7 @@ export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFail
         )
     }
 
-    protected getLocalState() {
+    protected getInternalState() {
         return this.vb.getInternalState();
     }
 

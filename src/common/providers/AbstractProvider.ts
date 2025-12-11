@@ -13,9 +13,11 @@ import {VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
 import {VirtualBlockchainStatus} from "../type/VirtualBlockchainStatus";
 import {ProtocolInternalState} from "../blockchain/internalStates/ProtocolInternalState";
 import {InternalStateFactory} from "../blockchain/internalStates/InternalStateFactory";
+import {Logger} from "../utils/Logger";
+import {Utils} from "../utils/utils";
 
 export abstract class AbstractProvider implements IProvider {
-
+    private log = Logger.getAbstractProviderLogger(AbstractProvider.name);
 
     async loadValidatorNodeVirtualBlockchain(validatorNodeId: Hash) {
         const vb = new ValidatorNodeVb(this);
@@ -24,6 +26,7 @@ export abstract class AbstractProvider implements IProvider {
     }
 
     async loadAccountVirtualBlockchain(accountId: Hash) {
+        this.log.debug(`Loading account virtual blockchain with id ${accountId.encode()}`)
         const vb = new AccountVb(this);
         await this.initializeVirtualBlockchain(vb, accountId);
         return vb;

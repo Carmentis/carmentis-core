@@ -142,7 +142,6 @@ export * from "./economics/currencies/euros";
 export * from "./economics/currencies/token";
 export * from "./entities/AccountState";
 export * from "./entities/Hash";
-export * from "./entities/MicroBlockHeaderDto";
 export * from "./entities/Optional";
 export * from "./entities/ProofVerificationResult";
 export * from "./errors/carmentis-error";

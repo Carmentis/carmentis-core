@@ -204,6 +204,7 @@ export * from "./utils/BinaryToStringEncoderInterface";
 export * from "./utils/BlockchainUtils";
 export * from "./utils/HCVCodec";
 export * from "./utils/Logger";
+export * from "./utils/SectionLabel";
 export * from "./utils/SeedEncoder";
 export * from "./utils/WalletSeedEncoder";
 export * from "./utils/encoder";

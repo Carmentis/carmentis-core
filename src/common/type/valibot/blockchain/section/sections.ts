@@ -137,13 +137,6 @@ export const ValidatorNodeVotingPowerUpdateSectionSchema = val.object({
 })
 export type ValidatorNodeVotingPowerUpdateSection = val.InferOutput<typeof ValidatorNodeVotingPowerUpdateSectionSchema>;
 
-export const ValidatorNodeSignatureSectionSchema = val.object({
-    type: val.literal(SectionType.VN_SIGNATURE),
-    schemeId: uint8(),
-    signature: uint8array(),
-})
-export type ValidatorNodeSignatureSection = val.InferOutput<typeof ValidatorNodeSignatureSectionSchema>;
-
 
 // ---------------------------------------------------------------------------
 // Organization Sections
@@ -305,7 +298,6 @@ export const SectionSchema = val.variant(
         ValidatorNodeCometbftPublicKeyDeclarationSectionSchema,
         ValidatorNodeRpcEndpointSectionSchema,
         ValidatorNodeVotingPowerUpdateSectionSchema,
-        ValidatorNodeSignatureSectionSchema,
 
         OrganizationCreationSectionSchema,
         OrganizationDescriptionSectionSchema,

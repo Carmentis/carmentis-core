@@ -37,7 +37,6 @@ import {
     SignatureSection,
     ValidatorNodeCometbftPublicKeyDeclarationSection, ValidatorNodeCreationSection,
     ValidatorNodeRpcEndpointSection,
-    ValidatorNodeSignatureSection,
     ValidatorNodeVotingPowerUpdateSection
 } from "../../type/valibot/blockchain/section/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";

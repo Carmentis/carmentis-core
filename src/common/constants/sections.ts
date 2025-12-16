@@ -158,8 +158,6 @@ export const VN_CREATION         = SectionType.VN_CREATION;
 export const VN_COMETBFT_PUBLIC_KEY_DECLARATION         = SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION;
 export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
 export const VN_VOTING_POWER_UPDATE = SectionType.VN_VOTING_POWER_UPDATE;
-export const VN_SIGNATURE           = SectionType.VN_SIGNATURE;
-
 const VALIDATOR_NODE: Schema[] = [] as const;
 
 
@@ -192,8 +190,6 @@ VALIDATOR_NODE[VN_VOTING_POWER_UPDATE] = {
     { name: 'votingPower', type: DATA.TYPE_UINT48 }
   ]
 };
-
-VALIDATOR_NODE[VN_SIGNATURE] = SIGNATURE_SCHEMA
 
 // ============================================================================================================================ //
 //  Organization                                                                                                                //

@@ -18,23 +18,11 @@ export class BlockchainSerializer {
     }
 
     static serializeMicroblockHeader(header: MicroblockHeader): Uint8Array {
-        return encode(header);
-        /*
-        const unserializer = new SchemaSerializer<MicroblockHeaderObject>(SCHEMAS.MICROBLOCK_HEADER);
-        const object = unserializer.serialize(header);
-        return object;
-
-         */
+        return encode(v.parse(MicroblockHeaderSchema,header));
     }
 
     static unserializeMicroblockHeader(serializedHeader: Uint8Array): MicroblockHeader {
         const decoded = decode(serializedHeader);
         return v.parse(MicroblockHeaderSchema, decoded);
-
-        /*
-        const unserializer = new SchemaUnserializer<MicroblockHeaderObject>(SCHEMAS.MICROBLOCK_HEADER);
-        const object = unserializer.unserialize(serializedHeader);
-        return object;
-         */
     }
 }

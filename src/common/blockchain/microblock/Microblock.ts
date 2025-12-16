@@ -49,7 +49,7 @@ import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {Logger} from "../../utils/Logger";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {MicroblockHeader} from "../../type/valibot/blockchain/microblock/MicroblockHeader";
-import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {BlockchainUtils} from "../../utils/BlockchainUtils";
 import {MicroblockBody} from "../../type/valibot/blockchain/microblock/MicroblockBody";
 
 /**

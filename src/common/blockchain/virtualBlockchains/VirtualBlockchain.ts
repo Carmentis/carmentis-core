@@ -14,7 +14,7 @@ import {Logger} from "../../utils/Logger";
 import {IProvider} from "../../providers/IProvider";
 import {OnMicroblockInsertionEventListener} from "./events/OnMicroblockInsertedEventListener";
 import {IInternalState} from "../internalStates/IInternalState";
-import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {BlockchainUtils} from "../../utils/BlockchainUtils";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {Utils} from "../../utils/utils";
 import {VirtualBlockchainState} from "../../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";

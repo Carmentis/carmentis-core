@@ -206,7 +206,7 @@ export * from "./utils/HCVCodec";
 export * from "./utils/Logger";
 export * from "./utils/SeedEncoder";
 export * from "./utils/WalletSeedEncoder";
-export * from "./utils/blockchainUtils";
+export * from "./utils/BlockchainUtils";
 export * from "./utils/encoder";
 export * from "./utils/utils";
 export * from "./wallet/AccountCrypto";

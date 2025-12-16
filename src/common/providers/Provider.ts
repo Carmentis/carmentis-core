@@ -1,4 +1,4 @@
-import {BlockchainUtils} from "../utils/blockchainUtils";
+import {BlockchainUtils} from "../utils/BlockchainUtils";
 import {Utils} from "../utils/utils";
 import {CryptographicHash, Sha256CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";

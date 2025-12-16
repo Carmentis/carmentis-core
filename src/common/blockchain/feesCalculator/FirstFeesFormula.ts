@@ -5,7 +5,7 @@ import {ECO} from "../../constants/constants";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {Section} from "../../type/valibot/blockchain/section/sections";
-import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {BlockchainUtils} from "../../utils/BlockchainUtils";
 
 /**
  * FirstFeesFormula is a concrete implementation of the IFeesFormula interface.

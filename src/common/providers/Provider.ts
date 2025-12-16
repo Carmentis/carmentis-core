@@ -9,12 +9,7 @@ import {
     BlockInformationDTO,
     ChainInformationDTO,
     GenesisSnapshotDTO,
-    MicroblockBody,
-    MicroblockHeaderObject,
-    MicroblockInformationSchema,
-    MsgVirtualBlockchainState,
-    ObjectList, VirtualBlockchainState,
-    VirtualBlockchainStateDto
+    ObjectList,
 } from "../type/types";
 import {Hash} from "../entities/Hash";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
@@ -25,9 +20,13 @@ import {Microblock} from "../blockchain/microblock/Microblock";
 import {Assertion} from "../utils/Assertion";
 import {IInternalProvider} from "./IInternalProvider";
 import {IExternalProvider} from "./IExternalProvider";
-import {VirtualBlockchainStatus} from "../type/VirtualBlockchainStatus";
 import {AbstractProvider} from "./AbstractProvider";
 import {ProtocolInternalState} from "../blockchain/internalStates/ProtocolInternalState";
+import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
+import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBody";
+import {MicroblockHeader} from "../type/valibot/blockchain/microblock/MicroblockHeader";
+import {VirtualBlockchainStatus} from "../type/valibot/provider/VirtualBlockchainStatus";
+import {MicroblockInformation} from "../type/valibot/provider/MicroblockInformation";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -92,13 +91,15 @@ export class Provider extends AbstractProvider {
     }
 
     async getVirtualBlockchainState(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainState | null> {
-        // TODO log
+        this.logger.debug(`Getting state for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)}`);
         const serializedVirtualBlockchainState = await this.internalProvider.getSerializedVirtualBlockchainState(virtualBlockchainId);
         if (serializedVirtualBlockchainState !== null) {
+            this.logger.debug(`State for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)} found locally`);
             return BlockchainUtils.decodeVirtualBlockchainState(serializedVirtualBlockchainState)
         } else {
             const receivedSerializedVirtualBlockchainState = await this.externalProvider.getSerializedVirtualBlockchainState(virtualBlockchainId);
             if (receivedSerializedVirtualBlockchainState) {
+                this.logger.debug(`State for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)} found online`);
                 await this.internalProvider.setSerializedVirtualBlockchainState(virtualBlockchainId, receivedSerializedVirtualBlockchainState);
                 return BlockchainUtils.decodeVirtualBlockchainState(receivedSerializedVirtualBlockchainState);
             } else {
@@ -107,7 +108,7 @@ export class Provider extends AbstractProvider {
         }
     }
 
-    async getAccountHashByPublicKey(
+    async getAccountIdByPublicKey(
         publicKey: PublicSignatureKey,
         hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
     ) {
@@ -122,7 +123,10 @@ export class Provider extends AbstractProvider {
         if (state === null) {
           throw new Error(`Cannot get protocol parameters from the internal provider`);
         }
-        return state.internalState as ProtocolInternalState;
+        if (state.type !== VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN) throw new Error(
+            `Expected protocol virtual blockchain, got ${VirtualBlockchainType[state.type]}`
+        )
+        return ProtocolInternalState.createFromObject(state.internalState);
     }
 
     async getProtocolVirtualBlockchainId(): Promise<Hash> {
@@ -148,6 +152,7 @@ export class Provider extends AbstractProvider {
         return await this.externalProvider.getObjectList(type);
     }
 
+    /*
     async storeMicroblock(hash: Uint8Array, virtualBlockchainId: Uint8Array, virtualBlockchainType: number, height: number, headerData: Uint8Array, bodyData: Uint8Array) {
         Assertion.assert(virtualBlockchainId instanceof Uint8Array, `virtualBlockchainId must be an Uint8Array: got ${typeof virtualBlockchainId}`);
         Assertion.assert(headerData instanceof Uint8Array, `headerData must be an Uint8Array: got ${typeof headerData}`);
@@ -178,21 +183,25 @@ export class Provider extends AbstractProvider {
         await this.internalProvider.setSerializedVirtualBlockchainState(virtualBlockchainId, stateData);
     }
 
-    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema|null> {
-        const data = await this.internalProvider.getMicroblockVbInformation(hash);
-        const header = await this.internalProvider.getSerializedMicroblockHeader(hash);
+     */
+
+    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation|null> {
+        const data = await this.internalProvider.getInformationOfVirtualBlockchainContainingMicroblock(hash);
+        const header = await this.internalProvider.getMicroblockHeader(hash);
 
         if(data && header) {
           return {
-            ...BlockchainUtils.decodeMicroblockVbInformation(data),
+            ...data,
             header
           };
         }
 
         const info = await this.externalProvider.getMicroblockInformation(hash);
-
-        if(info) {
-            const data = BlockchainUtils.encodeMicroblockVbInformation(info.virtualBlockchainType, info.virtualBlockchainId);
+        if (info) {
+            const data = BlockchainUtils.encodeVirtualBlockchainInfo({
+                virtualBlockchainId: info.virtualBlockchainId,
+                virtualBlockchainType: info.virtualBlockchainType,
+            });
             await this.internalProvider.setMicroblockVbInformation(hash, data);
             await this.internalProvider.setMicroblockHeader(hash, info.header);
             return info;
@@ -222,14 +231,14 @@ export class Provider extends AbstractProvider {
         if (missingHashes.length) {
             const externalData = await this.externalProvider.getMicroblockBodys(missingHashes);
 
-            if(externalData === null) {
+            if (externalData === null) {
               throw new Error(`Unable to load microblock bodies`);
             }
 
             // save missing data in the internal provider and update res[]
             for (const { hash, body } of externalData.list) {
                 const serializedBody = body;
-                await this.internalProvider.setMicroblockBody(hash, serializedBody);
+                await this.internalProvider.setSerializedMicroblockBody(hash, serializedBody);
                 const decodedBody = BlockchainUtils.decodeMicroblockBody(serializedBody);
                 res.push({ hash, body: decodedBody });
             }
@@ -244,6 +253,7 @@ export class Provider extends AbstractProvider {
     async getMicroblockBody(microblockHash: Hash): Promise<MicroblockBody | null> {
         const serializedBody = await this.internalProvider.getMicroblockBody(microblockHash.toBytes());
         if (serializedBody instanceof Uint8Array) {
+            this.logger.debug(`Body for microblock ${microblockHash.encode()} found locally`)
             return BlockchainUtils.decodeMicroblockBody(serializedBody)
         } else {
             const externalData = await this.externalProvider.getMicroblockBodys([
@@ -252,21 +262,22 @@ export class Provider extends AbstractProvider {
             if (externalData !== null && externalData.list.length !== 0) {
                 const bodyResponse = externalData.list[0];
                 const serializedBody = bodyResponse.body;
-                await this.internalProvider.setMicroblockBody(microblockHash.toBytes(), serializedBody);
+                await this.internalProvider.setSerializedMicroblockBody(microblockHash.toBytes(), serializedBody);
                 const decodedBody = BlockchainUtils.decodeMicroblockBody(serializedBody);
+                this.logger.debug(`Body for microblock ${microblockHash.encode()} found online`)
                 return decodedBody;
             }
         }
         // we do not have found the microblock body
-        // TODO: log
+        this.logger.warning(`Body for microblock ${microblockHash.encode()} not found`)
         return null;
     }
-    async getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeaderObject | null> {
+    async getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeader | null> {
         const serializedHedaer = await this.internalProvider.getSerializedMicroblockHeader(microblockHash.toBytes());
         if (serializedHedaer instanceof Uint8Array) return BlockchainUtils.decodeMicroblockHeader(serializedHedaer);
         const receivedSerializedHeader = await this.externalProvider.getMicroblockInformation(microblockHash.toBytes());
         if (receivedSerializedHeader !== null) {
-            return BlockchainUtils.decodeMicroblockHeader(receivedSerializedHeader.header);
+            return receivedSerializedHeader.header;
         } else {
             throw new MicroBlockNotFoundError();
         }
@@ -274,9 +285,8 @@ export class Provider extends AbstractProvider {
 
     async getVirtualBlockchainIdContainingMicroblock(microblockHash: Hash): Promise<Hash> {
         // TODO: log
-        const serializedINfo = await this.internalProvider.getMicroblockVbInformation(microblockHash.toBytes());
-        if (serializedINfo !== null) {
-             const info = BlockchainUtils.decodeMicroblockVbInformation(serializedINfo);
+        const info = await this.internalProvider.getInformationOfVirtualBlockchainContainingMicroblock(microblockHash.toBytes());
+        if (info !== null) {
              return Hash.from(info.virtualBlockchainId);
         } else {
             const receivedInfo = await this.externalProvider.getMicroblockInformation(microblockHash.toBytes());
@@ -404,12 +414,12 @@ export class Provider extends AbstractProvider {
             for(let n = 0; n < vbUpdate.headers.length; n++) {
                 await this.internalProvider.setMicroblockVbInformation(
                     check.hashes[n],
-                    BlockchainUtils.encodeMicroblockVbInformation(
-                        vbState.type,
+                    BlockchainUtils.encodeVirtualBlockchainInfo({
+                        virtualBlockchainType: vbState.type,
                         virtualBlockchainId
-                    )
+                    })
                 );
-                await this.internalProvider.setMicroblockHeader(
+                await this.internalProvider.setSerializedMicroblockHeader(
                     check.hashes[n],
                     vbUpdate.headers[n]
                 );

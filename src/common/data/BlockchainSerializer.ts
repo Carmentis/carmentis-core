@@ -1,7 +1,6 @@
-import {MicroblockHeaderObject} from "../type/types";
-import {SchemaSerializer, SchemaUnserializer} from "./schemaSerializer";
-import {SCHEMAS} from "../constants/constants";
-import {decode, encode} from 'cbor2';
+import {decode, encode} from 'cbor-x';
+import {MicroblockHeader, MicroblockHeaderSchema} from "../type/valibot/blockchain/microblock/MicroblockHeader";
+import * as v from 'valibot';
 
 export class BlockchainSerializer {
     static serializeMicroblockSerializedHeaderAndBody(serializedHeader: Uint8Array, serializedBody: Uint8Array): Uint8Array {
@@ -12,20 +11,30 @@ export class BlockchainSerializer {
     }
 
     static unserializeMicroblockSerializedHeaderAndBody(serializedMicroblockSerializedHeaderAndBody: Uint8Array) {
-        return decode<{ serializedHeader: Uint8Array, serializedBody: Uint8Array }>(
+        // TODO: use a specific object or do better
+        return decode(
             serializedMicroblockSerializedHeaderAndBody
-        )
+        ) as { serializedHeader: Uint8Array, serializedBody: Uint8Array }
     }
 
-    static serializeMicroblockHeader(header: MicroblockHeaderObject): Uint8Array {
+    static serializeMicroblockHeader(header: MicroblockHeader): Uint8Array {
+        return encode(header);
+        /*
         const unserializer = new SchemaSerializer<MicroblockHeaderObject>(SCHEMAS.MICROBLOCK_HEADER);
         const object = unserializer.serialize(header);
         return object;
+
+         */
     }
 
-    static unserializeMicroblockHeader(serializedHeader: Uint8Array) {
+    static unserializeMicroblockHeader(serializedHeader: Uint8Array): MicroblockHeader {
+        const decoded = decode(serializedHeader);
+        return v.parse(MicroblockHeaderSchema, decoded);
+
+        /*
         const unserializer = new SchemaUnserializer<MicroblockHeaderObject>(SCHEMAS.MICROBLOCK_HEADER);
         const object = unserializer.unserialize(serializedHeader);
         return object;
+         */
     }
 }

@@ -2,7 +2,6 @@ import {CHAIN, ECO, SCHEMAS, SECTIONS} from "../../constants/constants";
 import {SchemaSerializer, SchemaUnserializer} from "../../data/schemaSerializer";
 import {Utils} from "../../utils/utils";
 import {Crypto} from "../../crypto/crypto";
-import {MicroblockBody, MicroblockHeaderObject} from "../../type/types";
 import {Hash} from "../../entities/Hash";
 import {
     CarmentisError,
@@ -10,13 +9,12 @@ import {
     IllegalStateError,
     SectionNotFoundError
 } from "../../errors/carmentis-error";
-import {SectionType} from "../../type/SectionType";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {
     AccountCreationSection,
     AccountEscrowTransferSection,
     AccountPublicKeySection,
-    AccountSignatureSection,
     AccountStakeSection,
     AccountTokenIssuanceSection,
     AccountTransferSection,
@@ -28,35 +26,31 @@ import {
     ApplicationLedgerAllowedPkeSchemesSection,
     ApplicationLedgerAllowedSigSchemesSection,
     ApplicationLedgerAuthorSection,
-    ApplicationLedgerAuthorSignatureSection,
     ApplicationLedgerChannelCreationSection,
     ApplicationLedgerChannelInvitationSection,
     ApplicationLedgerCreationSection,
     ApplicationLedgerEndorsementRequestSection,
-    ApplicationLedgerEndorserSignatureSection,
-    ApplicationLedgerPrivateChannelSection,
-    ApplicationLedgerPublicChannelSection,
-    ApplicationLedgerSharedKeySection,
-    ApplicationSignatureSection, OrganizationCreationSection,
+    OrganizationCreationSection,
     OrganizationDescriptionSection,
-    OrganizationSignatureSection,
     ProtocolCreationSection,
-    ProtocolSignatureSection, ProtocolUpdateSection,
+    ProtocolUpdateSection, Section,
     SignatureSection,
     ValidatorNodeCometbftPublicKeyDeclarationSection, ValidatorNodeCreationSection,
     ValidatorNodeRpcEndpointSection,
     ValidatorNodeSignatureSection,
     ValidatorNodeVotingPowerUpdateSection
-} from "../../type/sections";
+} from "../../type/valibot/blockchain/section/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {CMTSToken} from "../../economics/currencies/token";
 import {EncoderFactory} from "../../utils/encoder";
-import {Section} from "../../type/Section";
 import {TimestampValidationResult} from "./TimestampValidationResult";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {Logger} from "../../utils/Logger";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
+import {MicroblockHeader} from "../../type/valibot/blockchain/microblock/MicroblockHeader";
+import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {MicroblockBody} from "../../type/valibot/blockchain/microblock/MicroblockBody";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -148,7 +142,7 @@ export class Microblock {
         return Microblock.loadFromSerializedHeaderAndBody(serializedHeader, serializedBody, expectedMbType);
     }
 
-    static loadFromHeaderAndBody(header: MicroblockHeaderObject, body: MicroblockBody, expectedMbType?: VirtualBlockchainType): Microblock {
+    static loadFromHeaderAndBody(header: MicroblockHeader, body: MicroblockBody, expectedMbType?: VirtualBlockchainType): Microblock {
         // Validate that expected type matches if provided
         const microblockType = header.microblockType;
         if (expectedMbType !== undefined && expectedMbType !== microblockType) {
@@ -168,15 +162,25 @@ export class Microblock {
             throw new Error(`invalid protocol version (expected ${CHAIN.PROTOCOL_VERSION}, got ${header.protocolVersion})`);
         }
 
-
-        // parse the body
+        mb.addSections(body.body);
+        /*
         for (const {type, data} of body.body) {
             const sectionSchema = SECTIONS.DEF[microblockType][type];
             const unserializer = new SchemaUnserializer(sectionSchema);
             const object = unserializer.unserialize(data);
 
-            mb.storeSection(type, object, data);
+            const hash = Crypto.Hashes.sha256AsBinary(data);
+            const index = this.sections.length;
+
+            const section = {type, object, data, hash, index};
+            this.sections.push(section);
+
+            //mb.storeSection(type, object, data);
         }
+
+         */
+
+
 
 
 
@@ -238,6 +242,11 @@ export class Microblock {
         }
 
         // parse the body
+        const body = BlockchainUtils.decodeMicroblockBody(serializedBody);
+        for (const section of body.body) {
+            mb.addSection(section)
+        }
+        /*
         const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY);
         // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
         const body = bodyUnserializer.unserialize(serializedBody).body;
@@ -248,6 +257,8 @@ export class Microblock {
 
             mb.storeSection(type, object, data);
         }
+
+         */
 
         return mb;
     }
@@ -262,19 +273,17 @@ export class Microblock {
         return Microblock.computeBodyHashFromSections([])
     }
 
-    private static computeMicroblockHash(header: MicroblockHeaderObject) {
+    private static computeMicroblockHash(header: MicroblockHeader) {
         const headerData = BlockchainSerializer.serializeMicroblockHeader(header);
         return Crypto.Hashes.sha256AsBinary(headerData);
     }
 
     private static computeBodyHashFromSections(sections: Section[]): Uint8Array {
-        const body = {
-            body: sections.map(({ type, data }) => ({type, data}))
-        };
-        const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
-        const bodyData = bodySerializer.serialize(body);
-        return Crypto.Hashes.sha256AsBinary(bodyData);
-
+        const body: MicroblockBody = {
+            body: sections
+        }
+        const serializedBody = BlockchainUtils.encodeMicroblockBody(body);
+        return Crypto.Hashes.sha256AsBinary(serializedBody);
     }
 
 
@@ -323,13 +332,13 @@ export class Microblock {
 
     /**
      * Represents the header for a microblock.
-     * The `MicroblockHeaderObject` provides metadata and essential details about the microblock,
+     * The `MicroblockHeader` provides metadata and essential details about the microblock,
      * such as its version, parent block reference, microblock sequence, and other relevant data.
      *
      * This object is integral for validating and processing microblocks and ensuring they
      * are chained properly within their respective blockchains.
      */
-    private header: MicroblockHeaderObject;
+    private header: MicroblockHeader;
 
     /**
      * Represents an array of sections.
@@ -352,7 +361,7 @@ export class Microblock {
         const defaultExpirationDay = 0;
         const defaultTimestampInSeconds = Math.floor(Date.now() / 1000);
         const defaultGasPrice = CMTSToken.zero().getAmountAsAtomic();
-        const initialHeader : MicroblockHeaderObject = {
+        const initialHeader : MicroblockHeader = {
             magicString: CHAIN.MAGIC_STRING,
             protocolVersion: CHAIN.PROTOCOL_VERSION,
             microblockType: type,
@@ -411,17 +420,6 @@ export class Microblock {
         if (this.sections.length == 0) return false;
         return this.sections[this.sections.length - 1].type === SectionType.SIGNATURE;
     }
-
-    /**
-     * Returns the size of the microblock in bytes.
-     *
-     * The size does not include the last section of the microblock when the last section is the signature section.
-     */
-    getSizeInBytes(): number {
-        // TODO: exclude the size of the last section when it is the signature section
-        return this.serialize().microblockData.length;
-    }
-
 
     /**
      Updates the timestamp.
@@ -513,9 +511,7 @@ export class Microblock {
 
    
 
-    /**
-     Stores a section, including its serialized data, hash and index.
-     */
+    /*
     private storeSection(type: SectionType, object: any, data: Uint8Array): Section {
         const hash = Crypto.Hashes.sha256AsBinary(data);
         const index = this.sections.length;
@@ -532,6 +528,8 @@ export class Microblock {
         return section;
     }
 
+     */
+
 
 
     computeBodyHash() {
@@ -546,11 +544,17 @@ export class Microblock {
     }
 
     serializedBody(): Uint8Array {
+        return BlockchainUtils.encodeMicroblockBody({
+            body: this.sections
+        })
+        /*
         const body = {
             body: this.sections.map(({ type, data }) => ({type, data}))
         };
         const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
         return bodySerializer.serialize(body);
+
+         */
     }
 
 
@@ -580,7 +584,7 @@ export class Microblock {
      * @param callback
      * @throws SectionNotFoundError When no section matches.
      */
-    getSection<T = any>(callback: (section: Section) => boolean): Section<T> {
+    getSection<T = any>(callback: (section: Section) => boolean): Section {
         const section = this.sections.find((section: Section) => callback(section));
         if (section === undefined) throw new SectionNotFoundError()
         return section;
@@ -599,22 +603,13 @@ export class Microblock {
     /**
      Returns all sections for which the given callback function returns true.
      */
-    getSections<T = any>(callback: (section: Section) => boolean): Section<T>[] {
+    getSections<T = any>(callback: (section: Section) => boolean): Section[] {
         return this.sections.filter((section: Section) => callback(section));
     }
 
-    getSectionsByType<T = any>(sectionType: SectionType): Section<T>[] {
+    getSectionsByType<T = any>(sectionType: SectionType): Section[] {
         return this.getSections(s => s.type === sectionType);
     }
-
-    getPublicChannelDataSections(): Section<ApplicationLedgerPublicChannelSection>[] {
-        return this.getSectionsByType<ApplicationLedgerPublicChannelSection>(SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA);
-    }
-
-    getPrivateChannelDataSections(): Section<ApplicationLedgerPrivateChannelSection>[] {
-        return this.getSectionsByType<ApplicationLedgerPrivateChannelSection>(SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA);
-    }
-
 
 
     /**
@@ -623,8 +618,8 @@ export class Microblock {
      * @template T - The type of data contained within the sections.
      * @return {Section<T>[]} An array of sections with the specified type.
      */
-    getAllSections<T = any>(): Section<T>[] {
-        return this.getSections<T>(_ => true)
+    getAllSections(): Section[] {
+        return this.sections
     }
 
     /**
@@ -664,7 +659,7 @@ export class Microblock {
      */
     async verify(publicKey: PublicSignatureKey, includeGas: boolean = true) {
         const signatureSection = this.getLastSignatureSection();
-        const signature = signatureSection.object.signature;
+        const signature = signatureSection.signature;
         return await this.verifySignature(publicKey, signature, includeGas);
     }
 
@@ -720,7 +715,7 @@ export class Microblock {
             shouldBeSigned && this.isLastSectionSignature() ?  numberOfSections - 1 : numberOfSections
         );
 
-        const signedHeader: MicroblockHeaderObject = {
+        const signedHeader: MicroblockHeader = {
             ...this.header,
             gas: includeGas ? this.header.gas : 0,
             gasPrice: includeGas ? this.header.gasPrice : 0,
@@ -745,20 +740,6 @@ export class Microblock {
 
     getIndexOfSection(sectionType: SectionType): number {
         return this.sections.findIndex(section => section.type === sectionType);
-    }
-
-
-    computeGas(extraBytes = 0) {
-        const totalSize = this.sections.reduce((total: number, section: Section) =>
-            total + section.data.length,
-            extraBytes
-        );
-        return CMTSToken.createAtomic(
-            ECO.FIXED_GAS_FEE + ECO.GAS_PER_BYTE * totalSize
-        );
-    }
-
-    computeRetentionPeriod(mbTimestamp: number, expirationDay: number) {
     }
 
     /**
@@ -807,30 +788,42 @@ export class Microblock {
         if (feesPayerAccount) this.setFeesPayerAccount(feesPayerAccount);
         const signature = await this.sign(privateKey, true);
         const signatureSectionObject: SignatureSection = {
+            type: SectionType.SIGNATURE,
             signature,
             schemeId: privateKey.getSignatureSchemeId()
         }
-        this.addSection(SectionType.SIGNATURE, signatureSectionObject);
+        this.addSection(signatureSectionObject);
     }
 
+
+    addSections(sections: Section[]) {
+        Microblock.logger.debug("Adding multiple sections to microblock")
+        this.sections.push(...sections);
+        // we update the body hash and microblock hash
+        this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
+        this.hash = Microblock.computeMicroblockHash(this.header)
+    }
 
     /**
      * Adds a new section of the specified type, serializes the provided object, and stores it.
      *
-     * @param {SectionType} type - The type of the section to be added.
-     * @param {any} object - The data object to be serialized and added as a section.
-     * @return {Section} The newly created and stored section.
+     * @param {Section} section - The created section.
      */
-    addSection(type: SectionType, object: any): Section {
-        Microblock.logger.debug("Adding section of type {type} to microblock: {object}", () => ({
-            type,
-            object
+    addSection(section: Section) {
+        Microblock.logger.debug("Adding section of type {type} to microblock", () => ({
+            type: section.type
         }))
+        this.sections.push(section);
+        // we update the body hash and microblock hash
+        this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
+        this.hash = Microblock.computeMicroblockHash(this.header)
+        /*
         const sectionSchema = SECTIONS.DEF[this.type][type];
         const serializer = new SchemaSerializer(sectionSchema);
         const data = serializer.serialize(object);
-
         return this.storeSection(type, object, data);
+
+         */
     }
 
     /**
@@ -854,429 +847,16 @@ export class Microblock {
     }
 
     /**
-     * Adds an organization public key section.
-     */
-    addOrganizationCreationSection(object: OrganizationCreationSection) {
-        return this.addSection(SectionType.ORG_CREATION, object);
-    }
-
-    /**
-     * Adds an organization description section.
-     */
-    addOrganizationDescriptionSection(object: OrganizationDescriptionSection) {
-        return this.addSection(SectionType.ORG_DESCRIPTION, object);
-    }
-
-    /**
-     * Adds an organization signature section.
-     */
-    addOrganizationSignatureSection(object: OrganizationSignatureSection) {
-        return this.addSection(SectionType.ORG_SIGNATURE, object);
-    }
-    // Protocol sections
-
-    /**
-     * Adds a protocol public key section.
-     */
-    addProtocolCreationSection(object: ProtocolCreationSection) {
-        return this.addSection(SectionType.PROTOCOL_CREATION, object);
-    }
-
-    /**
-     * Adds a protocol protocol update section.
-     */
-    addProtocolUpdateSection(object: ProtocolUpdateSection) {
-        return this.addSection(SectionType.PROTOCOL_UPDATE, object);
-    }
-
-
-
-    /**
-     * Adds a protocol signature section.
-     */
-    addProtocolSignatureSection(object: ProtocolSignatureSection) {
-        return this.addSection(SectionType.PROTOCOL_SIGNATURE, object);
-    }
-
-    // Account sections
-
-    /**
-     * Adds an account public key section.
-     */
-    addAccountPublicKeySection(object: AccountPublicKeySection) {
-        return this.addSection(SectionType.ACCOUNT_PUBLIC_KEY, object);
-    }
-
-    /**
-     * Adds an account token issuance section.
-     */
-    addAccountTokenIssuanceSection(object: AccountTokenIssuanceSection) {
-        return this.addSection(SectionType.ACCOUNT_TOKEN_ISSUANCE, object);
-    }
-
-    /**
-     * Adds an account creation section.
-     */
-    addAccountCreationSection(object: AccountCreationSection) {
-        return this.addSection(SectionType.ACCOUNT_CREATION, object);
-    }
-
-    /**
-     * Adds an account transfer section.
-     */
-    addAccountTransferSection(object: AccountTransferSection) {
-        return this.addSection(SectionType.ACCOUNT_TRANSFER, object);
-    }
-
-    /**
-     * Adds an account vesting transfer section.
-     */
-    addAccountVestingTransferSection(object: AccountVestingTransferSection) {
-        return this.addSection(SectionType.ACCOUNT_VESTING_TRANSFER, object);
-    }
-
-    /**
-     * Adds an account escrow transfer section.
-     */
-    addAccountEscrowTransferSection(object: AccountEscrowTransferSection) {
-        return this.addSection(SectionType.ACCOUNT_ESCROW_TRANSFER, object);
-    }
-
-    /**
-     * Adds an account stake section.
-     */
-    addAccountStakeSection(object: AccountStakeSection) {
-        return this.addSection(SectionType.ACCOUNT_STAKE, object);
-    }
-
-    /**
-     * Adds an account signature section.
-     */
-    addAccountSignatureSection(object: AccountSignatureSection) {
-        return this.addSection(SectionType.ACCOUNT_SIGNATURE, object);
-    }
-
-    // Validator Node sections
-    /**
-     * Adds a validator node creation section.
-     */
-    addValidatorNodeCreationSection(object: ValidatorNodeCreationSection) {
-        return this.addSection(SectionType.VN_CREATION, object);
-    }
-
-    /**
-     * Adds a validator node cometbft public key declaration section.
-     */
-    addValidatorNodeCometbftPublicKeyDeclarationSection(object: ValidatorNodeCometbftPublicKeyDeclarationSection) {
-        return this.addSection(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION, object);
-    }
-
-    /**
-     * Adds a validator node RPC endpoint section.
-     */
-    addValidatorNodeRpcEndpointSection(object: ValidatorNodeRpcEndpointSection) {
-        return this.addSection(SectionType.VN_RPC_ENDPOINT, object);
-    }
-
-    /**
-     * Adds a validator node network integration section.
-     */
-    addValidatorNodeVotingPowerUpdateSection(object: ValidatorNodeVotingPowerUpdateSection) {
-        return this.addSection(SectionType.VN_VOTING_POWER_UPDATE, object);
-    }
-
-    /**
-     * Adds a validator node signature section.
-     */
-    addValidatorNodeSignatureSection(object: ValidatorNodeSignatureSection) {
-        return this.addSection(SectionType.VN_SIGNATURE, object);
-    }
-
-    // Application sections
-
-
-    /**
-     * Adds an application creation section.
-     */
-    addApplicationCreationSection(object: ApplicationCreationSection) {
-        return this.addSection(SectionType.APP_CREATION, object);
-    }
-
-    /**
-     * Adds an application description section.
-     */
-    addApplicationDescriptionSection(object: ApplicationDescriptionSection) {
-        return this.addSection(SectionType.APP_DESCRIPTION, object);
-    }
-
-    /**
-     * Adds an application signature section.
-     */
-    addApplicationSignatureSection(object: ApplicationSignatureSection) {
-        return this.addSection(SectionType.APP_SIGNATURE, object);
-    }
-
-    // Application Ledger sections
-    /**
-     * Adds an application ledger allowed signature schemes section.
-     */
-    addApplicationLedgerAllowedSigSchemesSection(object: ApplicationLedgerAllowedSigSchemesSection) {
-        return this.addSection(SectionType.APP_LEDGER_ALLOWED_SIG_SCHEMES, object);
-    }
-
-    /**
-     * Adds an application ledger allowed PKE schemes section.
-     */
-    addApplicationLedgerAllowedPkeSchemesSection(object: ApplicationLedgerAllowedPkeSchemesSection) {
-        return this.addSection(SectionType.APP_LEDGER_ALLOWED_PKE_SCHEMES, object);
-    }
-
-    /**
-     * Adds an application ledger creation section.
-     */
-    addApplicationLedgerCreationSection(object: ApplicationLedgerCreationSection) {
-        return this.addSection(SectionType.APP_LEDGER_CREATION, object);
-    }
-
-    /**
-     * Adds an application ledger actor creation section.
-     */
-    addApplicationLedgerActorCreationSection(object: ApplicationLedgerActorCreationSection) {
-        return this.addSection(SectionType.APP_LEDGER_ACTOR_CREATION, object);
-    }
-
-    /**
-     * Adds an application ledger channel creation section.
-     */
-    addApplicationLedgerChannelCreationSection(object: ApplicationLedgerChannelCreationSection) {
-        return this.addSection(SectionType.APP_LEDGER_CHANNEL_CREATION, object);
-    }
-
-    /**
-     * Adds an application ledger shared key section.
-     */
-    addApplicationLedgerSharedKeySection(object: ApplicationLedgerSharedKeySection) {
-        return this.addSection(SectionType.APP_LEDGER_SHARED_SECRET, object);
-    }
-
-    /**
-     * Adds an application ledger channel invitation section.
-     */
-    addApplicationLedgerChannelInvitationSection(object: ApplicationLedgerChannelInvitationSection) {
-        return this.addSection(SectionType.APP_LEDGER_CHANNEL_INVITATION, object);
-    }
-
-    /**
-     * Adds an application ledger actor subscription section.
-     */
-    addApplicationLedgerActorSubscriptionSection(object: ApplicationLedgerActorSubscriptionSection) {
-        return this.addSection(SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION, object);
-    }
-
-    /**
-     * Adds an application ledger public channel section.
-     */
-    addApplicationLedgerPublicChannelSection(object: ApplicationLedgerPublicChannelSection) {
-        return this.addSection(SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA, object);
-    }
-
-    /**
-     * Adds an application ledger private channel section.
-     */
-    addApplicationLedgerPrivateChannelSection(object: ApplicationLedgerPrivateChannelSection) {
-        return this.addSection(SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA, object);
-    }
-
-    /**
-     * Adds an application ledger author section.
-     */
-    addApplicationLedgerAuthorSection(object: ApplicationLedgerAuthorSection) {
-        return this.addSection(SectionType.APP_LEDGER_AUTHOR, object);
-    }
-
-    /**
-     * Adds an application ledger endorsement request section.
-     */
-    addApplicationLedgerEndorsementRequestSection(object: ApplicationLedgerEndorsementRequestSection) {
-        return this.addSection(SectionType.APP_LEDGER_ENDORSEMENT_REQUEST, object);
-    }
-
-    /**
-     * Adds an application ledger endorser signature section.
-     */
-    addApplicationLedgerEndorserSignatureSection(object: ApplicationLedgerEndorserSignatureSection) {
-        return this.addSection(SectionType.APP_LEDGER_ENDORSER_SIGNATURE, object);
-    }
-
-    /**
-     * Adds an application ledger author signature section.
-     */
-    addApplicationLedgerAuthorSignatureSection(object: ApplicationLedgerAuthorSignatureSection) {
-        return this.addSection(SectionType.APP_LEDGER_AUTHOR_SIGNATURE, object);
-    }
-
-
-    /**
      * Retrieves a section by its type.
      *
      * @param {number} type - The type of the section to find.
      * @return {Section} The section object that matches the specified type.
      * @throws {SectionNotFoundError} If no section with the specified type is found.
      */
-    getSectionByType<T = any>(type: number): Section<T> {
+    getSectionByType<T = any>(type: number): Section {
         const section = this.sections.find((section: Section) => section.type === type);
         if (section === undefined) throw new SectionNotFoundError();
         return section
-    }
-    
-    // Organization sections
-    getOrganizationDescriptionSection() {
-        return this.getSectionByType<OrganizationDescriptionSection>(SectionType.ORG_DESCRIPTION);
-    }
-
-    getOrganizationCreationSection() {
-        return this.getSectionByType<OrganizationCreationSection>(SectionType.ORG_CREATION);
-    }
-
-    getOrganizationSignatureSection() {
-        return this.getSectionByType<OrganizationSignatureSection>(SectionType.ORG_SIGNATURE);
-    }
-
-
-    getProtocolPublicKeySection() {
-        return this.getSectionByType<ProtocolCreationSection>(SectionType.PROTOCOL_CREATION);
-    }
-
-    getProtocolUpdateSection() {
-        return this.getSectionByType<ProtocolUpdateSection>(SectionType.PROTOCOL_UPDATE);
-    }
-
-    getProtocolSignatureSection() {
-        return this.getSectionByType<ProtocolSignatureSection>(SectionType.PROTOCOL_SIGNATURE);
-    }
-
-    getAccountPublicKeySection() {
-        return this.getSectionByType<AccountPublicKeySection>(SectionType.ACCOUNT_PUBLIC_KEY);
-    }
-
-    getAccountTokenIssuanceSection() {
-        return this.getSectionByType<AccountTokenIssuanceSection>(SectionType.ACCOUNT_TOKEN_ISSUANCE);
-    }
-
-    getAccountCreationSection() {
-        return this.getSectionByType<AccountCreationSection>(SectionType.ACCOUNT_CREATION);
-    }
-
-    getAccountTransferSection() {
-        return this.getSectionByType<AccountTransferSection>(SectionType.ACCOUNT_TRANSFER);
-    }
-
-    getAccountVestingTransferSection() {
-        return this.getSectionByType<AccountVestingTransferSection>(SectionType.ACCOUNT_VESTING_TRANSFER);
-    }
-
-    getAccountEscrowTransferSection() {
-        return this.getSectionByType<AccountEscrowTransferSection>(SectionType.ACCOUNT_ESCROW_TRANSFER);
-    }
-
-    getAccountStakeSection() {
-        return this.getSectionByType<AccountStakeSection>(SectionType.ACCOUNT_STAKE);
-    }
-
-    getAccountSignatureSection() {
-        return this.getSectionByType<AccountSignatureSection>(SectionType.ACCOUNT_SIGNATURE);
-    }
-
-    // Validator Node sections
-    getValidatorNodeCreationSection() {
-        return this.getSectionByType<ValidatorNodeCreationSection>(SectionType.VN_CREATION);
-    }
-
-    getValidatorNodeCometBFTPublicKeyDeclarationSection() {
-        return this.getSectionByType<ValidatorNodeCometbftPublicKeyDeclarationSection>(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION);
-    }
-
-    getValidatorNodeRpcEndpointSection() {
-        return this.getSectionByType<ValidatorNodeRpcEndpointSection>(SectionType.VN_RPC_ENDPOINT);
-    }
-
-    getValidatorNodeNetworkIntegrationSection() {
-        return this.getSectionByType<ValidatorNodeVotingPowerUpdateSection>(SectionType.VN_VOTING_POWER_UPDATE);
-    }
-
-    getValidatorNodeSignatureSection() {
-        return this.getSectionByType<ValidatorNodeSignatureSection>(SectionType.VN_SIGNATURE);
-    }
-
-    // Application sections
-
-    getApplicationCreationSection() {
-        return this.getSectionByType<ApplicationCreationSection>(SectionType.APP_CREATION);
-    }
-
-    getApplicationDescriptionSection() {
-        return this.getSectionByType<ApplicationDescriptionSection>(SectionType.APP_DESCRIPTION);
-    }
-
-    getApplicationSignatureSection() {
-        return this.getSectionByType<ApplicationSignatureSection>(SectionType.APP_SIGNATURE);
-    }
-
-    // Application Ledger sections
-    getApplicationLedgerAllowedSigSchemesSection() {
-        return this.getSectionByType<ApplicationLedgerAllowedSigSchemesSection>(SectionType.APP_LEDGER_ALLOWED_SIG_SCHEMES);
-    }
-
-    getApplicationLedgerAllowedPkeSchemesSection() {
-        return this.getSectionByType<ApplicationLedgerAllowedPkeSchemesSection>(SectionType.APP_LEDGER_ALLOWED_PKE_SCHEMES);
-    }
-
-    getApplicationLedgerCreationSection() {
-        return this.getSectionByType<ApplicationLedgerCreationSection>(SectionType.APP_LEDGER_CREATION);
-    }
-
-    getApplicationLedgerActorCreationSection() {
-        return this.getSectionByType<ApplicationLedgerActorCreationSection>(SectionType.APP_LEDGER_ACTOR_CREATION);
-    }
-
-    getApplicationLedgerChannelCreationSection() {
-        return this.getSectionByType<ApplicationLedgerChannelCreationSection>(SectionType.APP_LEDGER_CHANNEL_CREATION);
-    }
-
-    getApplicationLedgerSharedKeySection() {
-        return this.getSectionByType<ApplicationLedgerSharedKeySection>(SectionType.APP_LEDGER_SHARED_SECRET);
-    }
-
-    getApplicationLedgerChannelInvitationSection() {
-        return this.getSectionByType<ApplicationLedgerChannelInvitationSection>(SectionType.APP_LEDGER_CHANNEL_INVITATION);
-    }
-
-    getApplicationLedgerActorSubscriptionSection() {
-        return this.getSectionByType<ApplicationLedgerActorSubscriptionSection>(SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION);
-    }
-
-    getApplicationLedgerPublicChannelSection() {
-        return this.getSectionByType<ApplicationLedgerPublicChannelSection>(SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA);
-    }
-
-    getApplicationLedgerPrivateChannelSection() {
-        return this.getSectionByType<ApplicationLedgerPrivateChannelSection>(SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA);
-    }
-
-    getApplicationLedgerAuthorSection() {
-        return this.getSectionByType<ApplicationLedgerAuthorSection>(SectionType.APP_LEDGER_AUTHOR);
-    }
-
-    getApplicationLedgerEndorsementRequestSection() {
-        return this.getSectionByType<ApplicationLedgerEndorsementRequestSection>(SectionType.APP_LEDGER_ENDORSEMENT_REQUEST);
-    }
-
-    getApplicationLedgerEndorserSignatureSection() {
-        return this.getSectionByType<ApplicationLedgerEndorserSignatureSection>(SectionType.APP_LEDGER_ENDORSER_SIGNATURE);
-    }
-
-    getApplicationLedgerAuthorSignatureSection() {
-        return this.getSectionByType<ApplicationLedgerAuthorSignatureSection>(SectionType.APP_LEDGER_AUTHOR_SIGNATURE);
     }
     
     toString(): string {
@@ -1299,9 +879,6 @@ export class Microblock {
         this.sections.forEach((section, index) => {
             output += `    Section ${index}:\n`;
             output += `      Section Type: ${section.type}\n`;
-            output += `      Section Hash: ${encoder.encode(section.hash)}\n`;
-            output += `      Section Data Length: ${section.data.length} bytes\n`;
-            output += `      Section Object: ${JSON.stringify(section.object, null).replace(/\n/g, '\n      ')}\n`;
         });
 
         return output;
@@ -1358,8 +935,9 @@ export class Microblock {
         this.hash = hash;
     }
 
-    getLastSignatureSection(): Section<SignatureSection> {
-        if (this.isSigned()) return this.sections[this.sections.length - 1];
-        throw new Error('Microblock is not signed: signature section not found');
+    getLastSignatureSection(): SignatureSection {
+        const lastSection = this.sections[this.sections.length - 1];
+        if (lastSection.type !== SectionType.SIGNATURE) throw new Error('Last section is not a signature section');
+        return lastSection;
     }
 }

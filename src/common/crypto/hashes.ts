@@ -10,7 +10,7 @@ export const Hashes = {
   sha512
 };
 
-function sha256AsBinary(data: Uint8Array) {
+function sha256AsBinary(data: Uint8Array): Uint8Array {
   const isBinary = data instanceof Uint8Array;
   if(!isBinary) {
     throw new InternalError(`Argument passed to compute sha256 is not an instance of Uint8Array: got ${typeof data}`);

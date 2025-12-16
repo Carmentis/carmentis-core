@@ -8,6 +8,7 @@ import {IProvider} from "../../providers/IProvider";
 import {ApplicationInternalState} from "../internalStates/ApplicationInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
+import {Utils} from "../../utils/utils";
 
 export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
     
@@ -25,6 +26,20 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
             stateUpdaterVersion
         );
         return localStateUpdater.updateState(state, microblock);
+    }
+
+    async getVirtualBlockchainState() {
+        const height = this.getHeight();
+        const lastMicroblockHash = height === 0 ?
+            Utils.getNullHash() :
+            (await this.getLastMicroblock()).getHash().toBytes();
+        return {
+            expirationDay: this.getExpirationDay(),
+            height: height,
+            internalState: this.internalState.toObject(),
+            lastMicroblockHash: lastMicroblockHash,
+            type: this.getType()
+        };
     }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {

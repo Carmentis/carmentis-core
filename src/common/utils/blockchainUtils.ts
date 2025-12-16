@@ -2,18 +2,21 @@ import {SCHEMAS} from "../constants/constants";
 import {SchemaSerializer, SchemaUnserializer} from "../data/schemaSerializer";
 import {Crypto} from "../crypto/crypto";
 import {Utils} from "./utils";
+import {encode, decode} from 'cbor-x';
 
-import {
-    MicroblockBody,
-    MicroblockHeaderObject,
-    MicroblockInformationSchema, VirtualBlockchainState,
-    VirtualBlockchainStateDto
-} from "../type/types";
 import {BlockchainSerializer} from "../data/BlockchainSerializer";
-
+import {MicroblockHeader, MicroblockHeaderSchema} from "../type/valibot/blockchain/microblock/MicroblockHeader";
+import {MicroblockBody, MicroblockBodySchema} from "../type/valibot/blockchain/microblock/MicroblockBody";
+import * as v from 'valibot';
+import {
+    VirtualBlockchainState,
+    VirtualBlockchainStateSchema
+} from "../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
+import {Section} from "../type/valibot/blockchain/section/sections";
+import {VirtualBlockchainInfo, VirtualBlockchainInfoSchema} from "../type/valibot/provider/VirtualBlockchainInfo";
 
 export class BlockchainUtils {
-    static computeMicroblockHashFromHeader(previousMicroblockHeader: MicroblockHeaderObject) {
+    static computeMicroblockHashFromHeader(previousMicroblockHeader: MicroblockHeader) {
         const serializedHeader = BlockchainSerializer.serializeMicroblockHeader(previousMicroblockHeader);
         return Crypto.Hashes.sha256AsBinary(serializedHeader);
     }
@@ -61,17 +64,21 @@ export class BlockchainUtils {
          */
     }
 
+    /*
     static decodeMicroblockHeader(serializedHeader: Uint8Array) {
         return BlockchainSerializer.unserializeMicroblockHeader(serializedHeader)
-        /*
+
       const unserializer = new SchemaUnserializer<MicroBlockHeaderDto>(SCHEMAS.MICROBLOCK_HEADER);
       const object = unserializer.unserialize(data);
 
       return object;
 
-         */
+
     }
 
+     */
+
+    /*
     static decodeMicroblockBody(serializedBody: Uint8Array) {
         const unserializer = new SchemaUnserializer<MicroblockBody>(SCHEMAS.MICROBLOCK_BODY);
         const object = unserializer.unserialize(serializedBody);
@@ -79,6 +86,18 @@ export class BlockchainUtils {
         return object;
     }
 
+     */
+
+
+    static encodeVirtualBlockchainInfo(virtualBlockchainInfo: VirtualBlockchainInfo) {
+        return encode(virtualBlockchainInfo);
+    }
+
+    static decodeVirtualBlockchainInfo(serializedInfo: Uint8Array) {
+        return v.parse(VirtualBlockchainInfoSchema, decode(serializedInfo));
+    }
+
+    /*
     static encodeMicroblockVbInformation(virtualBlockchainType: number, virtualBlockchainId: Uint8Array) {
         const serializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_VB_INFORMATION);
         const data = serializer.serialize({ virtualBlockchainType, virtualBlockchainId });
@@ -93,12 +112,16 @@ export class BlockchainUtils {
         return object;
     }
 
+
+     */
     /**
      *
      * @param vbState
      */
     static encodeVirtualBlockchainState(vbState: VirtualBlockchainState) {
-        const stateObject: VirtualBlockchainStateDto = {
+        return encode(vbState);
+        /*
+        const stateObject:  = {
             type: vbState.type,
             expirationDay: vbState.expirationDay,
             height: vbState.height,
@@ -113,15 +136,19 @@ export class BlockchainUtils {
         const data = stateSerializer.serialize(stateObject);
 
         return data;
+
+         */
     }
 
     /**
      * Decodes a virtual blockchain state object from the given binary data.
      *
-     * @param {Uint8Array} data The binary encoded virtual blockchain state data.
+     * @param {Uint8Array} serializedVirtualBlockchainState The binary encoded virtual blockchain state data.
      * @return {VirtualBlockchainState} The decoded virtual blockchain state object.
      */
-    static decodeVirtualBlockchainState(data: Uint8Array) : VirtualBlockchainState {
+    static decodeVirtualBlockchainState(serializedVirtualBlockchainState: Uint8Array) : VirtualBlockchainState {
+        return v.parse(VirtualBlockchainStateSchema, serializedVirtualBlockchainState)
+        /*
         const stateUnserializer = new SchemaUnserializer<VirtualBlockchainStateDto>(SCHEMAS.VIRTUAL_BLOCKCHAIN_STATE);
         const stateObject = stateUnserializer.unserialize(data);
         const vbState: VirtualBlockchainState = {
@@ -135,6 +162,8 @@ export class BlockchainUtils {
             )
         }
         return vbState;
+
+         */
     }
 
     /**
@@ -156,4 +185,25 @@ export class BlockchainUtils {
         const customStateUnserializer = new SchemaUnserializer(SCHEMAS.VB_STATES[type]);
         return customStateUnserializer.unserialize(data) as T;
     }
+
+    static encodeMicroblockBody(body: MicroblockBody) {
+        return encode(body);
+    }
+
+    static decodeMicroblockBody(serializedBody: Uint8Array) {
+        return v.parse(MicroblockBodySchema, decode(serializedBody));
+    }
+
+    static encodeSection(section: Section) {
+        return encode(section);
+    }
+
+    static encodeMicroblockHeader(header: MicroblockHeader) {
+        return encode(header);
+    }
+
+    static decodeMicroblockHeader(serializedHeader: Uint8Array) {
+        return v.parse(MicroblockHeaderSchema, decode(serializedHeader));
+    }
+
 }

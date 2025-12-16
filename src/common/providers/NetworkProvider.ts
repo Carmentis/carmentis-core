@@ -12,7 +12,6 @@ import {
     ChainInformationDTO,
     GenesisSnapshotDTO,
     MicroblockBodyListResponse,
-    MicroblockInformationSchema,
     MsgVirtualBlockchainState,
     ObjectList,
     ValidatorNodeDTO,
@@ -30,6 +29,7 @@ import {RPCNodeStatusResponseSchema} from "./nodeRpc/RPCNodeStatusResponseSchema
 import {Logger} from "../utils/Logger";
 import {IExternalProvider} from "./IExternalProvider";
 import {CMTSToken} from "../economics/currencies/token";
+import {MicroblockInformation} from "../type/valibot/provider/MicroblockInformation";
 
 export class NetworkProvider implements IExternalProvider {
     private static staticLogger = Logger.getNetworkProviderLogger();
@@ -71,7 +71,7 @@ export class NetworkProvider implements IExternalProvider {
             hash: Utils.binaryToHexa(hash)
         }));
 
-        const answer = await this.abciQuery<MicroblockInformationSchema>(
+        const answer = await this.abciQuery<MicroblockInformation>(
             SCHEMAS.MSG_AWAIT_MICROBLOCK_ANCHORING,
             {
                 hash
@@ -209,10 +209,10 @@ export class NetworkProvider implements IExternalProvider {
         return answer;
     }
 
-    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema | null>  {
+    async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation | null>  {
         this.requestLogger.debug(`Requesting microblock information for hash ${Utils.binaryToHexa(hash)}`);
 
-        const answer = await this.abciQuery<MicroblockInformationSchema>(
+        const answer = await this.abciQuery<MicroblockInformation>(
             SCHEMAS.MSG_GET_MICROBLOCK_INFORMATION,
             {
                 hash
@@ -220,7 +220,6 @@ export class NetworkProvider implements IExternalProvider {
         );
 
         this.responseLogger.debug(`Received microblock information: header size={headerSize}, vbType={vbType}, vbId={vbId}`, () => ({
-            headerSize: answer.header.length,
             vbType: answer.virtualBlockchainType,
             vbId: Utils.binaryToHexa(answer.virtualBlockchainId),
         }));

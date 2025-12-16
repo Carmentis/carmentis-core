@@ -1,5 +1,4 @@
 import {z} from "zod";
-import {ProtocolUpdateSection} from "./sections";
 import {ProtocolVariables} from "./ProtocolVariables";
 
 export interface ImportedProof {
@@ -57,46 +56,10 @@ export interface MerkleProof {
 
 
 
-export interface ProtocolVBInternalStateObject {
-    organizationId: Uint8Array,
-    currentProtocolVariables: ProtocolVariables;
-    protocolUpdates: ProtocolUpdateSection[]
-}
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-export interface AccountVBInternalStateObject {
-    signatureSchemeId: number;
-    publicKeyHeight: number;
-}
-
-export interface OrganizationVBInternalStateObject {
-    accountId: Uint8Array;
-    descriptionHeight: number;
-}
-
-export interface ValidatorNodeVBInternalStateObject {
-    organizationId: Uint8Array;
-    cometbftPublicKeyDeclarationHeight: number;
-    rpcEndpointHeight: number;
-    lastKnownVotingPower: number;
-}
-
-export interface ApplicationVBInternalStateObject {
-    organizationId: Uint8Array;
-    descriptionHeight: number;
-}
 
 export interface ApplicationLedgerChannel {
     name: string;
@@ -203,7 +166,7 @@ export interface MicroblockHeaderObject {
     bodyHash: Uint8Array;
     feesPayerAccount: Uint8Array
 }
-
+/*
 export interface MicroblockSection {
     type: number;
     data: Uint8Array;
@@ -212,12 +175,16 @@ export interface MicroblockSection {
 export interface MicroblockBody {
     body: MicroblockSection[];
 }
+ */
 
+/*
 export interface MicroblockInformationSchema {
     virtualBlockchainId: Uint8Array;
     virtualBlockchainType: number;
     header: Uint8Array;
 }
+
+ */
 
 export interface MicroblockBodyResponse {
     hash: Uint8Array,
@@ -241,6 +208,7 @@ export interface VirtualBlockchainState<InternalState = unknown> {
     internalState: InternalState
 }
 
+/*
 export interface VirtualBlockchainStateDto {
     type: number,
     height: number,
@@ -248,6 +216,8 @@ export interface VirtualBlockchainStateDto {
     lastMicroblockHash: Uint8Array,
     serializedInternalState: Uint8Array
 }
+
+ */
 
 export interface MsgVirtualBlockchainState {
     stateData: Uint8Array

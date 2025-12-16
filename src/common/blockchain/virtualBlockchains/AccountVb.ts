@@ -13,6 +13,10 @@ import {IProvider} from "../../providers/IProvider";
 import {AccountInternalState} from "../internalStates/AccountInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {ACCOUNT_CREATION} from "../../constants/sections";
+import {VirtualBlockchainState} from "../../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
+import {Utils} from "../../utils/utils";
 
 export class AccountVb extends VirtualBlockchain<AccountInternalState> {
 
@@ -26,6 +30,20 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
             accountInternalStateUpdaterVersion
         );
         return localStateUpdater.updateState(state, microblock);
+    }
+
+    async getVirtualBlockchainState() {
+        const height = this.getHeight();
+        const lastMicroblockHash = height === 0 ?
+            Utils.getNullHash() :
+            (await this.getLastMicroblock()).getHash().toBytes();
+        return {
+            expirationDay: this.getExpirationDay(),
+            height: height,
+            internalState: this.internalState.toObject(),
+            lastMicroblockHash: lastMicroblockHash,
+            type: this.getType()
+        };
     }
 
     protected checkMicroblockStructure(microblock: Microblock): boolean {
@@ -46,28 +64,33 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
         const publicKeyDeclarationHeight = this.internalState.getPublicKeyHeight();
         const schemeId = this.internalState.getPublicKeySchemeId();
         const mb = await this.getMicroblock(publicKeyDeclarationHeight);
-        const section = mb.getAccountPublicKeySection();
-        const factory = new CryptoSchemeFactory();
-        return factory.createPublicSignatureKey(schemeId, section.object.publicKey);
+        for (const section of mb.getAllSections()) {
+            if (section.type === SectionType.ACCOUNT_PUBLIC_KEY) {
+                const factory = new CryptoSchemeFactory();
+                return factory.createPublicSignatureKey(schemeId, section.publicKey);
+            }
+        }
+        throw new IllegalStateError("Account public key not found");
+        //const section = mb.getAccountPublicKeySection();
     }
 
     async isIssuer() {
-        try {
-            const firstBlock = await this.getFirstMicroBlock();
-            firstBlock.getAccountTokenIssuanceSection();
-        } catch (e: SectionNotFoundError | unknown) {
-            if (e instanceof SectionNotFoundError) return false;
-            else throw e;
+        const firstMb = await this.getFirstMicroBlock();
+        for (const section of firstMb.getAllSections()) {
+            if (section.type === SectionType.ACCOUNT_TOKEN_ISSUANCE) return true;
         }
+        return false;
     }
 
     static async createAccountCreationMicroblock(accountOwnerPublicKey: PublicSignatureKey, initialAmount: CMTSToken, sellerAccountId: Uint8Array, accountName: string = '') {
         const mb = Microblock.createGenesisAccountMicroblock();
-        mb.addAccountPublicKeySection({
+        mb.addSection({
+            type: SectionType.ACCOUNT_PUBLIC_KEY,
             publicKey: await accountOwnerPublicKey.getPublicKeyAsBytes(),
             schemeId: accountOwnerPublicKey.getSignatureSchemeId()
         });
-        mb.addAccountCreationSection({
+        mb.addSection({
+            type: SectionType.ACCOUNT_CREATION,
             amount: initialAmount.getAmountAsAtomic(),
             sellerAccount: sellerAccountId
         });
@@ -75,81 +98,18 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
     }
 
     static async createIssuerAccountCreationMicroblock(genesisPublicKey: PublicSignatureKey): Promise<Microblock> {
-        /*
-         // we need a public key to create the genesis account, so we raise an exception if
-        // both the provider and the default public key are undefined
-        const isUnkeyed = !this.provider.isKeyed();
-        const undefinedGenesisPublicKey = genesisPublicKey === undefined;
-        if (isUnkeyed && undefinedGenesisPublicKey) {
-            throw new IllegalStateError("Cannot create a genesis account without a keyed provider or default public key.")
-        }
-
-        // we use in priority the default public key, if provided, or the keyed provider's public key
-        const publicKey = genesisPublicKey || this.getPrivateSignatureKey().getPublicKey();
-         */
-
         // we use in priority the default public key, if provided, or the keyed provider's public key
         const publicKey = genesisPublicKey;
         const microblock = Microblock.createGenesisAccountMicroblock();
-        microblock.addAccountPublicKeySection({
+        microblock.addSection({
+            type: SectionType.ACCOUNT_PUBLIC_KEY,
             publicKey: await publicKey.getPublicKeyAsBytes(),
             schemeId: publicKey.getSignatureSchemeId()
         });
-        microblock.addAccountTokenIssuanceSection({
+        microblock.addSection({
+            type: SectionType.ACCOUNT_TOKEN_ISSUANCE,
             amount: INITIAL_OFFER
         })
         return microblock;
     }
-
-
-    /**
-     Update methods
-     */
-
-    /*
-    async setSignatureScheme(object: { schemeId: SignatureSchemeId }) {
-      await this.addSection(SECTIONS.ACCOUNT_SIG_SCHEME, object);
-    }
-
-    async setPublicKey(publicKey: PublicSignatureKey) {
-      await this.addSection(SECTIONS.ACCOUNT_PUBLIC_KEY, {
-        publicKey: publicKey.getPublicKeyAsBytes()
-      });
-    }
-
-    async setTokenIssuance(object: AccountTokenIssuance) {
-      await this.addSection(SECTIONS.ACCOUNT_TOKEN_ISSUANCE, object);
-    }
-
-    async setCreation(object: any) {
-      await this.addSection(SECTIONS.ACCOUNT_CREATION, object);
-    }
-
-    async setTransfer(object: AccountTransfer) {
-      await this.addSection(SECTIONS.ACCOUNT_TRANSFER, object);
-    }
-
-    async setVestingTransfer(object: AccountVestingTransfer) {
-      await this.addSection(SECTIONS.ACCOUNT_VESTING_TRANSFER, object);
-    }
-
-    async setEscrowTransfer(object: AccountEscrowTransfer) {
-      await this.addSection(SECTIONS.ACCOUNT_ESCROW_TRANSFER, object);
-    }
-
-    async setStake(object: AccountStake) {
-      await this.addSection(SECTIONS.ACCOUNT_STAKE, object);
-    }
-
-     async setSignature(privateKey: PrivateSignatureKey) {
-        const object = this.createSignature(privateKey);
-        await this.addSection(SECTIONS.ACCOUNT_SIGNATURE, object);
-    }
-
-     */
-
-
-
-
-
 }

@@ -5,12 +5,15 @@ import {Microblock} from "../microblock/Microblock";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {OrganizationMicroblockStructureChecker} from "../structureCheckers/OrganizationMicroblockStructureChecker";
-import {OrganizationDescriptionSection} from "../../type/sections";
 import {IProvider} from "../../providers/IProvider";
 import {OrganizationInternalState} from "../internalStates/OrganizationInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {Hash} from "../../entities/Hash";
+import {OrganizationDescriptionSection} from "../../type/valibot/blockchain/section/sections";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {IllegalStateError} from "../../errors/carmentis-error";
+import {Utils} from "../../utils/utils";
 
 export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState> {
 
@@ -38,6 +41,20 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState>
             );
         return localStateUpdater.updateState(state, microblock);
     }
+
+    async getVirtualBlockchainState() {
+        const height = this.getHeight();
+        const lastMicroblockHash = height === 0 ?
+            Utils.getNullHash() :
+            (await this.getLastMicroblock()).getHash().toBytes();
+        return {
+            expirationDay: this.getExpirationDay(),
+            height: height,
+            internalState: this.internalState.toObject(),
+            lastMicroblockHash: lastMicroblockHash,
+            type: this.getType()
+        };
+    }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {
         const checker = new OrganizationMicroblockStructureChecker();
@@ -51,8 +68,12 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState>
     async getDescription() : Promise<OrganizationDescriptionSection> {
         const descriptionHeight = this.internalState.getDescriptionHeight();
         const microblock = await this.getMicroblock(descriptionHeight);
-        const section = microblock.getOrganizationDescriptionSection();
-        return section.object;
+        for (const section of microblock.getAllSections()) {
+            if (section.type === SectionType.ORG_DESCRIPTION) {
+                return section;
+            }
+        }
+        throw new IllegalStateError("No description found for the organization")
     }
 
 }

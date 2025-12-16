@@ -26,7 +26,7 @@ export class ApplicationLedgerInternalState implements IInternalState {
         })
     }
 
-    toObject(): object {
+    toObject(): ApplicationLedgerInternalStateObject {
         return this.internalState
     }
 

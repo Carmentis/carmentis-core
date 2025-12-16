@@ -165,7 +165,7 @@ export class MicroblockConsistencyChecker {
 
         const microblock = this.checkedMicroblock;
         const signatureSection = microblock.getLastSignatureSection();
-        const usedSchemeId = signatureSection.object.schemeId;
+        const usedSchemeId = signatureSection.schemeId;
         const usedFeesCalculationFormula = feesCalculationFormula === undefined ?
             await this.getFeesCalculationFormulaFromProvider() : feesCalculationFormula;
         const declaredGas = microblock.getGas();

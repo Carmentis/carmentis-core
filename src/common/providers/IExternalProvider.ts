@@ -1,15 +1,15 @@
 import {
     AccountHash, AccountHistoryInterface, AccountStateDTO, BlockContentDTO, BlockInformationDTO, ChainInformationDTO,
     GenesisSnapshotDTO, MicroblockBodyListResponse,
-    MicroblockInformationSchema,
     MsgVirtualBlockchainState, ObjectList, ValidatorNodeDTO,
     VirtualBlockchainUpdateInterface
 } from "../type/types";
+import {MicroblockInformation} from "../type/valibot/provider/MicroblockInformation";
 
 export interface IExternalProvider {
     sendSerializedMicroblock(headerData: Uint8Array, bodyData: Uint8Array): Promise<any>;
 
-    awaitMicroblockAnchoring(hash: Uint8Array): Promise<MicroblockInformationSchema>;
+    awaitMicroblockAnchoring(hash: Uint8Array): Promise<MicroblockInformation>;
 
     getChainInformation(): Promise<ChainInformationDTO>;
 
@@ -27,7 +27,7 @@ export interface IExternalProvider {
 
     getObjectList(type: number): Promise<ObjectList>;
 
-    getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema | null> ;
+    getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation | null> ;
 
     getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroblockBodyListResponse  | null>;
 

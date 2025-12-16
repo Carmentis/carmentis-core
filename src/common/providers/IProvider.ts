@@ -1,4 +1,3 @@
-import {MicroblockBody, MicroblockHeaderObject, VirtualBlockchainState} from "../type/types";
 import {Hash} from "../entities/Hash";
 import {ValidatorNodeVb} from "../blockchain/virtualBlockchains/ValidatorNodeVb";
 import {AccountVb} from "../blockchain/virtualBlockchains/AccountVb";
@@ -7,12 +6,15 @@ import {ApplicationVb} from "../blockchain/virtualBlockchains/ApplicationVb";
 import {OrganizationVb} from "../blockchain/virtualBlockchains/OrganizationVb";
 import {ProtocolVb} from "../blockchain/virtualBlockchains/ProtocolVb";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
-import {VirtualBlockchainStatus} from "../type/VirtualBlockchainStatus";
 import {ProtocolInternalState} from "../blockchain/internalStates/ProtocolInternalState";
+import {MicroblockHeader} from "../type/valibot/blockchain/microblock/MicroblockHeader";
+import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBody";
+import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
+import {VirtualBlockchainStatus} from "../type/valibot/provider/VirtualBlockchainStatus";
 
 export interface IProvider {
     getVirtualBlockchainIdContainingMicroblock(microblockHash: Hash): Promise<Hash>;
-    getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeaderObject|null>;
+    getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeader|null>;
     getMicroblockBody(microblockHash: Hash): Promise<MicroblockBody|null>;
     getListOfMicroblockBody(microblockHashes: Uint8Array[]):  Promise<MicroblockBody[]>;
 

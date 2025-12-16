@@ -1,7 +1,8 @@
-import {ApplicationVBInternalStateObject} from "../../type/types";
+
 import {Utils} from "../../utils/utils";
 import {Hash} from "../../entities/Hash";
 import {IInternalState} from "./IInternalState";
+import {ApplicationVBInternalStateObject} from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
 
 export class ApplicationInternalState implements IInternalState {
     constructor(private internalState: ApplicationVBInternalStateObject) {

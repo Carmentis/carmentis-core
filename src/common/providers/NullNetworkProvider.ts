@@ -1,5 +1,6 @@
-import { MicroblockInformationSchema, ChainInformationDTO, BlockInformationDTO, BlockContentDTO, ValidatorNodeDTO, AccountStateDTO, AccountHistoryInterface, AccountHash, ObjectList, MicroblockBodyListResponse, VirtualBlockchainUpdateInterface, MsgVirtualBlockchainState, GenesisSnapshotDTO } from "../common";
+import { ChainInformationDTO, BlockInformationDTO, BlockContentDTO, ValidatorNodeDTO, AccountStateDTO, AccountHistoryInterface, AccountHash, ObjectList, MicroblockBodyListResponse, VirtualBlockchainUpdateInterface, MsgVirtualBlockchainState, GenesisSnapshotDTO } from "../common";
 import {IExternalProvider} from "./IExternalProvider";
+import {MicroblockInformation} from "../type/valibot/provider/MicroblockInformation";
 
 /**
  This is the dummy external provider for nodes.
@@ -11,7 +12,7 @@ export class NullNetworkProvider implements IExternalProvider {
     sendSerializedMicroblock(headerData: Uint8Array, bodyData: Uint8Array): Promise<any> {
         throw new Error("Method not implemented.");
     }
-    awaitMicroblockAnchoring(hash: Uint8Array): Promise<MicroblockInformationSchema> {
+    awaitMicroblockAnchoring(hash: Uint8Array): Promise<MicroblockInformation> {
         throw new Error("Method not implemented.");
     }
     getChainInformation(): Promise<ChainInformationDTO> {
@@ -39,7 +40,7 @@ export class NullNetworkProvider implements IExternalProvider {
         throw new Error("Method not implemented.");
     }
 
-    getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformationSchema | null>  {
+    getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation | null>  {
         return Promise.resolve(null);
     }
 

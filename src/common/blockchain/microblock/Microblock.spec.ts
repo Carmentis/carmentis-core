@@ -5,6 +5,7 @@ import {Utils} from "../../utils/utils";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
 
 import {Secp256k1PrivateSignatureKey} from "../../crypto/signature/secp256k1/Secp256k1PrivateSignatureKey";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 
 describe('Microblock.createGenesisAccountMicroblock', () => {
     it('should create a genesis microblock of type ACCOUNT_VIRTUAL_BLOCKCHAIN', () => {
@@ -62,7 +63,8 @@ describe('Microblock.serialize', () => {
         const type = VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN;
         const microblock = new Microblock(type);
 
-        microblock.addAccountCreationSection({
+        microblock.addSection({
+            type: SectionType.ACCOUNT_CREATION,
             amount: 0,
             sellerAccount: Utils.getNullHash()
         })
@@ -116,13 +118,18 @@ describe('Microblock.verifySignature', () => {
         const sk = Secp256k1PrivateSignatureKey.gen();
         const pk = await sk.getPublicKey();
         const mb = Microblock.createGenesisAccountMicroblock();
-        mb.addAccountPublicKeySection({
+        mb.addSection({
+            type: SectionType.ACCOUNT_PUBLIC_KEY,
             publicKey: await pk.getPublicKeyAsBytes(),
             schemeId: pk.getSignatureSchemeId()
         });
         const signature = await mb.sign(sk);
         expect(signature).toBeInstanceOf(Uint8Array)
-        mb.addAccountSignatureSection({ signature, schemeId: sk.getSignatureSchemeId() });
+        mb.addSection({
+            type: SectionType.SIGNATURE,
+            signature,
+            schemeId: sk.getSignatureSchemeId()
+        });
         expect(await mb.verifySignature(pk, signature)).toBe(true)
     })
 
@@ -132,7 +139,8 @@ describe('Microblock.verifySignature', () => {
 
         // create the microblock with a single section
         const mb = Microblock.createGenesisAccountMicroblock();
-        mb.addAccountPublicKeySection({
+        mb.addSection({
+            type: SectionType.ACCOUNT_PUBLIC_KEY,
             publicKey: await pk.getPublicKeyAsBytes(),
             schemeId: pk.getSignatureSchemeId(),
         });
@@ -140,14 +148,22 @@ describe('Microblock.verifySignature', () => {
         // sign the microblock a first time
         const firstSignature = await mb.sign(sk);
         expect(firstSignature).toBeInstanceOf(Uint8Array)
-        mb.addAccountSignatureSection({ signature: firstSignature, schemeId: sk.getSignatureSchemeId() });
+        mb.addSection({
+            type: SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA,
+            channelId: 1,
+            data: Utils.getNullHash(),
+        });
         expect(await mb.verifySignature(pk, firstSignature)).toBe(true)
 
 
         // sign the microblock a second time
         const secondSignature = await mb.sign(sk);
         expect(secondSignature).toBeInstanceOf(Uint8Array)
-        mb.addAccountSignatureSection({ signature: secondSignature, schemeId: sk.getSignatureSchemeId() });
+        mb.addSection({
+            type: SectionType.SIGNATURE,
+            signature: secondSignature,
+            schemeId: sk.getSignatureSchemeId()
+        });
         expect(await mb.verifySignature(pk, firstSignature)).toBe(false)
         expect(await mb.verifySignature(pk, secondSignature)).toBe(true)
         expect(await mb.verifySignature(pk, secondSignature)).toBe(true)

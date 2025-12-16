@@ -1,10 +1,11 @@
 import {IFeesFormula} from "./IFeesFormula";
 import {Microblock} from "../microblock/Microblock";
 import {CMTSToken} from "../../economics/currencies/token";
-import {Section} from "../../type/Section";
 import {ECO} from "../../constants/constants";
-import {SectionType} from "../../type/SectionType";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
+import {Section} from "../../type/valibot/blockchain/section/sections";
+import {BlockchainUtils} from "../../utils/blockchainUtils";
 
 /**
  * FirstFeesFormula is a concrete implementation of the IFeesFormula interface.
@@ -49,8 +50,11 @@ export class FirstFeesFormula implements IFeesFormula {
         let sectionsUsedInComputeOfSize = isLastSectionSig ?
             sections.slice(0, sections.length - 1) :
             sections;
-        const totalSize = sectionsUsedInComputeOfSize.reduce((total: number, section: Section) =>
-                total + section.data.length,
+        const totalSize = sectionsUsedInComputeOfSize.reduce(
+            (total: number, section: Section) => {
+                const serializedSection = BlockchainUtils.encodeSection(section)
+                return total + serializedSection.length
+            },
             0
         );
         return totalSize

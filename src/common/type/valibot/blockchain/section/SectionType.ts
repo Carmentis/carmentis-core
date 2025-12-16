@@ -29,7 +29,6 @@ export enum SectionType {
     VN_COMETBFT_PUBLIC_KEY_DECLARATION = 34,
     VN_RPC_ENDPOINT = 35,
     VN_VOTING_POWER_UPDATE = 36,
-    VN_SIGNATURE = SIGNATURE,
 
     // Organization
     ORG_CREATION = 52,

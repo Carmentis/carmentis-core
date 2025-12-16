@@ -3,30 +3,29 @@ export const LOCK_TYPE_COUNT = 3;
 export enum LockType {
     Escrow = 0,
     Vesting = 1,
-    Staking = 2
+    NodeStaking = 2,
 }
 
 export type EscrowParameters = {
-    escrowIdentifier: Uint8Array,
-    agentAccount: Uint8Array
+    fundEmitterAccountId: Uint8Array,
+    transferAuthorizerAccountId: Uint8Array
 };
 
 export type VestingParameters = {
-    initialAmount: number,
-    startTime: number,
+    initialVestedAmountInAtomics: number,
+    cliffStartTimestamp: number,
     cliffDurationDays: number,
     vestingDurationDays: number
 };
 
-export type StakingParameters = {
-    objectType: number,
-    objectIdentifier: Uint8Array
+export type NodeStakingParameters = {
+    validatorNodeAccountId: Uint8Array
 };
 
 export type Lock =
-    | { type: LockType.Escrow, amount: number, parameters: EscrowParameters }
-    | { type: LockType.Vesting, amount: number, parameters: VestingParameters }
-    | { type: LockType.Staking, amount: number, parameters: StakingParameters };
+    | { type: LockType.Escrow, lockedAmountInAtomics: number, parameters: EscrowParameters }
+    | { type: LockType.Vesting, lockedAmountInAtomics: number, parameters: VestingParameters }
+    | { type: LockType.NodeStaking, lockedAmountInAtomics: number, parameters: NodeStakingParameters };
 
 export type AccountBreakdown = {
     balance: number,

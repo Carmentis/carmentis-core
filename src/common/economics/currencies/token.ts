@@ -205,6 +205,26 @@ export class CMTSToken implements Currency{
     }
 
     /**
+     * Adds the given CMTSToken instance to the current instance and returns a new CMTSToken with the combined value.
+     *
+     * @param {CMTSToken} other - The CMTSToken instance to add to the current instance.
+     * @return {CMTSToken} A new CMTSToken instance representing the sum of the two tokens.
+     */
+    add(other: CMTSToken): CMTSToken {
+        return CMTSToken.createAtomic(this.getAmountAsAtomic() + other.getAmountAsAtomic())
+    }
+
+    /**
+     * Subtracts the value of the provided CMTSToken from the current CMTSToken and returns a new CMTSToken with the resulting value.
+     *
+     * @param {CMTSToken} other - The CMTSToken to be subtracted from the current token.
+     * @return {CMTSToken} A new CMTSToken object representing the result of the subtraction.
+     */
+    sub(other: CMTSToken): CMTSToken {
+        return CMTSToken.createAtomic(this.getAmountAsAtomic() - other.getAmountAsAtomic())
+    }
+
+    /**
      * Converts the object to a string representation combining the amount and its unit label.
      * The returned string typically includes the numerical value and its corresponding unit.
      *

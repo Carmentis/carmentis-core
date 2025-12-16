@@ -72,4 +72,20 @@ describe('TokenAmount', () => {
             expect(result.toString()).toBe('123.45 CMTS');
         });
     });
+
+    describe("Add and sub correctly", () =>  {
+        it("Should add two amounts correctly", () => {
+            const a = CMTSToken.createCMTS(100);
+            const b = CMTSToken.createCMTS(90);
+            const c = CMTSToken.createCMTS(10);
+            expect(a.add(b)).toEqual(c)
+        })
+
+        it("Should sub two amounts correctly", () => {
+            const a = CMTSToken.createCMTS(100);
+            const b = CMTSToken.createCMTS(10);
+            const c = CMTSToken.createCMTS(90);
+            expect(a.sub(b)).toEqual(c)
+        })
+    })
 });

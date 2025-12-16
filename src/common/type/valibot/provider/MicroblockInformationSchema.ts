@@ -3,12 +3,12 @@ import {MicroblockHeaderSchema} from "../blockchain/microblock/MicroblockHeader"
 import {VirtualBlockchainType} from "../../VirtualBlockchainType";
 import {uint8array} from "../primitives";
 
-export const MicroblockInformation = v.object({
+export const MicroblockInformationSchema = v.object({
     virtualBlockchainId: uint8array(),
     virtualBlockchainType: v.number(),
     header: MicroblockHeaderSchema
 })
-export type MicroblockInformation = v.InferOutput<typeof MicroblockInformation>;
+export type MicroblockInformation = v.InferOutput<typeof MicroblockInformationSchema>;
 
 /*
 export interface MicroblockInformationSchema {

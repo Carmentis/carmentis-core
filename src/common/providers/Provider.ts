@@ -2,15 +2,6 @@ import {BlockchainUtils} from "../utils/blockchainUtils";
 import {Utils} from "../utils/utils";
 import {CryptographicHash, Sha256CryptographicHash} from "../crypto/hash/hash-interface";
 import {CryptoSchemeFactory} from "../crypto/CryptoSchemeFactory";
-import {
-    AccountHistoryInterface,
-    AccountStateDTO,
-    BlockContentDTO,
-    BlockInformationDTO,
-    ChainInformationDTO,
-    GenesisSnapshotDTO,
-    ObjectList,
-} from "../type/types";
 import {Hash} from "../entities/Hash";
 import {PublicSignatureKey} from "../crypto/signature/PublicSignatureKey";
 import {IllegalStateError, MicroBlockNotFoundError} from "../errors/carmentis-error";
@@ -26,7 +17,15 @@ import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockcha
 import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBody";
 import {MicroblockHeader} from "../type/valibot/blockchain/microblock/MicroblockHeader";
 import {VirtualBlockchainStatus} from "../type/valibot/provider/VirtualBlockchainStatus";
-import {MicroblockInformation} from "../type/valibot/provider/MicroblockInformation";
+import {MicroblockInformation, MicroblockInformationSchema} from "../type/valibot/provider/MicroblockInformationSchema";
+import {
+    AccountHistoryAbciResponse,
+    AccountStateAbciResponse,
+    BlockContentAbciResponse,
+    BlockInformationAbciResponse,
+    ChainInformationAbciResponse,
+    GenesisSnapshotAbciResponse, ObjectListAbciResponse
+} from "../type/valibot/provider/abci/AbciResponse";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -51,27 +50,27 @@ export class Provider extends AbstractProvider {
         return await this.externalProvider.awaitMicroblockAnchoring(hash);
     }
 
-    async getChainInformation() : Promise<ChainInformationDTO> {
+    async getChainInformation() : Promise<ChainInformationAbciResponse> {
         return await this.externalProvider.getChainInformation();
     }
 
-    async getGenesisSnapshot(): Promise<GenesisSnapshotDTO> {
+    async getGenesisSnapshot(): Promise<GenesisSnapshotAbciResponse> {
         return await this.externalProvider.getGenesisSnapshot();
     }
 
-    async getBlockInformation(height: number) : Promise<BlockInformationDTO> {
+    async getBlockInformation(height: number) : Promise<BlockInformationAbciResponse> {
         return await this.externalProvider.getBlockInformation(height);
     }
 
-    async getBlockContent(height: number) : Promise<BlockContentDTO> {
+    async getBlockContent(height: number) : Promise<BlockContentAbciResponse> {
         return await this.externalProvider.getBlockContent(height);
     }
 
-    async getAccountState(accountHash: Uint8Array) : Promise<AccountStateDTO> {
+    async getAccountState(accountHash: Uint8Array) : Promise<AccountStateAbciResponse> {
         return await this.externalProvider.getAccountState(accountHash);
     }
 
-    async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number): Promise<AccountHistoryInterface> {
+    async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number): Promise<AccountHistoryAbciResponse> {
         return await this.externalProvider.getAccountHistory(accountHash, lastHistoryHash, maxRecords);
     }
 
@@ -148,7 +147,7 @@ export class Provider extends AbstractProvider {
         return list.list.map(Hash.from)
     }
 
-    async getObjectList(type: VirtualBlockchainType): Promise<ObjectList> {
+    async getObjectList(type: VirtualBlockchainType): Promise<ObjectListAbciResponse> {
         return await this.externalProvider.getObjectList(type);
     }
 
@@ -229,18 +228,19 @@ export class Provider extends AbstractProvider {
 
         // if necessary, request missing data from the external provider
         if (missingHashes.length) {
-            const externalData = await this.externalProvider.getMicroblockBodys(missingHashes);
+            const microblockBodysResponse = await this.externalProvider.getMicroblockBodys(missingHashes);
 
-            if (externalData === null) {
+            if (microblockBodysResponse === null) {
               throw new Error(`Unable to load microblock bodies`);
             }
 
             // save missing data in the internal provider and update res[]
-            for (const { hash, body } of externalData.list) {
+            for (const { hash, body } of microblockBodysResponse.list) {
                 const serializedBody = body;
-                await this.internalProvider.setSerializedMicroblockBody(hash, serializedBody);
+                const hashBytes = Utils.binaryFromHexa(hash);
+                await this.internalProvider.setSerializedMicroblockBody(hashBytes, serializedBody);
                 const decodedBody = BlockchainUtils.decodeMicroblockBody(serializedBody);
-                res.push({ hash, body: decodedBody });
+                res.push({ hash: hashBytes, body: decodedBody });
             }
 
             // for convenience, we sort the list according to the original query order
@@ -391,12 +391,12 @@ export class Provider extends AbstractProvider {
             // check the consistency of the new headers
             const check = BlockchainUtils.checkHeaderList(vbUpdate.headers);
 
-            if(!check.valid) {
+            if (!check.valid) {
                 throw new Error(`received headers are inconsistent`);
             }
 
             // make sure that the 'previous hash' field of the first new microblock matches the last known hash
-            if(knownHeight) {
+            if (knownHeight) {
                 const firstNewHeader = vbUpdate.headers[vbUpdate.headers.length - 1];
                 const linkedHash = BlockchainUtils.previousHashFromHeader(firstNewHeader);
 

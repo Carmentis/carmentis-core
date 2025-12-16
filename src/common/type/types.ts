@@ -1,6 +1,3 @@
-import {z} from "zod";
-import {ProtocolVariables} from "./ProtocolVariables";
-
 export interface ImportedProof {
     height: number;
     data: {
@@ -59,35 +56,12 @@ export interface MerkleProof {
 
 
 
-
-
-export interface ApplicationLedgerChannel {
-    name: string;
-    isPrivate: boolean;
-    creatorId: number;
-}
-
-
-export interface ApplicationLedgerActorInvitationState {
-    channelId: number;
-    height: number;
-}
-
-
-/**
- * Describes a shared secret between two parties.
- * One of the actor is implicit: This object should be associated with
- * an actor identifier, the other one is defined in this state.
- */
+/*
 export interface ApplicationLedgerSharedSecretState {
-    /**
-     * The identifier of the other actor for which the shared key is intended to be used by.
-     */
+
     peerActorId: number;
 
-    /**
-     * The height in the virtual blockchain where the shared key is defined.
-     */
+
     height: number;
 }
 
@@ -100,11 +74,14 @@ export interface ApplicationLedgerActor {
     invitations: ApplicationLedgerActorInvitationState[];
 }
 
+ */
+
 
 
 /**
  * Describes the local state of the application ledger.
  */
+/*
 export interface ApplicationLedgerInternalStateObject {
     allowedSignatureSchemeIds: number[];
     allowedPkeSchemeIds: number[];
@@ -113,17 +90,15 @@ export interface ApplicationLedgerInternalStateObject {
     actors: ApplicationLedgerActor[];
 }
 
-
-/**
- * Describes the genesis snapshot which contains base64-encoded chunks.
  */
+
+
+/*
 export interface GenesisSnapshotDTO {
     base64EncodedChunks: string[];
 }
 
-/**
- * Provides information on the chain.
- */
+
 export interface ChainInformationDTO {
     height: number;
     lastBlockTimestamp: number;
@@ -153,6 +128,8 @@ export interface BlockContentDTO {
 export interface ValidatorNodeDTO {
     validatorNodeHash: Uint8Array;
 }
+
+ */
 
 export interface MicroblockHeaderObject {
     magicString: string;
@@ -185,7 +162,7 @@ export interface MicroblockInformationSchema {
 }
 
  */
-
+/*
 export interface MicroblockBodyResponse {
     hash: Uint8Array,
     body: Uint8Array
@@ -208,6 +185,8 @@ export interface VirtualBlockchainState<InternalState = unknown> {
     internalState: InternalState
 }
 
+ */
+
 /*
 export interface VirtualBlockchainStateDto {
     type: number,
@@ -218,7 +197,7 @@ export interface VirtualBlockchainStateDto {
 }
 
  */
-
+/*
 export interface MsgVirtualBlockchainState {
     stateData: Uint8Array
 }
@@ -228,6 +207,8 @@ export interface AccountStateDTO {
     balance: number;
     lastHistoryHash: Uint8Array
 }
+
+ */
 
 export interface AccountHash {
     accountHash: Uint8Array
@@ -242,10 +223,12 @@ export interface AccountTransactionInterface {
     amount: number,
     chainReference: Uint8Array
 }
-
+/*
 export interface AccountHistoryInterface {
     list: AccountTransactionInterface[]
 }
+
+ */
 /*
 export interface AccountTokenIssuance {
     amount: number;
@@ -286,10 +269,6 @@ export interface AccountStake {
 }
  */
 
-export interface ObjectList {
-    list: Uint8Array[];
-}
-
 export interface Proof {
     info: {
         title: string,
@@ -301,8 +280,3 @@ export interface Proof {
         data: any
     }[]
 }
-
-
-export const AccountHashSchema =  z.object({
-    accountHash: z.instanceof(Uint8Array)
-})

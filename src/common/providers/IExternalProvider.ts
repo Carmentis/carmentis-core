@@ -1,44 +1,50 @@
+import {MicroblockInformation, MicroblockInformationSchema} from "../type/valibot/provider/MicroblockInformationSchema";
+import {AbciRequest} from "../type/valibot/provider/abci/AbciRequest";
 import {
-    AccountHash, AccountHistoryInterface, AccountStateDTO, BlockContentDTO, BlockInformationDTO, ChainInformationDTO,
-    GenesisSnapshotDTO, MicroblockBodyListResponse,
-    MsgVirtualBlockchainState, ObjectList, ValidatorNodeDTO,
-    VirtualBlockchainUpdateInterface
-} from "../type/types";
-import {MicroblockInformation} from "../type/valibot/provider/MicroblockInformation";
+    AbciResponse,
+    AccountByPublicKeyHashAbciResponse, AccountHistoryAbciResponse,
+    AccountStateAbciResponse,
+    BlockContentAbciResponse,
+    BlockInformationAbciResponse,
+    ChainInformationAbciResponse,
+    GenesisSnapshotAbciResponse, MicroblockBodysAbciResponse,
+    ObjectListAbciResponse,
+    ValidatorNodeByAddressAbciResponse, VirtualBlockchainUpdateAbciResponse
+} from "../type/valibot/provider/abci/AbciResponse";
 
 export interface IExternalProvider {
     sendSerializedMicroblock(headerData: Uint8Array, bodyData: Uint8Array): Promise<any>;
 
     awaitMicroblockAnchoring(hash: Uint8Array): Promise<MicroblockInformation>;
 
-    getChainInformation(): Promise<ChainInformationDTO>;
+    getChainInformation(): Promise<ChainInformationAbciResponse>;
 
-    getBlockInformation(height: number): Promise<BlockInformationDTO>;
+    getBlockInformation(height: number): Promise<BlockInformationAbciResponse>;
 
-    getBlockContent(height: number): Promise<BlockContentDTO>;
+    getBlockContent(height: number): Promise<BlockContentAbciResponse>;
 
-    getValidatorNodeByAddress(address: Uint8Array): Promise<ValidatorNodeDTO>;
+    getValidatorNodeByAddress(address: Uint8Array): Promise<ValidatorNodeByAddressAbciResponse>;
 
-    getAccountState(accountHash: Uint8Array): Promise<AccountStateDTO>;
+    getAccountState(accountHash: Uint8Array): Promise<AccountStateAbciResponse>;
 
-    getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number): Promise<AccountHistoryInterface>;
+    getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number): Promise<AccountHistoryAbciResponse>;
 
-    getAccountByPublicKeyHash(publicKeyHash: Uint8Array): Promise<AccountHash>;
+    getAccountByPublicKeyHash(publicKeyHash: Uint8Array): Promise<AccountByPublicKeyHashAbciResponse>;
 
-    getObjectList(type: number): Promise<ObjectList>;
+    getObjectList(type: number): Promise<ObjectListAbciResponse>;
 
     getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation | null> ;
 
-    getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroblockBodyListResponse  | null>;
+    getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroblockBodysAbciResponse  | null>;
 
-    getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number): Promise<VirtualBlockchainUpdateInterface>;
+    getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number): Promise<VirtualBlockchainUpdateAbciResponse>;
 
     getSerializedVirtualBlockchainState(virtualBlockchainId: any): Promise<Uint8Array>;
 
     broadcastTx(data: Uint8Array): Promise<any>;
 
-    abciQuery<T = object>(msgId: number, msgData: object): Promise<T>
+    abciQuery(request: AbciRequest): Promise<AbciResponse>
 
-    getGenesisSnapshot(): Promise<GenesisSnapshotDTO>;
+    getGenesisSnapshot(): Promise<GenesisSnapshotAbciResponse>;
 
 }

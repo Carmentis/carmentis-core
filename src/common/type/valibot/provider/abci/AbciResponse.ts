@@ -3,6 +3,7 @@ import {MicroblockInformationSchema} from "../MicroblockInformationSchema";
 import {VirtualBlockchainInfoSchema} from "../VirtualBlockchainInfo";
 import {bin256, uint8array} from "../../primitives";
 import {MicroblockBodySchema} from "../../blockchain/microblock/MicroblockBody";
+import {LockSchema} from "../../node/AccountInformation";
 
 // ============================================================================================================================ //
 //  ABCI Response Types Enumeration                                                                                            //
@@ -106,19 +107,12 @@ export const MicroblockBodysAbciResponseSchema = v.object({
   list: v.array(MicroblockBodyItemSchema),
 });
 
-// MSG_ACCOUNT_STATE (0x12)
-export const AccountLockSchema = v.object({
-  type: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(255)),
-  amount: v.pipe(v.number(), v.integer(), v.minValue(0)),
-  parameters: uint8array(),
-});
-
 export const AccountStateAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.ACCOUNT_STATE),
   height: v.pipe(v.number(), v.integer(), v.minValue(0)),
   balance: v.pipe(v.number(), v.integer(), v.minValue(0)),
     lastHistoryHash: bin256(),
-  locks: v.array(AccountLockSchema),
+  locks: v.array(LockSchema),
 });
 
 // MSG_ACCOUNT_HISTORY (0x14)

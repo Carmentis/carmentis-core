@@ -1,9 +1,12 @@
-import {ApplicationLedgerActor, ApplicationLedgerInternalStateObject} from "../../type/types";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {ActorNotDefinedError, ChannelAlreadyDefinedError, ChannelNotDefinedError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
 import {IInternalState} from "./IInternalState";
+import {
+    ApplicationLedgerActor,
+    ApplicationLedgerInternalStateObject
+} from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
 
 export class ApplicationLedgerInternalState implements IInternalState {
     private static UNDEFINED_APPLICATION_ID = new Uint8Array(0);
@@ -26,7 +29,7 @@ export class ApplicationLedgerInternalState implements IInternalState {
         })
     }
 
-    toObject(): object {
+    toObject(): ApplicationLedgerInternalStateObject {
         return this.internalState
     }
 

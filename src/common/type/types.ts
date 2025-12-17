@@ -1,7 +1,3 @@
-import {z} from "zod";
-import {ProtocolUpdateSection} from "./sections";
-import {ProtocolVariables} from "./ProtocolVariables";
-
 export interface ImportedProof {
     height: number;
     data: {
@@ -57,74 +53,15 @@ export interface MerkleProof {
 
 
 
-export interface ProtocolVBInternalStateObject {
-    organizationId: Uint8Array,
-    currentProtocolVariables: ProtocolVariables;
-    protocolUpdates: ProtocolUpdateSection[]
-}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-export interface AccountVBInternalStateObject {
-    signatureSchemeId: number;
-    publicKeyHeight: number;
-}
-
-export interface OrganizationVBInternalStateObject {
-    accountId: Uint8Array;
-    descriptionHeight: number;
-}
-
-export interface ValidatorNodeVBInternalStateObject {
-    organizationId: Uint8Array;
-    cometbftPublicKeyDeclarationHeight: number;
-    rpcEndpointHeight: number;
-    lastKnownVotingPower: number;
-}
-
-export interface ApplicationVBInternalStateObject {
-    organizationId: Uint8Array;
-    descriptionHeight: number;
-}
-
-export interface ApplicationLedgerChannel {
-    name: string;
-    isPrivate: boolean;
-    creatorId: number;
-}
-
-
-export interface ApplicationLedgerActorInvitationState {
-    channelId: number;
-    height: number;
-}
-
-
-/**
- * Describes a shared secret between two parties.
- * One of the actor is implicit: This object should be associated with
- * an actor identifier, the other one is defined in this state.
- */
+/*
 export interface ApplicationLedgerSharedSecretState {
-    /**
-     * The identifier of the other actor for which the shared key is intended to be used by.
-     */
+
     peerActorId: number;
 
-    /**
-     * The height in the virtual blockchain where the shared key is defined.
-     */
+
     height: number;
 }
 
@@ -137,11 +74,14 @@ export interface ApplicationLedgerActor {
     invitations: ApplicationLedgerActorInvitationState[];
 }
 
+ */
+
 
 
 /**
  * Describes the local state of the application ledger.
  */
+/*
 export interface ApplicationLedgerInternalStateObject {
     allowedSignatureSchemeIds: number[];
     allowedPkeSchemeIds: number[];
@@ -150,17 +90,15 @@ export interface ApplicationLedgerInternalStateObject {
     actors: ApplicationLedgerActor[];
 }
 
-
-/**
- * Describes the genesis snapshot which contains base64-encoded chunks.
  */
+
+
+/*
 export interface GenesisSnapshotDTO {
     base64EncodedChunks: string[];
 }
 
-/**
- * Provides information on the chain.
- */
+
 export interface ChainInformationDTO {
     height: number;
     lastBlockTimestamp: number;
@@ -191,6 +129,8 @@ export interface ValidatorNodeDTO {
     validatorNodeHash: Uint8Array;
 }
 
+ */
+
 export interface MicroblockHeaderObject {
     magicString: string;
     protocolVersion: number;
@@ -203,7 +143,7 @@ export interface MicroblockHeaderObject {
     bodyHash: Uint8Array;
     feesPayerAccount: Uint8Array
 }
-
+/*
 export interface MicroblockSection {
     type: number;
     data: Uint8Array;
@@ -212,13 +152,17 @@ export interface MicroblockSection {
 export interface MicroblockBody {
     body: MicroblockSection[];
 }
+ */
 
+/*
 export interface MicroblockInformationSchema {
     virtualBlockchainId: Uint8Array;
     virtualBlockchainType: number;
     header: Uint8Array;
 }
 
+ */
+/*
 export interface MicroblockBodyResponse {
     hash: Uint8Array,
     body: Uint8Array
@@ -241,6 +185,9 @@ export interface VirtualBlockchainState<InternalState = unknown> {
     internalState: InternalState
 }
 
+ */
+
+/*
 export interface VirtualBlockchainStateDto {
     type: number,
     height: number,
@@ -249,6 +196,8 @@ export interface VirtualBlockchainStateDto {
     serializedInternalState: Uint8Array
 }
 
+ */
+/*
 export interface MsgVirtualBlockchainState {
     stateData: Uint8Array
 }
@@ -258,6 +207,8 @@ export interface AccountStateDTO {
     balance: number;
     lastHistoryHash: Uint8Array
 }
+
+ */
 
 export interface AccountHash {
     accountHash: Uint8Array
@@ -272,10 +223,12 @@ export interface AccountTransactionInterface {
     amount: number,
     chainReference: Uint8Array
 }
-
+/*
 export interface AccountHistoryInterface {
     list: AccountTransactionInterface[]
 }
+
+ */
 /*
 export interface AccountTokenIssuance {
     amount: number;
@@ -316,10 +269,6 @@ export interface AccountStake {
 }
  */
 
-export interface ObjectList {
-    list: Uint8Array[];
-}
-
 export interface Proof {
     info: {
         title: string,
@@ -331,8 +280,3 @@ export interface Proof {
         data: any
     }[]
 }
-
-
-export const AccountHashSchema =  z.object({
-    accountHash: z.instanceof(Uint8Array)
-})

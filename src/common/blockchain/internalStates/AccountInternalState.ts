@@ -1,5 +1,6 @@
-import {AccountVBInternalStateObject} from "../../type/types";
+
 import {IInternalState} from "./IInternalState";
+import {AccountVBInternalStateObject} from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
 
 export class AccountInternalState implements IInternalState {
     constructor(private internalState: AccountVBInternalStateObject) {

@@ -18,7 +18,7 @@ export class ApplicationMicroblockStructureChecker implements IMicroblockStructu
                     [ SECTIONS.AT_MOST_ONE, SECTIONS.APP_DESCRIPTION ]
                 ]
             );
-            checker.expects(SECTIONS.ONE, SECTIONS.APP_SIGNATURE);
+            checker.expects(SECTIONS.ONE, SECTIONS.SIGNATURE);
             checker.endsHere();
             return true;
         } catch {

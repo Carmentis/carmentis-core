@@ -1,7 +1,11 @@
-import {ProtocolVBInternalStateObject} from "../../type/types";
 import {IInternalState} from "./IInternalState";
-import {ProtocolVariables} from "../../type/ProtocolVariables";
 import {Utils} from "../../utils/utils";
+import {
+    ProtocolVBInternalStateObject,
+    ProtocolVBInternalStateObjectSchema
+} from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
+import * as v from 'valibot';
+import {ProtocolVariables} from "../../type/valibot/blockchain/protocol/ProtocolVariables";
 
 enum ProtocolName {
     INITIAL_PROTOCOL_VERSION_NAME = "Stockolm"
@@ -13,11 +17,12 @@ export class ProtocolInternalState implements IInternalState {
     }
 
     static createFromObject(internalState: unknown) {
-        // TODO check type using better tools, currently we are limited to check if not undefined
-        if (internalState === undefined) throw new Error("Provided internal state is undefined");
-        const parsedInternalState = <ProtocolVBInternalStateObject>internalState;
-        if (parsedInternalState.currentProtocolVariables === undefined) throw new Error("Provided internal state is missing currentProtocolVariables field: " + JSON.stringify(internalState, null, 2) + "")
-        return new ProtocolInternalState(parsedInternalState);
+        const parseResult = v.safeParse(ProtocolVBInternalStateObjectSchema, internalState);
+        if (parseResult.success) {
+            return new ProtocolInternalState(parseResult.output)
+        } else {
+            throw new Error(`Provided internal state is not valid: ${parseResult.issues}` )
+        }
     }
 
     static createInitialState() {

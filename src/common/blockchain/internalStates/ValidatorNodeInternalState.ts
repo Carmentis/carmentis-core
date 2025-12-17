@@ -1,6 +1,7 @@
-import {ValidatorNodeVBInternalStateObject} from "../../type/types";
+
 import {Utils} from "../../utils/utils";
 import {Hash} from "../../entities/Hash";
+import {ValidatorNodeVBInternalStateObject} from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
 
 export class ValidatorNodeInternalState {
     constructor(private internalState: ValidatorNodeVBInternalStateObject) {

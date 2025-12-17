@@ -8,6 +8,7 @@ import {Logger} from "../common/utils/Logger";
 import {Microblock} from "../common/blockchain/microblock/Microblock";
 import {CMTSToken} from "../common/economics/currencies/token";
 import {Secp256k1PrivateSignatureKey} from "../common/crypto/signature/secp256k1/Secp256k1PrivateSignatureKey";
+import {SectionType} from "../common/type/valibot/blockchain/section/SectionType";
 
 const NODE_URL = "http://localhost:26657";
 
@@ -32,12 +33,14 @@ describe('Chain test', async () => {
     it("creating an account", async () => {
         const firstAccountPrivateKey = await MLDSA65PrivateSignatureKey.gen();
         const firstAccountCreationMb = Microblock.createGenesisAccountMicroblock();
-        firstAccountCreationMb.addAccountCreationSection({
+        firstAccountCreationMb.addSection({
+            type: SectionType.ACCOUNT_CREATION,
             amount: CMTSToken.zero().getAmountAsAtomic(),
             sellerAccount: genesisAccountId.toBytes()
         });
         const firstAccountPublicKey = await firstAccountPrivateKey.getPublicKey();
-        firstAccountCreationMb.addAccountPublicKeySection({
+        firstAccountCreationMb.addSection({
+            type: SectionType.ACCOUNT_PUBLIC_KEY,
             publicKey: await firstAccountPublicKey.getPublicKeyAsBytes(),
             schemeId: firstAccountPublicKey.getSignatureSchemeId(),
         })

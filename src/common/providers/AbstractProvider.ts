@@ -4,17 +4,19 @@ import {Hash} from "../entities/Hash";
 import {ValidatorNodeVb} from "../blockchain/virtualBlockchains/ValidatorNodeVb";
 import {AccountVb} from "../blockchain/virtualBlockchains/AccountVb";
 import {ApplicationLedgerVb} from "../blockchain/virtualBlockchains/ApplicationLedgerVb";
-import {MicroblockBody, MicroblockHeaderObject, VirtualBlockchainState} from "../type/types";
 import {ApplicationVb} from "../blockchain/virtualBlockchains/ApplicationVb";
 import {OrganizationVb} from "../blockchain/virtualBlockchains/OrganizationVb";
 import {ProtocolVb} from "../blockchain/virtualBlockchains/ProtocolVb";
 import {VirtualBlockchain} from "../blockchain/virtualBlockchains/VirtualBlockchain";
 import {VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
-import {VirtualBlockchainStatus} from "../type/VirtualBlockchainStatus";
 import {ProtocolInternalState} from "../blockchain/internalStates/ProtocolInternalState";
 import {InternalStateFactory} from "../blockchain/internalStates/InternalStateFactory";
 import {Logger} from "../utils/Logger";
 import {Utils} from "../utils/utils";
+import {MicroblockHeader} from "../type/valibot/blockchain/microblock/MicroblockHeader";
+import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBody";
+import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
+import {VirtualBlockchainStatus} from "../type/valibot/provider/VirtualBlockchainStatus";
 
 export abstract class AbstractProvider implements IProvider {
     private log = Logger.getAbstractProviderLogger(AbstractProvider.name);
@@ -62,7 +64,7 @@ export abstract class AbstractProvider implements IProvider {
     abstract getAccountIdFromPublicKey(publicKey: PublicSignatureKey): Promise<Hash>;
     abstract getListOfMicroblockBody(microblockHashes: Uint8Array[]): Promise<MicroblockBody[]>
     abstract getMicroblockBody(microblockHash: Hash): Promise<MicroblockBody | null>;
-    abstract getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeaderObject | null>;
+    abstract getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeader | null>;
     abstract getVirtualBlockchainIdContainingMicroblock(microblockHash: Hash): Promise<Hash>;
     abstract getVirtualBlockchainState(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainState | null>;
     abstract getProtocolVariables(): Promise<ProtocolInternalState>;

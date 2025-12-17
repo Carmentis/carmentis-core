@@ -6,7 +6,7 @@ import {configure, getConsoleSink} from "@logtape/logtape";
 import {Secp256k1PublicSignatureKey} from "../../crypto/signature/secp256k1/Secp256k1PublicSignatureKey";
 import {Secp256k1PrivateSignatureKey} from "../../crypto/signature/secp256k1/Secp256k1PrivateSignatureKey";
 import {ProtocolVb} from "./ProtocolVb";
-import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {BlockchainUtils} from "../../utils/BlockchainUtils";
 
 
 beforeAll(async () => {

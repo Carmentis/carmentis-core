@@ -1,7 +1,6 @@
 import * as DATA from './data';
 import {CONTRACT_SCHEMA, PROTOCOL_VARIABLES, Schema} from './schemas';
-import {SectionType} from '../type/SectionType';
-import {Section} from "../type/Section";
+import {SectionType} from '../type/valibot/blockchain/section/SectionType';
 
 // ============================================================================================================================ //
 //  Constraints                                                                                                                 //
@@ -34,8 +33,6 @@ export const SIGNATURE_SCHEMA = {
 // ============================================================================================================================ //
 export const PROTOCOL_CREATION      = SectionType.PROTOCOL_CREATION;
 export const PROTOCOL_UPDATE = SectionType.PROTOCOL_UPDATE;
-export const PROTOCOL_SIGNATURE       = SectionType.PROTOCOL_SIGNATURE;
-
 const PROTOCOL: Schema[] = [] as const;
 
 PROTOCOL[PROTOCOL_CREATION] = {
@@ -56,10 +53,6 @@ PROTOCOL[PROTOCOL_UPDATE] = {
       {name: 'protocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES }
   ]
 };
-
-
-PROTOCOL[PROTOCOL_SIGNATURE] = SIGNATURE_SCHEMA
-
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
@@ -72,7 +65,6 @@ export const ACCOUNT_VESTING_TRANSFER  = SectionType.ACCOUNT_VESTING_TRANSFER;
 export const ACCOUNT_ESCROW_TRANSFER   = SectionType.ACCOUNT_ESCROW_TRANSFER;
 export const ACCOUNT_ESCROW_SETTLEMENT = SectionType.ACCOUNT_ESCROW_SETTLEMENT;
 export const ACCOUNT_STAKE             = SectionType.ACCOUNT_STAKE;
-export const ACCOUNT_SIGNATURE         = SectionType.ACCOUNT_SIGNATURE;
 
 const ACCOUNT: Schema[] = [] as const;
 /*
@@ -159,8 +151,6 @@ ACCOUNT[ACCOUNT_STAKE] = {
   ]
 };
 
-ACCOUNT[ACCOUNT_SIGNATURE] = SIGNATURE_SCHEMA
-
 // ============================================================================================================================ //
 //  Validator node                                                                                                              //
 // ============================================================================================================================ //
@@ -168,8 +158,6 @@ export const VN_CREATION         = SectionType.VN_CREATION;
 export const VN_COMETBFT_PUBLIC_KEY_DECLARATION         = SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION;
 export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
 export const VN_VOTING_POWER_UPDATE = SectionType.VN_VOTING_POWER_UPDATE;
-export const VN_SIGNATURE           = SectionType.VN_SIGNATURE;
-
 const VALIDATOR_NODE: Schema[] = [] as const;
 
 
@@ -203,15 +191,11 @@ VALIDATOR_NODE[VN_VOTING_POWER_UPDATE] = {
   ]
 };
 
-VALIDATOR_NODE[VN_SIGNATURE] = SIGNATURE_SCHEMA
-
 // ============================================================================================================================ //
 //  Organization                                                                                                                //
 // ============================================================================================================================ //
 export const ORG_CREATION    = SectionType.ORG_CREATION;
 export const ORG_DESCRIPTION   = SectionType.ORG_DESCRIPTION;
-export const ORG_SERVER        = SectionType.ORG_SERVER;
-export const ORG_SIGNATURE     = SectionType.ORG_SIGNATURE;
 
 const ORGANIZATION: Schema[] = [] as const;
 
@@ -232,14 +216,6 @@ ORGANIZATION[ORG_DESCRIPTION] = {
   ]
 };
 
-ORGANIZATION[ORG_SERVER] = {
-  label: 'ORG_SERVER',
-  definition: [
-    { name: 'endpoint', type: DATA.TYPE_STRING }
-  ]
-};
-
-ORGANIZATION[ORG_SIGNATURE] = SIGNATURE_SCHEMA
 
 // ============================================================================================================================ //
 //  Application                                                                                                                 //
@@ -247,8 +223,6 @@ ORGANIZATION[ORG_SIGNATURE] = SIGNATURE_SCHEMA
 
 export const APP_CREATION = SectionType.APP_CREATION;
 export const APP_DESCRIPTION = SectionType.APP_DESCRIPTION;
-export const APP_SIGNATURE   = SectionType.APP_SIGNATURE;
-
 const APPLICATION: Schema[] = [] as const;
 
 
@@ -269,7 +243,6 @@ APPLICATION[APP_DESCRIPTION] = {
   ]
 };
 
-APPLICATION[APP_SIGNATURE] = SIGNATURE_SCHEMA
 
 // ============================================================================================================================ //
 //  Application ledger                                                                                                          //
@@ -286,8 +259,6 @@ export const APP_LEDGER_PUBLIC_CHANNEL_DATA  = SectionType.APP_LEDGER_PUBLIC_CHA
 export const APP_LEDGER_PRIVATE_CHANNEL_DATA = SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA;
 export const APP_LEDGER_AUTHOR               = SectionType.APP_LEDGER_AUTHOR;
 export const APP_LEDGER_ENDORSEMENT_REQUEST  = SectionType.APP_LEDGER_ENDORSEMENT_REQUEST;
-export const APP_LEDGER_ENDORSER_SIGNATURE   = SectionType.APP_LEDGER_ENDORSER_SIGNATURE;
-export const APP_LEDGER_AUTHOR_SIGNATURE     = SectionType.APP_LEDGER_AUTHOR_SIGNATURE;
 
 const APP_LEDGER: Schema[] = [] as const;
 
@@ -394,10 +365,6 @@ APP_LEDGER[APP_LEDGER_ENDORSEMENT_REQUEST] = {
     { name: 'message',  type: DATA.TYPE_STRING }
   ]
 };
-
-APP_LEDGER[APP_LEDGER_ENDORSER_SIGNATURE] = SIGNATURE_SCHEMA
-
-APP_LEDGER[APP_LEDGER_AUTHOR_SIGNATURE] = SIGNATURE_SCHEMA
 
 export const ALL_SECTIONS_SCHEMAS = {
   ...PROTOCOL,

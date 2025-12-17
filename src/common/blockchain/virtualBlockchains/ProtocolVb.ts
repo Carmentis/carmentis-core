@@ -10,6 +10,7 @@ import {IProvider} from "../../providers/IProvider";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {ProtocolInternalStateUpdater} from "../internalStatesUpdater/ProtocolInternalStateUpdater";
+import {Utils} from "../../utils/utils";
 
 export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {
 
@@ -35,6 +36,22 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {
             stateUpdaterVersion
         );
         return localStateUpdater.updateState(state, microblock);
+    }
+
+
+
+    async getVirtualBlockchainState() {
+        const height = this.getHeight();
+        const lastMicroblockHash = height === 0 ?
+            Utils.getNullHash() :
+            (await this.getLastMicroblock()).getHash().toBytes();
+        return {
+            expirationDay: this.getExpirationDay(),
+            height: height,
+            internalState: this.internalState.toObject(),
+            lastMicroblockHash: lastMicroblockHash,
+            type: this.getType()
+        };
     }
 
     /**

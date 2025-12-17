@@ -7,11 +7,8 @@ export enum LockType {
 }
 
 export type EscrowParameters = {
-    identifier: Uint8Array,
     fundEmitterAccountId: Uint8Array,
-    transferAuthorizerAccountId: Uint8Array,
-    startTimestamp: number,
-    durationDays: number
+    transferAuthorizerAccountId: Uint8Array
 };
 
 export type VestingParameters = {

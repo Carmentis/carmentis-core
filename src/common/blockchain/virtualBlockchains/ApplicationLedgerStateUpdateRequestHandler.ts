@@ -22,6 +22,14 @@ import {ICryptoKeyHandler} from "../../wallet/ICryptoKeyHandler";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {Provider} from "../../providers/Provider";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {
+    ApplicationLedgerActorCreationSection, ApplicationLedgerActorSubscriptionSection,
+    ApplicationLedgerChannelCreationSection, ApplicationLedgerChannelInvitationSection,
+    ApplicationLedgerEndorsementRequestSection, ApplicationLedgerPrivateChannelDataSection,
+    ApplicationLedgerPublicChannelDataSection, ApplicationLedgerSharedSecretSection,
+    Section
+} from "../../type/valibot/blockchain/section/sections";
 
 export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedgerMicroblockBuilder {
 
@@ -77,21 +85,25 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         const isBuildingGenesisMicroBlock = this.vb.isEmpty();
         if (isBuildingGenesisMicroBlock) {
             // genesis -> link the application ledger with the application id
-            const section = this.mbUnderConstruction.addApplicationLedgerCreationSection({
+            const section: Section = {
+                type: SectionType.APP_LEDGER_CREATION,
                 applicationId: Utils.binaryFromHexa(object.applicationId)
-            });
+            }
+            this.mbUnderConstruction.addSection(section);
             await this.updateStateWithSection(section);
         }
 
         // add the new actors
         let freeActorId = this.state.getNumberOfActors();
         for (const def of object.actors || []) {
-            const createdSection = this.mbUnderConstruction.addApplicationLedgerActorCreationSection({
+            const section: ApplicationLedgerActorCreationSection = {
+                type: SectionType.APP_LEDGER_ACTOR_CREATION,
                 id: freeActorId,
-                type: ActorType.UNKNOWN,
+                actorType: ActorType.UNKNOWN,
                 name: def.name
-            })
-            await this.updateStateWithSection(createdSection);
+            }
+            this.mbUnderConstruction.addSection(section)
+            await this.updateStateWithSection(section);
             freeActorId = freeActorId + 1;
         }
 
@@ -114,13 +126,15 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         // add the new channels
         let freeChannelId = this.state.getNumberOfChannels();
         for (const def of object.channels || []) {
-            const createdSection = this.mbUnderConstruction.addApplicationLedgerChannelCreationSection({
+            const section: ApplicationLedgerChannelCreationSection = {
+                type: SectionType.APP_LEDGER_CHANNEL_CREATION,
                 id: freeChannelId,
                 isPrivate: !def.public,
                 creatorId: authorId,
                 name: def.name
-            });
-            await this.updateStateWithSection(createdSection);
+            }
+            this.mbUnderConstruction.addSection(section);
+            await this.updateStateWithSection(section);
             freeChannelId += 1;
         }
 
@@ -171,18 +185,22 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
                 const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, this.vb.getHeight(), channelId);
                 const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, this.vb.getHeight(), channelId);
                 const encryptedData = Crypto.Aes.encryptGcm(channelSectionKey, channelData.data, channelSectionIv);
-                const createdSection = this.mbUnderConstruction.addApplicationLedgerPrivateChannelSection({
+                const section: ApplicationLedgerPrivateChannelDataSection = {
+                    type: SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA,
                     channelId: channelId,
                     merkleRootHash: Utils.binaryFromHexa(channelData.merkleRootHash),
                     encryptedData: encryptedData
-                });
-                await this.updateStateWithSection(createdSection)
+                }
+                this.mbUnderConstruction.addSection(section);
+                await this.updateStateWithSection(section)
             } else {
-                const createdSection = this.mbUnderConstruction.addApplicationLedgerPublicChannelSection({
-                    channelId,
+                const section: ApplicationLedgerPublicChannelDataSection = {
+                    type: SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA,
+                    channelId: channelId,
                     data: channelData.data
-                });
-                await this.updateStateWithSection(createdSection)
+                }
+                this.mbUnderConstruction.addSection(section)
+                await this.updateStateWithSection(section)
             }
         }
 
@@ -198,11 +216,14 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
             // we replace the message with an empty string.
             const endorserId = this.getActorIdFromActorName(object.endorser);
             const messageToShow = object.approvalMessage ?? "";
-            const createdSection = this.mbUnderConstruction.addApplicationLedgerEndorsementRequestSection({
+            const section: ApplicationLedgerEndorsementRequestSection = {
+                type: SectionType.APP_LEDGER_ENDORSEMENT_REQUEST,
                 message: messageToShow,
                 endorserId
-            });
-            await this.updateStateWithSection(createdSection)
+
+            }
+            this.mbUnderConstruction.addSection(section);
+            await this.updateStateWithSection(section)
         }
 
         return this.mbUnderConstruction
@@ -265,13 +286,15 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         logger.debug(`Channel key for channel ${channelName}: ${channelKey}`)
 
         // we create the section containing the encrypted channel key (that can only be decrypted by the host and the guest)
-        const createdSection = this.mbUnderConstruction.addApplicationLedgerChannelInvitationSection({
+        const section: ApplicationLedgerChannelInvitationSection = {
+            type: SectionType.APP_LEDGER_CHANNEL_INVITATION,
             channelId,
             hostId,
             guestId,
             encryptedChannelKey,
-        })
-        await this.updateStateWithSection(createdSection);
+        }
+        this.mbUnderConstruction.addSection(section)
+        await this.updateStateWithSection(section);
     }
 
 
@@ -282,12 +305,14 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         } = await this.generateSharedKeyAndEncryptedSharedKey(hostPrivateDecryptionKey, guestId);
 
         // we create the section containing the shared secret key
-        const addedSection = this.mbUnderConstruction.addApplicationLedgerSharedKeySection({
+        const section: ApplicationLedgerSharedSecretSection = {
+            type: SectionType.APP_LEDGER_SHARED_SECRET,
             hostId,
             guestId,
             encryptedSharedKey,
-        });
-        await this.updateStateWithSection(addedSection);
+        }
+        this.mbUnderConstruction.addSection(section)
+        await this.updateStateWithSection(section);
 
         return hostGuestSharedKey;
     }
@@ -364,7 +389,8 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         // The organization id is currently not used in the protocol.
         // Initially, it has been designed to handle the case where a user from another organization is added to an external vb.
         const nullOrganizationId = Utils.getNullHash();
-        const addedSection =  this.mbUnderConstruction.addApplicationLedgerActorSubscriptionSection({
+        const section: ApplicationLedgerActorSubscriptionSection = {
+            type: SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION,
             actorId,
             actorType: unknownActorType,
             organizationId: nullOrganizationId,
@@ -372,8 +398,9 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
             signaturePublicKey: await actorPublicSignatureKey.getPublicKeyAsBytes(),
             pkeSchemeId: actorPublicEncryptionKey.getSchemeId(),
             pkePublicKey: await actorPublicEncryptionKey.getRawPublicKey(),
-        });
-        await this.updateStateWithSection(addedSection);
+        }
+        this.mbUnderConstruction.addSection(section);
+        await this.updateStateWithSection(section);
     }
 
 

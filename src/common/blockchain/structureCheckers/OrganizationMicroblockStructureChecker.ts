@@ -14,11 +14,9 @@ export class OrganizationMicroblockStructureChecker implements IMicroblockStruct
             checker.group(
                 SECTIONS.AT_LEAST_ONE,
                 [
-                    [ SECTIONS.AT_MOST_ONE, SECTIONS.ORG_DESCRIPTION ],
-                    [ SECTIONS.AT_MOST_ONE, SECTIONS.ORG_SERVER ]
                 ]
             );
-            checker.expects(SECTIONS.ONE, SECTIONS.ORG_SIGNATURE);
+            checker.expects(SECTIONS.ONE, SECTIONS.SIGNATURE);
             checker.endsHere();
             return true;
         } catch {

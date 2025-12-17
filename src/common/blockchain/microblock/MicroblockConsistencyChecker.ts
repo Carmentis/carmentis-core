@@ -17,7 +17,7 @@ import {Optional} from "../../entities/Optional";
 import {IllegalStateError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
 import {IProvider} from "../../providers/IProvider";
-import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {BlockchainUtils} from "../../utils/BlockchainUtils";
 import {FeesCalculationFormulaFactory} from "../feesCalculator/FeesCalcuationFormulaFactory";
 import {IFeesFormula} from "../feesCalculator/IFeesFormula";
 
@@ -165,7 +165,7 @@ export class MicroblockConsistencyChecker {
 
         const microblock = this.checkedMicroblock;
         const signatureSection = microblock.getLastSignatureSection();
-        const usedSchemeId = signatureSection.object.schemeId;
+        const usedSchemeId = signatureSection.schemeId;
         const usedFeesCalculationFormula = feesCalculationFormula === undefined ?
             await this.getFeesCalculationFormulaFromProvider() : feesCalculationFormula;
         const declaredGas = microblock.getGas();

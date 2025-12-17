@@ -28,17 +28,12 @@ import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {
     ApplicationLedgerMicroblockStructureChecker
 } from "../structureCheckers/ApplicationLedgerMicroblockStructureChecker";
-import {
-    ApplicationLedgerActorSubscriptionSection,
-    ApplicationLedgerChannelInvitationSection,
-    ApplicationLedgerSharedKeySection
-} from "../../type/sections";
+
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Hash} from "../../entities/Hash";
 import {Height} from "../../type/Height";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
-import {SectionType} from "../../type/SectionType";
-import {Section} from "../../type/Section";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {IProvider} from "../../providers/IProvider";
 import {ApplicationLedgerInternalState} from "../internalStates/ApplicationLedgerInternalState";
@@ -47,6 +42,10 @@ import {ICryptoKeyHandler} from "../../wallet/ICryptoKeyHandler";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
+import {
+    ApplicationLedgerActorSubscriptionSection, ApplicationLedgerChannelInvitationSection,
+    ApplicationLedgerSharedSecretSection
+} from "../../type/valibot/blockchain/section/sections";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInternalState> {
 
@@ -65,7 +64,20 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     constructor(provider: IProvider, state: ApplicationLedgerInternalState = ApplicationLedgerInternalState.createInitialState()) {
         super(provider, VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN, state )
     }
-    
+
+    async getVirtualBlockchainState() {
+        const height = this.getHeight();
+        const lastMicroblockHash = height === 0 ?
+            Utils.getNullHash() :
+            (await this.getLastMicroblock()).getHash().toBytes();
+        return {
+            expirationDay: this.getExpirationDay(),
+            height: height,
+            internalState: this.internalState.toObject(),
+            lastMicroblockHash: lastMicroblockHash,
+            type: this.getType()
+        };
+    }
 
     protected async updateInternalState(protocolState: ProtocolInternalState, state: ApplicationLedgerInternalState, microblock: Microblock) {
         const applicationLedgerInternalStateUpdaterVersion = protocolState.getApplicationLedgerInternalStateUpdaterVersion();
@@ -114,25 +126,24 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
             if (isNotSubscribed) continue;
 
             try {
+                // we search for the section describing the actor subscription
                 const keyMicroblock = await this.getMicroblock(actor.signatureKeyHeight);
-                const keySection = keyMicroblock.getSection((section: Section<ApplicationLedgerActorSubscriptionSection>) => {
+                for (const section of keyMicroblock.getAllSections()) {
                     // we search a section declaring an actor subscription
-                    const isActorSubscriptionSection = section.type === SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION;
-                    if (!isActorSubscriptionSection) return false;
+                    if (section.type !== SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION) continue;
 
                     // we search a section focusing the current actor
-                    const {actorId: actorFocusedByThisSection} = section.object;
+                    const {actorId: actorFocusedByThisSection} = section;
                     const isFocusingActorInTheLoop = actorFocusedByThisSection === actorId;
-                    if (!isFocusingActorInTheLoop) return false;
+                    if (!isFocusingActorInTheLoop) continue;
 
                     // we now ensure that the public signature key declared in the section and used by the current user are matching
-                    const {signaturePublicKey} = section.object;
-                    const isMatchingPublicKeys = Utils.binaryIsEqual(section.object.signaturePublicKey, publicKeyBytes);
+                    const {signaturePublicKey} = section;
+                    const isMatchingPublicKeys = Utils.binaryIsEqual(section.signaturePublicKey, publicKeyBytes);
                     logger.debug(`Is public key matching for actor ${actor.name} (id ${actorId})? ${signaturePublicKey} and ${publicKeyBytes}: ${isMatchingPublicKeys}`);
-                    return isMatchingPublicKeys
-                });
-                logger.debug(`Matching public signature key: {actor.name} (id ${actorId})`, {actor})
-                if (keySection) {
+                    if (!isMatchingPublicKeys) continue
+
+                    logger.debug(`Matching public signature key: {actor.name} (id ${actorId})`, {actor})
                     return actorId;
                 }
             } catch (e) {
@@ -166,21 +177,28 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         const isPkeDefined =
             typeof actorPublicKeyEncryptionHeightDefinition === 'number' &&
             actorPublicKeyEncryptionHeightDefinition !== 0;
-        if (!isPkeDefined) {
-            throw new ProtocolError(`Actor ${actorId} has not subscribed to a public encryption key.`)
+        if (isPkeDefined) {
+            // search the microblock containing the actor subscription (and the public encryption key definition)
+            const microBlock = await this.getMicroblock(actorPublicKeyEncryptionHeightDefinition);
+            for (const section of microBlock.getAllSections()) {
+                // we search a section declaring an actor subscription for a specific actor id
+                if (section.type !== SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION) continue;
+                const isMatchingActorId = section.actorId == actorId
+                if (!isMatchingActorId) continue;
+
+
+                // reconstruct the public encryption key
+                const rawPkePublicKey = section.pkePublicKey;
+                const pkeSchemeId = section.pkeSchemeId;
+                return CryptoSchemeFactory.createPublicEncryptionKey(pkeSchemeId, rawPkePublicKey);
+            }
         }
 
-        // search the microblock containing the actor subscription (and the public encryption key definition)
-        const microBlock = await this.getMicroblock(actorPublicKeyEncryptionHeightDefinition);
-        const subscribeSection = microBlock.getSection((section: Section) =>
-            section.type == SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION &&
-            section.object.actorId == actorId
-        );
 
-        // reconstruct the public encryption key
-        const rawPkePublicKey = subscribeSection.object.pkePublicKey;
-        const pkeSchemeId = subscribeSection.object.pkeSchemeId;
-        return CryptoSchemeFactory.createPublicEncryptionKey(pkeSchemeId, rawPkePublicKey);
+
+        throw new ProtocolError(`Actor ${actorId} has not subscribed to a public encryption key.`)
+
+
     }
 
 
@@ -205,53 +223,17 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
 
         // search the section declaring the (encrypted) shared key in the microblock specified in the state.
         const microBlock = await this.getMicroblock(sharedSecretFromState.height);
-        const sharedSecretSection = microBlock.getSection((section) =>
-            section.type == SectionType.APP_LEDGER_SHARED_SECRET &&
-            section.object.hostId == hostId &&
-            section.object.guestId == guestId
-        );
-
-        // if the condition is verified, then there is a shared secret section in the vb declaring
-        // a shared secret between guest and host but no shared key is included in the section: very very bad!
-        if (sharedSecretSection === undefined) {
-            throw new NoSharedSecretError(guestId, hostId);
+        for (const section of microBlock.getAllSections()) {
+            if (section.type !== SectionType.APP_LEDGER_SHARED_SECRET) continue;
+            if (section.hostId !== hostId || section.guestId !== guestId) continue;
+            return section.encryptedSharedKey;
         }
 
-        return sharedSecretSection.object.encryptedChannelKey;
+
+        // At this step, there is a shared secret section in the vb declaring
+        // a shared secret between guest and host but no shared key is included in the section: very very bad!
+        throw new NoSharedSecretError(guestId, hostId);
     }
-
-
-
-
-    /*
-    async signAsAuthor(privateKey: PrivateSignatureKey) {
-        const object = this.createSignature(privateKey);
-        await this.addSection(SECTIONS.APP_LEDGER_AUTHOR_SIGNATURE, object);
-    }
-
-    async signAsEndorser(privateKey: PrivateSignatureKey) {
-        const object = this.createSignature(privateKey);
-        await this.addSection(SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, object);
-        return object.signature
-    }
-
-    async addEndorserSignature(signature: Uint8Array) {
-        return this.addSection(SECTIONS.APP_LEDGER_ENDORSER_SIGNATURE, {signature})
-    }
-
-     */
-
-    /*
-    async addEndorsementRequest(endorserId: number, messageToDisplay: string) {
-        const section: ApplicationLedgerEndorsementRequestSection = {
-            endorserId,
-            message: messageToDisplay
-        };
-        return this.addSection(SECTIONS.APP_LEDGER_ENDORSEMENT_REQUEST, section)
-    }
-
-     */
-
 
 
 
@@ -328,9 +310,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         const listOfChannels: { channelId: number, data: object, merkleRootHash?: string }[] = [];
 
         // we load the public channels that should be always accessible
-        const publicChannelDataSections = microblock.getPublicChannelDataSections();
-        for (const publicChannelSection of publicChannelDataSections) {
-            const {channelId, data} = publicChannelSection.object;
+        for (const section of microblock.getAllSections()) {
+            if (section.type !== SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA) continue;
+            const {channelId, data} = section;
             listOfChannels.push({
                 channelId: channelId,
                 data: data
@@ -361,9 +343,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
 
             // if the current actor is found, then we attempt to decrypt the private channels
             if (typeof currentActorId === 'number') {
-                const privateChannelDataSections = microblock.getPrivateChannelDataSections();
-                for (const section of privateChannelDataSections) {
-                    const {channelId, encryptedData, merkleRootHash} = section.object;
+                for (const section of microblock.getAllSections()) {
+                    // we only focus on private channel data sections
+                    if (section.type !== SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA) continue;
+                    const {channelId, encryptedData, merkleRootHash} = section;
                     try {
                         const channelKey = await this.getChannelKey(currentActorId, channelId, hostIdentity);
                         const channelSectionKey = this.deriveChannelSectionKey(channelKey, height, channelId);
@@ -534,16 +517,27 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
 
         // we search for the channel invitation
         const invitationMicroblock = await this.getMicroblock(actorOnChannelInvitation.height);
-        const invitationSection = invitationMicroblock.getSection<ApplicationLedgerChannelInvitationSection>((section: Section<ApplicationLedgerChannelInvitationSection>) =>
-            section.type == SECTIONS.APP_LEDGER_CHANNEL_INVITATION &&
-            section.object.channelId == channelId &&
-            section.object.guestId == actorId
-        );
+        let invitationSection: ApplicationLedgerChannelInvitationSection | undefined;
+        for (const section of invitationMicroblock.getAllSections()) {
+            if (section.type !== SectionType.APP_LEDGER_CHANNEL_INVITATION) continue;
+            if (section.guestId !== actorId || section.channelId !== channelId) continue;
+            invitationSection = section;
+            /*
+            const invitationSection = invitationMicroblock.getSection<ApplicationLedgerChannelInvitationSection>((section: Section<ApplicationLedgerChannelInvitationSection>) =>
+                section.type == SECTIONS.APP_LEDGER_CHANNEL_INVITATION &&
+                section.object.channelId == channelId &&
+                section.object.guestId == actorId
+            );
 
-        const hostId = invitationSection.object.hostId;
-        const encryptedChannelKey = invitationSection.object.encryptedChannelKey;
+             */
+        }
+        // raise an error if the actor is not invited to the channel
+        if (invitationSection === undefined) throw new ActorNotInvitedError(actorId, channelId);
+
 
         // look for the shared secret between actorId and hostId
+        const hostId = invitationSection.hostId;
+        const encryptedChannelKey = invitationSection.encryptedChannelKey;
         const sharedSecret = actor.sharedSecrets.find(
             (sharedSecret) => sharedSecret.peerActorId == hostId
         );
@@ -552,17 +546,20 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         }
 
         const sharedSecretMicroblock = await this.getMicroblock(sharedSecret.height);
-        const sharedSecretSection = sharedSecretMicroblock.getSection<ApplicationLedgerSharedKeySection>((section: any) =>
-            section.type == SECTIONS.APP_LEDGER_SHARED_SECRET &&
-            section.object.hostId == hostId &&
-            section.object.guestId == actorId
-        );
-        const encryptedSharedKey = sharedSecretSection.object.encryptedSharedKey;
-        const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
-            await actorPrivateDecryptionKey.decrypt(encryptedSharedKey)
-        );
-        const channelKey = hostGuestSharedKey.decrypt(encryptedChannelKey);
-        return channelKey;
+        for (const section of sharedSecretMicroblock.getAllSections()) {
+            if (section.type !== SectionType.APP_LEDGER_SHARED_SECRET) continue;
+            if (section.hostId !== hostId || section.guestId !== actorId) continue;
+            const encryptedSharedKey = section.encryptedSharedKey;
+            const hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
+                await actorPrivateDecryptionKey.decrypt(encryptedSharedKey)
+            );
+            const channelKey = hostGuestSharedKey.decrypt(encryptedChannelKey);
+            return channelKey;
+
+        }
+        // at this point, no shared key has been found
+        throw new NoSharedSecretError(actorId, hostId);
+
     }
 
     /**

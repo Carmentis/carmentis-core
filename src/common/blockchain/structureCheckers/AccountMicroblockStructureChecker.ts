@@ -32,7 +32,7 @@ export class AccountMicroblockStructureChecker implements IMicroblockStructureCh
                     ]
                 );
             }
-            checker.expects(SECTIONS.ONE, SECTIONS.ACCOUNT_SIGNATURE);
+            checker.expects(SECTIONS.ONE, SECTIONS.SIGNATURE);
             checker.endsHere();
             return true;
         } catch {

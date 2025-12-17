@@ -2,11 +2,10 @@ import {Microblock} from "../microblock/Microblock";
 import {Provider} from "../../providers/Provider";
 import {Hash} from "../../entities/Hash";
 import {IllegalParameterError, MicroBlockNotFoundInVirtualBlockchainAtHeightError} from "../../errors/carmentis-error";
-import {SectionType} from "../../type/SectionType";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {IMicroblockStructureChecker} from "../structureCheckers/IMicroblockStructureChecker";
 import {EncoderFactory} from "../../utils/encoder";
-import {Section} from "../../type/Section";
 import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
 import {ThrownErrorMicroblockSearchFailureFallback} from "./fallbacks/ThrownErrorMicroblockSearchFailureFallback";
 import {Height} from "../../type/Height";
@@ -14,11 +13,11 @@ import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {Logger} from "../../utils/Logger";
 import {IProvider} from "../../providers/IProvider";
 import {OnMicroblockInsertionEventListener} from "./events/OnMicroblockInsertedEventListener";
-import {VirtualBlockchainState} from "../../type/types";
 import {IInternalState} from "../internalStates/IInternalState";
-import {BlockchainUtils} from "../../utils/blockchainUtils";
+import {BlockchainUtils} from "../../utils/BlockchainUtils";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {Utils} from "../../utils/utils";
+import {VirtualBlockchainState} from "../../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -107,6 +106,8 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
      */
     protected abstract updateInternalState(protocolState: ProtocolInternalState, state: InternalState, microblock: Microblock): Promise<InternalState>;
 
+    abstract getVirtualBlockchainState(): Promise<VirtualBlockchainState>;
+
     /**
      * Retrieves the local state of the current instance.
      *
@@ -178,20 +179,7 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         this.expirationDay = day;
     }
 
-    async getVirtualBlockchainState(): Promise<VirtualBlockchainState> {
-        const height = this.getHeight();
-        const lastMicroblockHash = height === 0 ?
-            Utils.getNullHash() :
-            (await this.getLastMicroblock()).getHash().toBytes();
-        const vbState: VirtualBlockchainState = {
-            expirationDay: this.getExpirationDay(),
-            height: height,
-            internalState: this.internalState.toObject(),
-            lastMicroblockHash: lastMicroblockHash,
-            type: this.getType()
-        };
-        return vbState
-    }
+
 
     async getSerializedVirtualBlockchainState(): Promise<Uint8Array> {
         return BlockchainUtils.encodeVirtualBlockchainState(

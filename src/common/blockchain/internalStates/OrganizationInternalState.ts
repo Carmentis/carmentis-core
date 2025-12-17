@@ -1,6 +1,7 @@
-import {OrganizationVBInternalStateObject} from "../../type/types";
+
 import {Utils} from "../../utils/utils";
 import {Hash} from "../../entities/Hash";
+import {OrganizationVBInternalStateObject} from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
 
 export class OrganizationInternalState {
     constructor(private internalState: OrganizationVBInternalStateObject) {

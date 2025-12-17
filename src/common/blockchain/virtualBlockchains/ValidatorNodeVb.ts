@@ -7,11 +7,11 @@ import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Microblock} from "../microblock/Microblock";
 import {IProvider} from "../../providers/IProvider";
 import {IllegalStateError} from "../../errors/carmentis-error";
-import {SectionType} from "../../type/SectionType";
-import {ValidatorNodeCometbftPublicKeyDeclarationSection} from "../../type/sections";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {ValidatorNodeInternalState} from "../internalStates/ValidatorNodeInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
+import {Utils} from "../../utils/utils";
 
 export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalState> {
 
@@ -30,6 +30,20 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
         );
         return stateUpdater.updateState(state, microblock);
     }
+
+    async getVirtualBlockchainState() {
+        const height = this.getHeight();
+        const lastMicroblockHash = height === 0 ?
+            Utils.getNullHash() :
+            (await this.getLastMicroblock()).getHash().toBytes();
+        return {
+            expirationDay: this.getExpirationDay(),
+            height: height,
+            internalState: this.internalState.toObject(),
+            lastMicroblockHash: lastMicroblockHash,
+            type: this.getType()
+        };
+    }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {
         const checker = new ValidatorNodeMicroblockStructureChecker();
@@ -40,10 +54,15 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
         const height = this.internalState.getCometbftPublicKeyDeclarationHeight();
         if (height === 0) throw new IllegalStateError("Node has not declared its CometBFT public key yet");
         const microblock = await this.getMicroblock(height);
-        const section = microblock.getSectionByType<ValidatorNodeCometbftPublicKeyDeclarationSection>(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION);
-        const cometbftPublicKey = section.object.cometPublicKey;
-        const cometbftPublicKeyType = section.object.cometPublicKeyType;
-        return { cometbftPublicKeyType, cometbftPublicKey }
+        for (const section of microblock.getAllSections()) {
+            if (section.type !== SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION) continue;
+            const cometbftPublicKey = section.cometPublicKey;
+            const cometbftPublicKeyType = section.cometPublicKeyType;
+            return { cometbftPublicKeyType, cometbftPublicKey }
+        }
+        throw new IllegalStateError("Node has not declared its CometBFT public key yet");
+        //const section = microblock.getSectionByType<ValidatorNodeCometbftPublicKeyDeclarationSection>(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION);
+
     }
 
     getNodeDeclarationHeight(): number {

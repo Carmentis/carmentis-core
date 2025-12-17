@@ -1,8 +1,12 @@
 import {Microblock} from "../microblock/Microblock";
 import {ECO, SECTIONS} from "../../constants/constants";
-import {Section} from "../../type/Section";
 import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {AccountInternalState} from "../internalStates/AccountInternalState";
+import {
+    AccountPublicKeySection,
+    AccountTokenIssuanceSection, AccountVestingTransferSection,
+    Section
+} from "../../type/valibot/blockchain/section/sections";
 
 export class AccountInternalStateUpdater implements IInternalStateUpdater<AccountInternalState> {
     constructor() {}
@@ -38,7 +42,7 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
                 case SECTIONS.ACCOUNT_STAKE:
                     await this.stakeCallback(newState, microblock, section);
                     break;
-                case SECTIONS.ACCOUNT_SIGNATURE:
+                case SECTIONS.SIGNATURE:
                     await this.signatureCallback(newState, microblock, section);
                     break;
             }
@@ -47,13 +51,13 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
         return newState;
     }
 
-    private async publicKeyCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
+    private async publicKeyCallback(state: AccountInternalState, microblock: Microblock, section: AccountPublicKeySection) {
         state.updatePublicKeyHeight(microblock.getHeight());
         state.updateSignatureScheme(microblock.getHeight());
     }
 
-    private async tokenIssuanceCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
-        if (section.object.amount != ECO.INITIAL_OFFER) {
+    private async tokenIssuanceCallback(state: AccountInternalState, microblock: Microblock, section: AccountTokenIssuanceSection) {
+        if (section.amount != ECO.INITIAL_OFFER) {
             throw new Error(`the amount of the initial token issuance is not the expected one`);
         }
     }
@@ -69,14 +73,14 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
         // This might need to be handled differently in the new architecture
     }
 
-    private async vestingTransferCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
-        if(section.object.cliffDurationDays < 0) {
+    private async vestingTransferCallback(state: AccountInternalState, microblock: Microblock, section: AccountVestingTransferSection) {
+        if(section.cliffDurationDays < 0) {
             throw new Error(`The cliff duration must be greater than or equal to 0`);
         }
-        if(section.object.vestingDurationDays <= 0) {
+        if(section.vestingDurationDays <= 0) {
             throw new Error(`The vesting duration must be greater than 0`);
         }
-        if(section.object.amount <= 0) {
+        if(section.amount <= 0) {
             throw new Error(`The amount must be greater than 0`);
         }
 

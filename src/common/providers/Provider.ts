@@ -235,12 +235,10 @@ export class Provider extends AbstractProvider {
             }
 
             // save missing data in the internal provider and update res[]
-            for (const { hash, body } of microblockBodysResponse.list) {
-                const serializedBody = body;
-                const hashBytes = Utils.binaryFromHexa(hash);
-                await this.internalProvider.setSerializedMicroblockBody(hashBytes, serializedBody);
-                const decodedBody = BlockchainUtils.decodeMicroblockBody(serializedBody);
-                res.push({ hash: hashBytes, body: decodedBody });
+            for (const { microblockBody, microblockHash } of microblockBodysResponse.list) {
+                const serializedBody = BlockchainUtils.encodeMicroblockBody(microblockBody);
+                await this.internalProvider.setSerializedMicroblockBody(microblockHash, serializedBody);
+                res.push({ hash: microblockHash, body: microblockBody });
             }
 
             // for convenience, we sort the list according to the original query order
@@ -261,11 +259,10 @@ export class Provider extends AbstractProvider {
             ]);
             if (externalData !== null && externalData.list.length !== 0) {
                 const bodyResponse = externalData.list[0];
-                const serializedBody = bodyResponse.body;
-                await this.internalProvider.setSerializedMicroblockBody(microblockHash.toBytes(), serializedBody);
-                const decodedBody = BlockchainUtils.decodeMicroblockBody(serializedBody);
+                const microblockBody = bodyResponse.microblockBody;
+                await this.internalProvider.setMicroblockBody(microblockHash.toBytes(), microblockBody);
                 this.logger.debug(`Body for microblock ${microblockHash.encode()} found online`)
-                return decodedBody;
+                return microblockBody;
             }
         }
         // we do not have found the microblock body
@@ -389,7 +386,7 @@ export class Provider extends AbstractProvider {
         if (!vbUpdate.exists) return null;
         if (vbUpdate.changed) {
             // check the consistency of the new headers
-            const check = BlockchainUtils.checkHeaderList(vbUpdate.headers);
+            const check = BlockchainUtils.checkHeaderList(vbUpdate.serializedHeaders);
 
             if (!check.valid) {
                 throw new Error(`received headers are inconsistent`);
@@ -397,7 +394,8 @@ export class Provider extends AbstractProvider {
 
             // make sure that the 'previous hash' field of the first new microblock matches the last known hash
             if (knownHeight) {
-                const firstNewHeader = vbUpdate.headers[vbUpdate.headers.length - 1];
+                const numberOfHeadersReturned = vbUpdate.serializedHeaders.length;
+                const firstNewHeader = vbUpdate.serializedHeaders[numberOfHeadersReturned - 1];
                 const linkedHash = BlockchainUtils.previousHashFromHeader(firstNewHeader);
 
                 if(!Utils.binaryIsEqual(linkedHash, microblockHashes[knownHeight - 1])) {
@@ -406,12 +404,12 @@ export class Provider extends AbstractProvider {
             }
 
             // update the VB state in our internal provider
-            await this.internalProvider.setSerializedVirtualBlockchainState(virtualBlockchainId, vbUpdate.stateData);
+            await this.internalProvider.setSerializedVirtualBlockchainState(virtualBlockchainId, vbUpdate.serializedVirtualBlockchainState);
 
-            vbState = BlockchainUtils.decodeVirtualBlockchainState(vbUpdate.stateData);
+            vbState = BlockchainUtils.decodeVirtualBlockchainState(vbUpdate.serializedVirtualBlockchainState);
 
             // update the microblock information and header in our internal provider
-            for(let n = 0; n < vbUpdate.headers.length; n++) {
+            for(let n = 0; n < vbUpdate.serializedHeaders.length; n++) {
                 await this.internalProvider.setMicroblockVbInformation(
                     check.hashes[n],
                     BlockchainUtils.encodeVirtualBlockchainInfo({
@@ -421,7 +419,7 @@ export class Provider extends AbstractProvider {
                 );
                 await this.internalProvider.setSerializedMicroblockHeader(
                     check.hashes[n],
-                    vbUpdate.headers[n]
+                    vbUpdate.serializedHeaders[n]
                 );
             }
 

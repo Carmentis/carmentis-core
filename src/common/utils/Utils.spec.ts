@@ -9,6 +9,9 @@ import {VirtualBlockchainType} from "../type/VirtualBlockchainType";
 import {height, number} from "../type/valibot/primitives";
 import {VirtualBlockchainInfo} from "../type/valibot/provider/VirtualBlockchainInfo";
 import {Section} from "../type/valibot/blockchain/section/sections";
+import {Microblock} from "../blockchain/microblock/Microblock";
+import {MicroblockStruct} from "../type/valibot/blockchain/microblock/MicroblockStruct";
+import {encode} from "cbor-x";
 
 describe('binaryFrom', () => {
   it('should correctly encode and decode three numbers', () => {
@@ -85,14 +88,14 @@ describe("BlockchainUtils", () => {
     it("Should encode and decode microblock body", () => {
         // for empty body
         const emptyBody: MicroblockBody = {
-            body: []
+            sections: []
         }
         expect(BlockchainUtils.decodeMicroblockBody(BlockchainUtils.encodeMicroblockBody(emptyBody)))
             .toEqual(emptyBody)
 
         // with some sample
         const filledBody: MicroblockBody = {
-            body: [{
+            sections: [{
                 type: SectionType.ORG_CREATION,
                 accountId: Utils.getNullHash(),
             }]
@@ -132,6 +135,34 @@ describe("BlockchainUtils", () => {
         }
         expect(BlockchainUtils.decodeSection(BlockchainUtils.encodeSection(section)))
             .toEqual(section)
+    })
+
+    it("Should encode and decode a microblock", () => {
+        const microblock: MicroblockStruct = {
+            header: {
+                magicString: "CMTS",
+                protocolVersion: 0,
+                microblockType: 0,
+                height: 0,
+                previousHash: Utils.getNullHash(),
+                timestamp: 0,
+                gas: 0,
+                gasPrice: 0,
+                bodyHash: Utils.getNullHash(),
+                feesPayerAccount: Utils.getNullHash()
+            },
+            body: {
+                sections: [
+                    {
+                        type: SectionType.ORG_CREATION,
+                        accountId: Utils.getNullHash()
+                    }
+                ]
+            }
+        }
+        const serializedMicroblock = encode(microblock);
+        const hexEncodedSerializedMicroblock = Utils.binaryToHexa(serializedMicroblock);
+        console.log(hexEncodedSerializedMicroblock)
     })
 
 

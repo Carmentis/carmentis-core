@@ -27,7 +27,7 @@ export interface BooleanOptions {}
 export interface NilOptions {}
 export interface UintOptions {}
 export interface BinaryOptions { size?: number; }
-export interface Bin256Options {}
+export interface Bin256Options { }
 
 
 export function array(options: ArrayOptions) {
@@ -104,7 +104,7 @@ export function binary(options: BinaryOptions = {}) {
 
 export function bin256(options: Bin256Options = {}) {
     const schema = val.pipe(
-        val.instance(Uint8Array),
+        val.instance(Uint8Array<ArrayBuffer | ArrayBufferLike>),
         val.custom((v) => v instanceof Uint8Array && v.length !== 32, `Expected Uint8Array of 32 bytes`),
         val.metadata({ typeId: BIN256, ...options })
     );
@@ -112,7 +112,7 @@ export function bin256(options: Bin256Options = {}) {
     return schema;
 }
 
-export function uint8array() {
+export function uint8array()  {
     return val.instance(Uint8Array<ArrayBuffer | ArrayBufferLike>)
 }
 

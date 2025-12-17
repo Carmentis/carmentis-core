@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import {uint8array} from "../../primitives";
+import {bin256, uint8array} from "../../primitives";
 
 // ============================================================================================================================ //
 //  ABCI AbciRequest Types Enumeration                                                                                             //
@@ -45,52 +45,52 @@ export const GetBlockContentAbciRequestSchema = v.object({
 // MSG_GET_VIRTUAL_BLOCKCHAIN_STATE (0x07)
 export const GetVirtualBlockchainStateAbciRequestSchema = v.object({
   requestType: v.literal(AbciRequestType.GET_VIRTUAL_BLOCKCHAIN_STATE),
-  hexEncodedVirtualBlockchainId: v.pipe(v.string(), v.length(64, 'Virtual blockchain ID must be 256 bits (64 hex characters)')),
+  virtualBlockchainId: bin256(),
 });
 
 // MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE (0x09)
 export const GetVirtualBlockchainUpdateAbciRequestSchema = v.object({
   requestType: v.literal(AbciRequestType.GET_VIRTUAL_BLOCKCHAIN_UPDATE),
-  hexEncodedVirtualBlockchainId: v.pipe(v.string(), v.length(64, 'Virtual blockchain ID must be 256 bits (64 hex characters)')),
+  virtualBlockchainId: bin256(),
   knownHeight: v.pipe(v.number(), v.integer(), v.minValue(0)),
 });
 
 // MSG_GET_MICROBLOCK_INFORMATION (0x0B)
 export const GetMicroblockInformationAbciRequestSchema = v.object({
   requestType: v.literal(AbciRequestType.GET_MICROBLOCK_INFORMATION),
-  hash: v.pipe(v.string(), v.length(64, 'Hash must be 256 bits (64 hex characters)')),
+  hash: bin256()
 });
 
 // MSG_AWAIT_MICROBLOCK_ANCHORING (0x0D)
 export const AwaitMicroblockAnchoringAbciRequestSchema = v.object({
-  requestType: v.literal(AbciRequestType.AWAIT_MICROBLOCK_ANCHORING),
-  hash: v.pipe(v.string(), v.length(64, 'Hash must be 256 bits (64 hex characters)')),
+  requestType: v.literal(AbciRequestType.AWAIT_MICROBLOCK_ANCHORING), 
+    hash: bin256(),
 });
 
 // MSG_GET_MICROBLOCK_BODYS (0x0F)
 export const GetMicroblockBodysAbciRequestSchema = v.object({
   requestType: v.literal(AbciRequestType.GET_MICROBLOCK_BODYS),
-  hashes: v.array(v.pipe(v.string(), v.length(64, 'Hash must be 256 bits (64 hex characters)'))),
+  hashes: v.array(bin256()),
 });
 
 // MSG_GET_ACCOUNT_STATE (0x11)
 export const GetAccountStateAbciRequestSchema = v.object({
   requestType: v.literal(AbciRequestType.GET_ACCOUNT_STATE),
-  accountHash: v.pipe(v.string(), v.length(64, 'Account hash must be 256 bits (64 hex characters)')),
+  accountHash: bin256(),
 });
 
 // MSG_GET_ACCOUNT_HISTORY (0x13)
 export const GetAccountHistoryAbciRequestSchema = v.object({
   requestType: v.literal(AbciRequestType.GET_ACCOUNT_HISTORY),
-  accountHash: v.pipe(v.string(), v.length(64, 'Account hash must be 256 bits (64 hex characters)')),
-  lastHistoryHash: v.pipe(v.string(), v.length(64, 'Last history hash must be 256 bits (64 hex characters)')),
+  accountHash: bin256(),
+  lastHistoryHash: bin256(),
   maxRecords: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });
 
 // MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH (0x15)
 export const GetAccountByPublicKeyHashAbciRequestSchema = v.object({
   requestType: v.literal(AbciRequestType.GET_ACCOUNT_BY_PUBLIC_KEY_HASH),
-  publicKeyHash: v.pipe(v.string(), v.length(64, 'Public key hash must be 256 bits (64 hex characters)')),
+  publicKeyHash: bin256(),
 });
 
 // MSG_GET_VALIDATOR_NODE_BY_ADDRESS (0x17)

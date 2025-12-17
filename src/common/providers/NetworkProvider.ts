@@ -76,7 +76,7 @@ export class NetworkProvider implements IExternalProvider {
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.AWAIT_MICROBLOCK_ANCHORING,
-            hash: hashString
+            hash: hash
         });
 
         return v.parse(MicroblockInformationSchema, answer);
@@ -140,7 +140,7 @@ export class NetworkProvider implements IExternalProvider {
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_ACCOUNT_STATE,
-            accountHash: Utils.binaryToHexa(accountHash)
+            accountHash: accountHash
         });
 
         const response = v.parse(AccountStateAbciResponseSchema, answer);
@@ -158,8 +158,8 @@ export class NetworkProvider implements IExternalProvider {
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_ACCOUNT_HISTORY,
-            accountHash: Utils.binaryToHexa(accountHash),
-            lastHistoryHash: Utils.binaryToHexa(lastHistoryHash),
+            accountHash: accountHash,
+            lastHistoryHash: lastHistoryHash,
             maxRecords
         });
 
@@ -174,7 +174,7 @@ export class NetworkProvider implements IExternalProvider {
         const answer = await this.abciQuery(
             {
                 requestType: AbciRequestType.GET_ACCOUNT_BY_PUBLIC_KEY_HASH,
-                publicKeyHash: Utils.binaryToHexa(publicKeyHash)
+                publicKeyHash: publicKeyHash
             }
         );
 
@@ -188,12 +188,10 @@ export class NetworkProvider implements IExternalProvider {
     async getObjectList(type: number) {
         this.requestLogger.debug(`Requesting list of objects of type ${type}`);
 
-        const answer = await this.abciQuery(
-            {
+        const answer = await this.abciQuery({
                 requestType: AbciRequestType.GET_OBJECT_LIST,
                 type: type
-            }
-        );
+        });
 
         const response = v.parse(ObjectListAbciResponseSchema, answer);
         this.responseLogger.debug(`Receiving object lists with ${response.list.length} elements)`);
@@ -205,7 +203,7 @@ export class NetworkProvider implements IExternalProvider {
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_MICROBLOCK_INFORMATION,
-            hash: Utils.binaryToHexa(hash)
+            hash
         });
 
         const response = v.parse(MicroblockInformationAbciResponseSchema, answer);
@@ -224,7 +222,7 @@ export class NetworkProvider implements IExternalProvider {
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_MICROBLOCK_BODYS,
-            hashes: hashes.map(h => Utils.binaryToHexa(h))
+            hashes: hashes
         });
 
         const response = v.parse(MicroblockBodysAbciResponseSchema, answer);
@@ -237,7 +235,7 @@ export class NetworkProvider implements IExternalProvider {
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_VIRTUAL_BLOCKCHAIN_UPDATE,
-            hexEncodedVirtualBlockchainId: Utils.binaryToHexa(virtualBlockchainId),
+            virtualBlockchainId: virtualBlockchainId,
             knownHeight: knownHeight
         });
 
@@ -252,12 +250,12 @@ export class NetworkProvider implements IExternalProvider {
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_VIRTUAL_BLOCKCHAIN_STATE,
-            hexEncodedVirtualBlockchainId: Utils.binaryToHexa(virtualBlockchainId)
+            virtualBlockchainId: virtualBlockchainId
         });
 
         const response = v.parse(VirtualBlockchainStateAbciResponseSchema, answer);
-        this.responseLogger.debug(`Receiving virtual blockchain state: ${response.stateData.length} bytes`);
-        return response.stateData;
+        this.responseLogger.debug(`Receiving virtual blockchain state: ${response.serializedVirtualBlockchainState.length} bytes`);
+        return response.serializedVirtualBlockchainState;
     }
 
 

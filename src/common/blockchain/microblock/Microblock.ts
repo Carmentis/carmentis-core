@@ -161,7 +161,7 @@ export class Microblock {
             throw new Error(`invalid protocol version (expected ${CHAIN.PROTOCOL_VERSION}, got ${header.protocolVersion})`);
         }
 
-        mb.addSections(body.body);
+        mb.addSections(body.sections);
         /*
         for (const {type, data} of body.body) {
             const sectionSchema = SECTIONS.DEF[microblockType][type];
@@ -242,7 +242,7 @@ export class Microblock {
 
         // parse the body
         const body = BlockchainUtils.decodeMicroblockBody(serializedBody);
-        for (const section of body.body) {
+        for (const section of body.sections) {
             mb.addSection(section)
         }
         /*
@@ -279,7 +279,7 @@ export class Microblock {
 
     private static computeBodyHashFromSections(sections: Section[]): Uint8Array {
         const body: MicroblockBody = {
-            body: sections
+            sections: sections
         }
         const serializedBody = BlockchainUtils.encodeMicroblockBody(body);
         return Crypto.Hashes.sha256AsBinary(serializedBody);
@@ -428,6 +428,13 @@ export class Microblock {
         this.hash = Microblock.computeMicroblockHash(this.header)
     }
 
+    /**
+     * Returns the header of the microblock.
+     */
+    getHeader(): MicroblockHeader {
+        return this.header;
+    }
+
 
     /**
      * Retrieves the hash of the microblock.
@@ -544,7 +551,7 @@ export class Microblock {
 
     serializedBody(): Uint8Array {
         return BlockchainUtils.encodeMicroblockBody({
-            body: this.sections
+            sections: this.sections
         })
         /*
         const body = {

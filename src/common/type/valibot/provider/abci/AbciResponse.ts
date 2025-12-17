@@ -1,7 +1,8 @@
 import * as v from 'valibot';
 import {MicroblockInformationSchema} from "../MicroblockInformationSchema";
 import {VirtualBlockchainInfoSchema} from "../VirtualBlockchainInfo";
-import {uint8array} from "../../primitives";
+import {bin256, uint8array} from "../../primitives";
+import {MicroblockBodySchema} from "../../blockchain/microblock/MicroblockBody";
 
 // ============================================================================================================================ //
 //  ABCI Response Types Enumeration                                                                                            //
@@ -46,7 +47,7 @@ export const ChainInformationAbciResponseSchema = v.object({
 // MSG_BLOCK_INFORMATION (0x04)
 export const BlockInformationAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.BLOCK_INFORMATION),
-  hash: v.pipe(v.string(), v.length(64, 'Hash must be 256 bits (64 hex characters)')),
+  hash: bin256(),
   timestamp: v.pipe(v.number(), v.integer(), v.minValue(0)),
   proposerAddress: uint8array(),
   size: v.pipe(v.number(), v.integer(), v.minValue(0)),
@@ -55,8 +56,8 @@ export const BlockInformationAbciResponseSchema = v.object({
 
 // MSG_BLOCK_CONTENT (0x06)
 const MicroblockInBlockSchema = v.object({
-  hash: v.pipe(v.string(), v.length(64, 'Hash must be 256 bits (64 hex characters)')),
-  vbIdentifier: v.pipe(v.string(), v.length(64, 'VB identifier must be 256 bits (64 hex characters)')),
+  hash: bin256(),
+  vbId: bin256(),
   vbType: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(255)),
   height: v.pipe(v.number(), v.integer(), v.minValue(0)),
   size: v.pipe(v.number(), v.integer(), v.minValue(0)),
@@ -71,7 +72,7 @@ export const BlockContentAbciResponseSchema = v.object({
 // MSG_VIRTUAL_BLOCKCHAIN_STATE (0x08)
 export const VirtualBlockchainStateAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.VIRTUAL_BLOCKCHAIN_STATE),
-  stateData: uint8array(),
+  serializedVirtualBlockchainState: uint8array(),
 });
 
 // MSG_VIRTUAL_BLOCKCHAIN_UPDATE (0x0A)
@@ -79,8 +80,8 @@ export const VirtualBlockchainUpdateAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.VIRTUAL_BLOCKCHAIN_UPDATE),
   exists: v.boolean(),
   changed: v.boolean(),
-  stateData: uint8array(),
-  headers: v.array(uint8array()),
+  serializedVirtualBlockchainState: uint8array(),
+  serializedHeaders: v.array(uint8array()),
 });
 
 // MSG_MICROBLOCK_INFORMATION (0x0C)
@@ -95,11 +96,10 @@ export const MicroblockAnchoringAbciResponseSchema = v.object({
   ...VirtualBlockchainInfoSchema.entries
 });
 
-// MSG_MICROBLOCK_BODYS (0x10)
-const MicroblockBodyItemSchema = v.object({
-  hash: v.pipe(v.string(), v.length(64, 'Hash must be 256 bits (64 hex characters)')),
-  body: uint8array(),
-});
+export const MicroblockBodyItemSchema = v.object({
+    microblockHash: bin256(),
+    microblockBody: MicroblockBodySchema,
+})
 
 export const MicroblockBodysAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.MICROBLOCK_BODYS),
@@ -117,17 +117,17 @@ export const AccountStateAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.ACCOUNT_STATE),
   height: v.pipe(v.number(), v.integer(), v.minValue(0)),
   balance: v.pipe(v.number(), v.integer(), v.minValue(0)),
-  lastHistoryHash: v.pipe(v.string(), v.length(64, 'Last history hash must be 256 bits (64 hex characters)')),
+    lastHistoryHash: bin256(),
   locks: v.array(AccountLockSchema),
 });
 
 // MSG_ACCOUNT_HISTORY (0x14)
 export const AccountHistoryItemSchema = v.object({
   height: v.pipe(v.number(), v.integer(), v.minValue(0)),
-  previousHistoryHash: v.pipe(v.string(), v.length(64, 'Previous history hash must be 256 bits (64 hex characters)')),
+  previousHistoryHash: bin256(),
   type: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(255)),
   timestamp: v.pipe(v.number(), v.integer(), v.minValue(0)),
-  linkedAccount: v.pipe(v.string(), v.length(64, 'Linked account must be 256 bits (64 hex characters)')),
+  linkedAccount: bin256(),
   amount: v.pipe(v.number(), v.integer(), v.minValue(0)),
   chainReference: uint8array(),
 });
@@ -140,19 +140,19 @@ export const AccountHistoryAbciResponseSchema = v.object({
 // MSG_ACCOUNT_BY_PUBLIC_KEY_HASH (0x16)
 export const AccountByPublicKeyHashAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.ACCOUNT_BY_PUBLIC_KEY_HASH),
-  accountHash: v.pipe(v.string(), v.length(64, 'Account hash must be 256 bits (64 hex characters)')),
+  accountHash: bin256(),
 });
 
 // MSG_VALIDATOR_NODE_BY_ADDRESS (0x18)
 export const ValidatorNodeByAddressAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.VALIDATOR_NODE_BY_ADDRESS),
-  validatorNodeHash: v.pipe(v.string(), v.length(64, 'Validator node hash must be 256 bits (64 hex characters)')),
+  validatorNodeHash: bin256(),
 });
 
 // MSG_OBJECT_LIST (0x1A)
 export const ObjectListAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.OBJECT_LIST),
-  list: v.array(v.pipe(v.string(), v.length(64, 'Object hash must be 256 bits (64 hex characters)'))),
+  list: v.array(bin256()),
 });
 
 // MSG_GENESIS_SNAPSHOT (0x1C)

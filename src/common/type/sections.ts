@@ -241,9 +241,17 @@ export interface AccountEscrowTransferSection {
     amount: number,
     publicReference: string,
     privateReference: string,
-    escrowIdentifier: Uint8Array,
+    identifier: Uint8Array,
     agentAccount: Uint8Array,
     durationDays: number
+}
+
+/**
+ * @see {ACCOUNT_ESCROW_SETTLEMENT}
+ */
+export interface AccountEscrowSettlementSection {
+    confirmed: boolean,
+    identifier: Uint8Array
 }
 
 /**

@@ -95,6 +95,7 @@ export type AccountEscrowTransferSection = val.InferOutput<typeof AccountEscrowT
 export const AccountEscrowSettlementSectionSchema = val.object({
     type: val.literal(SectionType.ACCOUNT_ESCROW_SETTLEMENT),
     escrowIdentifier: accountId(),
+    confirmed: boolean(),
 })
 export type AccountEscrowSettlementSection = val.InferOutput<typeof AccountEscrowSettlementSectionSchema>;
 

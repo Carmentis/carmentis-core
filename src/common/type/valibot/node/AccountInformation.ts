@@ -12,42 +12,45 @@ export enum LockType {
 // Escrow schemas
 export const EscrowParametersSchema = v.object({
     escrowIdentifier: uint8array(),
-    agentPublicKey: v.any()
+    fundEmitterAccountId: uint8array(),
+    transferAuthorizerAccountId: uint8array(),
+    startTimestamp: v.number(),
+    durationDays: v.number(),
 });
 export type EscrowParameters = v.InferOutput<typeof EscrowParametersSchema>;
 
 export const EscrowLockSchema = v.object({
     type: v.literal(LockType.Escrow),
-    amount: v.number(),
+    lockedAmountInAtomics: v.number(),
     parameters: EscrowParametersSchema
 });
 export type EscrowLock = v.InferOutput<typeof EscrowLockSchema>;
 
 // Vesting schemas
 export const VestingParametersSchema = v.object({
-    initialAmount: v.number(),
-    startTime: v.number(),
-    cliffPeriod: v.number(),
-    vestingPeriod: v.number()
+    initialVestedAmountInAtomics: v.number(),
+    cliffStartTimestamp: v.number(),
+    cliffDurationDays: v.number(),
+    vestingDurationDays: v.number()
 });
 export type VestingParameters = v.InferOutput<typeof VestingParametersSchema>;
 
 export const VestingLockSchema = v.object({
     type: v.literal(LockType.Vesting),
-    amount: v.number(),
+    lockedAmountInAtomics: v.number(),
     parameters: VestingParametersSchema
 });
 export type VestingLock = v.InferOutput<typeof VestingLockSchema>;
 
 // Staking schemas
 export const NodeStakingParametersSchema = v.object({
-    nodeIdentifier: uint8array()
+    validatorNodeAccountId: uint8array()
 });
 export type NodeStakingParameters = v.InferOutput<typeof NodeStakingParametersSchema>;
 
 export const NodeStakingLockSchema = v.object({
     type: v.literal(LockType.NodeStaking),
-    amount: v.number(),
+    lockedAmountInAtomics: v.number(),
     parameters: NodeStakingParametersSchema
 });
 export type NodeStakingLock = v.InferOutput<typeof NodeStakingLockSchema>;

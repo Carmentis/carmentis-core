@@ -6,7 +6,7 @@ export const LOCK_TYPE_COUNT = 3;
 export enum LockType {
     Escrow = 0,
     Vesting = 1,
-    Staking = 2
+    NodeStaking = 2
 }
 
 // Escrow schemas
@@ -40,23 +40,23 @@ export const VestingLockSchema = v.object({
 export type VestingLock = v.InferOutput<typeof VestingLockSchema>;
 
 // Staking schemas
-export const StakingParametersSchema = v.object({
+export const NodeStakingParametersSchema = v.object({
     nodeIdentifier: uint8array()
 });
-export type StakingParameters = v.InferOutput<typeof StakingParametersSchema>;
+export type NodeStakingParameters = v.InferOutput<typeof NodeStakingParametersSchema>;
 
-export const StakingLockSchema = v.object({
-    type: v.literal(LockType.Staking),
+export const NodeStakingLockSchema = v.object({
+    type: v.literal(LockType.NodeStaking),
     amount: v.number(),
-    parameters: StakingParametersSchema
+    parameters: NodeStakingParametersSchema
 });
-export type StakingLock = v.InferOutput<typeof StakingLockSchema>;
+export type NodeStakingLock = v.InferOutput<typeof NodeStakingLockSchema>;
 
 // Lock variant schema
 export const LockSchema = v.variant('type', [
     EscrowLockSchema,
     VestingLockSchema,
-    StakingLockSchema
+    NodeStakingLockSchema
 ]);
 export type Lock = v.InferOutput<typeof LockSchema>;
 

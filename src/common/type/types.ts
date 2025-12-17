@@ -53,84 +53,6 @@ export interface MerkleProof {
 
 
 
-
-
-
-/*
-export interface ApplicationLedgerSharedSecretState {
-
-    peerActorId: number;
-
-
-    height: number;
-}
-
-export interface ApplicationLedgerActor {
-    name: string;
-    subscribed: boolean;
-    signatureKeyHeight: number;
-    pkeKeyHeight: number;
-    sharedSecrets: ApplicationLedgerSharedSecretState[];
-    invitations: ApplicationLedgerActorInvitationState[];
-}
-
- */
-
-
-
-/**
- * Describes the local state of the application ledger.
- */
-/*
-export interface ApplicationLedgerInternalStateObject {
-    allowedSignatureSchemeIds: number[];
-    allowedPkeSchemeIds: number[];
-    applicationId: Uint8Array;
-    channels: ApplicationLedgerChannel[];
-    actors: ApplicationLedgerActor[];
-}
-
- */
-
-
-/*
-export interface GenesisSnapshotDTO {
-    base64EncodedChunks: string[];
-}
-
-
-export interface ChainInformationDTO {
-    height: number;
-    lastBlockTimestamp: number;
-    microblockCount: number;
-    objectCounts: number[];
-}
-
-export interface BlockInformationDTO {
-    hash: Uint8Array;
-    timestamp: number;
-    proposerAddress: Uint8Array;
-    size: number;
-    microblockCount: number;
-}
-
-export interface BlockContentDTO {
-    microblocks: {
-        hash: Uint8Array;
-        vbIdentifier: Uint8Array;
-        vbType: number;
-        height: number;
-        size: number;
-        sectionCount: number;
-    }[];
-}
-
-export interface ValidatorNodeDTO {
-    validatorNodeHash: Uint8Array;
-}
-
- */
-
 export interface MicroblockHeaderObject {
     magicString: string;
     protocolVersion: number;
@@ -143,72 +65,6 @@ export interface MicroblockHeaderObject {
     bodyHash: Uint8Array;
     feesPayerAccount: Uint8Array
 }
-/*
-export interface MicroblockSection {
-    type: number;
-    data: Uint8Array;
-}
-
-export interface MicroblockBody {
-    body: MicroblockSection[];
-}
- */
-
-/*
-export interface MicroblockInformationSchema {
-    virtualBlockchainId: Uint8Array;
-    virtualBlockchainType: number;
-    header: Uint8Array;
-}
-
- */
-/*
-export interface MicroblockBodyResponse {
-    hash: Uint8Array,
-    body: Uint8Array
-}
-
-export interface MicroblockBodyListResponse {
-    list: MicroblockBodyResponse[];
-}
-
-export type VirtualBlockchainUpdateInterface =
-    { exists: false } |
-    { exists: true, changed: false } |
-    { exists: true, changed: true, stateData: Uint8Array, headers: Uint8Array[] }
-
-export interface VirtualBlockchainState<InternalState = unknown> {
-    type: number,
-    height: number,
-    expirationDay: number,
-    lastMicroblockHash: Uint8Array,
-    internalState: InternalState
-}
-
- */
-
-/*
-export interface VirtualBlockchainStateDto {
-    type: number,
-    height: number,
-    expirationDay: number,
-    lastMicroblockHash: Uint8Array,
-    serializedInternalState: Uint8Array
-}
-
- */
-/*
-export interface MsgVirtualBlockchainState {
-    stateData: Uint8Array
-}
-
-export interface AccountStateDTO {
-    height: number;
-    balance: number;
-    lastHistoryHash: Uint8Array
-}
-
- */
 
 export interface AccountHash {
     accountHash: Uint8Array
@@ -223,51 +79,6 @@ export interface AccountTransactionInterface {
     amount: number,
     chainReference: Uint8Array
 }
-/*
-export interface AccountHistoryInterface {
-    list: AccountTransactionInterface[]
-}
-
- */
-/*
-export interface AccountTokenIssuance {
-    amount: number;
-}
-
-export interface AccountCreation {
-    sellerAccount: Uint8Array;
-    amount: number;
-}
-
-export interface AccountTransfer {
-    account: Uint8Array;
-    amount: number;
-    publicReference: string;
-    privateReference: string;
-}
-
-export interface AccountVestingTransfer {
-    account: Uint8Array;
-    amount: number;
-    publicReference: string;
-    privateReference: string;
-    cliffDurationDays: number;
-    vestingDurationDays: number;
-}
-
-export interface AccountEscrowTransfer {
-    account: Uint8Array;
-    amount: number;
-    publicReference: string;
-    privateReference: string;
-    agentPublicKey: Uint8Array;
-}
-
-export interface AccountStake {
-    amount: number;
-    nodeIdentifier: Uint8Array;
-}
- */
 
 export interface Proof {
     info: {

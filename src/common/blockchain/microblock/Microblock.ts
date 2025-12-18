@@ -50,6 +50,9 @@ import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStat
 import {MicroblockHeader} from "../../type/valibot/blockchain/microblock/MicroblockHeader";
 import {BlockchainUtils} from "../../utils/BlockchainUtils";
 import {MicroblockBody} from "../../type/valibot/blockchain/microblock/MicroblockBody";
+import * as v from 'valibot';
+import {encode, decode} from 'cbor-x';
+import {MicroblockStruct, MicroblockStructSchema} from "../../type/valibot/blockchain/microblock/MicroblockStruct";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -137,8 +140,10 @@ export class Microblock {
 
 
     static loadFromSerializedMicroblock(serializedMicroblock: Uint8Array, expectedMbType?: VirtualBlockchainType) {
-        const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(serializedMicroblock);
-        return Microblock.loadFromSerializedHeaderAndBody(serializedHeader, serializedBody, expectedMbType);
+        const mbStruct = v.parse(MicroblockStructSchema, decode(serializedMicroblock));
+        return Microblock.loadFromHeaderAndBody(mbStruct.header, mbStruct.body, expectedMbType)
+        //const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(serializedMicroblock);
+        //return Microblock.loadFromSerializedHeaderAndBody(serializedHeader, serializedBody, expectedMbType);
     }
 
     static loadFromHeaderAndBody(header: MicroblockHeader, body: MicroblockBody, expectedMbType?: VirtualBlockchainType): Microblock {
@@ -162,28 +167,7 @@ export class Microblock {
         }
 
         mb.addSections(body.sections);
-        /*
-        for (const {type, data} of body.body) {
-            const sectionSchema = SECTIONS.DEF[microblockType][type];
-            const unserializer = new SchemaUnserializer(sectionSchema);
-            const object = unserializer.unserialize(data);
 
-            const hash = Crypto.Hashes.sha256AsBinary(data);
-            const index = this.sections.length;
-
-            const section = {type, object, data, hash, index};
-            this.sections.push(section);
-
-            //mb.storeSection(type, object, data);
-        }
-
-         */
-
-
-
-
-
-        // we now proceed
         // we check that the hash of the body is consistent with the body hash contained in the header
         const computedBodyHash = mb.computeBodyHash();
         const bodyHashContainedInHeader = header.bodyHash;
@@ -545,8 +529,12 @@ export class Microblock {
 
 
     serializeHeader(): Uint8Array {
+        return BlockchainUtils.encodeMicroblockHeader(this.header);
+        /*
         const headerSerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_HEADER);
         return headerSerializer.serialize(this.header);
+
+         */
     }
 
     serializedBody(): Uint8Array {
@@ -573,10 +561,19 @@ export class Microblock {
         const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
         const headerData = this.serializeHeader();
         const microblockHash = Crypto.Hashes.sha256AsBinary(headerData);
+        /*
         const microblockData = BlockchainSerializer.serializeMicroblockSerializedHeaderAndBody(
             headerData,
             bodyData
         )
+         */
+        const microblock: MicroblockStruct = {
+            header: this.header,
+            body: {
+                sections: this.sections
+            }
+        };
+        const microblockData = encode(v.parse(MicroblockStructSchema, microblock));
         return {microblockHash, headerData, bodyHash, bodyData, microblockData};
     }
 

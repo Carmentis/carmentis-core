@@ -12,6 +12,29 @@ import {
 } from "../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
 import {Section, SectionSchema} from "../type/valibot/blockchain/section/sections";
 import {VirtualBlockchainInfo, VirtualBlockchainInfoSchema} from "../type/valibot/provider/VirtualBlockchainInfo";
+import {MicroblockInformation, MicroblockInformationSchema} from "../type/valibot/provider/MicroblockInformationSchema";
+import {
+    EscrowParameters,
+    EscrowParametersSchema,
+    EscrowLock,
+    EscrowLockSchema,
+    VestingParameters,
+    VestingParametersSchema,
+    VestingLock,
+    VestingLockSchema,
+    NodeStakingParameters,
+    NodeStakingParametersSchema,
+    NodeStakingLock,
+    NodeStakingLockSchema,
+    Lock,
+    LockSchema,
+    AccountBreakdown,
+    AccountBreakdownSchema,
+    AccountState,
+    AccountStateSchema,
+    AccountInformation,
+    AccountInformationSchema
+} from "../type/valibot/node/AccountInformation";
 
 export class BlockchainUtils {
     static computeMicroblockHashFromHeader(previousMicroblockHeader: MicroblockHeader) {
@@ -105,6 +128,94 @@ export class BlockchainUtils {
 
     static decodeMicroblockHeader(serializedHeader: Uint8Array) {
         return v.parse(MicroblockHeaderSchema, decode(serializedHeader));
+    }
+
+    static encodeEscrowParameters(escrowParameters: EscrowParameters) {
+        return encode(v.parse(EscrowParametersSchema, escrowParameters));
+    }
+
+    static decodeEscrowParameters(serializedEscrowParameters: Uint8Array): EscrowParameters {
+        return v.parse(EscrowParametersSchema, decode(serializedEscrowParameters));
+    }
+
+    static encodeEscrowLock(escrowLock: EscrowLock) {
+        return encode(v.parse(EscrowLockSchema, escrowLock));
+    }
+
+    static decodeEscrowLock(serializedEscrowLock: Uint8Array): EscrowLock {
+        return v.parse(EscrowLockSchema, decode(serializedEscrowLock));
+    }
+
+    static encodeVestingParameters(vestingParameters: VestingParameters) {
+        return encode(v.parse(VestingParametersSchema, vestingParameters));
+    }
+
+    static decodeVestingParameters(serializedVestingParameters: Uint8Array): VestingParameters {
+        return v.parse(VestingParametersSchema, decode(serializedVestingParameters));
+    }
+
+    static encodeVestingLock(vestingLock: VestingLock) {
+        return encode(v.parse(VestingLockSchema, vestingLock));
+    }
+
+    static decodeVestingLock(serializedVestingLock: Uint8Array): VestingLock {
+        return v.parse(VestingLockSchema, decode(serializedVestingLock));
+    }
+
+    static encodeNodeStakingParameters(nodeStakingParameters: NodeStakingParameters) {
+        return encode(v.parse(NodeStakingParametersSchema, nodeStakingParameters));
+    }
+
+    static decodeNodeStakingParameters(serializedNodeStakingParameters: Uint8Array): NodeStakingParameters {
+        return v.parse(NodeStakingParametersSchema, decode(serializedNodeStakingParameters));
+    }
+
+    static encodeNodeStakingLock(nodeStakingLock: NodeStakingLock) {
+        return encode(v.parse(NodeStakingLockSchema, nodeStakingLock));
+    }
+
+    static decodeNodeStakingLock(serializedNodeStakingLock: Uint8Array): NodeStakingLock {
+        return v.parse(NodeStakingLockSchema, decode(serializedNodeStakingLock));
+    }
+
+    static encodeLock(lock: Lock) {
+        return encode(v.parse(LockSchema, lock));
+    }
+
+    static decodeLock(serializedLock: Uint8Array): Lock {
+        return v.parse(LockSchema, decode(serializedLock));
+    }
+
+    static encodeAccountBreakdown(accountBreakdown: AccountBreakdown) {
+        return encode(v.parse(AccountBreakdownSchema, accountBreakdown));
+    }
+
+    static decodeAccountBreakdown(serializedAccountBreakdown: Uint8Array): AccountBreakdown {
+        return v.parse(AccountBreakdownSchema, decode(serializedAccountBreakdown));
+    }
+
+    static encodeAccountState(accountState: AccountState) {
+        return encode(v.parse(AccountStateSchema, accountState));
+    }
+
+    static decodeAccountState(serializedAccountState: Uint8Array): AccountState {
+        return v.parse(AccountStateSchema, decode(serializedAccountState));
+    }
+
+    static encodeAccountInformation(accountInformation: AccountInformation) {
+        return encode(v.parse(AccountInformationSchema, accountInformation));
+    }
+
+    static decodeAccountInformation(serializedAccountInformation: Uint8Array): AccountInformation {
+        return v.parse(AccountInformationSchema, decode(serializedAccountInformation));
+    }
+
+    static encodeMicroblockInformation(microblockInformation: MicroblockInformation) {
+        return encode(v.parse(MicroblockInformationSchema, microblockInformation));
+    }
+
+    static decodeMicroblockInformation(serializedMicroblockInformation: Uint8Array): MicroblockInformation {
+        return v.parse(MicroblockInformationSchema, decode(serializedMicroblockInformation));
     }
 
 }

@@ -53,6 +53,7 @@ import {MicroblockBody} from "../../type/valibot/blockchain/microblock/Microbloc
 import * as v from 'valibot';
 import {encode, decode} from 'cbor-x';
 import {MicroblockStruct, MicroblockStructSchema} from "../../type/valibot/blockchain/microblock/MicroblockStruct";
+import {SectionLabel} from "../../utils/SectionLabel";
 
 /**
  * Represents a microblock in the blockchain that contains sections of data.
@@ -800,7 +801,10 @@ export class Microblock {
 
 
     addSections(sections: Section[]) {
-        Microblock.logger.debug("Adding multiple sections to microblock")
+        Microblock.logger.debug("Adding multiple sections to microblock: {names}", () => {
+            const labels = sections.map(section => SectionLabel.getSectionLabelFromSection(section))
+            return { names: labels.join(', ') }
+        })
         this.sections.push(...sections);
         // we update the body hash and microblock hash
         this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);

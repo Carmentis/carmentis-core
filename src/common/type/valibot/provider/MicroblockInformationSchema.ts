@@ -1,6 +1,5 @@
 import * as v from 'valibot'
 import {MicroblockHeaderSchema} from "../blockchain/microblock/MicroblockHeader";
-import {VirtualBlockchainType} from "../../VirtualBlockchainType";
 import {uint8array} from "../primitives";
 
 export const MicroblockInformationSchema = v.object({

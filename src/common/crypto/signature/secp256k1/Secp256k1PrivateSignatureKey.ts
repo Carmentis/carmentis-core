@@ -1,6 +1,5 @@
-import {sign as signSecp256k1, getPublicKey} from "@noble/secp256k1";
+import {etc, getPublicKey, PrivKey, sign as signSecp256k1, utils} from "@noble/secp256k1";
 import {BasePrivateSignatureKey} from "../BasePrivateSignatureKey";
-import {etc, PrivKey, utils} from "@noble/secp256k1";
 import {EncoderInterface} from "../../../utils/encoder";
 import {PublicSignatureKey} from "../PublicSignatureKey";
 import {Secp256k1PublicSignatureKey} from "./Secp256k1PublicSignatureKey";

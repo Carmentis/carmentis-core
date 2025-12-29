@@ -1,4 +1,3 @@
-
 import {Microblock} from "../microblock/Microblock";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 

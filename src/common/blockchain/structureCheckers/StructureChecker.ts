@@ -1,4 +1,3 @@
-import {SECTIONS} from "../../constants/constants";
 import {Microblock} from "../microblock/Microblock";
 import {MicroblockStructureCheckingError} from "../../errors/carmentis-error";
 import {ConstraintNameByConstraint, SectionConstraint} from "./SectionConstraint";

@@ -1,6 +1,6 @@
 // This file contains all the sections contained in a microblock
 import * as val from 'valibot';
-import {accountId, string, number, uint8, uint16, boolean, binary, array, uint8array} from "../../primitives";
+import {accountId, boolean, number, string, uint8, uint8array} from "../../primitives";
 import {SectionType} from "./SectionType";
 import {ProtocolUpdateSchema} from "../protocol/ProtocolUpdate";
 

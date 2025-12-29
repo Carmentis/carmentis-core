@@ -1,4 +1,3 @@
-
 import {AppLedgerLocalStateUpdaterV1} from "./ApplicationLedgerLocalStateUpdater";
 import {IllegalParameterError} from "../../errors/carmentis-error";
 import {ValidatorNodeInternalStateUpdater} from "./ValidatorNodeInternalStateUpdater";

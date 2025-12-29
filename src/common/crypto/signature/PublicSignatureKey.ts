@@ -1,4 +1,3 @@
-import {EncoderInterface} from "../../utils/encoder";
 import {SignatureScheme} from "./SignatureScheme";
 import {SignatureSchemeId} from "./SignatureSchemeId";
 

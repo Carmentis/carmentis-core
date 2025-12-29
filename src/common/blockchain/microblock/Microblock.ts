@@ -1,5 +1,4 @@
-import {CHAIN, ECO, SCHEMAS, SECTIONS} from "../../constants/constants";
-import {SchemaSerializer, SchemaUnserializer} from "../../data/schemaSerializer";
+import {CHAIN} from "../../constants/constants";
 import {Utils} from "../../utils/utils";
 import {Crypto} from "../../crypto/crypto";
 import {Hash} from "../../entities/Hash";
@@ -11,34 +10,7 @@ import {
 } from "../../errors/carmentis-error";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
-import {
-    AccountCreationSection,
-    AccountEscrowTransferSection,
-    AccountPublicKeySection,
-    AccountStakeSection,
-    AccountTokenIssuanceSection,
-    AccountTransferSection,
-    AccountVestingTransferSection,
-    ApplicationCreationSection,
-    ApplicationDescriptionSection,
-    ApplicationLedgerActorCreationSection,
-    ApplicationLedgerActorSubscriptionSection,
-    ApplicationLedgerAllowedPkeSchemesSection,
-    ApplicationLedgerAllowedSigSchemesSection,
-    ApplicationLedgerAuthorSection,
-    ApplicationLedgerChannelCreationSection,
-    ApplicationLedgerChannelInvitationSection,
-    ApplicationLedgerCreationSection,
-    ApplicationLedgerEndorsementRequestSection,
-    OrganizationCreationSection,
-    OrganizationDescriptionSection,
-    ProtocolCreationSection,
-    ProtocolUpdateSection, Section,
-    SignatureSection,
-    ValidatorNodeCometbftPublicKeyDeclarationSection, ValidatorNodeCreationSection,
-    ValidatorNodeRpcEndpointSection,
-    ValidatorNodeVotingPowerUpdateSection
-} from "../../type/valibot/blockchain/section/sections";
+import {Section, SignatureSection} from "../../type/valibot/blockchain/section/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {CMTSToken} from "../../economics/currencies/token";
@@ -46,12 +18,11 @@ import {EncoderFactory} from "../../utils/encoder";
 import {TimestampValidationResult} from "./TimestampValidationResult";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {Logger} from "../../utils/Logger";
-import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {MicroblockHeader} from "../../type/valibot/blockchain/microblock/MicroblockHeader";
 import {BlockchainUtils} from "../../utils/BlockchainUtils";
 import {MicroblockBody} from "../../type/valibot/blockchain/microblock/MicroblockBody";
 import * as v from 'valibot';
-import {encode, decode} from 'cbor-x';
+import {decode, encode} from 'cbor-x';
 import {MicroblockStruct, MicroblockStructSchema} from "../../type/valibot/blockchain/microblock/MicroblockStruct";
 import {SectionLabel} from "../../utils/SectionLabel";
 

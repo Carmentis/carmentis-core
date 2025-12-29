@@ -1,5 +1,3 @@
-import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
-
 export enum SectionConstraint {
     ANY,
     ZERO,

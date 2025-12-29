@@ -1,5 +1,5 @@
 import * as val from 'valibot';
-import {accountId, number, string, boolean, array, height} from "../../primitives";
+import {accountId, boolean, height, number, string} from "../../primitives";
 import {ProtocolUpdateSchema} from "../protocol/ProtocolUpdate";
 import {ProtocolVariablesSchema} from "../protocol/ProtocolVariables";
 

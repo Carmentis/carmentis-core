@@ -1,15 +1,11 @@
 import {Microblock} from "../microblock/Microblock";
-import {Provider} from "../../providers/Provider";
 import {Hash} from "../../entities/Hash";
 import {IllegalParameterError, MicroBlockNotFoundInVirtualBlockchainAtHeightError} from "../../errors/carmentis-error";
-import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
-import {IMicroblockStructureChecker} from "../structureCheckers/IMicroblockStructureChecker";
 import {EncoderFactory} from "../../utils/encoder";
 import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
 import {ThrownErrorMicroblockSearchFailureFallback} from "./fallbacks/ThrownErrorMicroblockSearchFailureFallback";
 import {Height} from "../../type/Height";
-import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {Logger} from "../../utils/Logger";
 import {IProvider} from "../../providers/IProvider";
 import {OnMicroblockInsertionEventListener} from "./events/OnMicroblockInsertedEventListener";

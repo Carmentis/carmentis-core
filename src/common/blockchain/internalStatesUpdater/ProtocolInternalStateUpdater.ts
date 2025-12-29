@@ -2,7 +2,6 @@ import {Microblock} from "../microblock/Microblock";
 import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
-import {getLogger} from "@logtape/logtape";
 import {Logger} from "../../utils/Logger";
 
 export class ProtocolInternalStateUpdater implements IInternalStateUpdater<ProtocolInternalState> {

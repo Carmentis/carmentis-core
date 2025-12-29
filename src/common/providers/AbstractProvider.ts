@@ -12,7 +12,6 @@ import {VirtualBlockchainNotFoundError} from "../errors/carmentis-error";
 import {ProtocolInternalState} from "../blockchain/internalStates/ProtocolInternalState";
 import {InternalStateFactory} from "../blockchain/internalStates/InternalStateFactory";
 import {Logger} from "../utils/Logger";
-import {Utils} from "../utils/utils";
 import {MicroblockHeader} from "../type/valibot/blockchain/microblock/MicroblockHeader";
 import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBody";
 import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";

@@ -1,6 +1,4 @@
-
 import {Microblock} from "../microblock/Microblock";
-import {SectionNotFoundError} from "../../errors/carmentis-error";
 import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {ApplicationInternalState} from "../internalStates/ApplicationInternalState";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";

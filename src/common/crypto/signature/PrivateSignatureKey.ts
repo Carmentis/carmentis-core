@@ -1,6 +1,5 @@
 import {SignatureScheme} from "./SignatureScheme";
 import {PublicSignatureKey} from "./PublicSignatureKey";
-import {EncoderInterface} from "../../utils/encoder";
 
 import {SignatureSchemeId} from "./SignatureSchemeId";
 

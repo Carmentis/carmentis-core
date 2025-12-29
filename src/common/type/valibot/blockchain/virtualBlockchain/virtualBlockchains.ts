@@ -1,13 +1,13 @@
 import * as v from 'valibot';
-import {uint8array, number} from "../../primitives";
+import {number, uint8array} from "../../primitives";
 import {VirtualBlockchainType} from "../../../VirtualBlockchainType";
 import {
     AccountVirtualBlockchainInternalStateSchema,
-    OrganizationVBInternalStateObjectSchema,
-    ValidatorNodeVBInternalStateObjectSchema,
-    ApplicationVBInternalStateObjectSchema,
     ApplicationLedgerInternalStateObjectSchema,
-    ProtocolVBInternalStateObjectSchema
+    ApplicationVBInternalStateObjectSchema,
+    OrganizationVBInternalStateObjectSchema,
+    ProtocolVBInternalStateObjectSchema,
+    ValidatorNodeVBInternalStateObjectSchema
 } from "./internalStates";
 
 export const VirtualBlockchainSharedPropertiesSchema = v.object({

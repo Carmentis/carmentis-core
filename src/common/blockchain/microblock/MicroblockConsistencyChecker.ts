@@ -1,8 +1,6 @@
 import {Microblock} from "./Microblock";
 import {VirtualBlockchain} from "../virtualBlockchains/VirtualBlockchain";
-import {Provider} from "../../providers/Provider";
 import {Utils} from "../../utils/utils";
-import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {OrganizationVb} from "../virtualBlockchains/OrganizationVb";
 import {AccountVb} from "../virtualBlockchains/AccountVb";
@@ -10,7 +8,6 @@ import {ApplicationVb} from "../virtualBlockchains/ApplicationVb";
 import {ValidatorNodeVb} from "../virtualBlockchains/ValidatorNodeVb";
 import {ProtocolVb} from "../virtualBlockchains/ProtocolVb";
 import {ApplicationLedgerVb} from "../virtualBlockchains/ApplicationLedgerVb";
-import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {TimestampValidationResult} from "./TimestampValidationResult";
 import {MicroblockHeaderObject} from "../../type/types";
 import {Optional} from "../../entities/Optional";

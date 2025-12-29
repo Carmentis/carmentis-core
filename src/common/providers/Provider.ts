@@ -8,7 +8,6 @@ import {IllegalStateError, MicroBlockNotFoundError} from "../errors/carmentis-er
 import {Logger} from "../utils/Logger";
 import {VirtualBlockchainType} from "../type/VirtualBlockchainType";
 import {Microblock} from "../blockchain/microblock/Microblock";
-import {Assertion} from "../utils/Assertion";
 import {IInternalProvider} from "./IInternalProvider";
 import {IExternalProvider} from "./IExternalProvider";
 import {AbstractProvider} from "./AbstractProvider";
@@ -17,14 +16,15 @@ import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockcha
 import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBody";
 import {MicroblockHeader} from "../type/valibot/blockchain/microblock/MicroblockHeader";
 import {VirtualBlockchainStatus} from "../type/valibot/provider/VirtualBlockchainStatus";
-import {MicroblockInformation, MicroblockInformationSchema} from "../type/valibot/provider/MicroblockInformationSchema";
+import {MicroblockInformation} from "../type/valibot/provider/MicroblockInformationSchema";
 import {
     AccountHistoryAbciResponse,
     AccountStateAbciResponse,
     BlockContentAbciResponse,
     BlockInformationAbciResponse,
     ChainInformationAbciResponse,
-    GenesisSnapshotAbciResponse, ObjectListAbciResponse
+    GenesisSnapshotAbciResponse,
+    ObjectListAbciResponse
 } from "../type/valibot/provider/abci/AbciResponse";
 
 /**

@@ -24,10 +24,14 @@ import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {Provider} from "../../providers/Provider";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {
-    ApplicationLedgerActorCreationSection, ApplicationLedgerActorSubscriptionSection,
-    ApplicationLedgerChannelCreationSection, ApplicationLedgerChannelInvitationSection,
-    ApplicationLedgerEndorsementRequestSection, ApplicationLedgerPrivateChannelDataSection,
-    ApplicationLedgerPublicChannelDataSection, ApplicationLedgerSharedSecretSection,
+    ApplicationLedgerActorCreationSection,
+    ApplicationLedgerActorSubscriptionSection,
+    ApplicationLedgerChannelCreationSection,
+    ApplicationLedgerChannelInvitationSection,
+    ApplicationLedgerEndorsementRequestSection,
+    ApplicationLedgerPrivateChannelDataSection,
+    ApplicationLedgerPublicChannelDataSection,
+    ApplicationLedgerSharedSecretSection,
     Section
 } from "../../type/valibot/blockchain/section/sections";
 

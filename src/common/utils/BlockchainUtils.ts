@@ -1,6 +1,6 @@
 import {Crypto} from "../crypto/crypto";
 import {Utils} from "./utils";
-import {encode, decode} from 'cbor-x';
+import {decode, encode} from 'cbor-x';
 
 import {BlockchainSerializer} from "../data/BlockchainSerializer";
 import {MicroblockHeader, MicroblockHeaderSchema} from "../type/valibot/blockchain/microblock/MicroblockHeader";
@@ -14,26 +14,26 @@ import {Section, SectionSchema} from "../type/valibot/blockchain/section/section
 import {VirtualBlockchainInfo, VirtualBlockchainInfoSchema} from "../type/valibot/provider/VirtualBlockchainInfo";
 import {MicroblockInformation, MicroblockInformationSchema} from "../type/valibot/provider/MicroblockInformationSchema";
 import {
-    EscrowParameters,
-    EscrowParametersSchema,
-    EscrowLock,
-    EscrowLockSchema,
-    VestingParameters,
-    VestingParametersSchema,
-    VestingLock,
-    VestingLockSchema,
-    NodeStakingParameters,
-    NodeStakingParametersSchema,
-    NodeStakingLock,
-    NodeStakingLockSchema,
-    Lock,
-    LockSchema,
     AccountBreakdown,
     AccountBreakdownSchema,
+    AccountInformation,
+    AccountInformationSchema,
     AccountState,
     AccountStateSchema,
-    AccountInformation,
-    AccountInformationSchema
+    EscrowLock,
+    EscrowLockSchema,
+    EscrowParameters,
+    EscrowParametersSchema,
+    Lock,
+    LockSchema,
+    NodeStakingLock,
+    NodeStakingLockSchema,
+    NodeStakingParameters,
+    NodeStakingParametersSchema,
+    VestingLock,
+    VestingLockSchema,
+    VestingParameters,
+    VestingParametersSchema
 } from "../type/valibot/node/AccountInformation";
 
 export class BlockchainUtils {

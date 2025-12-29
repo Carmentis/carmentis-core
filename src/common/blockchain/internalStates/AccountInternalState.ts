@@ -1,4 +1,3 @@
-
 import {IInternalState} from "./IInternalState";
 import {AccountVBInternalStateObject} from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
 

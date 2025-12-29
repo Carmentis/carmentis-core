@@ -4,7 +4,8 @@ import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {AccountInternalState} from "../internalStates/AccountInternalState";
 import {
     AccountPublicKeySection,
-    AccountTokenIssuanceSection, AccountVestingTransferSection,
+    AccountTokenIssuanceSection,
+    AccountVestingTransferSection,
     Section
 } from "../../type/valibot/blockchain/section/sections";
 

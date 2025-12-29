@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+
 export const ProtocolVariablesSchema = v.object({
     protocolVersionName: v.string(),
     protocolVersion: v.number(),

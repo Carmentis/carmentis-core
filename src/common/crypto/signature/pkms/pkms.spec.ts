@@ -1,5 +1,4 @@
 import {Utils} from "../../../utils/utils";
-import * as https from "node:https";
 import {PkmsSecp256k1PrivateSignatureKey} from "./PkmsSecp256k1PrivateSignatureKey";
 import {
     SelfProvidedApiKeyPkmsCredentialProvider

@@ -1,6 +1,4 @@
 import {VirtualBlockchain} from "./VirtualBlockchain";
-import {Provider} from "../../providers/Provider";
-import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {ValidatorNodeMicroblockStructureChecker} from "../structureCheckers/ValidatorNodeMicroblockStructureChecker";
 
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";

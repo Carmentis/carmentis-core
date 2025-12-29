@@ -1,9 +1,7 @@
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
-import {Provider} from "../../providers/Provider";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
-import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
-import {IllegalStateError, SectionNotFoundError} from "../../errors/carmentis-error";
+import {IllegalStateError} from "../../errors/carmentis-error";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {AccountMicroblockStructureChecker} from "../structureCheckers/AccountMicroblockStructureChecker";
 import {Microblock} from "../microblock/Microblock";
@@ -14,8 +12,6 @@ import {AccountInternalState} from "../internalStates/AccountInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
-import {ACCOUNT_CREATION} from "../../constants/sections";
-import {VirtualBlockchainState} from "../../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
 import {Utils} from "../../utils/utils";
 
 export class AccountVb extends VirtualBlockchain<AccountInternalState> {

@@ -1,4 +1,3 @@
-
 import {Utils} from "../../utils/utils";
 import {Hash} from "../../entities/Hash";
 import {IInternalState} from "./IInternalState";

@@ -1,4 +1,3 @@
-
 import {Utils} from "../../utils/utils";
 import {Hash} from "../../entities/Hash";
 import {ValidatorNodeVBInternalStateObject} from "../../type/valibot/blockchain/virtualBlockchain/internalStates";

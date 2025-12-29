@@ -1,7 +1,6 @@
 import {AccountVb} from "./AccountVb";
 import {ProviderFactory} from "../../providers/ProviderFactory";
 import {Microblock} from "../microblock/Microblock";
-import {Utils} from "../../utils/utils";
 import {configure, getConsoleSink} from "@logtape/logtape";
 import {Secp256k1PublicSignatureKey} from "../../crypto/signature/secp256k1/Secp256k1PublicSignatureKey";
 import {Secp256k1PrivateSignatureKey} from "../../crypto/signature/secp256k1/Secp256k1PrivateSignatureKey";

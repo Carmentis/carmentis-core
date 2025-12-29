@@ -6,10 +6,8 @@ import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBo
 import {SectionType} from "../type/valibot/blockchain/section/SectionType";
 import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
 import {VirtualBlockchainType} from "../type/VirtualBlockchainType";
-import {height, number} from "../type/valibot/primitives";
 import {VirtualBlockchainInfo} from "../type/valibot/provider/VirtualBlockchainInfo";
 import {Section} from "../type/valibot/blockchain/section/sections";
-import {Microblock} from "../blockchain/microblock/Microblock";
 import {MicroblockStruct} from "../type/valibot/blockchain/microblock/MicroblockStruct";
 import {encode} from "cbor-x";
 

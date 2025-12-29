@@ -1,6 +1,6 @@
 import {toBytes} from "@noble/ciphers/utils";
 import {CryptoSchemeFactory} from "../CryptoSchemeFactory";
-import {MLDSA65PrivateSignatureKey, MLDSA65PublicSignatureKey} from "./ml-dsa-65";
+import {MLDSA65PrivateSignatureKey} from "./ml-dsa-65";
 import {SignatureSchemeId} from "./SignatureSchemeId";
 import {BytesSignatureEncoder} from "../encoder/signature/BytesSignatureEncoder";
 

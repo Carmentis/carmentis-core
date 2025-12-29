@@ -2,7 +2,6 @@ import {Provider} from "./Provider";
 import {NullNetworkProvider} from "./NullNetworkProvider";
 import {MemoryProvider} from "./MemoryProvider";
 import {NetworkProvider} from "./NetworkProvider";
-import {PrivateSignatureKey} from "../crypto/signature/PrivateSignatureKey";
 
 /**
  * Factory class for creating instances of the Provider class with various configurations.

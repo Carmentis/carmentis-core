@@ -1,5 +1,5 @@
 import * as DATA from './data';
-import {CONTRACT_SCHEMA, PROTOCOL_VARIABLES, Schema} from './schemas';
+import {PROTOCOL_VARIABLES, Schema} from './schemas';
 import {SectionType} from '../type/valibot/blockchain/section/SectionType';
 
 // ============================================================================================================================ //

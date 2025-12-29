@@ -1,7 +1,6 @@
 import * as val from 'valibot';
-import {bin256, uint8array} from "../../primitives";
+import {uint8array} from "../../primitives";
 import {MAGIC_STRING} from "../../../../constants/chain";
-
 
 
 export const MicroblockHeaderSchema = val.object({

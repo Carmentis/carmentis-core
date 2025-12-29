@@ -1,4 +1,3 @@
-import {SECTIONS} from "../../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {HKDF} from "../../crypto/kdf/HKDF";
 import {ImportedProof, Proof} from "../../type/types";
@@ -34,7 +33,6 @@ import {Hash} from "../../entities/Hash";
 import {Height} from "../../type/Height";
 import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
-import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {IProvider} from "../../providers/IProvider";
 import {ApplicationLedgerInternalState} from "../internalStates/ApplicationLedgerInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
@@ -42,10 +40,7 @@ import {ICryptoKeyHandler} from "../../wallet/ICryptoKeyHandler";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
-import {
-    ApplicationLedgerActorSubscriptionSection, ApplicationLedgerChannelInvitationSection,
-    ApplicationLedgerSharedSecretSection
-} from "../../type/valibot/blockchain/section/sections";
+import {ApplicationLedgerChannelInvitationSection} from "../../type/valibot/blockchain/section/sections";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInternalState> {
 

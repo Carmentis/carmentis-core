@@ -1,15 +1,10 @@
-import {SECTIONS} from "../../constants/constants";
 import {VirtualBlockchain} from "./VirtualBlockchain";
-import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
-import {Provider} from "../../providers/Provider";
-import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {ProtocolMicroblockStructureChecker} from "../structureCheckers/ProtocolMicroblockStructureChecker";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {Microblock} from "../microblock/Microblock";
 import {IProvider} from "../../providers/IProvider";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
-import {ProtocolInternalStateUpdater} from "../internalStatesUpdater/ProtocolInternalStateUpdater";
 import {Utils} from "../../utils/utils";
 
 export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {

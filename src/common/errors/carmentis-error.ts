@@ -32,6 +32,9 @@ export enum CarmentisErrorCode {
     VIRTUAL_BLOCKCHAIN_NOT_FOUND,
     VIRTUAL_BLOCKCHAIN_ALREADY_EXISTS,
 
+    //
+    MICROBLOCK_STRUCTURE_CHECKING_ERROR,
+
     // economics errors
     ECONOMICS_ERROR = 200,
     INVALID_TOKEN_UNIT,
@@ -55,6 +58,12 @@ export class CarmentisError extends Error {
 
     static isCarmentisError(error: any): error is CarmentisError {
         return error instanceof CarmentisError;
+    }
+}
+
+export class MicroblockStructureCheckingError extends CarmentisError {
+    constructor(message?: string) {
+        super(`Microblock structure checking error: ${message ?? 'Not specified'}`, CarmentisErrorCode.MICROBLOCK_STRUCTURE_CHECKING_ERROR);
     }
 }
 

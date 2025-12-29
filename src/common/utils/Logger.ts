@@ -41,4 +41,8 @@ export class Logger {
     static getAbstractProviderLogger(name: string) {
         return this.getLogger(['provider', name])
     }
+
+    static getMicroblockStructureCheckerLogger() {
+        return this.getLogger(['microblock', 'structure-checker'])
+    }
 }

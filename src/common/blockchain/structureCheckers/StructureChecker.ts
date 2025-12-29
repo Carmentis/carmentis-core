@@ -1,5 +1,9 @@
 import {SECTIONS} from "../../constants/constants";
 import {Microblock} from "../microblock/Microblock";
+import {MicroblockStructureCheckingError} from "../../errors/carmentis-error";
+import {ConstraintNameByConstraint, SectionConstraint} from "./SectionConstraint";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {SectionLabel} from "../../utils/SectionLabel";
 
 /**
  * The StructureChecker class is responsible for validating the structure of a microblock.
@@ -47,7 +51,7 @@ export class StructureChecker {
      * @return void
      * @throws An error if the count of sections does not meet the specified constraint.
      */
-    expects(constraint: any, type: any) {
+    expects(constraint: SectionConstraint, type: SectionType) {
         let count = 0;
 
         while (!this.endOfList() && this.currentSection().type == type) {
@@ -56,7 +60,7 @@ export class StructureChecker {
         }
 
         if (!this.checkConstraint(constraint, count)) {
-            throw `expected ${SECTIONS.CONSTRAINT_NAMES[constraint]} of type ${this.getTypeLabel(type)}, got ${count}`;
+            throw new MicroblockStructureCheckingError(`expected ${ConstraintNameByConstraint[constraint]} of type ${this.getSectionLabelBySectionType(type)}, got ${count}`);
         }
     }
 
@@ -68,7 +72,7 @@ export class StructureChecker {
      * @return void
      * @throws An error if the group constraint or type constraints are not met.
      */
-    group(groupConstraint: any, list: any) {
+    group(groupConstraint: SectionConstraint, list: [SectionConstraint, SectionType][]) {
         const counts = new Map;
         let groupCount = 0;
 
@@ -79,7 +83,6 @@ export class StructureChecker {
         while (!this.endOfList()) {
             const currentType = this.currentSection().type;
 
-            // @ts-expect-error TS(7031): Binding element 'count' implicitly has an 'any' ty... Remove this comment to see the full error message
             if (!list.some(([count, type]) => type == currentType)) {
                 break;
             }
@@ -89,14 +92,14 @@ export class StructureChecker {
         }
 
         if (!this.checkConstraint(groupConstraint, groupCount)) {
-            throw `expected ${SECTIONS.CONSTRAINT_NAMES[groupConstraint]} in group, got ${groupCount}`;
+            throw new MicroblockStructureCheckingError(`expected ${ConstraintNameByConstraint[groupConstraint]} in group, got ${groupCount}`);
         }
 
         for (const [constraint, type] of list) {
             const count = counts.get(type);
 
             if (!this.checkConstraint(constraint, count)) {
-                throw `expected ${SECTIONS.CONSTRAINT_NAMES[constraint]} of type ${this.getTypeLabel(type)}, got ${count}`;
+                throw new MicroblockStructureCheckingError(`expected ${ConstraintNameByConstraint[constraint]} of type ${this.getSectionLabelBySectionType(type)}, got ${count}`);
             }
         }
     }
@@ -111,7 +114,7 @@ export class StructureChecker {
         if (!this.endOfList()) {
             const currentSection = this.currentSection();
             const currentSectionType = currentSection.type;
-            throw `Unexpected section ${this.getTypeLabel(currentSectionType)}`;
+            throw new MicroblockStructureCheckingError(`Unexpected section ${this.getSectionLabelBySectionType(currentSectionType)}`);
         }
     }
 
@@ -140,21 +143,21 @@ export class StructureChecker {
      * @param {any} count - The actual count value to assess against the given constraint.
      * @return {boolean} Returns true if the count satisfies the given constraint, otherwise false.
      */
-    checkConstraint(constraint: number, count: any) {
+    checkConstraint(constraint: SectionConstraint, count: number) {
         switch (constraint) {
-            case SECTIONS.ANY         : {
+            case SectionConstraint.ANY         : {
                 return true;
             }
-            case SECTIONS.ZERO        : {
+            case SectionConstraint.ZERO        : {
                 return count == 0;
             }
-            case SECTIONS.ONE         : {
+            case SectionConstraint.ONE         : {
                 return count == 1;
             }
-            case SECTIONS.AT_LEAST_ONE: {
+            case SectionConstraint.AT_LEAST_ONE: {
                 return count >= 1;
             }
-            case SECTIONS.AT_MOST_ONE : {
+            case SectionConstraint.AT_MOST_ONE : {
                 return count <= 1;
             }
         }
@@ -167,8 +170,12 @@ export class StructureChecker {
      * @param {number} type - The type for which the label needs to be retrieved.
      * @return {string} The label associated with the given type, or "unknown" if the type is not defined.
      */
-    getTypeLabel(type: number): string {
+    getSectionLabelBySectionType(type: SectionType): string {
+        return SectionLabel.getSectionLabelFromSectionType(type)
+        /*
         const section = SECTIONS.DEF[this.microblock.getType()][type];
         return section ? section.label : "unknown";
+
+         */
     }
 }

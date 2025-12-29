@@ -2,33 +2,45 @@ import {IMicroblockStructureChecker} from "./IMicroblockStructureChecker";
 import {StructureChecker} from "./StructureChecker";
 import {Microblock} from "../microblock/Microblock";
 import {SECTIONS} from "../../constants/constants";
+import {Logger} from "../../utils/Logger";
+import {MicroblockStructureCheckingError} from "../../errors/carmentis-error";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {SectionConstraint} from "./SectionConstraint";
 
 export class ValidatorNodeMicroblockStructureChecker implements IMicroblockStructureChecker {
+    private logger = Logger.getMicroblockStructureCheckerLogger();
     checkMicroblockStructure(microblock: Microblock): boolean {
         try {
             const checker = new StructureChecker(microblock);
             checker.expects(
-                checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-                SECTIONS.VN_CREATION
+                checker.isFirstBlock() ? SectionConstraint.ONE : SectionConstraint.ZERO,
+                SectionType.VN_CREATION
             );
             checker.group(
-                SECTIONS.AT_LEAST_ONE,
+                SectionConstraint.AT_LEAST_ONE,
                 checker.isFirstBlock() ? 
                     [
-                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_COMETBFT_PUBLIC_KEY_DECLARATION ],
-                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_RPC_ENDPOINT ]
+                        [ SectionConstraint.AT_MOST_ONE, SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION ],
+                        [ SectionConstraint.AT_MOST_ONE, SectionType.VN_RPC_ENDPOINT ]
                     ]
                 :
                     [
-                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_COMETBFT_PUBLIC_KEY_DECLARATION ],
-                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_RPC_ENDPOINT ],
-                        [ SECTIONS.AT_MOST_ONE, SECTIONS.VN_VOTING_POWER_UPDATE ]
+                        [ SectionConstraint.AT_MOST_ONE, SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION ],
+                        [ SectionConstraint.AT_MOST_ONE, SectionType.VN_RPC_ENDPOINT ],
+                        [ SectionConstraint.AT_MOST_ONE, SectionType.VN_VOTING_POWER_UPDATE ]
                     ]
             );
-            checker.expects(SECTIONS.ONE, SECTIONS.SIGNATURE);
+            checker.expects(SectionConstraint.ONE, SectionType.SIGNATURE);
             checker.endsHere();
             return true;
-        } catch {
+        } catch (e) {
+            if (e instanceof Error) {
+                if (e instanceof MicroblockStructureCheckingError) {
+                    this.logger.error(`Invalid microblock structure: ${e.message}`)
+                } else {
+                    this.logger.error(`Unexpected error occurred during microblock structure checking: ${e.message} at ${e.stack}`)
+                }
+            }
             return false;
         }
     }

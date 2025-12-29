@@ -1,5 +1,5 @@
 import {Microblock} from "../microblock/Microblock";
-import {ECO, SECTIONS} from "../../constants/constants";
+import {ECO} from "../../constants/constants";
 import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {AccountInternalState} from "../internalStates/AccountInternalState";
 import {
@@ -8,6 +8,7 @@ import {
     AccountVestingTransferSection,
     Section
 } from "../../type/valibot/blockchain/section/sections";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 
 export class AccountInternalStateUpdater implements IInternalStateUpdater<AccountInternalState> {
     constructor() {}
@@ -18,32 +19,32 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
         });
 
         // Process all sections in the microblock
-        const sections = microblock.getAllSections();
+        const sections: Section[] = microblock.getAllSections();
         
         for (const section of sections) {
             switch (section.type) {
-                case SECTIONS.ACCOUNT_PUBLIC_KEY:
+                case SectionType.ACCOUNT_PUBLIC_KEY:
                     await this.publicKeyCallback(newState, microblock, section);
                     break;
-                case SECTIONS.ACCOUNT_TOKEN_ISSUANCE:
+                case SectionType.ACCOUNT_TOKEN_ISSUANCE:
                     await this.tokenIssuanceCallback(newState, microblock, section);
                     break;
-                case SECTIONS.ACCOUNT_CREATION:
+                case SectionType.ACCOUNT_CREATION:
                     await this.creationCallback(newState, microblock, section);
                     break;
-                case SECTIONS.ACCOUNT_TRANSFER:
+                case SectionType.ACCOUNT_TRANSFER:
                     await this.transferCallback(newState, microblock, section);
                     break;
-                case SECTIONS.ACCOUNT_VESTING_TRANSFER:
+                case SectionType.ACCOUNT_VESTING_TRANSFER:
                     await this.vestingTransferCallback(newState, microblock, section);
                     break;
-                case SECTIONS.ACCOUNT_ESCROW_TRANSFER:
+                case SectionType.ACCOUNT_ESCROW_TRANSFER:
                     await this.escrowTransferCallback(newState, microblock, section);
                     break;
-                case SECTIONS.ACCOUNT_STAKE:
+                case SectionType.ACCOUNT_STAKE:
                     await this.stakeCallback(newState, microblock, section);
                     break;
-                case SECTIONS.SIGNATURE:
+                case SectionType.SIGNATURE:
                     await this.signatureCallback(newState, microblock, section);
                     break;
             }
@@ -54,7 +55,7 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
 
     private async publicKeyCallback(state: AccountInternalState, microblock: Microblock, section: AccountPublicKeySection) {
         state.updatePublicKeyHeight(microblock.getHeight());
-        state.updateSignatureScheme(microblock.getHeight());
+        state.updateSignatureScheme(section.schemeId);
     }
 
     private async tokenIssuanceCallback(state: AccountInternalState, microblock: Microblock, section: AccountTokenIssuanceSection) {
@@ -75,37 +76,24 @@ export class AccountInternalStateUpdater implements IInternalStateUpdater<Accoun
     }
 
     private async vestingTransferCallback(state: AccountInternalState, microblock: Microblock, section: AccountVestingTransferSection) {
-        if(section.cliffDurationDays < 0) {
+        if (section.cliffDurationDays < 0) {
             throw new Error(`The cliff duration must be greater than or equal to 0`);
         }
-        if(section.vestingDurationDays <= 0) {
+        if (section.vestingDurationDays <= 0) {
             throw new Error(`The vesting duration must be greater than 0`);
         }
-        if(section.amount <= 0) {
+        if (section.amount <= 0) {
             throw new Error(`The amount must be greater than 0`);
         }
-
-        // TODO: check that the vesting para
-        // FIXME: to be completed
-        //const payeeVb = new AccountVb({ provider: this.provider });
-        //await payeeVb.load(section.object.account);
-        // Note: microblock.setFeesPayerAccount would need the account identifier which isn't available in this context
-        // This might need to be handled differently in the new architecture
     }
 
     private async escrowTransferCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
-        // FIXME: to be completed
-        //const payeeVb = new AccountVb({ provider: this.provider });
-        //await payeeVb.load(section.object.account);
-        // Note: microblock.setFeesPayerAccount would need the account identifier which isn't available in this context
-        // This might need to be handled differently in the new architecture
+
     }
 
     private async stakeCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
-        // TODO
     }
 
     private async signatureCallback(state: AccountInternalState, microblock: Microblock, section: Section) {
-        // TODO
     }
 }

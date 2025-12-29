@@ -9,14 +9,75 @@ import {Microblock} from "../common/blockchain/microblock/Microblock";
 import {CMTSToken} from "../common/economics/currencies/token";
 import {Secp256k1PrivateSignatureKey} from "../common/crypto/signature/secp256k1/Secp256k1PrivateSignatureKey";
 import {SectionType} from "../common/type/valibot/blockchain/section/SectionType";
+import {Utils} from "../common/utils/utils";
 
 const NODE_URL = "http://localhost:26657";
+import * as v from 'valibot';
+import {ProtocolVariablesSchema} from "../common/type/valibot/blockchain/protocol/ProtocolVariables";
+import {FeesCalculationFormulaFactory} from "../common/blockchain/feesCalculator/FeesCalcuationFormulaFactory";
 
-describe('Chain test', async () => {
+describe('Chain test', () => {
     const TEST_TIMEOUT = 45000;
 
-    // init the content
+    // create a random account
     const nodeUrl = NODE_URL;
+    const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
+    const sigEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
+    const encodedSk = 'SIG:SECP256K1:SK{cd42ad5f7a7823f3ab4da368ea4f807fa8246526ea4ea7eeb4879c42048916a5}';
+
+    async function getProtocolVariables() {
+        const protocolParams = await provider.getProtocolVariables();
+        const parseResult = v.safeParse(ProtocolVariablesSchema, protocolParams.getProtocolVariables());
+        expect(protocolParams).toBeDefined();
+        expect(parseResult.success).toBeTruthy();
+        return protocolParams.getProtocolVariables()
+    }
+
+    it("Should get all accounts", async () => {
+        // we load the genesis account information
+        const accounts = await provider.getAllAccounts();
+        expect(accounts.length).toBeGreaterThan(0);
+    })
+
+    it("Should get the genesis issuer account", async () => {
+        const accounts = await provider.getAllAccounts();
+    })
+
+    it("Should recover the protocol parameters", async () => {
+        await getProtocolVariables()
+    })
+
+    it('Should create an account', async () => {
+        const sellerSk = await sigEncoder.decodePrivateKey(encodedSk);
+        const sellerPk = await sellerSk.getPublicKey();
+        const sellerAccountId = await provider.getAccountIdFromPublicKey(sellerPk);
+        const protocolVariables = await getProtocolVariables();
+        const feesFormulaVersion = protocolVariables.feesCalculationVersion;
+        const feesFormula = FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(feesFormulaVersion);
+
+        const sk = Secp256k1PrivateSignatureKey.gen();
+        const pk = await sk.getPublicKey();
+        const mb = Microblock.createGenesisAccountMicroblock();
+        mb.addSections([
+            {
+                type: SectionType.ACCOUNT_PUBLIC_KEY,
+                schemeId: pk.getSignatureSchemeId(),
+                publicKey: await pk.getPublicKeyAsBytes()
+            },
+            {
+                type: SectionType.ACCOUNT_CREATION,
+                sellerAccount: sellerAccountId.toBytes(),
+                amount: 10
+            },
+        ])
+        mb.setFeesPayerAccount(sellerAccountId.toBytes());
+        mb.setTimestamp(Utils.getTimestampInSeconds())
+        mb.setGas(await feesFormula.computeFees(sellerSk.getSignatureSchemeId(), mb))
+        await mb.seal(sellerSk);
+        await provider.publishMicroblock(mb);
+    })
+
+    /*
     const sigEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
     const issuerPrivateKey = await sigEncoder.decodePrivateKey('SIG:SECP256K1:SK{2e3b5c0e850dce63adb3ee46866c691d2731d92ad8108fbf8cd8c86f6a124bb6}');
     console.log(`Issuer public key: ${sigEncoder.encodePublicKey(await issuerPrivateKey.getPublicKey())}`)
@@ -50,6 +111,8 @@ describe('Chain test', async () => {
 
         expect(1).toEqual(1)
     })
+
+     */
 
 
 

@@ -16,7 +16,7 @@ import {
 } from "../type/valibot/provider/abci/AbciResponse";
 
 export interface IExternalProvider {
-    sendSerializedMicroblock(headerData: Uint8Array, bodyData: Uint8Array): Promise<any>;
+    sendSerializedMicroblock(serializedMicroblock: Uint8Array): Promise<any>;
 
     awaitMicroblockAnchoring(hash: Uint8Array): Promise<MicroblockInformation>;
 

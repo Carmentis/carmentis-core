@@ -114,8 +114,6 @@ export class Microblock {
     static loadFromSerializedMicroblock(serializedMicroblock: Uint8Array, expectedMbType?: VirtualBlockchainType) {
         const mbStruct = v.parse(MicroblockStructSchema, decode(serializedMicroblock));
         return Microblock.loadFromHeaderAndBody(mbStruct.header, mbStruct.body, expectedMbType)
-        //const {serializedHeader, serializedBody} = BlockchainSerializer.unserializeMicroblockSerializedHeaderAndBody(serializedMicroblock);
-        //return Microblock.loadFromSerializedHeaderAndBody(serializedHeader, serializedBody, expectedMbType);
     }
 
     static loadFromHeaderAndBody(header: MicroblockHeader, body: MicroblockBody, expectedMbType?: VirtualBlockchainType): Microblock {

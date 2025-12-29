@@ -105,7 +105,7 @@ export function binary(options: BinaryOptions = {}) {
 export function bin256(options: Bin256Options = {}) {
     const schema = val.pipe(
         val.instance(Uint8Array<ArrayBuffer | ArrayBufferLike>),
-        val.custom((v) => v instanceof Uint8Array && v.length !== 32, `Expected Uint8Array of 32 bytes`),
+        val.custom((v) => v instanceof Uint8Array && v.length === 32, `Expected Uint8Array of 32 bytes`),
         val.metadata({ typeId: BIN256, ...options })
     );
 

@@ -42,10 +42,6 @@ export class Provider extends AbstractProvider {
         this.externalProvider = externalProvider;
     }
 
-    async sendMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
-        return await this.externalProvider.sendSerializedMicroblock(headerData, bodyData);
-    }
-
     async awaitMicroblockAnchoring(hash: Uint8Array) {
         return await this.externalProvider.awaitMicroblockAnchoring(hash);
     }
@@ -443,8 +439,9 @@ export class Provider extends AbstractProvider {
     }
 
     publishMicroblock(microblockToPublish: Microblock) {
-        const {headerData: serializedHeader, bodyData:serialiazedBody} = microblockToPublish.serialize();
-        return this.externalProvider.sendSerializedMicroblock(serializedHeader, serialiazedBody)
+        this.logger.info(`Publishing microblock ${microblockToPublish.getHash().encode()}`)
+        const {microblockData} = microblockToPublish.serialize();
+        return this.externalProvider.sendSerializedMicroblock(microblockData)
     }
 
 

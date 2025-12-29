@@ -14,6 +14,7 @@ import {BlockchainUtils} from "../../utils/BlockchainUtils";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {Utils} from "../../utils/utils";
 import {VirtualBlockchainState} from "../../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
+import {height} from "../../type/valibot/primitives";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -240,6 +241,11 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
      * @throws {Error} If the microblock information cannot be loaded.
      */
     async getMicroblock(height: Height): Promise<Microblock> {
+        this.logger.debug(`Accessing microblock at height ${height} of vb`)
+        for (const entry of this.microblockHashByHeight.entries()) {
+            this.logger.debug(`\t- Height ${entry[0]}: ${Utils.binaryToHexa(entry[1])}`)
+        }
+
         // if the provided height is strictly lower, then we raise an error
         if (height < 1) throw new IllegalParameterError(`Cannot retrieve microblock at height strictly lower than 1: got ${height}`);
 
@@ -268,8 +274,10 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         const microblockBody = await this.provider.getMicroblockBody(Hash.from(microblockHash));
         if (microblockBody === null) throw new Error('Unable to load the microblock body')
 
-        // instantiate the microblock
+        // instantiate the microblock and check that the provided microblock corresponds to the expected one
         const microblock = Microblock.loadFromHeaderAndBody(microblockHeader, microblockBody, this.type )
+        if (microblock.getHeight() !== height) throw new Error(`Received microblock contains an unexpected height: expected ${height}, defined ${microblock.getHeight()} `)
+        if (!Utils.binaryIsEqual(microblock.getHash().toBytes(), microblockHash)) throw new Error(`Mismatch between microblock hash ${microblock.getHash().encode()} and expected hash ${Utils.binaryToHexa(microblockHash)}`)
 
         // we store the microblock in the map
         this.microblockByHeight.set(height, microblock);
@@ -309,7 +317,7 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
      * @return {Promise<void>} A promise that resolves once the microblock is appended and the local state is updated.
      */
     async appendMicroBlock(microblock: Microblock): Promise<void> {
-        // raise internal error when invalid states are trigged; in practice, there cases should not happen
+        // raise internal error when invalid states are triggered; in practice, these cases should not happen
         // and are written for debugging purpose only
 
         // Case 1: the virtual blockchain is empty but contains an identifier
@@ -320,16 +328,33 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         if (!this.isEmpty() && !(this.identifier instanceof Uint8Array))
             throw new Error("Virtual blockchain is empty but has an identifier: should not happen");
 
-        // we first check that the microblock has a valid structure
+        // we first check that the microblock has a correct height
+        const expectedNewMicroblockHeight = this.height + 1;
+        const definedHeightInMicroblock = microblock.getHeight();
+        if (expectedNewMicroblockHeight !== definedHeightInMicroblock) {
+            throw new Error(`Microblock height mismatch: expected ${expectedNewMicroblockHeight} but got ${definedHeightInMicroblock}`)
+        }
+
+        // the previous hash is assumed to match otherwise is considered invalid
+        // only considered when the virtual blockchain is non-empty
+        if (!this.isEmpty()) {
+            const lastMicroblock = await this.getLastMicroblock();
+            const lastMicroblockHash = lastMicroblock.getHash().toBytes();
+            const previousMicroblockHash = microblock.getPreviousHash().toBytes();
+            if (!Utils.binaryIsEqual(previousMicroblockHash, lastMicroblockHash)) {
+                throw new Error(`Previous hash mismatch: microblock's previous hash ${Utils.binaryToHexa(previousMicroblockHash)} does not match the last microblock's hash ${Utils.binaryToHexa(lastMicroblockHash)}`)
+            }
+        }
+
+
+        // we then check that the microblock has a valid structure
         const isValid = this.checkMicroblockStructure(microblock);
         if (!isValid) throw new IllegalParameterError("Provided microblock has an invalid structure")
 
         // should load the local state updater version
         const protocolState = await this.provider.getProtocolVariables();
 
-        // --update the previous hash of the microblock if possible--
-        // the previous hash is assumed to match otherwise is considered invalid
-        // TODO check previous hash
+
 
 
         this.internalState = await this.updateInternalState(protocolState, this.internalState, microblock);
@@ -346,19 +371,7 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         const mbHash = microblock.getHash().toBytes();
         this.microblockHashByHeight.set(this.height, mbHash);
         this.microblockByHeight.set(this.height, microblock);
-
-        // we store the microblock
-        /*
-        const { headerData, bodyData } = microblock.serialize();
-        await this.provider.storeMicroblock(
-            mbHash,
-            this.identifier,
-            this.getType(),
-            this.height,
-            headerData,
-            bodyData
-        )
-         */
+        this.logger.debug(`Microblock ${Utils.binaryToHexa(mbHash)} added to vb (now at height ${this.height} `)
     }
 
     setMicroblockSearchFailureFallback(fallback: IMicroblockSearchFailureFallback) {
@@ -382,97 +395,4 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
     getExpirationDay() {
         return this.expirationDay;
     }
-
-
-
-    /*
-    startMicroBlockConstruction() {
-        const isBuildingGenesisMicroBlock = this.height === 0;
-        this.currentMicroblock = new Microblock(this.type);
-        const previousHash = this.height ? this.microblockHashes[this.height - 1] : null;
-        this.height++;
-        this.currentMicroblock.create(this.height, previousHash, this.expirationDay);
-        return { isBuildingGenesisMicroBlock }
-    }
-
-     */
-
-    /*
-    async addSection(type: SectionType, object: any) {
-        if (!this.currentMicroblock) {
-            this.startMicroBlockConstruction();
-        }
-        if (!this.currentMicroblock) throw new Error("Current micro-block has not been created")
-        const section = this.currentMicroblock.addSection(type, object);
-        await this.processSectionCallback(this.currentMicroblock, section);
-    }
-
-     */
-
-    /*
-    async processSectionCallback(microblock: Microblock, section: Section) {
-        const callback = this.sectionCallbacks.get(section.type);
-        if(callback) {
-            await callback(microblock, section);
-        }
-    }
-
-     */
-
-
-    /*
-    createSignature(privateKey: PrivateSignatureKey, withGas = true) : { signature: Uint8Array } {
-        if (!this.currentMicroblock) throw new Error(
-            "Cannot create a signature for a microblock that has not been created yet."
-        )
-        const signature = this.currentMicroblock.createSignature(privateKey, withGas);
-        return { signature };
-    }
-
-     */
-    /*
-    setGasPrice(gasPrice: CMTSToken) {
-        if (!this.currentMicroblock) throw new Error("Cannot set gas price on a microblock that has not been created yet.");
-        this.currentMicroblock.gasPrice = gasPrice.getAmountAsAtomic();
-    }
-
-     */
-
-    /*
-    getMicroblockData() {
-        if(!this.currentMicroblock) throw new Error("Cannot get the data of a microblock that has not been created yet.");
-
-        this.checkMicroblockStructure(this.currentMicroblock);
-
-        const { headerData, bodyData } = this.currentMicroblock.serialize();
-
-        return Utils.binaryFrom(headerData, bodyData);
-    }
-
-     */
-
-    /*
-    async publish(waitForAnchoring: boolean) {
-        if (!this.currentMicroblock) throw new InternalError("Cannot publish a microblock that has not been created yet.");
-
-        this.checkMicroblockStructure(this.currentMicroblock);
-
-        const { microblockHash, headerData, bodyData } = this.currentMicroblock.serialize();
-
-        this.microblockHashes[this.height - 1] = microblockHash;
-
-        if(this.height == 1) {
-            this.identifier = microblockHash;
-        }
-
-        await this.provider.sendMicroblock(headerData, bodyData);
-
-        if(waitForAnchoring) {
-            await this.provider.awaitMicroblockAnchoring(microblockHash);
-        }
-
-        return Hash.from(microblockHash);
-    }
-
-     */
 }

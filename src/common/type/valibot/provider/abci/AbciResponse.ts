@@ -9,23 +9,22 @@ import {LockSchema} from "../../node/AccountInformation";
 //  ABCI Response Types Enumeration                                                                                            //
 // ============================================================================================================================ //
 export enum AbciResponseType {
-  ERROR = 0x00,
-  CHAIN_INFORMATION = 0x02,
-  BLOCK_INFORMATION = 0x04,
-  BLOCK_CONTENT = 0x06,
-  VIRTUAL_BLOCKCHAIN_STATE = 0x08,
-  VIRTUAL_BLOCKCHAIN_UPDATE = 0x0A,
-  MICROBLOCK_INFORMATION = 0x0C,
-  MICROBLOCK_ANCHORING = 0x0E,
-  MICROBLOCK_BODYS = 0x10,
-  ACCOUNT_STATE = 0x12,
-  ACCOUNT_HISTORY = 0x14,
-  ACCOUNT_BY_PUBLIC_KEY_HASH = 0x16,
-  VALIDATOR_NODE_BY_ADDRESS = 0x18,
-  OBJECT_LIST = 0x1A,
-  GENESIS_SNAPSHOT = 0x1C,
+  ERROR = 0,
+  CHAIN_INFORMATION = 2,
+  BLOCK_INFORMATION = 4,
+  BLOCK_CONTENT = 6,
+  VIRTUAL_BLOCKCHAIN_STATE = 8,
+  VIRTUAL_BLOCKCHAIN_UPDATE = 10,
+  MICROBLOCK_INFORMATION = 12,
+  MICROBLOCK_ANCHORING = 14,
+  MICROBLOCK_BODYS = 16,
+  ACCOUNT_STATE = 18,
+  ACCOUNT_HISTORY = 20,
+  ACCOUNT_BY_PUBLIC_KEY_HASH = 22,
+  VALIDATOR_NODE_BY_ADDRESS = 24,
+  OBJECT_LIST = 26,
+  GENESIS_SNAPSHOT = 28,
 }
-
 // ============================================================================================================================ //
 //  ABCI AbciResponse Schemas                                                                                                      //
 // ============================================================================================================================ //

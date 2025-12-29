@@ -55,14 +55,8 @@ export class NetworkProvider implements IExternalProvider {
 
     constructor(private readonly nodeUrl: string) {}
 
-    async sendSerializedMicroblock(headerData: Uint8Array, bodyData: Uint8Array) {
-        this.requestLogger.debug(`Sending serialized microblock -> header {headerDataLength} bytes, body {bodyDataLength} bytes`, () => ({
-            headerDataLength: headerData.length,
-            bodyDataLength: bodyData.length
-        }));
-
-        // TODO(microblock): use a centralized manner to construct the tx data
-        const serializedMicroblock = Utils.binaryFrom(headerData, bodyData);
+    async sendSerializedMicroblock(serializedMicroblock: Uint8Array) {
+        this.requestLogger.debug(`Sending serialized microblock (${serializedMicroblock.length} bytes)`);
         const answer = await this.broadcastTx(serializedMicroblock);
 
         this.responseLogger.debug(`Received response: <- {data}`, () => ({
@@ -281,15 +275,7 @@ export class NetworkProvider implements IExternalProvider {
 
                 // internal server error
                 if (e.status === 500) {
-                    const cometError = e?.response?.data?.error?.code;
-                    if (cometError) {
-                        switch (cometError) {
-                            case CometBFTErrorCode.ENDPOINT_CLOSED_WHILE_NODE_IS_CATCHING_UP:
-                                throw new NodeEndpointClosedWhileCatchingUpError()
-                        }
-                    }
-                    //if (e.response.data.error.code === CometBFTErrorCode.ENDPOINT_CLOSED_WHILE_NODE_IS_CATCHING_UP)
-                    throw new NodeError("Internal error in the node")
+                    throw new NodeError(`Internal error in the node: ${e.message}`)
                 }
 
             }

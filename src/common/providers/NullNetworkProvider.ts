@@ -23,7 +23,7 @@ export class NullNetworkProvider implements IExternalProvider {
     constructor() {
     }
 
-    sendSerializedMicroblock(headerData: Uint8Array, bodyData: Uint8Array): Promise<any> {
+    sendSerializedMicroblock(serializedMicroblock: Uint8Array): Promise<any> {
         throw new Error("Method not implemented.");
     }
     awaitMicroblockAnchoring(hash: Uint8Array): Promise<MicroblockInformation> {

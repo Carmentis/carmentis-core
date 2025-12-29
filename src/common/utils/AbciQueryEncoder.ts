@@ -6,7 +6,7 @@ import * as v from 'valibot';
 
 export class AbciQueryEncoder {
     static encodeAbciRequest(request: AbciRequest) {
-        return encode(request)
+        return encode(v.parse(AbciRequestSchema, request));
     }
 
     static decodeAbciRequest(request: Uint8Array) {
@@ -14,10 +14,11 @@ export class AbciQueryEncoder {
     }
 
     static encodeAbciResponse(response: AbciResponse) {
-        return encode(response);
+        return encode(v.parse(AbciResponseSchema, response));
     }
 
     static decodeAbciResponse(response: Uint8Array) {
-        return v.parse(AbciResponseSchema, decode(response));
+        const decodedResponse = decode(response);
+        return v.parse(AbciResponseSchema, decodedResponse);
     }
 }

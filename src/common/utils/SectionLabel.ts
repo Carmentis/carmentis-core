@@ -19,6 +19,7 @@ const sectionLabelBySectionType: Record<SectionType, string> = {
     [SectionType.ACCOUNT_ESCROW_TRANSFER]: 'ACCOUNT_ESCROW_TRANSFER',
     [SectionType.ACCOUNT_ESCROW_SETTLEMENT]: 'ACCOUNT_ESCROW_SETTLEMENT',
     [SectionType.ACCOUNT_STAKE]: 'ACCOUNT_STAKE',
+    [SectionType.ACCOUNT_UNSTAKE]: 'ACCOUNT_UNSTAKE',
 
     // Validator node
     [SectionType.VN_CREATION]: 'VN_CREATION',

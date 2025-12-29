@@ -22,6 +22,7 @@ export enum SectionType {
     //ACCOUNT_SIGNATURE = SIGNATURE,
     ACCOUNT_ESCROW_SETTLEMENT = 23,
     ACCOUNT_STAKE = 24,
+    ACCOUNT_UNSTAKE = 25,
 
     // Validator node
     //VN_SIG_SCHEME = 32,

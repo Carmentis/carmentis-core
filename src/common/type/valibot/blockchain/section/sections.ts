@@ -107,6 +107,13 @@ export const AccountStakeSectionSchema = val.object({
 })
 export type AccountStakeSection = val.InferOutput<typeof AccountStakeSectionSchema>;
 
+export const AccountUnstakeSectionSchema = val.object({
+    type: val.literal(SectionType.ACCOUNT_UNSTAKE),
+    amount: number(),
+    objectType: number(),
+    objectIdentifier: accountId(),
+})
+export type AccountUnstakeSection = val.InferOutput<typeof AccountUnstakeSectionSchema>;
 
 
 // ---------------------------------------------------------------------------

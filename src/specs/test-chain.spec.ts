@@ -25,6 +25,9 @@ describe('Chain test', () => {
     const sigEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
     const encodedSk = 'SIG:SECP256K1:SK{cd42ad5f7a7823f3ab4da368ea4f807fa8246526ea4ea7eeb4879c42048916a5}';
 
+    // set up the logger
+    Logger.enableLogs();
+
     async function getProtocolVariables() {
         const protocolParams = await provider.getProtocolVariables();
         const parseResult = v.safeParse(ProtocolVariablesSchema, protocolParams.getProtocolVariables());
@@ -75,6 +78,34 @@ describe('Chain test', () => {
         mb.setGas(await feesFormula.computeFees(sellerSk.getSignatureSchemeId(), mb))
         await mb.seal(sellerSk);
         await provider.publishMicroblock(mb);
+        await provider.awaitMicroblockAnchoring(mb.getHash().toBytes());
+
+        // now create an organization
+        const newAccountId = await provider.getAccountIdFromPublicKey(pk);
+        const carmentisOrganizationMicroblock = Microblock.createGenesisOrganizationMicroblock();
+        carmentisOrganizationMicroblock.addSections([
+            {
+                type: SectionType.ORG_CREATION,
+                accountId: newAccountId.toBytes(),
+            },
+            {
+                type: SectionType.ORG_DESCRIPTION,
+                name: 'Carmentis SAS',
+                website: '',
+                countryCode: 'FR',
+                city: '',
+            },
+        ]);
+        carmentisOrganizationMicroblock.setFeesPayerAccount(newAccountId.toBytes());
+        carmentisOrganizationMicroblock.setTimestamp(Utils.getTimestampInSeconds());
+        carmentisOrganizationMicroblock.setGas(await feesFormula.computeFees(sk.getSignatureSchemeId(), carmentisOrganizationMicroblock));
+        await carmentisOrganizationMicroblock.seal(sk);
+        const { microblockData: carmentisOrganizationData, microblockHash: carmentisOrgId } =
+            carmentisOrganizationMicroblock.serialize();
+        await provider.publishMicroblock(carmentisOrganizationMicroblock);
+        await provider.awaitMicroblockAnchoring(carmentisOrganizationMicroblock.getHash().toBytes());
+
+        // now create the
     })
 
     /*
@@ -118,9 +149,6 @@ describe('Chain test', () => {
 
     it("Works correctly when valid usage of BlockchainFacade", async () => {
 
-
-        // set up the logger
-        await Logger.enableLogs();
 
         /* The genesis account is already created during the genesis state: no more creation required
         console.log("creating genesis account");

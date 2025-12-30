@@ -16,7 +16,7 @@ export class AccountMicroblockStructureChecker implements IMicroblockStructureCh
                 checker.isFirstBlock() ? SectionConstraint.ONE : SectionConstraint.AT_MOST_ONE,
                 SectionType.ACCOUNT_PUBLIC_KEY
             );
-            if(checker.isFirstBlock()) {
+            if (checker.isFirstBlock()) {
                 checker.group(
                     SectionConstraint.ONE,
                     [
@@ -24,8 +24,7 @@ export class AccountMicroblockStructureChecker implements IMicroblockStructureCh
                         [ SectionConstraint.AT_MOST_ONE, SectionType.ACCOUNT_CREATION ]
                     ]
                 )
-            }
-            else {
+            } else {
                 checker.group(
                     SectionConstraint.AT_LEAST_ONE,
                     [

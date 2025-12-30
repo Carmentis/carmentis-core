@@ -5,22 +5,21 @@ import {bin256, uint8array} from "../../primitives";
 //  ABCI AbciRequest Types Enumeration                                                                                             //
 // ============================================================================================================================ //
 export enum AbciRequestType {
-  GET_CHAIN_INFORMATION = 0x01,
-  GET_BLOCK_INFORMATION = 0x03,
-  GET_BLOCK_CONTENT = 0x05,
-  GET_VIRTUAL_BLOCKCHAIN_STATE = 0x07,
-  GET_VIRTUAL_BLOCKCHAIN_UPDATE = 0x09,
-  GET_MICROBLOCK_INFORMATION = 0x0B,
-  AWAIT_MICROBLOCK_ANCHORING = 0x0D,
-  GET_MICROBLOCK_BODYS = 0x0F,
-  GET_ACCOUNT_STATE = 0x11,
-  GET_ACCOUNT_HISTORY = 0x13,
-  GET_ACCOUNT_BY_PUBLIC_KEY_HASH = 0x15,
-  GET_VALIDATOR_NODE_BY_ADDRESS = 0x17,
-  GET_OBJECT_LIST = 0x19,
-  GET_GENESIS_SNAPSHOT = 0x1B,
+  GET_CHAIN_INFORMATION = 1,
+  GET_BLOCK_INFORMATION = 3,
+  GET_BLOCK_CONTENT = 5,
+  GET_VIRTUAL_BLOCKCHAIN_STATE = 7,
+  GET_VIRTUAL_BLOCKCHAIN_UPDATE = 9,
+  GET_MICROBLOCK_INFORMATION = 11,
+  AWAIT_MICROBLOCK_ANCHORING = 13,
+  GET_MICROBLOCK_BODYS = 15,
+  GET_ACCOUNT_STATE = 17,
+  GET_ACCOUNT_HISTORY = 19,
+  GET_ACCOUNT_BY_PUBLIC_KEY_HASH = 21,
+  GET_VALIDATOR_NODE_BY_ADDRESS = 23,
+  GET_OBJECT_LIST = 25,
+  GET_GENESIS_SNAPSHOT = 27,
 }
-
 // ============================================================================================================================ //
 //  ABCI AbciRequest Schemas                                                                                                       //
 // ============================================================================================================================ //

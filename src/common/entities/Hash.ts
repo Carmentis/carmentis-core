@@ -49,7 +49,7 @@ export class Hash {
      * @return {string} The encoded string representation of the hash.
      */
     encode(encoder: EncoderInterface<Uint8Array, string> = new BytesToHexEncoder()): string {
-        return encoder.encode(this.hash);
+        return encoder.encode(this.hash).toUpperCase();
     }
 
     /**

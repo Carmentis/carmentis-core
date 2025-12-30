@@ -132,9 +132,6 @@ export class Microblock {
         if (header.magicString != CHAIN.MAGIC_STRING) {
             throw new Error(`magic string '${CHAIN.MAGIC_STRING}' is missing`);
         }
-        if (header.protocolVersion != CHAIN.PROTOCOL_VERSION) {
-            throw new Error(`invalid protocol version (expected ${CHAIN.PROTOCOL_VERSION}, got ${header.protocolVersion})`);
-        }
 
         mb.addSections(body.sections);
 
@@ -157,63 +154,8 @@ export class Microblock {
 
     static loadFromSerializedHeaderAndBody(serializedHeader: Uint8Array, serializedBody: Uint8Array, expectedMbType?: VirtualBlockchainType): Microblock {
         const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
-
-        // Extract microblock type from header
-        const microblockType = header.microblockType;
-
-        // Validate that expected type matches if provided
-        if (expectedMbType !== undefined && expectedMbType !== microblockType) {
-            throw new CarmentisError(
-                `Microblock type mismatch: expected ${expectedMbType}, got ${microblockType} from header`
-            );
-        }
-
-        const mb = new Microblock(microblockType);
-        mb.header = header;
-
-        // Validate basic header fields
-        if (header.magicString != CHAIN.MAGIC_STRING) {
-            throw new Error(`magic string '${CHAIN.MAGIC_STRING}' is missing`);
-        }
-        if (header.protocolVersion != CHAIN.PROTOCOL_VERSION) {
-            throw new Error(`invalid protocol version (expected ${CHAIN.PROTOCOL_VERSION}, got ${header.protocolVersion})`);
-        }
-
-
-        // we compute the hash of the microblock being the hash of the serialized header and assign the gas price
-        mb.hash = Crypto.Hashes.sha256AsBinary(serializedHeader);
-
-        // we check that the hash of the body is consistent with the body hash contained in the header
-        const computedBodyHash = Crypto.Hashes.sha256AsBinary(serializedBody);
-        const bodyHashContainedInHeader = header.bodyHash;
-        const areBodyHashMatching = Utils.binaryIsEqual(bodyHashContainedInHeader, computedBodyHash)
-        if (!areBodyHashMatching) {
-            const encoder = EncoderFactory.bytesToHexEncoder();
-            throw new CarmentisError(
-                `Body hash in the header is different of the locally computed body hash: header.bodyHash=${encoder.encode(bodyHashContainedInHeader)}, computed=${encoder.encode(computedBodyHash)}`
-            );
-        }
-
-        // parse the body
         const body = BlockchainUtils.decodeMicroblockBody(serializedBody);
-        for (const section of body.sections) {
-            mb.addSection(section)
-        }
-        /*
-        const bodyUnserializer = new SchemaUnserializer(SCHEMAS.MICROBLOCK_BODY);
-        // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
-        const body = bodyUnserializer.unserialize(serializedBody).body;
-        for (const {type, data} of body) {
-            const sectionSchema = SECTIONS.DEF[microblockType][type];
-            const unserializer = new SchemaUnserializer(sectionSchema);
-            const object = unserializer.unserialize(data);
-
-            mb.storeSection(type, object, data);
-        }
-
-         */
-
-        return mb;
+        return Microblock.loadFromHeaderAndBody(header, body, expectedMbType);
     }
 
     /**
@@ -493,7 +435,11 @@ export class Microblock {
 
 
     computeBodyHash() {
-        return Microblock.computeBodyHashFromSections(this.sections)
+        if (this.isLastSectionSignature()) {
+            return Microblock.computeBodyHashFromSections(this.sections.slice(0, this.sections.length - 1));
+        } else {
+            return Microblock.computeBodyHashFromSections(this.sections)
+        }
     }
 
 
@@ -528,7 +474,7 @@ export class Microblock {
      */
     serialize() {
         const bodyData = this.serializedBody();
-        const bodyHash = Crypto.Hashes.sha256AsBinary(bodyData);
+        const bodyHash = this.header.bodyHash; //Crypto.Hashes.sha256AsBinary(bodyData);
         const headerData = this.serializeHeader();
         const microblockHash = Crypto.Hashes.sha256AsBinary(headerData);
         /*
@@ -603,7 +549,7 @@ export class Microblock {
      * @return {Uint8Array} The generated digital signature as a byte array.
      */
     async sign(privateKey: PrivateSignatureKey, includeGas: boolean = true): Promise<Uint8Array> {
-        const signedData = this.serializeForSigning(includeGas, false);
+        const signedData = this.serializeForSigning(includeGas, 'sign');
         const signature = await privateKey.sign(signedData)
         return signature
     }
@@ -619,7 +565,7 @@ export class Microblock {
     async verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas: boolean = true): Promise<boolean> {
         //const shouldIncludeGas = typeof includeGas === 'boolean' ? includeGas : true;
         //const numberOfSectionsToIncludeInSignature = sectionCount || this.sections.length - 1;
-        const signedData = this.serializeForSigning(includeGas, true);
+        const signedData = this.serializeForSigning(includeGas, 'verif');
         return await publicKey.verify(signedData, signature);
     }
 
@@ -644,6 +590,7 @@ export class Microblock {
     }
 
     private isLastSectionSignature(): boolean {
+        if (this.sections.length == 0) return false;
         return this.sections[this.sections.length - 1].type === SectionType.SIGNATURE;
     }
 
@@ -680,19 +627,21 @@ export class Microblock {
      *
      * @return {Uint8Array} The serialized binary representation of the microblock for signing.
      */
-    serializeForSigning(includeGas: boolean, shouldBeSigned: boolean = false): Uint8Array {
+    serializeForSigning(includeGas: boolean, executionContext: 'sign' | 'verif'): Uint8Array {
         // this.setGasData(includeGas, extraBytes);
+        // we need the distinction between sign and verif to sign all sections contained in the microblock (and hence
+        // excluding the last signature when verifying).
         const numberOfSections = this.sections.length;
         const sections = this.sections.slice(
             0,
-            shouldBeSigned && this.isLastSectionSignature() ?  numberOfSections - 1 : numberOfSections
+            executionContext === 'verif' && this.isLastSectionSignature() ?  numberOfSections - 1 : numberOfSections
         );
 
         const signedHeader: MicroblockHeader = {
             ...this.header,
             gas: includeGas ? this.header.gas : 0,
             gasPrice: includeGas ? this.header.gasPrice : 0,
-            bodyHash: Microblock.computeBodyHashFromSections(sections)
+            bodyHash: Microblock.computeBodyHashFromSections(sections) // TODO check if
         }
         const headerData = BlockchainSerializer.serializeMicroblockHeader(signedHeader);
         return headerData
@@ -753,13 +702,15 @@ export class Microblock {
      * can be set before sealing the microblock.
      *
      * @param {PrivateSignatureKey} privateKey - The private key used to sign the microblock.
-     * @param {Uint8Array} [feesPayerAccount] - An optional account identifying the payer for transaction fees.
+     * @param sealingParams
      * @return {Promise<void>} A promise that resolves when the microblock has been successfully sealed.
      * @throws {IllegalStateError} If the microblock is already signed.
      */
-    async seal(privateKey: PrivateSignatureKey, feesPayerAccount?: Uint8Array) {
+    async seal(privateKey: PrivateSignatureKey, sealingParams: { feesPayerAccount?: Uint8Array, includeGas?: boolean } = {}) {
+        const feesPayerAccount = sealingParams.feesPayerAccount;
         if (feesPayerAccount) this.setFeesPayerAccount(feesPayerAccount);
-        const signature = await this.sign(privateKey, true);
+        const includeGas = typeof sealingParams.includeGas === 'boolean' ? sealingParams.includeGas : true;
+        const signature = await this.sign(privateKey, includeGas);
         const signatureSectionObject: SignatureSection = {
             type: SectionType.SIGNATURE,
             signature,
@@ -770,13 +721,13 @@ export class Microblock {
 
 
     addSections(sections: Section[]) {
-        Microblock.logger.debug("Adding multiple sections to microblock: {names}", () => {
+        Microblock.logger.debug("Adding sections to microblock: {names}", () => {
             const labels = sections.map(section => SectionLabel.getSectionLabelFromSection(section))
             return { names: labels.join(', ') }
         })
         this.sections.push(...sections);
         // we update the body hash and microblock hash
-        this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
+        this.header.bodyHash = this.computeBodyHash();
         this.hash = Microblock.computeMicroblockHash(this.header)
     }
 
@@ -786,20 +737,7 @@ export class Microblock {
      * @param {Section} section - The created section.
      */
     addSection(section: Section) {
-        Microblock.logger.debug("Adding section of type {type} to microblock", () => ({
-            type: section.type
-        }))
-        this.sections.push(section);
-        // we update the body hash and microblock hash
-        this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
-        this.hash = Microblock.computeMicroblockHash(this.header)
-        /*
-        const sectionSchema = SECTIONS.DEF[this.type][type];
-        const serializer = new SchemaSerializer(sectionSchema);
-        const data = serializer.serialize(object);
-        return this.storeSection(type, object, data);
-
-         */
+        this.addSections([section])
     }
 
     /**
@@ -816,7 +754,7 @@ export class Microblock {
             throw new IllegalStateError("Cannot pop section from empty microblock");
 
         // update the microblock state
-        this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
+        this.header.bodyHash = this.computeBodyHash()
         this.hash = Microblock.computeMicroblockHash(this.header)
 
         return removedSection
@@ -850,11 +788,14 @@ export class Microblock {
         output += `    Gas: ${this.header.gas}\n`;
         output += `    Gas Price: ${this.header.gasPrice}\n`;
         output += `    Body Hash: ${encoder.encode(this.header.bodyHash)}\n`;
+        output += `    Computed body Hash: ${encoder.encode(this.computeBodyHash())}\n`;
 
         output += `  Sections (${this.sections.length}):\n`;
         this.sections.forEach((section, index) => {
             output += `    Section ${index}:\n`;
-            output += `      Section Type: ${section.type}\n`;
+            output += `      Section Type: ${SectionLabel.getSectionLabelFromSection(section)} (type ${section.type})\n`;
+            output += `      Section Data: ${Utils.binaryToHexa(BlockchainUtils.encodeSection(section))}\n`;
+            console.log(section)
         });
 
         return output;

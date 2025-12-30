@@ -143,6 +143,16 @@ export class Provider extends AbstractProvider {
         return list.list.map(Hash.from)
     }
 
+    /**
+     * Returns the list of validator node identifiers.
+     *
+     * Note: to recover more data from the validator node, load the node virtual blockchain.
+     */
+    async getAllValidatorNodes(): Promise<Hash[]> {
+        const list = await this.getObjectList(VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN);
+        return list.list.map(Hash.from)
+    }
+
     async getObjectList(type: VirtualBlockchainType): Promise<ObjectListAbciResponse> {
         return await this.externalProvider.getObjectList(type);
     }
@@ -266,8 +276,8 @@ export class Provider extends AbstractProvider {
         return null;
     }
     async getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeader | null> {
-        const serializedHedaer = await this.internalProvider.getSerializedMicroblockHeader(microblockHash.toBytes());
-        if (serializedHedaer instanceof Uint8Array) return BlockchainUtils.decodeMicroblockHeader(serializedHedaer);
+        const serializedHeader = await this.internalProvider.getSerializedMicroblockHeader(microblockHash.toBytes());
+        if (serializedHeader instanceof Uint8Array) return BlockchainUtils.decodeMicroblockHeader(serializedHeader);
         const receivedSerializedHeader = await this.externalProvider.getMicroblockInformation(microblockHash.toBytes());
         if (receivedSerializedHeader !== null) {
             return receivedSerializedHeader.header;

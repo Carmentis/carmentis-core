@@ -35,6 +35,7 @@ import {
     VestingParameters,
     VestingParametersSchema
 } from "../type/valibot/node/AccountInformation";
+import {Logger} from "./Logger";
 
 export class BlockchainUtils {
     static computeMicroblockHashFromHeader(previousMicroblockHeader: MicroblockHeader) {
@@ -46,14 +47,22 @@ export class BlockchainUtils {
       Takes a list of consecutive microblock headers in binary format and in anti-chronological order.
       Returns an object with a flag telling if the hash chain is valid and the list of microblock hashes (also in anti-chronological order).
     */
-    static checkHeaderList(headers: Uint8Array[]) {
+    static checkHeaderList(serializedHeaders: Uint8Array[]) {
+        // if the list of headers contains zero or one header, the verification succeed
+        const numberOfHeaders = serializedHeaders.length;
+        if (numberOfHeaders === 0) return { valid: true, hashes: [] }
+        if (numberOfHeaders === 1) return { valid: true, hashes: [Crypto.Hashes.sha256AsBinary(serializedHeaders[0])] }
+
+        // on the other cases (at least two headers), we have to start from the header before the last one, whose
+        // the hash must match the previous hash of the last one, etc
         const hashes = [];
         let expectedHash = null;
-
-        for(const header of headers) {
+        const logger = Logger.getProviderLogger();
+        for (const header of serializedHeaders.reverse()) {
             const hash = Crypto.Hashes.sha256AsBinary(header);
 
-            if(expectedHash && !Utils.binaryIsEqual(hash, expectedHash)) {
+            if (expectedHash && !Utils.binaryIsEqual(hash, expectedHash)) {
+                logger.error(`Received headers mismatch: Expected ${Utils.binaryToHexa(expectedHash)}, got ${Utils.binaryToHexa(hash)}: aborting verification`)
                 return {
                     valid: false,
                     hashes: []

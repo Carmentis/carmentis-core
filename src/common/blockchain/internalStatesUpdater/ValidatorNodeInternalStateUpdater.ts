@@ -18,6 +18,9 @@ export class ValidatorNodeInternalStateUpdater implements IInternalStateUpdater<
                 case SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION:
                     newState.setCometbftPublicKeyDeclarationHeight(microblock.getHeight());
                     break;
+                case SectionType.VN_RPC_ENDPOINT:
+                    newState.setRpcEndpointDeclarationHeight(microblock.getHeight());
+                    break;
             }
         }
         return newState;

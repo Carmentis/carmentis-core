@@ -54,4 +54,8 @@ export class ValidatorNodeInternalState {
     setOrganizationId(organizationId: Uint8Array) {
         this.internalState.organizationId = organizationId;
     }
+
+    setRpcEndpointDeclarationHeight(height: number) {
+        this.internalState.rpcEndpointHeight = height;
+    }
 }

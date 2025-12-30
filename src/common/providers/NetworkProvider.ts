@@ -208,6 +208,8 @@ export class NetworkProvider implements IExternalProvider {
             vbType: response.virtualBlockchainType,
             vbId: Utils.binaryToHexa(response.virtualBlockchainId),
         }));
+        // TODO: remove or downgrade to debug
+        this.logger.debug(`Received microblock information body hash for microblock ${Utils.binaryToHexa(hash)}: ${Utils.binaryToHexa(response.header.bodyHash)}`)
         return v.parse(MicroblockInformationSchema, response);
     }
 

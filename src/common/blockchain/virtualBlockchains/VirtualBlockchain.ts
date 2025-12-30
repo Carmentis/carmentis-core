@@ -277,7 +277,19 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         // instantiate the microblock and check that the provided microblock corresponds to the expected one
         const microblock = Microblock.loadFromHeaderAndBody(microblockHeader, microblockBody, this.type )
         if (microblock.getHeight() !== height) throw new Error(`Received microblock contains an unexpected height: expected ${height}, defined ${microblock.getHeight()} `)
-        if (!Utils.binaryIsEqual(microblock.getHash().toBytes(), microblockHash)) throw new Error(`Mismatch between microblock hash ${microblock.getHash().encode()} and expected hash ${Utils.binaryToHexa(microblockHash)}`)
+        if (!Utils.binaryIsEqual(microblock.getHash().toBytes(), microblockHash)) {
+            const errMsg = `Mismatch between microblock hash ${microblock.getHash().encode()} and expected hash ${Utils.binaryToHexa(microblockHash)}`
+            this.logger.error(microblock.toString())
+            if (microblock.isSigned()) {
+                this.logger.error("Microblock is signed, checking if mismatch do not comes from signature")
+                microblock.popSection();
+                this.logger.error(microblock.toString())
+            }
+            for (const entry of this.microblockHashByHeight.entries()) {
+                this.logger.error(`\t- Height ${entry[0]}: ${Utils.binaryToHexa(entry[1])}`)
+            }
+            throw new Error(errMsg)
+        }
 
         // we store the microblock in the map
         this.microblockByHeight.set(height, microblock);

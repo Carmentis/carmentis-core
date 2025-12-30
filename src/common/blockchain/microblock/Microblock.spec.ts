@@ -6,6 +6,9 @@ import {CryptoSchemeFactory} from "../../crypto/CryptoSchemeFactory";
 
 import {Secp256k1PrivateSignatureKey} from "../../crypto/signature/secp256k1/Secp256k1PrivateSignatureKey";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {CMTSToken} from "../../economics/currencies/token";
+import {Section} from "../../type/valibot/blockchain/section/sections";
+import {BlockchainUtils} from "../../utils/BlockchainUtils";
 
 describe('Microblock.createGenesisAccountMicroblock', () => {
     it('should create a genesis microblock of type ACCOUNT_VIRTUAL_BLOCKCHAIN', () => {
@@ -144,38 +147,62 @@ describe('Microblock.verifySignature', () => {
             publicKey: await pk.getPublicKeyAsBytes(),
             schemeId: pk.getSignatureSchemeId(),
         });
-
-        // sign the microblock a first time
-        const firstSignature = await mb.sign(sk);
-        expect(firstSignature).toBeInstanceOf(Uint8Array)
-        mb.addSection({
-            type: SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA,
-            channelId: 1,
-            data: Utils.getNullHash(),
-        });
-        expect(await mb.verifySignature(pk, firstSignature)).toBe(true)
-
-
-        // sign the microblock a second time
-        const secondSignature = await mb.sign(sk);
-        expect(secondSignature).toBeInstanceOf(Uint8Array)
-        mb.addSection({
-            type: SectionType.SIGNATURE,
-            signature: secondSignature,
-            schemeId: sk.getSignatureSchemeId()
-        });
-        expect(await mb.verifySignature(pk, firstSignature)).toBe(false)
-        expect(await mb.verifySignature(pk, secondSignature)).toBe(true)
-        expect(await mb.verifySignature(pk, secondSignature)).toBe(true)
-
-        // pop the last signature
-        expect(mb.getNumberOfSections()).toBe(3)
-        mb.popSection();
+        mb.setGas(CMTSToken.createAtomic(19))
+        await mb.seal(sk, { includeGas: false });
+        expect(await mb.verify(pk, false)).toBe(true)
         expect(mb.getNumberOfSections()).toBe(2)
 
-        // verify the signatures
-        expect(await mb.verifySignature(pk, firstSignature)).toBe(true)
-        expect(await mb.verifySignature(pk, secondSignature)).toBe(false)
+
+        // sign twice
+        mb.addSection({
+            type: SectionType.ACCOUNT_PUBLIC_KEY,
+            publicKey: await pk.getPublicKeyAsBytes(),
+            schemeId: pk.getSignatureSchemeId(),
+        });
+        await mb.seal(sk);
+        expect(await mb.verify(pk)).toBe(true)
+        expect(mb.getNumberOfSections()).toBe(4)
+
+        // pop the two last sections
+        mb.popSection()
+        mb.popSection()
+
+        // verify the first signature
+        expect(await mb.verify(pk, false)).toBe(true)
+        expect(await mb.verify(pk, false)).toBe(true)
+        expect(await mb.verify(pk, true)).toBe(false)
+
+
+    })
+
+    it('Should obtain the same body hash if we compute the signature', async () => {
+        const sk = Secp256k1PrivateSignatureKey.gen();
+        const pk = await sk.getPublicKey();
+
+        // create the microblock with a single section
+        const mb = Microblock.createGenesisAccountMicroblock();
+        mb.addSection({
+            type: SectionType.ACCOUNT_PUBLIC_KEY,
+            publicKey: await pk.getPublicKeyAsBytes(),
+            schemeId: pk.getSignatureSchemeId(),
+        });
+        mb.setGas(CMTSToken.createAtomic(19))
+        await mb.seal(sk, { includeGas: false })
+
+        // the body hash must be the same with or without the signature
+        const bodyHashWithSignature = mb.computeBodyHash();
+        const poppedSection = mb.popSection();
+        const bodyHashWithoutSignature = mb.computeBodyHash();
+        expect(bodyHashWithSignature).toEqual(bodyHashWithoutSignature)
+
+        // however, a second signature should lead to a distinct body hash (the body hash should include the first signature)
+        mb.addSection(poppedSection);
+        expect(mb.computeBodyHash()).toEqual(bodyHashWithSignature)
+        await mb.seal(sk, { includeGas: false });
+        expect(await mb.verify(pk, false)).toBe(true);
+        const bodyHashWithoutSecondSignature = mb.computeBodyHash();
+        expect(bodyHashWithoutSecondSignature).not.toEqual(bodyHashWithoutSignature)
+
     })
 
     it("Recovers the fees payer account after deserializing", async () => {
@@ -187,4 +214,69 @@ describe('Microblock.verifySignature', () => {
         expect(recoveredMicroblock.getFeesPayerAccount()).toBeInstanceOf(Uint8Array)
         expect(recoveredMicroblock.getFeesPayerAccount()).toEqual(feesPayerAccount);
     })
+
+    it("Should compute the correct hash", async () => {
+        const sk = Secp256k1PrivateSignatureKey.gen();
+        const mb = Microblock.createGenesisOrganizationMicroblock();
+        mb.addSections([
+            {
+                type: SectionType.ORG_CREATION,
+                accountId: Uint8Array.from([
+                    48, 127,  44, 100, 153, 236,  37,  26,
+                    230, 205, 247, 252, 190,  16, 107, 133,
+                    98, 121,  25, 188, 217, 148,  59, 167,
+                    179,  24,  19, 251, 228, 150,  15,  79
+                ]),
+            },
+            {
+                type: SectionType.ORG_DESCRIPTION,
+                name: 'Carmentis SAS',
+                website: '',
+                countryCode: 'FR',
+                city: '',
+            },
+        ]);
+        mb.setPreviousHash(Hash.from(Utils.binaryFromHexa('03000000000000001a749bfbaa2c59a93dda75dd3043108dc6a1a25e3c3d27b7')))
+        mb.setTimestamp(1767106522)
+        //await mb.seal(sk);
+        const { microblockData, microblockHash, bodyData, bodyHash } =
+            mb.serialize();
+        console.log(mb.toString())
+        expect(Utils.binaryToHexa(bodyHash))
+            .toEqual("1faee202e3c65c1c5092160c80b3f8e1e25d45f20816a9c9ff2c7658925b98a8".toUpperCase())
+        expect(bodyHash).toEqual(mb.computeBodyHash());
+
+    })
+
+    it('should convert Uint8Array from browser JSON representation to hexadecimal', () => {
+        const uint8ArrayData = new Uint8Array([
+            33, 122, 19, 49, 191, 8, 65, 168,
+            135, 14, 113, 219, 211, 58, 170, 19,
+            23, 182, 45, 49, 105, 245, 210, 197,
+            213, 239, 92, 74, 64, 120, 24, 213
+        ]);
+        const hexString = Utils.binaryToHexa(uint8ArrayData);
+        expect(hexString).toBe('217A1331BF0841A8870E71DBD33AAA1317B62D3169F5D2C5D5EF5C4A407818D5');
+    })
+
+    it("Should recover the same encoding whatever the order of the fields", async () => {
+        const s1: Section =  {
+                type: SectionType.ORG_DESCRIPTION,
+                name: 'Carmentis SAS',
+                website: '',
+                countryCode: 'FR',
+                city: '',
+        };
+        const s2: Section =  {
+            "type": SectionType.ORG_DESCRIPTION,
+            "city": "",
+            "website": "",
+            "name": "Carmentis SAS",
+            "countryCode": "FR",
+        };
+        expect(BlockchainUtils.encodeSection(s1)).toEqual(BlockchainUtils.encodeSection(s1))
+        expect(BlockchainUtils.encodeSection(s1)).toEqual(BlockchainUtils.encodeSection(s2))
+    })
+
+
 })

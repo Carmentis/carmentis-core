@@ -1,8 +1,7 @@
 import {Crypto} from "../crypto/crypto";
 import {Utils} from "./utils";
-import {decode, encode} from 'cbor-x';
+import {Encoder} from 'cbor-x';
 
-import {BlockchainSerializer} from "../data/BlockchainSerializer";
 import {MicroblockHeader, MicroblockHeaderSchema} from "../type/valibot/blockchain/microblock/MicroblockHeader";
 import {MicroblockBody, MicroblockBodySchema} from "../type/valibot/blockchain/microblock/MicroblockBody";
 import * as v from 'valibot';
@@ -36,10 +35,14 @@ import {
     VestingParametersSchema
 } from "../type/valibot/node/AccountInformation";
 import {Logger} from "./Logger";
+import {CryptoEncoderFactory} from "../crypto/encoder/CryptoEncoderFactory";
 
 export class BlockchainUtils {
-    static computeMicroblockHashFromHeader(previousMicroblockHeader: MicroblockHeader) {
-        const serializedHeader = BlockchainSerializer.serializeMicroblockHeader(previousMicroblockHeader);
+    private static encoder  = CryptoEncoderFactory.getCryptoBinaryEncoder();
+    private static logger = Logger.getLogger(["utils"]);
+
+    static computeMicroblockHashFromHeader(header: MicroblockHeader) {
+        const serializedHeader = BlockchainUtils.encodeMicroblockHeader(header);
         return Crypto.Hashes.sha256AsBinary(serializedHeader);
     }
 
@@ -83,17 +86,17 @@ export class BlockchainUtils {
       Extracts the 'previousHash' field from a microblock header in binary format.
     */
     static previousHashFromHeader(serializedHeader: Uint8Array) {
-        const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
+        const header = BlockchainUtils.decodeMicroblockHeader(serializedHeader);
         return header.previousHash;
     }
 
 
     static encodeVirtualBlockchainInfo(virtualBlockchainInfo: VirtualBlockchainInfo) {
-        return encode(v.parse(VirtualBlockchainInfoSchema, virtualBlockchainInfo));
+        return this.encodeObjectToBinary(v.parse(VirtualBlockchainInfoSchema, virtualBlockchainInfo));
     }
 
     static decodeVirtualBlockchainInfo(serializedInfo: Uint8Array) {
-        return v.parse(VirtualBlockchainInfoSchema, decode(serializedInfo));
+        return v.parse(VirtualBlockchainInfoSchema, this.decodeObjectFromBinary(serializedInfo));
     }
 
     /**
@@ -101,7 +104,7 @@ export class BlockchainUtils {
      * @param vbState
      */
     static encodeVirtualBlockchainState(vbState: VirtualBlockchainState) {
-        return encode(v.parse(VirtualBlockchainStateSchema, vbState));
+        return this.encodeObjectToBinary(v.parse(VirtualBlockchainStateSchema, vbState));
     }
 
     /**
@@ -111,120 +114,134 @@ export class BlockchainUtils {
      * @return {VirtualBlockchainState} The decoded virtual blockchain state object.
      */
     static decodeVirtualBlockchainState(serializedVirtualBlockchainState: Uint8Array) : VirtualBlockchainState {
-        return v.parse(VirtualBlockchainStateSchema, decode(serializedVirtualBlockchainState))
+        return v.parse(VirtualBlockchainStateSchema, this.decodeObjectFromBinary(serializedVirtualBlockchainState))
     }
 
 
     static encodeMicroblockBody(body: MicroblockBody) {
-        return encode(v.parse(MicroblockBodySchema, body));
+        return this.encodeObjectToBinary(v.parse(MicroblockBodySchema, body));
     }
 
     static decodeMicroblockBody(serializedBody: Uint8Array) {
-        return v.parse(MicroblockBodySchema, decode(serializedBody));
+        return v.parse(MicroblockBodySchema, this.decodeObjectFromBinary(serializedBody));
     }
 
     static encodeSection(section: Section) {
-        return encode(v.parse(SectionSchema, section));
+        return this.encodeObjectToBinary(v.parse(SectionSchema, section));
     }
 
     static decodeSection(serializedSection: Uint8Array): Section {
-        return v.parse(SectionSchema, decode(serializedSection));
+        return v.parse(SectionSchema, this.decodeObjectFromBinary(serializedSection));
     }
 
     static encodeMicroblockHeader(header: MicroblockHeader) {
-        return encode(v.parse(MicroblockHeaderSchema, header));
+        return this.encodeObjectToBinary(v.parse(MicroblockHeaderSchema, header));
     }
 
     static decodeMicroblockHeader(serializedHeader: Uint8Array) {
-        return v.parse(MicroblockHeaderSchema, decode(serializedHeader));
+        const decoded = this.decodeObjectFromBinary(serializedHeader)
+        const result = v.parse(MicroblockHeaderSchema, decoded);
+        if (!Utils.binaryIsEqual(decoded.bodyHash!, result.bodyHash)) {
+            BlockchainUtils.logger.error(`Modified validated object: ${JSON.stringify(decoded)} vs ${JSON.stringify(result)}`)
+            throw new Error(`Modified body hash detected during deserialization: ${decoded.bodyHash} vs ${result.bodyHash}`)
+        }
+        return result
     }
 
     static encodeEscrowParameters(escrowParameters: EscrowParameters) {
-        return encode(v.parse(EscrowParametersSchema, escrowParameters));
+        return this.encodeObjectToBinary(v.parse(EscrowParametersSchema, escrowParameters));
     }
 
     static decodeEscrowParameters(serializedEscrowParameters: Uint8Array): EscrowParameters {
-        return v.parse(EscrowParametersSchema, decode(serializedEscrowParameters));
+        return v.parse(EscrowParametersSchema, this.decodeObjectFromBinary(serializedEscrowParameters));
     }
 
     static encodeEscrowLock(escrowLock: EscrowLock) {
-        return encode(v.parse(EscrowLockSchema, escrowLock));
+        return this.encodeObjectToBinary(v.parse(EscrowLockSchema, escrowLock));
     }
 
     static decodeEscrowLock(serializedEscrowLock: Uint8Array): EscrowLock {
-        return v.parse(EscrowLockSchema, decode(serializedEscrowLock));
+        return v.parse(EscrowLockSchema, this.decodeObjectFromBinary(serializedEscrowLock));
     }
 
     static encodeVestingParameters(vestingParameters: VestingParameters) {
-        return encode(v.parse(VestingParametersSchema, vestingParameters));
+        return this.encodeObjectToBinary(v.parse(VestingParametersSchema, vestingParameters));
     }
 
     static decodeVestingParameters(serializedVestingParameters: Uint8Array): VestingParameters {
-        return v.parse(VestingParametersSchema, decode(serializedVestingParameters));
+        return v.parse(VestingParametersSchema, this.decodeObjectFromBinary(serializedVestingParameters));
     }
 
     static encodeVestingLock(vestingLock: VestingLock) {
-        return encode(v.parse(VestingLockSchema, vestingLock));
+        return this.encodeObjectToBinary(v.parse(VestingLockSchema, vestingLock));
     }
 
     static decodeVestingLock(serializedVestingLock: Uint8Array): VestingLock {
-        return v.parse(VestingLockSchema, decode(serializedVestingLock));
+        return v.parse(VestingLockSchema, this.decodeObjectFromBinary(serializedVestingLock));
     }
 
     static encodeNodeStakingParameters(nodeStakingParameters: NodeStakingParameters) {
-        return encode(v.parse(NodeStakingParametersSchema, nodeStakingParameters));
+        return this.encodeObjectToBinary(v.parse(NodeStakingParametersSchema, nodeStakingParameters));
     }
 
     static decodeNodeStakingParameters(serializedNodeStakingParameters: Uint8Array): NodeStakingParameters {
-        return v.parse(NodeStakingParametersSchema, decode(serializedNodeStakingParameters));
+        return v.parse(NodeStakingParametersSchema, this.decodeObjectFromBinary(serializedNodeStakingParameters));
     }
 
     static encodeNodeStakingLock(nodeStakingLock: NodeStakingLock) {
-        return encode(v.parse(NodeStakingLockSchema, nodeStakingLock));
+        return this.encodeObjectToBinary(v.parse(NodeStakingLockSchema, nodeStakingLock));
     }
 
     static decodeNodeStakingLock(serializedNodeStakingLock: Uint8Array): NodeStakingLock {
-        return v.parse(NodeStakingLockSchema, decode(serializedNodeStakingLock));
+        return v.parse(NodeStakingLockSchema, this.decodeObjectFromBinary(serializedNodeStakingLock));
     }
 
     static encodeLock(lock: Lock) {
-        return encode(v.parse(LockSchema, lock));
+        return this.encodeObjectToBinary(v.parse(LockSchema, lock));
     }
 
     static decodeLock(serializedLock: Uint8Array): Lock {
-        return v.parse(LockSchema, decode(serializedLock));
+        return v.parse(LockSchema, this.decodeObjectFromBinary(serializedLock));
     }
 
     static encodeAccountBreakdown(accountBreakdown: AccountBreakdown) {
-        return encode(v.parse(AccountBreakdownSchema, accountBreakdown));
+        return this.encodeObjectToBinary(v.parse(AccountBreakdownSchema, accountBreakdown));
     }
 
     static decodeAccountBreakdown(serializedAccountBreakdown: Uint8Array): AccountBreakdown {
-        return v.parse(AccountBreakdownSchema, decode(serializedAccountBreakdown));
+        return v.parse(AccountBreakdownSchema, this.decodeObjectFromBinary(serializedAccountBreakdown));
     }
 
     static encodeAccountState(accountState: AccountState) {
-        return encode(v.parse(AccountStateSchema, accountState));
+        return this.encodeObjectToBinary(v.parse(AccountStateSchema, accountState));
     }
 
     static decodeAccountState(serializedAccountState: Uint8Array): AccountState {
-        return v.parse(AccountStateSchema, decode(serializedAccountState));
+        return v.parse(AccountStateSchema, this.decodeObjectFromBinary(serializedAccountState));
     }
 
     static encodeAccountInformation(accountInformation: AccountInformation) {
-        return encode(v.parse(AccountInformationSchema, accountInformation));
+        return this.encodeObjectToBinary(v.parse(AccountInformationSchema, accountInformation));
     }
 
     static decodeAccountInformation(serializedAccountInformation: Uint8Array): AccountInformation {
-        return v.parse(AccountInformationSchema, decode(serializedAccountInformation));
+        return v.parse(AccountInformationSchema, this.decodeObjectFromBinary(serializedAccountInformation));
     }
 
     static encodeMicroblockInformation(microblockInformation: MicroblockInformation) {
-        return encode(v.parse(MicroblockInformationSchema, microblockInformation));
+        return this.encodeObjectToBinary(v.parse(MicroblockInformationSchema, microblockInformation));
     }
 
     static decodeMicroblockInformation(serializedMicroblockInformation: Uint8Array): MicroblockInformation {
-        return v.parse(MicroblockInformationSchema, decode(serializedMicroblockInformation));
+        return v.parse(MicroblockInformationSchema, this.decodeObjectFromBinary(serializedMicroblockInformation));
+    }
+    
+    private static encodeObjectToBinary(object: any): Uint8Array {
+        return BlockchainUtils.encoder.encode(object);
+    } 
+    
+    private static decodeObjectFromBinary(binary: Uint8Array): any {
+        return BlockchainUtils.encoder.decode(binary);
     }
 
 }

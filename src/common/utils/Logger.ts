@@ -1,4 +1,4 @@
-import {configure, getConsoleSink, getLogger} from "@logtape/logtape";
+import {configure, configureSync, getConsoleSink, getLogger} from "@logtape/logtape";
 
 export class Logger {
     static getLogger(context: string[] = []) {
@@ -10,11 +10,15 @@ export class Logger {
     }
 
     static getMemoryProviderLogger() {
-        return this.getLogger()
+        return this.getLogger(["provider", "memory"])
     }
 
     static async enableLogs() {
-        await configure({
+       this.enableLogsSync()
+    }
+
+    static enableLogsSync() {
+        configureSync({
             sinks: { console: getConsoleSink() },
             loggers: [
                 { category: "@cmts-dev/carmentis-sdk", lowestLevel: "debug", sinks: ["console"] }

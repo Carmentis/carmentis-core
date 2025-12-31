@@ -1,6 +1,7 @@
 import {DATA} from "../constants/constants";
 import {TypeManager} from "../data/types";
 import {Utf8Encoder} from "../data/utf8Encoder";
+import {Logger} from "./Logger";
 
 export const Utils = {
     numberToHexa,
@@ -24,6 +25,8 @@ export const Utils = {
     byteArrayToInt,
     getGenesisEpochInTimestamp: getInitialTimestampInSeconds
 };
+
+const logger = Logger.getLogger(["utils"])
 
 /**
  * Converts an integer to a hexadecimal string, padded with 0's to reach a given size
@@ -212,16 +215,29 @@ function binaryFrom(...arg: (number | Uint8Array | string)[]) {
 /**
  * Tests whether two Uint8Array's are equal
  */
-function binaryIsEqual(a: any, b: any) {
-    if (!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length != b.length) {
+function binaryIsEqual(a: Uint8Array, b: Uint8Array) {
+    // reject non-binary inputs
+    if (!(a instanceof Uint8Array)) throw new Error(`Cannot compare object except Uint8array: got ${typeof a}`)
+    if (!(b instanceof Uint8Array)) throw new Error(`Cannot compare object except Uint8array: got ${typeof b}`)
+
+    // if one is a buffer, cast it into a Uint8Array
+    if (a instanceof Buffer) a = new Uint8Array(a)
+    if (b instanceof Buffer) b = new Uint8Array(b)
+
+
+    if (a.length != b.length) {
+        logger.debug(`Comparison result is false (distinct length): ${a.length} != ${b.length}`)
         return false;
     }
 
     for (const i in a) {
         if (a[i] != b[i]) {
+            logger.debug(`Comparison result is false (distinct value): ${a[i]} != ${b[i]}`)
             return false;
         }
     }
+
+    logger.debug(`Comparison result is true`)
     return true;
 }
 

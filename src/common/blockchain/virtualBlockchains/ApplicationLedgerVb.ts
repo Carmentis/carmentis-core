@@ -134,7 +134,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
 
                     // we now ensure that the public signature key declared in the section and used by the current user are matching
                     const {signaturePublicKey} = section;
-                    const isMatchingPublicKeys = Utils.binaryIsEqual(section.signaturePublicKey, publicKeyBytes);
+                    const isMatchingPublicKeys = Utils.binaryIsEqual(section.signaturePublicKey, await publicKeyBytes);
                     logger.debug(`Is public key matching for actor ${actor.name} (id ${actorId})? ${signaturePublicKey} and ${publicKeyBytes}: ${isMatchingPublicKeys}`);
                     if (!isMatchingPublicKeys) continue
 

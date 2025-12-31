@@ -15,6 +15,7 @@ import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {Utils} from "../../utils/utils";
 import {VirtualBlockchainState} from "../../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
 import {height} from "../../type/valibot/primitives";
+import {Crypto} from "../../crypto/crypto";
 
 /**
  * Abstract class representing a Virtual Blockchain (VB).
@@ -275,19 +276,14 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         if (microblockBody === null) throw new Error('Unable to load the microblock body')
 
         // instantiate the microblock and check that the provided microblock corresponds to the expected one
+        // TODO: remove these debug lines
+        this.logger.debug("Header before microblock loading: {header}", { header: JSON.stringify(microblockHeader) })
         const microblock = Microblock.loadFromHeaderAndBody(microblockHeader, microblockBody, this.type )
+        this.logger.debug("Header after microblock loading: {header}", { header: JSON.stringify(microblockHeader) })
         if (microblock.getHeight() !== height) throw new Error(`Received microblock contains an unexpected height: expected ${height}, defined ${microblock.getHeight()} `)
         if (!Utils.binaryIsEqual(microblock.getHash().toBytes(), microblockHash)) {
             const errMsg = `Mismatch between microblock hash ${microblock.getHash().encode()} and expected hash ${Utils.binaryToHexa(microblockHash)}`
             this.logger.error(microblock.toString())
-            if (microblock.isSigned()) {
-                this.logger.error("Microblock is signed, checking if mismatch do not comes from signature")
-                microblock.popSection();
-                this.logger.error(microblock.toString())
-            }
-            for (const entry of this.microblockHashByHeight.entries()) {
-                this.logger.error(`\t- Height ${entry[0]}: ${Utils.binaryToHexa(entry[1])}`)
-            }
             throw new Error(errMsg)
         }
 

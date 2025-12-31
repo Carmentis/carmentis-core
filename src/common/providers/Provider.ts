@@ -26,6 +26,7 @@ import {
     GenesisSnapshotAbciResponse,
     ObjectListAbciResponse
 } from "../type/valibot/provider/abci/AbciResponse";
+import {Crypto} from "../crypto/crypto";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -86,15 +87,15 @@ export class Provider extends AbstractProvider {
     }
 
     async getVirtualBlockchainState(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainState | null> {
-        this.logger.debug(`Getting state for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)}`);
+        this.logger.info(`Getting state for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)}`);
         const serializedVirtualBlockchainState = await this.internalProvider.getSerializedVirtualBlockchainState(virtualBlockchainId);
         if (serializedVirtualBlockchainState !== null) {
-            this.logger.debug(`State for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)} found locally`);
+            this.logger.info(`State for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)} found locally`);
             return BlockchainUtils.decodeVirtualBlockchainState(serializedVirtualBlockchainState)
         } else {
             const receivedSerializedVirtualBlockchainState = await this.externalProvider.getSerializedVirtualBlockchainState(virtualBlockchainId);
             if (receivedSerializedVirtualBlockchainState) {
-                this.logger.debug(`State for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)} found online`);
+                this.logger.info(`State for virtual blockchain ${Utils.binaryToHexa(virtualBlockchainId)} found online`);
                 await this.internalProvider.setSerializedVirtualBlockchainState(virtualBlockchainId, receivedSerializedVirtualBlockchainState);
                 return BlockchainUtils.decodeVirtualBlockchainState(receivedSerializedVirtualBlockchainState);
             } else {
@@ -153,6 +154,16 @@ export class Provider extends AbstractProvider {
         return list.list.map(Hash.from)
     }
 
+    async getAllOrganizationIds(): Promise<Hash[]> {
+        const list = await this.getObjectList(VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN);
+        return list.list.map(Hash.from)
+    }
+
+    async getAllApplicationIds(): Promise<Hash[]> {
+        const list = await this.getObjectList(VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN);
+        return list.list.map(Hash.from)
+    }
+
     async getObjectList(type: VirtualBlockchainType): Promise<ObjectListAbciResponse> {
         return await this.externalProvider.getObjectList(type);
     }
@@ -164,7 +175,7 @@ export class Provider extends AbstractProvider {
         Assertion.assert(bodyData instanceof Uint8Array, `bodyData must be an Uint8Array: got ${typeof bodyData}`);
         Assertion.assert(headerData.length > 0, "headerData must not be empty");
         Assertion.assert(bodyData.length > 0, "bodyData must not be empty");
-        this.logger.debug(`Storing microblock: microblock hash={microblockHash}, vbId={vbId}, height={height}`, () => ({
+        this.logger.info(`Storing microblock: microblock hash={microblockHash}, vbId={vbId}, height={height}`, () => ({
             microblockHash: Utils.binaryToHexa(hash),
             vbId: Utils.binaryToHexa(virtualBlockchainId),
             height
@@ -255,9 +266,10 @@ export class Provider extends AbstractProvider {
     }
 
     async getMicroblockBody(microblockHash: Hash): Promise<MicroblockBody | null> {
+        this.logger.info(`Looking for body for microblock ${microblockHash.encode()}`)
         const serializedBody = await this.internalProvider.getMicroblockBody(microblockHash.toBytes());
         if (serializedBody instanceof Uint8Array) {
-            this.logger.debug(`Body for microblock ${microblockHash.encode()} found locally`)
+            this.logger.info(`Body for microblock ${microblockHash.encode()} found locally`)
             return BlockchainUtils.decodeMicroblockBody(serializedBody)
         } else {
             const externalData = await this.externalProvider.getMicroblockBodys([
@@ -267,7 +279,7 @@ export class Provider extends AbstractProvider {
                 const bodyResponse = externalData.list[0];
                 const microblockBody = bodyResponse.microblockBody;
                 await this.internalProvider.setMicroblockBody(microblockHash.toBytes(), microblockBody);
-                this.logger.debug(`Body for microblock ${microblockHash.encode()} found online`)
+                this.logger.info(`Body for microblock ${microblockHash.encode()} found online`)
                 return microblockBody;
             }
         }
@@ -276,10 +288,19 @@ export class Provider extends AbstractProvider {
         return null;
     }
     async getMicroblockHeader(microblockHash: Hash): Promise<MicroblockHeader | null> {
+        this.logger.info(`Looking for header for microblock ${microblockHash.encode()}`)
         const serializedHeader = await this.internalProvider.getSerializedMicroblockHeader(microblockHash.toBytes());
-        if (serializedHeader instanceof Uint8Array) return BlockchainUtils.decodeMicroblockHeader(serializedHeader);
+        if (serializedHeader instanceof Uint8Array) {
+            const headerHash = Crypto.Hashes.sha256(serializedHeader);
+            const header =  BlockchainUtils.decodeMicroblockHeader(serializedHeader);
+            this.logger.info(`Header for microblock ${microblockHash.encode()} found locally (sha256:${headerHash}): {header}`, {
+                header: JSON.stringify(header)
+            });
+            return header
+        }
         const receivedSerializedHeader = await this.externalProvider.getMicroblockInformation(microblockHash.toBytes());
         if (receivedSerializedHeader !== null) {
+            this.logger.info(`Header for microblock ${microblockHash.encode()} found online: {header}:`, { header: receivedSerializedHeader.header });
             return receivedSerializedHeader.header;
         } else {
             throw new MicroBlockNotFoundError();

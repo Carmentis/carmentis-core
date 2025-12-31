@@ -12,7 +12,6 @@ import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {Section, SignatureSection} from "../../type/valibot/blockchain/section/sections";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
-import {BlockchainSerializer} from "../../data/BlockchainSerializer";
 import {CMTSToken} from "../../economics/currencies/token";
 import {EncoderFactory} from "../../utils/encoder";
 import {TimestampValidationResult} from "./TimestampValidationResult";
@@ -125,19 +124,24 @@ export class Microblock {
             );
         }
 
-        const mb = new Microblock(microblockType);
-        mb.header = header;
-
         // Validate basic header fields
         if (header.magicString != CHAIN.MAGIC_STRING) {
             throw new Error(`magic string '${CHAIN.MAGIC_STRING}' is missing`);
         }
 
-        mb.addSections(body.sections);
+        // we pin the body hash
+        const bodyHashContainedInHeader = header.bodyHash;
 
+        const mb = new Microblock(microblockType);
+        mb.header = structuredClone(header);
+
+
+
+        mb.addSections(body.sections);
+        // e50ec05381ab72a6be436031734bc866d0cedb3fe7de9a2629454ebb5cc255df
+        // e50ec05381ab72a6be436031734bc866d0cedb3fe7de9a2629454ebb5cc255df
         // we check that the hash of the body is consistent with the body hash contained in the header
         const computedBodyHash = mb.computeBodyHash();
-        const bodyHashContainedInHeader = header.bodyHash;
         const areBodyHashMatching = Utils.binaryIsEqual(bodyHashContainedInHeader, computedBodyHash)
         if (!areBodyHashMatching) {
             const encoder = EncoderFactory.bytesToHexEncoder();
@@ -153,7 +157,7 @@ export class Microblock {
     }
 
     static loadFromSerializedHeaderAndBody(serializedHeader: Uint8Array, serializedBody: Uint8Array, expectedMbType?: VirtualBlockchainType): Microblock {
-        const header = BlockchainSerializer.unserializeMicroblockHeader(serializedHeader);
+        const header = BlockchainUtils.decodeMicroblockHeader(serializedHeader);
         const body = BlockchainUtils.decodeMicroblockBody(serializedBody);
         return Microblock.loadFromHeaderAndBody(header, body, expectedMbType);
     }
@@ -169,12 +173,12 @@ export class Microblock {
     }
 
     private static computeMicroblockHash(header: MicroblockHeader) {
-        const headerData = BlockchainSerializer.serializeMicroblockHeader(header);
+        const headerData = BlockchainUtils.encodeMicroblockHeader(header);
         return Crypto.Hashes.sha256AsBinary(headerData);
     }
 
     private static computeBodyHashFromSections(sections: Section[]): Uint8Array {
-        const body: MicroblockBody = {
+       const body: MicroblockBody = {
             sections: sections
         }
         const serializedBody = BlockchainUtils.encodeMicroblockBody(body);
@@ -413,33 +417,10 @@ export class Microblock {
 
    
 
-    /*
-    private storeSection(type: SectionType, object: any, data: Uint8Array): Section {
-        const hash = Crypto.Hashes.sha256AsBinary(data);
-        const index = this.sections.length;
-
-        const section = {type, object, data, hash, index};
-        this.sections.push(section);
-
-        // we update the body hash and microblock hash
-        //this.setGasData(true); The setGasData method is no more required since we never update
-        this.header.bodyHash = Microblock.computeBodyHashFromSections(this.sections);
-        this.hash = Microblock.computeMicroblockHash(this.header)
-        //const headerData = BlockchainSerializer.serializeMicroblockHeader(this.header);
-        //this.hash = Crypto.Hashes.sha256AsBinary(headerData);
-        return section;
-    }
-
-     */
-
 
 
     computeBodyHash() {
-        if (this.isLastSectionSignature()) {
-            return Microblock.computeBodyHashFromSections(this.sections.slice(0, this.sections.length - 1));
-        } else {
-            return Microblock.computeBodyHashFromSections(this.sections)
-        }
+        return Microblock.computeBodyHashFromSections(this.sections)
     }
 
 
@@ -457,14 +438,6 @@ export class Microblock {
         return BlockchainUtils.encodeMicroblockBody({
             sections: this.sections
         })
-        /*
-        const body = {
-            body: this.sections.map(({ type, data }) => ({type, data}))
-        };
-        const bodySerializer = new SchemaSerializer(SCHEMAS.MICROBLOCK_BODY);
-        return bodySerializer.serialize(body);
-
-         */
     }
 
 
@@ -474,15 +447,9 @@ export class Microblock {
      */
     serialize() {
         const bodyData = this.serializedBody();
-        const bodyHash = this.header.bodyHash; //Crypto.Hashes.sha256AsBinary(bodyData);
+        const bodyHash = this.header.bodyHash;
         const headerData = this.serializeHeader();
-        const microblockHash = Crypto.Hashes.sha256AsBinary(headerData);
-        /*
-        const microblockData = BlockchainSerializer.serializeMicroblockSerializedHeaderAndBody(
-            headerData,
-            bodyData
-        )
-         */
+        const microblockHash = Microblock.computeMicroblockHash(this.header)
         const microblock: MicroblockStruct = {
             header: this.header,
             body: {
@@ -542,6 +509,29 @@ export class Microblock {
     }
 
     /**
+     * Seals the microblock by signing it with the provided private key. Optionally, the fees payer account
+     * can be set before sealing the microblock.
+     *
+     * @param {PrivateSignatureKey} privateKey - The private key used to sign the microblock.
+     * @param sealingParams
+     * @return {Promise<void>} A promise that resolves when the microblock has been successfully sealed.
+     * @throws {IllegalStateError} If the microblock is already signed.
+     */
+    async seal(privateKey: PrivateSignatureKey, sealingParams: { feesPayerAccount?: Uint8Array, includeGas?: boolean } = {}) {
+        const feesPayerAccount = sealingParams.feesPayerAccount;
+        if (feesPayerAccount) this.setFeesPayerAccount(feesPayerAccount);
+        const includeGas = typeof sealingParams.includeGas === 'boolean' ? sealingParams.includeGas : true;
+        const signature = await this.sign(privateKey, includeGas);
+        const signatureSectionObject: SignatureSection = {
+            type: SectionType.SIGNATURE,
+            signature,
+            schemeId: privateKey.getSignatureSchemeId()
+        }
+        this.addSection(signatureSectionObject);
+    }
+
+
+    /**
      * Creates a digital signature using the provided private key and optionally includes gas-related data.
      *
      * @param {PrivateSignatureKey} privateKey - The private key used to sign the data.
@@ -549,25 +539,22 @@ export class Microblock {
      * @return {Uint8Array} The generated digital signature as a byte array.
      */
     async sign(privateKey: PrivateSignatureKey, includeGas: boolean = true): Promise<Uint8Array> {
-        const signedData = this.serializeForSigning(includeGas, 'sign');
-        const signature = await privateKey.sign(signedData)
+        // we need the distinction between sign and verif to sign all sections contained in the microblock (and hence
+        // excluding the last signature when verifying).
+        const numberOfSections = this.sections.length;
+        const sections = this.sections;
+        const bodyHash = Microblock.computeBodyHashFromSections(sections);
+        const headerToBeSigned: MicroblockHeader = {
+            ...this.header,
+            gas: includeGas ? this.header.gas : 0,
+            gasPrice: includeGas ? this.header.gasPrice : 0,
+            bodyHash,
+        }
+        const headerData = BlockchainUtils.encodeMicroblockHeader(headerToBeSigned);
+        const signature = await privateKey.sign(headerData)
         return signature
     }
 
-    /**
-     * Verifies the provided cryptographic signature using the specified algorithm.
-     *
-     * @param {PublicSignatureKey} publicKey - The public key used to verify the signature.
-     * @param {string} signature - The signature to be verified.
-     * @param {boolean} includeGas - Should includes the gas in the signature verification.
-     * @return {boolean} Returns true if the signature is successfully verified; otherwise, returns false.
-     */
-    async verifySignature(publicKey: PublicSignatureKey, signature: Uint8Array, includeGas: boolean = true): Promise<boolean> {
-        //const shouldIncludeGas = typeof includeGas === 'boolean' ? includeGas : true;
-        //const numberOfSectionsToIncludeInSignature = sectionCount || this.sections.length - 1;
-        const signedData = this.serializeForSigning(includeGas, 'verif');
-        return await publicKey.verify(signedData, signature);
-    }
 
     /**
      * Verifies the signature of the last signature section using the provided public key.
@@ -576,11 +563,61 @@ export class Microblock {
      * @param {boolean} [includeGas=true] - Optional flag to indicate if gas calculations should be included during verification.
      * @return {Promise<boolean>} A promise that resolves to a boolean indicating whether the signature verification was successful.
      */
-    async verify(publicKey: PublicSignatureKey, includeGas: boolean = true) {
-        const signatureSection = this.getLastSignatureSection();
+    async verify(
+        publicKey: PublicSignatureKey,
+        verificationParams: { includeGas?: boolean, verifiedSignatureIndex?: number | 'last' }
+        = { includeGas: true, verifiedSignatureIndex: 'last' }
+    ) {
+        const includeGas = typeof verificationParams.includeGas === 'boolean' ? verificationParams.includeGas : true;
+
+        // we cannot verify if there is no signature
+        const currentNumberOfSignatures = this.getNumberOfSignatures();
+        if (currentNumberOfSignatures === 0) {
+            throw new IllegalStateError("Microblock verification failure: The current microblock is not signed")
+        }
+
+        // verify the provided signature index
+        const providedVerifiedSignatureIndex = verificationParams.verifiedSignatureIndex;
+        let verifiedSignatureIndex = currentNumberOfSignatures // by default, we verify the last signature
+        if (typeof providedVerifiedSignatureIndex === 'number') {
+            if (providedVerifiedSignatureIndex <= 0) throw new IllegalParameterError('verifiedSignatureIndex must be positive');
+            if (currentNumberOfSignatures < providedVerifiedSignatureIndex)
+                throw new IllegalParameterError(`Invalid provided signature index ${providedVerifiedSignatureIndex}: this microblock contains ${currentNumberOfSignatures} signatures`)
+            verifiedSignatureIndex = providedVerifiedSignatureIndex
+        } else if (providedVerifiedSignatureIndex === 'last' || providedVerifiedSignatureIndex === undefined) {
+            // by default, we verify the last signature and the last index is already assigned, so nothing to be done here
+        } else {
+            throw new IllegalParameterError(`Unknown signature index: ${providedVerifiedSignatureIndex} (type ${typeof providedVerifiedSignatureIndex})`)
+        }
+
+        // search the signature section
+        const { signatureSection, sectionIndexInMicroblock } = this.getNthSignatureSectionAndIndexInMicroblock(verifiedSignatureIndex);
+
+        // compute the header
+        const sections = this.sections.slice(0, sectionIndexInMicroblock);
+        const headerToBeVerified: MicroblockHeader = {
+            ...this.header,
+            gas: includeGas ? this.header.gas : 0,
+            gasPrice: includeGas ? this.header.gasPrice : 0,
+            bodyHash: Microblock.computeBodyHashFromSections(sections)
+        }
+        const headerData = BlockchainUtils.encodeMicroblockHeader(headerToBeVerified);
         const signature = signatureSection.signature;
-        return await this.verifySignature(publicKey, signature, includeGas);
+        return await publicKey.verify(headerData, signature);
     }
+
+    private getNthSignatureSectionAndIndexInMicroblock(signatureIndex: number): { signatureSection: SignatureSection, sectionIndexInMicroblock: number } {
+        if (signatureIndex <= 0) throw new IllegalParameterError(`Cannot return the ${signatureIndex}-th signature: should be strictly positive`)
+        const sections = this.sections
+            .map((section, index) => ({ section, index }))
+            .filter(({section, index}) => section.type === SectionType.SIGNATURE);
+        if (sections.length < signatureIndex) throw new IllegalParameterError(`Cannot return the ${signatureIndex}-th signature: only ${sections.length} signature (index starting at 1)`)
+        const foundSignatureSection = sections[signatureIndex - 1]; // we search the signature section with an index starting at 1
+        if (foundSignatureSection.section.type !== SectionType.SIGNATURE) throw new Error('Returned section is not a signature section')
+        return { signatureSection: foundSignatureSection.section, sectionIndexInMicroblock: foundSignatureSection.index  }
+    }
+
+
 
     /**
      * Returns the number of signatures contained within the microblock.
@@ -621,33 +658,6 @@ export class Microblock {
     }
 
     /**
-     * Serializes the microblock data for signing purposes.
-     * The method includes the header data and a specified number of section hashes.
-     * Optionally includes gas-related data in the serialization based on the input.
-     *
-     * @return {Uint8Array} The serialized binary representation of the microblock for signing.
-     */
-    serializeForSigning(includeGas: boolean, executionContext: 'sign' | 'verif'): Uint8Array {
-        // this.setGasData(includeGas, extraBytes);
-        // we need the distinction between sign and verif to sign all sections contained in the microblock (and hence
-        // excluding the last signature when verifying).
-        const numberOfSections = this.sections.length;
-        const sections = this.sections.slice(
-            0,
-            executionContext === 'verif' && this.isLastSectionSignature() ?  numberOfSections - 1 : numberOfSections
-        );
-
-        const signedHeader: MicroblockHeader = {
-            ...this.header,
-            gas: includeGas ? this.header.gas : 0,
-            gasPrice: includeGas ? this.header.gasPrice : 0,
-            bodyHash: Microblock.computeBodyHashFromSections(sections) // TODO check if
-        }
-        const headerData = BlockchainSerializer.serializeMicroblockHeader(signedHeader);
-        return headerData
-    }
-
-    /**
      *
      */
     hasSection(sectionType: SectionType) {
@@ -682,11 +692,15 @@ export class Microblock {
 
         // to make this microblock of the successor of the provided microblock, we need to update
         // the previous hash and the height of the microblock
-        this.setPreviousHash(microblock.getHash());
+        const previousMicroblockHash = microblock.getHash();
+        this.setPreviousHash(previousMicroblockHash);
         this.setHeight(microblock.getHeight() + 1);
 
         // we update the hash of the microblock (we do not have to update the body hash because it only implies modification in the header)
         this.hash = Microblock.computeMicroblockHash(this.header)
+
+        // log the update
+        Microblock.logger.info(`Microblock ${Utils.binaryToHexa(this.hash)} updated as successor of microblock ${previousMicroblockHash.encode()}`);
     }
 
     /**
@@ -697,27 +711,6 @@ export class Microblock {
         return this.sections.filter(s => s.type === sectionType).length;
     }
 
-    /**
-     * Seals the microblock by signing it with the provided private key. Optionally, the fees payer account
-     * can be set before sealing the microblock.
-     *
-     * @param {PrivateSignatureKey} privateKey - The private key used to sign the microblock.
-     * @param sealingParams
-     * @return {Promise<void>} A promise that resolves when the microblock has been successfully sealed.
-     * @throws {IllegalStateError} If the microblock is already signed.
-     */
-    async seal(privateKey: PrivateSignatureKey, sealingParams: { feesPayerAccount?: Uint8Array, includeGas?: boolean } = {}) {
-        const feesPayerAccount = sealingParams.feesPayerAccount;
-        if (feesPayerAccount) this.setFeesPayerAccount(feesPayerAccount);
-        const includeGas = typeof sealingParams.includeGas === 'boolean' ? sealingParams.includeGas : true;
-        const signature = await this.sign(privateKey, includeGas);
-        const signatureSectionObject: SignatureSection = {
-            type: SectionType.SIGNATURE,
-            signature,
-            schemeId: privateKey.getSignatureSchemeId()
-        }
-        this.addSection(signatureSectionObject);
-    }
 
 
     addSections(sections: Section[]) {
@@ -777,6 +770,7 @@ export class Microblock {
         const encoder = EncoderFactory.bytesToHexEncoder();
         let output = `Microblock:\n`;
         output += `  Hash: ${encoder.encode(this.hash)}\n`;
+        output += `  Recomputed hash: ${encoder.encode(this.computeHash())}\n`;
         output += `  Header:\n`;
         output += `    Microblock type: ${this.header.microblockType} or ${this.type}\n`;
         output += `    Magic String: ${this.header.magicString}\n`;
@@ -795,7 +789,6 @@ export class Microblock {
             output += `    Section ${index}:\n`;
             output += `      Section Type: ${SectionLabel.getSectionLabelFromSection(section)} (type ${section.type})\n`;
             output += `      Section Data: ${Utils.binaryToHexa(BlockchainUtils.encodeSection(section))}\n`;
-            console.log(section)
         });
 
         return output;

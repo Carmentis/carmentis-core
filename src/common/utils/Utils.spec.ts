@@ -20,6 +20,31 @@ describe('binaryFrom', () => {
   });
 });
 
+
+describe("Should correctly compare", () => {
+    const buffer = Buffer.from([
+        8, 207, 12, 216, 36, 80, 167, 82,
+        177, 236, 174, 218, 65, 95, 132, 78,
+        139, 95, 11, 188, 235, 240, 23, 85,
+        68, 66, 45, 29, 102, 66, 25, 69
+    ]);
+
+    const uint8 = new Uint8Array([
+        8, 207, 12, 216, 36, 80, 167, 82,
+        177, 236, 174, 218, 65, 95, 132, 78,
+        139, 95, 11, 188, 235, 240, 23, 85,
+        68, 66, 45, 29, 102, 66, 25, 69
+    ]);
+
+    it('should accept even if an element is a buffer', () => {
+        expect(() => Utils.binaryIsEqual(buffer, uint8)).toBeTruthy()
+    });
+
+    it('should work if both are Uint8Array', () => {
+        expect(Utils.binaryIsEqual(uint8, new Uint8Array(buffer))).toBe(true);
+    });
+})
+
 describe('BytesToBase64Encoder', () => {
   const encoder = new BytesToBase64Encoder();
 

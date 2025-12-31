@@ -1,7 +1,8 @@
 import {Utils} from "../utils/utils";
-import {sha256 as H256} from "@noble/hashes/sha256";
+import {sha256 as H256} from "@noble/hashes/sha2.js";
 import {sha512 as H512} from "@noble/hashes/sha512";
 import {InternalError} from "../errors/carmentis-error";
+import {Logger} from "../utils/Logger";
 
 export const Hashes = {
   sha256AsBinary,
@@ -9,13 +10,15 @@ export const Hashes = {
   sha512AsBinary,
   sha512
 };
-
+const logger = Logger.getLogger(["utils", "crypto"]);
 function sha256AsBinary(data: Uint8Array): Uint8Array {
   const isBinary = data instanceof Uint8Array;
   if(!isBinary) {
     throw new InternalError(`Argument passed to compute sha256 is not an instance of Uint8Array: got ${typeof data}`);
   }
-  return H256(data);
+  const hash = H256(data);
+  logger.debug(`Computed sha256 hash for data ${Utils.binaryToHexa(data)} (${data.length} bytes): ${Utils.binaryToHexa(hash)}`);
+  return hash;
 }
 
 function sha256(data: Uint8Array) {

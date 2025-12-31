@@ -73,7 +73,7 @@ export abstract class AbstractProvider implements IProvider {
         const identifier = vbId.toBytes()
         const vbState = await this.getVirtualBlockchainStatus(identifier);
         if (vbState === null || vbState.state === undefined) {
-            throw new VirtualBlockchainNotFoundError(vbId);
+            throw new  VirtualBlockchainNotFoundError(vbId);
         }
         // the type is already assigned when creating the virtual blockchain
         if (vbState.state.type !== vb.getType()) throw new Error("Invalid blockchain type loaded");

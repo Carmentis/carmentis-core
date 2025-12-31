@@ -56,10 +56,10 @@ export class NetworkProvider implements IExternalProvider {
     constructor(private readonly nodeUrl: string) {}
 
     async sendSerializedMicroblock(serializedMicroblock: Uint8Array) {
-        this.requestLogger.debug(`Sending serialized microblock (${serializedMicroblock.length} bytes)`);
+        this.requestLogger.info(`Sending serialized microblock (${serializedMicroblock.length} bytes)`);
         const answer = await this.broadcastTx(serializedMicroblock);
 
-        this.responseLogger.debug(`Received response: <- {data}`, () => ({
+        this.responseLogger.info(`Received response: <- {data}`, () => ({
             data: answer?.data
         }));
         return answer;
@@ -67,7 +67,7 @@ export class NetworkProvider implements IExternalProvider {
 
     async awaitMicroblockAnchoring(hash: Uint8Array) {
         const hashString =  Utils.binaryToHexa(hash);
-        this.requestLogger.debug(`Awaiting microblock {hash} to be published...`, () => ({
+        this.requestLogger.info(`Awaiting microblock {hash} to be published...`, () => ({
             hash: hashString
         }));
 
@@ -80,7 +80,7 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getChainInformation() {
-        this.requestLogger.debug(`Requesting chain information`);
+        this.requestLogger.info(`Requesting chain information`);
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_CHAIN_INFORMATION,
@@ -90,19 +90,19 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getBlockInformation(height: number) {
-        this.requestLogger.debug(`Requesting block information at height: ${height}`);
+        this.requestLogger.info(`Requesting block information at height: ${height}`);
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_BLOCK_INFORMATION,
             height: height
         });
 
-        this.responseLogger.debug(`Received block information at height ${height}`)
+        this.responseLogger.info(`Received block information at height ${height}`)
         return v.parse(BlockInformationAbciResponseSchema, answer);
     }
 
     async getBlockContent(height: number) {
-        this.requestLogger.debug(`Requesting block content for height ${height}`);
+        this.requestLogger.info(`Requesting block content for height ${height}`);
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_BLOCK_CONTENT,
@@ -110,12 +110,12 @@ export class NetworkProvider implements IExternalProvider {
         });
         const blockContentResponse = v.parse(BlockContentAbciResponseSchema, answer);
 
-        this.responseLogger.debug(`Received block content for height ${height}: ${blockContentResponse.microblocks.length} microblocks received`);
+        this.responseLogger.info(`Received block content for height ${height}: ${blockContentResponse.microblocks.length} microblocks received`);
         return blockContentResponse
     }
 
     async getValidatorNodeByAddress(address: Uint8Array) {
-        this.requestLogger.debug(`Requesting validator node id for address {address}`, () => ({
+        this.requestLogger.info(`Requesting validator node id for address {address}`, () => ({
             address: Utils.binaryToHexa(address)}
         ));
 
@@ -124,14 +124,14 @@ export class NetworkProvider implements IExternalProvider {
             address: address
         });
 
-        this.responseLogger.debug(`Receiving validator node id {id}`, () => ({
+        this.responseLogger.info(`Receiving validator node id {id}`, () => ({
             id: Utils.binaryToHexa(address)
         }));
         return v.parse(ValidatorNodeByAddressAbciResponseSchema, answer);
     }
 
     async getAccountState(accountHash: Uint8Array) {
-        this.requestLogger.debug(`Requesting account state for account hash {accountHash}`, () => ({
+        this.requestLogger.info(`Requesting account state for account hash {accountHash}`, () => ({
             accountHash: Utils.binaryToHexa(accountHash)
         }));
 
@@ -141,7 +141,7 @@ export class NetworkProvider implements IExternalProvider {
         });
 
         const response = v.parse(AccountStateAbciResponseSchema, answer);
-        this.responseLogger.debug(`Receiving account state: height={height}, balance={balance}, lastHistoryHash={lastHistoryHash}`, () => {
+        this.responseLogger.info(`Receiving account state: height={height}, balance={balance}, lastHistoryHash={lastHistoryHash}`, () => {
             const height = response.height;
             const balance = CMTSToken.createAtomic(response.balance).toString();
             const lastHistoryHash = response.lastHistoryHash;
@@ -151,7 +151,7 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getAccountHistory(accountHash: Uint8Array, lastHistoryHash: Uint8Array, maxRecords: number) {
-        this.requestLogger.debug(`Requesting account history for account hash: ${Utils.binaryToHexa(accountHash)}, lastHistoryHash: ${Utils.binaryToHexa(lastHistoryHash)}, maxRecords: ${maxRecords}`);
+        this.requestLogger.info(`Requesting account history for account hash: ${Utils.binaryToHexa(accountHash)}, lastHistoryHash: ${Utils.binaryToHexa(lastHistoryHash)}, maxRecords: ${maxRecords}`);
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_ACCOUNT_HISTORY,
@@ -161,12 +161,12 @@ export class NetworkProvider implements IExternalProvider {
         });
 
         const response = v.parse(AccountHistoryAbciResponseSchema, answer);
-        this.responseLogger.debug(`Receiving account history with ${response.list.length} entries` );
+        this.responseLogger.info(`Receiving account history with ${response.list.length} entries` );
         return response;
     }
 
     async getAccountByPublicKeyHash(publicKeyHash: Uint8Array) {
-        this.requestLogger.debug(`Requesting account hash by public key hash: ${Utils.binaryToHexa(publicKeyHash)}`);
+        this.requestLogger.info(`Requesting account hash by public key hash: ${Utils.binaryToHexa(publicKeyHash)}`);
 
         const answer = await this.abciQuery(
             {
@@ -176,14 +176,14 @@ export class NetworkProvider implements IExternalProvider {
         );
 
         const response = v.parse(AccountByPublicKeyHashAbciResponseSchema, answer);
-        this.responseLogger.debug(`Received account hash {accountHash}`, () => ({
+        this.responseLogger.info(`Received account hash {accountHash}`, () => ({
             accountHash: Utils.binaryToHexa(response.accountHash)
         }));
         return response;
     }
 
     async getObjectList(type: number) {
-        this.requestLogger.debug(`Requesting list of objects of type ${type}`);
+        this.requestLogger.info(`Requesting list of objects of type ${type}`);
 
         const answer = await this.abciQuery({
                 requestType: AbciRequestType.GET_OBJECT_LIST,
@@ -191,12 +191,12 @@ export class NetworkProvider implements IExternalProvider {
         });
 
         const response = v.parse(ObjectListAbciResponseSchema, answer);
-        this.responseLogger.debug(`Receiving object lists with ${response.list.length} elements)`);
+        this.responseLogger.info(`Receiving object lists with ${response.list.length} elements)`);
         return response;
     }
 
     async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation | null>  {
-        this.requestLogger.debug(`Requesting microblock information for hash ${Utils.binaryToHexa(hash)}`);
+        this.requestLogger.info(`Requesting microblock information for hash ${Utils.binaryToHexa(hash)}`);
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_MICROBLOCK_INFORMATION,
@@ -204,19 +204,21 @@ export class NetworkProvider implements IExternalProvider {
         });
 
         const response = v.parse(MicroblockInformationAbciResponseSchema, answer);
-        this.responseLogger.debug(`Received microblock information: header size={headerSize}, vbType={vbType}, vbId={vbId}`, () => ({
+        this.responseLogger.info(`Received microblock information: vbType={vbType}, vbId={vbId}`, () => ({
             vbType: response.virtualBlockchainType,
             vbId: Utils.binaryToHexa(response.virtualBlockchainId),
         }));
+
+
         // TODO: remove or downgrade to debug
-        this.logger.debug(`Received microblock information body hash for microblock ${Utils.binaryToHexa(hash)}: ${Utils.binaryToHexa(response.header.bodyHash)}`)
+        this.logger.info(`Received microblock information body hash for microblock ${Utils.binaryToHexa(hash)}: ${Utils.binaryToHexa(response.header.bodyHash)}`)
         return v.parse(MicroblockInformationSchema, response);
     }
 
     async getMicroblockBodys(hashes: Uint8Array[]): Promise<MicroblockBodysAbciResponse | null>  {
-        this.requestLogger.debug(`Requesting microblock bodys for microblock hashes ${hashes.length}`);
-        this.requestLogger.debug(`Lisf of requsested hashes: ${hashes}`, () => ({
-            hashes: hashes.map(h => Utils.binaryToHexa(h))
+        this.requestLogger.info(`Requesting microblock bodys for microblock hashes ${hashes.length}`);
+        this.requestLogger.info(`Lisf of requested hashes: {hashes}`, () => ({
+            hashes: hashes.map(h => Utils.binaryToHexa(h)).join(', ')
         }))
 
         const answer = await this.abciQuery({
@@ -225,12 +227,12 @@ export class NetworkProvider implements IExternalProvider {
         });
 
         const response = v.parse(MicroblockBodysAbciResponseSchema, answer);
-        this.responseLogger.debug(`getMicroblockBodys <- {*}`, () => ({count: response.list.length}));
+        this.responseLogger.info(`Returned number of microblock bodys: ${response.list.length}`);
         return response;
     }
 
     async getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number) {
-        this.requestLogger.debug(`Request virtual blockchain update for virtualBlockchainId: ${Utils.binaryToHexa(virtualBlockchainId)}, knownHeight: ${knownHeight}`);
+        this.requestLogger.info(`Request virtual blockchain update for virtualBlockchainId: ${Utils.binaryToHexa(virtualBlockchainId)}, knownHeight: ${knownHeight}`);
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_VIRTUAL_BLOCKCHAIN_UPDATE,
@@ -238,12 +240,12 @@ export class NetworkProvider implements IExternalProvider {
             knownHeight: knownHeight
         });
 
-        this.responseLogger.debug(`Receiving virtual blockchain update`);
+        this.responseLogger.info(`Receiving virtual blockchain update`);
         return v.parse(VirtualBlockchainUpdateAbciResponseSchema, answer);
     }
 
     async getSerializedVirtualBlockchainState(virtualBlockchainId: Uint8Array) {
-        this.requestLogger.debug(`Requesting virtual blockchain state for vb id {vbId}`, () => ({
+        this.requestLogger.info(`Requesting virtual blockchain state for vb id {vbId}`, () => ({
             vbId: Utils.binaryToHexa(virtualBlockchainId)
         }));
 
@@ -253,7 +255,7 @@ export class NetworkProvider implements IExternalProvider {
         });
 
         const response = v.parse(VirtualBlockchainStateAbciResponseSchema, answer);
-        this.responseLogger.debug(`Receiving virtual blockchain state: ${response.serializedVirtualBlockchainState.length} bytes`);
+        this.responseLogger.info(`Receiving virtual blockchain state: ${response.serializedVirtualBlockchainState.length} bytes`);
         return response.serializedVirtualBlockchainState;
     }
 
@@ -350,14 +352,14 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async getGenesisSnapshot(): Promise<GenesisSnapshotAbciResponse> {
-        this.requestLogger.debug(`Requesting genesis snapshot`);
+        this.requestLogger.info(`Requesting genesis snapshot`);
 
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_GENESIS_SNAPSHOT,
         });
 
         const genesisSnapshotResponse = v.parse(GenesisSnapshotAbciResponseSchema, answer);
-        this.responseLogger.debug(`Received genesis snapshots containing {chunksNumber}`, () => ({
+        this.responseLogger.info(`Received genesis snapshots containing {chunksNumber}`, () => ({
             chunksNumber: genesisSnapshotResponse.base64EncodedChunks.length,
         }));
         return genesisSnapshotResponse;

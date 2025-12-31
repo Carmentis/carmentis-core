@@ -123,7 +123,6 @@ export * from "./crypto/signatureCache/SignatureCacheDisabled";
 export * from "./crypto/signatureCache/SignatureCacheEntry";
 export * from "./crypto/signatureCache/SignatureCacheInterface";
 export * from "./crypto/signatureCache/SignatureCacheMonothread";
-export * from "./data/BlockchainSerializer";
 export * from "./data/base64";
 export * from "./data/byteStreams";
 export * from "./data/messageSerializer";

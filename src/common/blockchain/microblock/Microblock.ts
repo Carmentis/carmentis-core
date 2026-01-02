@@ -350,6 +350,10 @@ export class Microblock {
         return this.hash;
     }
 
+    getTimestampAsDate(): Date {
+        return new Date(this.header.timestamp * 1000);
+    }
+
     /**
      * Retrieves the height of the header.
      *

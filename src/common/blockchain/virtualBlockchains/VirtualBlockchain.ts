@@ -237,6 +237,14 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         return this.getMicroblock(1);
     }
 
+    getAllMicroblockHashes(): Hash[] {
+        const hashes: Hash[] = [];
+        for (const entry of this.microblockHashByHeight.entries()) {
+            hashes.push(Hash.from(entry[1]))
+        }
+        return hashes;
+    }
+
 
     /**
      * Retrieves the microblock based on the given height.

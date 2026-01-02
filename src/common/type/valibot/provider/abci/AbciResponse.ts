@@ -192,6 +192,7 @@ export type MicroblockAnchoringAbciResponse = v.InferOutput<typeof MicroblockAnc
 export type MicroblockBodysAbciResponse = v.InferOutput<typeof MicroblockBodysAbciResponseSchema>;
 export type AccountStateAbciResponse = v.InferOutput<typeof AccountStateAbciResponseSchema>;
 export type AccountHistoryAbciResponse = v.InferOutput<typeof AccountHistoryAbciResponseSchema>;
+export type AccountHistoryItem = v.InferOutput<typeof AccountHistoryItemSchema>;
 export type AccountByPublicKeyHashAbciResponse = v.InferOutput<typeof AccountByPublicKeyHashAbciResponseSchema>;
 export type ValidatorNodeByAddressAbciResponse = v.InferOutput<typeof ValidatorNodeByAddressAbciResponseSchema>;
 export type ObjectListAbciResponse = v.InferOutput<typeof ObjectListAbciResponseSchema>;

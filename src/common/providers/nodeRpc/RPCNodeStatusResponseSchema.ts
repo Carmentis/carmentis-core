@@ -1,44 +1,45 @@
-import {z} from "zod";
+import * as v from "valibot";
 
-export const RPCNodeStatusResponseSchema = z.object({
-    jsonrpc: z.literal("2.0"),
-    id: z.number(),
-    result: z.object({
-        node_info: z.object({
-            protocol_version: z.object({
-                p2p: z.string(),
-                block: z.string(),
-                app: z.string(),
+export const RPCNodeStatusResponseSchema = v.object({
+    jsonrpc: v.literal("2.0"),
+    id: v.number(),
+    result: v.object({
+        node_info: v.object({
+            protocol_version: v.object({
+                p2p: v.string(),
+                block: v.string(),
+                app: v.string(),
             }),
-            id: z.string(),
-            listen_addr: z.string(),
-            network: z.string(),
-            version: z.string(),
-            channels: z.string(),
-            moniker: z.string(),
-            other: z.object({
-                tx_index: z.string(),
-                rpc_address: z.string(),
+            id: v.string(),
+            listen_addr: v.string(),
+            network: v.string(),
+            version: v.string(),
+            channels: v.string(),
+            moniker: v.string(),
+            other: v.object({
+                tx_index: v.string(),
+                rpc_address: v.string(),
             }),
         }),
-        sync_info: z.object({
-            latest_block_hash: z.string(),
-            latest_app_hash: z.string(),
-            latest_block_height: z.string(),
-            latest_block_time: z.string(),
-            earliest_block_hash: z.string(),
-            earliest_app_hash: z.string(),
-            earliest_block_height: z.string(),
-            earliest_block_time: z.string(),
-            catching_up: z.boolean(),
+        sync_info: v.object({
+            latest_block_hash: v.string(),
+            latest_app_hash: v.string(),
+            latest_block_height: v.string(),
+            latest_block_time: v.string(),
+            earliest_block_hash: v.string(),
+            earliest_app_hash: v.string(),
+            earliest_block_height: v.string(),
+            earliest_block_time: v.string(),
+            catching_up: v.boolean(),
         }),
-        validator_info: z.object({
-            address: z.string(),
-            pub_key: z.object({
-                type: z.string(), // "tendermint/PubKeyEd25519"
-                value: z.string(), // base64
+        validator_info: v.object({
+            address: v.string(),
+            pub_key: v.object({
+                type: v.string(), // "tendermint/PubKeyEd25519"
+                value: v.string(), // base64
             }),
-            voting_power: z.string(),
+            voting_power: v.string(),
         }),
     }),
 });
+export type RPCNodeStatusResponseType = v.InferOutput<typeof RPCNodeStatusResponseSchema>;

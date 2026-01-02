@@ -1,7 +1,8 @@
 import {NewBlockEventSchema, NewBlockEventType} from "./NewBlockEventType";
 import {RPCNodeWebSocketCallback} from "./RPCNodeWebSocketCallback";
+import * as v from 'valibot';
 
-export class RPCNodeWebSocketClient {
+export class CometBFTNodeWebSocket {
 
 
     private callbacks : RPCNodeWebSocketCallback[] = [];
@@ -15,7 +16,7 @@ export class RPCNodeWebSocketClient {
 
     static new(webSocketURl: string) {
         const ws = new WebSocket(webSocketURl);
-        return new RPCNodeWebSocketClient(ws);
+        return new CometBFTNodeWebSocket(ws);
     }
 
     addCallback(callback: RPCNodeWebSocketCallback) {
@@ -39,9 +40,9 @@ export class RPCNodeWebSocketClient {
         const object = JSON.parse(event.data);
 
         // check if new event block
-        const parsingResult = NewBlockEventSchema.safeParse(object);
+        const parsingResult = v.safeParse(NewBlockEventSchema, object);
         if (parsingResult.success) {
-            const data = parsingResult.data;
+            const data = parsingResult.output;
             this.onNewBlock(data);
         }
     }

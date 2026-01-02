@@ -342,13 +342,13 @@ export class NetworkProvider implements IExternalProvider {
         const urlObject = new URL(nodeUrl);
         urlObject.pathname = "status";
         const data  = await NetworkProvider.query(urlObject) as any;
-        const parsingResult = RPCNodeStatusResponseSchema.safeParse(data);
+        const parsingResult = v.safeParse(RPCNodeStatusResponseSchema, data);
         if (parsingResult.success) {
             NetworkProvider.staticLogger.debug(`sendStatusQueryToNodeServer <- received valid status response`);
-            return parsingResult.data;
+            return parsingResult.output;
         }
-        NetworkProvider.staticLogger.debug(`sendStatusQueryToNodeServer <- parsing error: ${parsingResult.error.message}`);
-        throw new NodeError(parsingResult.error.message);
+        NetworkProvider.staticLogger.debug(`sendStatusQueryToNodeServer <- parsing error: ${parsingResult.issues}`);
+        throw new NodeError(parsingResult.issues.map(i => i.message).join(", "));
     }
 
     async getGenesisSnapshot(): Promise<GenesisSnapshotAbciResponse> {

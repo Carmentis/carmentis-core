@@ -10,6 +10,7 @@ import {ValidatorNodeInternalState} from "../internalStates/ValidatorNodeInterna
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {Utils} from "../../utils/utils";
+import {Hash} from "../../entities/Hash";
 
 export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalState> {
 
@@ -42,6 +43,16 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
             type: this.getType()
         };
     }
+
+    async getVirtualBlockchainOwnerId() {
+        const orgId = await this.getOrganizationId();
+        const organizationVb = await this.provider.loadOrganizationVirtualBlockchain(orgId);
+        return organizationVb.getVirtualBlockchainOwnerId();
+    }
+
+    async getOrganizationId(): Promise<Hash> {
+        return this.internalState.getOrganizationId();
+    }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {
         const checker = new ValidatorNodeMicroblockStructureChecker();
@@ -60,7 +71,18 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
         }
         throw new IllegalStateError("Node has not declared its CometBFT public key yet");
         //const section = microblock.getSectionByType<ValidatorNodeCometbftPublicKeyDeclarationSection>(SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION);
+    }
 
+    async getRpcEndpointDeclaration() {
+        const height = this.internalState.getRpcEndpointHeight();
+        if (height === 0) throw new IllegalStateError("Node has not declared its RPC endpoint yet");
+        const microblock = await this.getMicroblock(height);
+        for (const section of microblock.getAllSections()) {
+            if (section.type !== SectionType.VN_RPC_ENDPOINT) continue;
+            const rpcEndpoint = section.rpcEndpoint;
+            return rpcEndpoint;
+        }
+        throw new IllegalStateError("Node has not declared its RPC endpoint yet");
     }
 
     getNodeDeclarationHeight(): number {

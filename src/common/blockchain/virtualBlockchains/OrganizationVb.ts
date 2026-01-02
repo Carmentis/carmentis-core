@@ -52,6 +52,10 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState>
             type: this.getType()
         };
     }
+
+    async getVirtualBlockchainOwnerId() {
+        return this.internalState.getAccountId();
+    }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {
         const checker = new OrganizationMicroblockStructureChecker();

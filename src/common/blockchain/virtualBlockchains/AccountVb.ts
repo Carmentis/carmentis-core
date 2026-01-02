@@ -13,6 +13,7 @@ import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStat
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {Utils} from "../../utils/utils";
+import {Hash} from "../../entities/Hash";
 
 export class AccountVb extends VirtualBlockchain<AccountInternalState> {
 
@@ -40,6 +41,10 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
             lastMicroblockHash: lastMicroblockHash,
             type: this.getType()
         };
+    }
+
+    async getVirtualBlockchainOwnerId() {
+        return Hash.from(this.getId());
     }
 
     protected checkMicroblockStructure(microblock: Microblock): boolean {

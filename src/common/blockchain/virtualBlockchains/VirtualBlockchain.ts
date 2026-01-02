@@ -107,6 +107,11 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
     abstract getVirtualBlockchainState(): Promise<VirtualBlockchainState>;
 
     /**
+     * Returns the owner ID of the virtual blockchain.
+     */
+    abstract getVirtualBlockchainOwnerId(): Promise<Hash>;
+
+    /**
      * Retrieves the local state of the current instance.
      *
      * @return {LocalState} The local state associated with this instance.

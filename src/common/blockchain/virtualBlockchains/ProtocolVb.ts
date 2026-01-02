@@ -6,6 +6,8 @@ import {IProvider} from "../../providers/IProvider";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {InternalStateUpdaterFactory} from "../internalStatesUpdater/InternalStateUpdaterFactory";
 import {Utils} from "../../utils/utils";
+import {Hash} from "../../entities/Hash";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 
 export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {
 
@@ -49,28 +51,20 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {
         };
     }
 
-    /**
-     Update methods
-     */
-    /*
-    async setSignatureScheme(signatureSchemeId: SignatureSchemeId) {
-        await this.addSection(SECTIONS.PROTOCOL_SIG_SCHEME, {
-            schemeId: signatureSchemeId
-        });
+    async getVirtualBlockchainOwnerId() {
+        const orgId = await this.getOrganizationId();
+        const organizationVb = await this.provider.loadOrganizationVirtualBlockchain(orgId);
+        return organizationVb.getVirtualBlockchainOwnerId();
     }
 
-    async setPublicKey(publicKey: PublicSignatureKey) {
-        await this.addSection(SECTIONS.PROTOCOL_PUBLIC_KEY, {
-            publicKey: publicKey.getPublicKeyAsBytes()
-        });
+    async getOrganizationId(): Promise<Hash> {
+        const firstBlock = await this.getFirstMicroBlock();
+        const sections = firstBlock.getAllSections();
+        for (const section of sections) {
+            if (section.type === SectionType.PROTOCOL_CREATION) {
+                return Hash.from(section.organizationId);
+            }
+        }
+        throw new Error('Organization ID not found in protocol vb')
     }
-
-    async setSignature(privateKey: PrivateSignatureKey) {
-        const object = this.createSignature(privateKey);
-        await this.addSection(SECTIONS.PROTOCOL_SIGNATURE, object);
-    }
-     */
-
-
-
 }

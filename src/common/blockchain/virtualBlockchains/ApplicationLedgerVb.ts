@@ -74,6 +74,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         };
     }
 
+
+    async getVirtualBlockchainOwnerId() {
+        const appId = this.internalState.getApplicationId();
+        const applicationVb = await this.provider.loadApplicationVirtualBlockchain(appId);
+        return applicationVb.getVirtualBlockchainOwnerId();
+    }
+
     protected async updateInternalState(protocolState: ProtocolInternalState, state: ApplicationLedgerInternalState, microblock: Microblock) {
         const applicationLedgerInternalStateUpdaterVersion = protocolState.getApplicationLedgerInternalStateUpdaterVersion();
         const stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(

@@ -39,6 +39,12 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
             type: this.getType()
         };
     }
+
+    async getVirtualBlockchainOwnerId() {
+        const orgId = this.internalState.getOrganizationId();
+        const organizationVb = await this.provider.loadOrganizationVirtualBlockchain(orgId);
+        return organizationVb.getVirtualBlockchainOwnerId();
+    }
     
     protected checkMicroblockStructure(microblock: Microblock): boolean {
         const checker = new ApplicationMicroblockStructureChecker();

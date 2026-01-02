@@ -27,6 +27,7 @@ import {
     ObjectListAbciResponse
 } from "../type/valibot/provider/abci/AbciResponse";
 import {Crypto} from "../crypto/crypto";
+import {VirtualBlockchain} from "../blockchain/virtualBlockchains/VirtualBlockchain";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -168,39 +169,6 @@ export class Provider extends AbstractProvider {
         return await this.externalProvider.getObjectList(type);
     }
 
-    /*
-    async storeMicroblock(hash: Uint8Array, virtualBlockchainId: Uint8Array, virtualBlockchainType: number, height: number, headerData: Uint8Array, bodyData: Uint8Array) {
-        Assertion.assert(virtualBlockchainId instanceof Uint8Array, `virtualBlockchainId must be an Uint8Array: got ${typeof virtualBlockchainId}`);
-        Assertion.assert(headerData instanceof Uint8Array, `headerData must be an Uint8Array: got ${typeof headerData}`);
-        Assertion.assert(bodyData instanceof Uint8Array, `bodyData must be an Uint8Array: got ${typeof bodyData}`);
-        Assertion.assert(headerData.length > 0, "headerData must not be empty");
-        Assertion.assert(bodyData.length > 0, "bodyData must not be empty");
-        this.logger.info(`Storing microblock: microblock hash={microblockHash}, vbId={vbId}, height={height}`, () => ({
-            microblockHash: Utils.binaryToHexa(hash),
-            vbId: Utils.binaryToHexa(virtualBlockchainId),
-            height
-        }));
-        await this.internalProvider.setMicroblockVbInformation(
-            hash,
-            BlockchainUtils.encodeMicroblockVbInformation(virtualBlockchainType, virtualBlockchainId)
-        );
-        await this.internalProvider.setMicroblockHeader(hash, headerData);
-        await this.internalProvider.setMicroblockBody(hash, bodyData);
-    }
-
-    async updateVirtualBlockchainState(virtualBlockchainId: Uint8Array, type: number, expirationDay: number, height: number, lastMicroblockHash: Uint8Array, internalState: unknown) {
-        const stateData = BlockchainUtils.encodeVirtualBlockchainState({
-            expirationDay,
-            height,
-            internalState,
-            lastMicroblockHash,
-            type
-        });
-        await this.internalProvider.setSerializedVirtualBlockchainState(virtualBlockchainId, stateData);
-    }
-
-     */
-
     async getMicroblockInformation(hash: Uint8Array): Promise<MicroblockInformation|null> {
         const data = await this.internalProvider.getInformationOfVirtualBlockchainContainingMicroblock(hash);
         const header = await this.internalProvider.getMicroblockHeader(hash);
@@ -308,7 +276,7 @@ export class Provider extends AbstractProvider {
     }
 
     async getVirtualBlockchainIdContainingMicroblock(microblockHash: Hash): Promise<Hash> {
-        // TODO: log
+        this.logger.info(`Searching for virtual blockchain containing microblock ${microblockHash.encode()}`)
         const info = await this.internalProvider.getInformationOfVirtualBlockchainContainingMicroblock(microblockHash.toBytes());
         if (info !== null) {
              return Hash.from(info.virtualBlockchainId);
@@ -354,7 +322,6 @@ export class Provider extends AbstractProvider {
         } else {
             throw new IllegalStateError("Cannot get the headers of a non-existing VB");
         }
-
     }
 
     /**
@@ -473,6 +440,31 @@ export class Provider extends AbstractProvider {
         this.logger.info(`Publishing microblock ${microblockToPublish.getHash().encode()}`)
         const {microblockData} = microblockToPublish.serialize();
         return this.externalProvider.sendSerializedMicroblock(microblockData)
+    }
+
+    async loadVirtualBlockchain(vbId: Hash): Promise<VirtualBlockchain> {
+        const vbStatus = await this.getVirtualBlockchainState(vbId.toBytes());
+        if (vbStatus === null) throw new Error(
+            `Virtual Blockchain with hash ${vbId.encode()} does not exist.`
+        );
+        const vbType = vbStatus.type;
+        switch (vbType) {
+            case VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN: return await this.loadAccountVirtualBlockchain(vbId);
+            case VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN: return await this.loadOrganizationVirtualBlockchain(vbId);
+            case VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN: return await this.loadApplicationVirtualBlockchain(vbId);
+            case VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN:  return await this.loadValidatorNodeVirtualBlockchain(vbId);
+            case VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN: return await this.loadProtocolVirtualBlockchain(vbId);
+            case VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN: return await this.loadApplicationLedgerVirtualBlockchain(vbId);
+            default: throw new Error(`Unknown virtual blockchain type: ${vbType}`);
+        }
+    }
+
+    async loadMicroblockByMicroblockHash(microblockHash: Hash): Promise<Microblock> {
+        this.logger.info(`Loading microblock ${microblockHash.encode()}`)
+        const header = await this.getMicroblockHeader(microblockHash);
+        const body = await this.getMicroblockBody(microblockHash);
+        if (header === null || body === null) throw new Error(`Microblock ${microblockHash.encode()} not found`);
+        return Microblock.loadFromHeaderAndBody(header, body)
     }
 
 

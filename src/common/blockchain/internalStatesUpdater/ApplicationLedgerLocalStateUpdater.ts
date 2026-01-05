@@ -28,6 +28,7 @@ import {
     Section
 } from "../../type/valibot/blockchain/section/sections";
 import {Height} from "../../type/Height";
+import {IProvider} from "../../providers/IProvider";
 
 export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<ApplicationLedgerInternalState>, IApplicationLedgerInternalStateUpdater {
     async updateState(provider: IProvider, prevState: ApplicationLedgerInternalState, microblock: Microblock): Promise<ApplicationLedgerInternalState> {

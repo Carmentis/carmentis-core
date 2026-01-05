@@ -21,12 +21,21 @@ export class ApplicationLedgerInternalState implements IInternalState {
 
     static createInitialState() {
         return new ApplicationLedgerInternalState({
+            allowedAdditionalWriters: [],
             actors: [],
             allowedPkeSchemeIds: [],
             allowedSignatureSchemeIds: [],
             applicationId: this.UNDEFINED_APPLICATION_ID,
             channels: []
         })
+    }
+
+    getAdditionalAllowedWriters() {
+        return this.internalState.allowedAdditionalWriters;
+    }
+
+    addAdditionalWriter(accountId: Uint8Array) {
+        this.internalState.allowedAdditionalWriters.push(accountId);
     }
 
     toObject(): ApplicationLedgerInternalStateObject {

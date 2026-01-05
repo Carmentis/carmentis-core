@@ -60,6 +60,21 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         super(provider, VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN, state )
     }
 
+    async isAccountIdAllowedToWrite(accountId:Hash) {
+        // when the virtual blockchain is empty, any account can write to it
+        if (this.getHeight() === 0) return true;
+
+
+        // otherwise, we check that the account ID is contained in the set of allowed writers.
+        const owner = await this.getVirtualBlockchainOwnerId();
+        const additionalWriters = this.internalState.getAdditionalAllowedWriters();
+        const allowedWriters: Uint8Array[] = [
+            owner.toBytes(),
+            ...additionalWriters
+        ]
+        return allowedWriters.some(allowedWriter => Utils.binaryIsEqual(allowedWriter, accountId.toBytes()))
+    }
+
     async getVirtualBlockchainState() {
         const height = this.getHeight();
         const lastMicroblockHash = height === 0 ?

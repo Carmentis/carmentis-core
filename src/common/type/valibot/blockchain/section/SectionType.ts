@@ -1,7 +1,8 @@
 export enum SectionType {
     // Generic (non-specific) sections
-
     SIGNATURE = 127,
+    ALLOWED_ADDITIONAL_WRITER = 128,
+
 
     // Protocol
     //PROTOCOL_SIG_SCHEME = 0,

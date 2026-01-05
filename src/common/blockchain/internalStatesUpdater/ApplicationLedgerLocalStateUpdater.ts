@@ -73,6 +73,9 @@ export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<Appli
             case SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA:
                 await this.privateChannelDataCallback(section, newState);
                 break;
+            case SectionType.ALLOWED_ADDITIONAL_WRITER:
+                newState.addAdditionalWriter(section.allowedWriterAccountId);
+                break;
             case SectionType.SIGNATURE:
                 await this.endorserSignatureCallback();
                 break;

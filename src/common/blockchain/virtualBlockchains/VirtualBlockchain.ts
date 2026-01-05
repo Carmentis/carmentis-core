@@ -83,6 +83,21 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         this.microblockSearchFailureFallback = new ThrownErrorMicroblockSearchFailureFallback();
     }
 
+    /**
+     * Determines whether a given account ID is allowed to write to the virtual blockchain.
+     *
+     * @param {Hash} accountId - The account ID to check for write permissions.
+     * @return {Promise<boolean>} A promise that resolves to `true` if the account ID is allowed to write, otherwise `false`.
+     */
+    async isAccountIdAllowedToWrite(accountId: Hash): Promise<boolean> {
+        // when the virtual blockchain is empty, any account can write to it
+        if (this.height === 0) return true;
+
+        // otherwise, we check that the account ID is the owner of the virtual blockchain
+        const vbOwner = await this.getVirtualBlockchainOwnerId();
+        return Utils.binaryIsEqual(vbOwner.toBytes(), accountId.toBytes())
+    }
+
     addOnMicroblockInsertionEventListener(listener: OnMicroblockInsertionEventListener) {
         this.onMicroblockInsertionEventListeners.push(listener);
     }

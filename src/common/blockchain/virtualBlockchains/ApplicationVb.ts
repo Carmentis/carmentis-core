@@ -23,7 +23,7 @@ export class ApplicationVb extends VirtualBlockchain<ApplicationInternalState> {
         const localStateUpdater = InternalStateUpdaterFactory.createApplicationInternalStateUpdater(
             stateUpdaterVersion
         );
-        return localStateUpdater.updateState(state, microblock);
+        return localStateUpdater.updateState(this.provider, state, microblock);
     }
 
     async getVirtualBlockchainState() {

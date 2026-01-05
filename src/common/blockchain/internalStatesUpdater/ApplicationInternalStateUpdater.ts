@@ -2,9 +2,10 @@ import {Microblock} from "../microblock/Microblock";
 import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {ApplicationInternalState} from "../internalStates/ApplicationInternalState";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {IProvider} from "../../providers/IProvider";
 
 export class ApplicationInternalStateUpdater implements IInternalStateUpdater<ApplicationInternalState> {
-    updateState(prevState: ApplicationInternalState, microblock: Microblock): ApplicationInternalState {
+    updateState(provider: IProvider, prevState: ApplicationInternalState, microblock: Microblock): ApplicationInternalState {
         const newState = prevState.clone();
         for (const section of microblock.getAllSections()) {
             if (section.type === SectionType.APP_CREATION) {

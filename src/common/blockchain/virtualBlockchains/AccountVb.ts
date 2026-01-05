@@ -26,7 +26,7 @@ export class AccountVb extends VirtualBlockchain<AccountInternalState> {
         const localStateUpdater = InternalStateUpdaterFactory.createAccountInternalStateUpdater(
             accountInternalStateUpdaterVersion
         );
-        return localStateUpdater.updateState(state, microblock);
+        return localStateUpdater.updateState(this.provider, state, microblock);
     }
 
     async getVirtualBlockchainState() {

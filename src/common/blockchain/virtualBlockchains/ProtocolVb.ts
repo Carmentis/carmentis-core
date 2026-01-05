@@ -32,7 +32,7 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {
         const localStateUpdater = InternalStateUpdaterFactory.createProtocolInternalStateUpdater(
             stateUpdaterVersion
         );
-        return localStateUpdater.updateState(state, microblock);
+        return localStateUpdater.updateState(this.provider, state, microblock);
     }
 
 

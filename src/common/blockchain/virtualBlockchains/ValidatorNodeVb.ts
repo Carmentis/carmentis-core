@@ -27,7 +27,7 @@ export class ValidatorNodeVb extends VirtualBlockchain<ValidatorNodeInternalStat
         const stateUpdater = InternalStateUpdaterFactory.createValidatorNodeInternalStateUpdater(
             stateUpdaterVersion
         );
-        return stateUpdater.updateState(state, microblock);
+        return stateUpdater.updateState(this.provider, state, microblock);
     }
 
     async getVirtualBlockchainState() {

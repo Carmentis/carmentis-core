@@ -3,9 +3,10 @@ import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {IInternalStateUpdater} from "../internalStates/IInternalStateUpdater";
 import {ValidatorNodeInternalState} from "../internalStates/ValidatorNodeInternalState";
 import {ValidatorNodeVotingPowerUpdateSection} from "../../type/valibot/blockchain/section/sections";
+import {IProvider} from "../../providers/IProvider";
 
 export class ValidatorNodeInternalStateUpdater implements IInternalStateUpdater<ValidatorNodeInternalState> {
-    updateState(prevState: ValidatorNodeInternalState, microblock: Microblock): ValidatorNodeInternalState {
+    updateState(provider: IProvider, prevState: ValidatorNodeInternalState, microblock: Microblock): ValidatorNodeInternalState {
         const newState = prevState;
         for (const section of microblock.getAllSections()) {
             switch (section.type) {

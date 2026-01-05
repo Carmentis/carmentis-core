@@ -9,11 +9,12 @@ import {
     Section
 } from "../../type/valibot/blockchain/section/sections";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {IProvider} from "../../providers/IProvider";
 
 export class AccountInternalStateUpdater implements IInternalStateUpdater<AccountInternalState> {
     constructor() {}
 
-    async updateState(prevState: AccountInternalState, microblock: Microblock) {
+    async updateState(provider: IProvider, prevState: AccountInternalState, microblock: Microblock) {
         const newState = AccountInternalState.createFromObject({
             ...prevState.toObject()
         });

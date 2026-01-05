@@ -86,7 +86,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         const stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(
             applicationLedgerInternalStateUpdaterVersion
         );
-        return stateUpdater.updateState(this.internalState, microblock);
+        return stateUpdater.updateState(this.provider, this.internalState, microblock);
     }
     
     protected checkMicroblockStructure(microblock:Microblock) {

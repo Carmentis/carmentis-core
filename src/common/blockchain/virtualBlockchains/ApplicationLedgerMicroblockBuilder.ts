@@ -38,6 +38,7 @@ export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFail
         // update the internal state with the new section
         this.vb.setInternalState(
             await this.stateUpdater.updateStateFromSection(
+                this.provider,
                 this.vb.getInternalState(),
                 section,
                 this.mbUnderConstruction.getHeight()

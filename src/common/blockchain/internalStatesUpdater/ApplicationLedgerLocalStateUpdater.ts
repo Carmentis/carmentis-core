@@ -30,16 +30,16 @@ import {
 import {Height} from "../../type/Height";
 
 export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<ApplicationLedgerInternalState>, IApplicationLedgerInternalStateUpdater {
-    async updateState(prevState: ApplicationLedgerInternalState, microblock: Microblock): Promise<ApplicationLedgerInternalState> {
+    async updateState(provider: IProvider, prevState: ApplicationLedgerInternalState, microblock: Microblock): Promise<ApplicationLedgerInternalState> {
         const newState = prevState.clone();
         const mbHeight = microblock.getHeight();
         for (const section of microblock.getAllSections()) {
-            await this.updateStateFromSection(prevState, section, mbHeight);
+            await this.updateStateFromSection(provider, prevState, section, mbHeight);
         }
         return newState;
     }
 
-    async updateStateFromSection(prevState: ApplicationLedgerInternalState, section: Section, mbHeight: number): Promise<ApplicationLedgerInternalState> {
+    async updateStateFromSection(provider: IProvider, prevState: ApplicationLedgerInternalState, section: Section, mbHeight: number): Promise<ApplicationLedgerInternalState> {
         const newState = prevState.clone();
         switch (section.type) {
             case SectionType.APP_LEDGER_ALLOWED_SIG_SCHEMES:

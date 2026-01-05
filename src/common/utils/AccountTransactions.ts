@@ -57,6 +57,18 @@ export class AccountTransaction {
         return new Date(this.transaction.timestamp * 1000);
     }
 
+    public getTransactionTypeLabel() {
+        if (this.isEarnedFees()) return 'Earned fees';
+        if (this.isPaidFees()) return 'Paid fees';
+        if (this.isSentPayment()) return 'Sent payment';
+        if (this.isReceivedPayment()) return 'Received payment';
+        if (this.isPurchase()) return 'Purchase';
+        if (this.isSentIssuance()) return 'Sent issuance';
+        if (this.isReceivedIssuance()) return 'Received issuance';
+        if (this.isSale()) return 'Sale';
+        return 'Transaction'
+    }
+
 
 
 

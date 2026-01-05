@@ -38,4 +38,8 @@ export class ApplicationInternalState implements IInternalState {
     getOrganizationId(): Hash {
         return Hash.from(this.internalState.organizationId);
     }
+
+    getDescriptionHeight() {
+        return this.internalState.descriptionHeight;
+    }
 }

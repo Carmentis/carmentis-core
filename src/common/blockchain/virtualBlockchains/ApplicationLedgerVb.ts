@@ -56,6 +56,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     // Instance implementation
     // ------------------------------------------
 
+    /**
+     * The draft mode allows to write unchecked microblock to the virtual blockchain
+     * @private
+     */
+    private draftModeEnabled: boolean  = false;
+
     constructor(provider: IProvider, state: ApplicationLedgerInternalState = ApplicationLedgerInternalState.createInitialState()) {
         super(provider, VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN, state )
     }
@@ -105,8 +111,16 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     }
     
     protected checkMicroblockStructure(microblock:Microblock) {
+        if (this.draftModeEnabled) return true;
         const checker = new ApplicationLedgerMicroblockStructureChecker();
         return checker.checkMicroblockStructure(microblock)
+    }
+
+    enableDraftMode() {
+        this.draftModeEnabled = true;
+    }
+    disableDraftMode() {
+        this.draftModeEnabled = false;
     }
 
 
@@ -114,6 +128,10 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         this.internalState = state;
     }
 
+
+    isActorDefined(name: string) {
+        return this.internalState.isActorDefinedByName(name)
+    }
 
     actorIsSubscribed(name: string) {
         const actor = this.getActor(name);
@@ -210,13 +228,43 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
                 return CryptoSchemeFactory.createPublicEncryptionKey(pkeSchemeId, rawPkePublicKey);
             }
         }
-
-
-
         throw new ProtocolError(`Actor ${actorId} has not subscribed to a public encryption key.`)
-
-
     }
+
+    /**
+     * Retrieves the public encryption key of an actor by its identifier.
+     *
+     * @param actorId The identifier of the actor.
+     * @returns The public encryption key of the actor.
+     */
+    async getPublicSignatureKeyByActorId(actorId: number): Promise<PublicSignatureKey> {
+        // recover the actor's public encryption key from the virtual blockchain state
+        // and ensure that the public encryption key is defined
+        const actor = this.internalState.getActorById(actorId);
+        const actorPublicKeySigHeightDefinition = actor.signatureKeyHeight;
+        const isSigKeyDefined =
+            typeof actorPublicKeySigHeightDefinition === 'number' &&
+            actorPublicKeySigHeightDefinition !== 0;
+        if (isSigKeyDefined) {
+            // search the microblock containing the actor subscription (and the public encryption key definition)
+            const microBlock = await this.getMicroblock(actorPublicKeySigHeightDefinition);
+            for (const section of microBlock.getAllSections()) {
+                // we search a section declaring an actor subscription for a specific actor id
+                if (section.type !== SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION) continue;
+                const isMatchingActorId = section.actorId == actorId
+                if (!isMatchingActorId) continue;
+
+
+                // reconstruct the public signature key
+                const rawSigKey = section.signaturePublicKey;
+                const schemeId = section.signatureSchemeId;
+                return CryptoSchemeFactory.createPublicSignatureKey(schemeId, rawSigKey);
+            }
+        }
+        throw new ProtocolError(`Actor ${actorId} has not subscribed to a public signature key.`)
+    }
+
+
 
 
 
@@ -860,6 +908,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     }
 
      */
+
 
 
 }

@@ -4,6 +4,10 @@ import {SCHEMAS} from "../../common/constants/constants";
 import * as clientSocket from "./wiClientSocket";
 import * as qrCode from "../qrCode/qrCode";
 import {SchemaSerializer} from "../../common/data/schemaSerializer";
+import {
+  ClientBridgeMessage, ClientBridgeMessage_ConnectionAccepted,
+  ClientBridgeMessageType
+} from "../../common/type/valibot/clientBridge/clientBridgeMessages";
 
 //import {CarmentisError} from "../../common/errors/error";
 
@@ -36,7 +40,7 @@ export class wiApplicationWallet extends wiWallet<Uint8Array> {
    * @param {string} serverUrl - The URL of the server to connect to.
    * @return {Promise<{type: number, object: any}>} A promise that resolves with the processed request object. The resolved object contains the `type` of the request and the decoded `object` associated with it.
    */
-  async obtainDataFromServer(serverUrl: any, qrId: any) {
+  async obtainDataFromServer(serverUrl: string, qrId: string) {
     let _this = this;
 
     return new Promise(function (resolve, reject) {
@@ -45,35 +49,34 @@ export class wiApplicationWallet extends wiWallet<Uint8Array> {
 
       function onConnect() {
         console.log("[wallet] connected");
-        _this.socket.sendMessage(SCHEMAS.WIMSG_CONNECTION_ACCEPTED, { qrId: qrId });
+        const message: ClientBridgeMessage_ConnectionAccepted = {
+          type: ClientBridgeMessageType.CONNECTION_ACCEPTED,
+          base64EncodedQrId: qrId,
+        }
+        _this.socket.sendMessage(message);
+        //_this.socket.sendMessage(SCHEMAS.WIMSG_CONNECTION_ACCEPTED, { qrId: qrId });
       }
 
-      async function onData(this: any, id: any, object: any) {
-        console.log("[wallet] incoming data", id, object);
+      async function onData(this: any, message: ClientBridgeMessage) {
+        console.log("[wallet] incoming message", message);
 
-        switch(id) {
+        switch(message.type) {
+          case ClientBridgeMessageType.FORWARDED_REQUEST: {
+            resolve(message.walletRequest);
+            break;
+          }
+          /*
           case SCHEMAS.WIMSG_FORWARDED_REQUEST: {
             let req = this.decodeRequest(object.requestType, object.request);
 
             resolve(req);
             break;
           }
+
+           */
         }
       }
     });
-  }
-
-  /**
-   * Formats an answer, using the application wallet format.
-   */
-  formatAnswer(answerType: number, object: any) {
-    const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_ANSWERS[answerType]);
-    let answer = schemaSerializer.serialize(object);
-
-    return {
-      answerType: answerType,
-      answer: answer
-    };
   }
 
   sendAnswer(answer: any) {

@@ -29,19 +29,22 @@ import {
 } from "../../type/valibot/blockchain/section/sections";
 import {Height} from "../../type/Height";
 import {IProvider} from "../../providers/IProvider";
+import {SectionLabel} from "../../utils/SectionLabel";
 
 export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<ApplicationLedgerInternalState>, IApplicationLedgerInternalStateUpdater {
+
+    private logger = Logger.getInternalStateUpdaterLogger(AppLedgerLocalStateUpdaterV1.name);
     async updateState(provider: IProvider, prevState: ApplicationLedgerInternalState, microblock: Microblock): Promise<ApplicationLedgerInternalState> {
-        const newState = prevState.clone();
+        let newState = prevState.clone();
         const mbHeight = microblock.getHeight();
         for (const section of microblock.getAllSections()) {
-            await this.updateStateFromSection(provider, prevState, section, mbHeight);
+            newState = await this.updateStateFromSection(provider, prevState, section, mbHeight);
         }
         return newState;
     }
 
     async updateStateFromSection(provider: IProvider, prevState: ApplicationLedgerInternalState, section: Section, mbHeight: number): Promise<ApplicationLedgerInternalState> {
-        const newState = prevState.clone();
+        const newState = prevState;
         switch (section.type) {
             case SectionType.APP_LEDGER_ALLOWED_SIG_SCHEMES:
                 await this.allowedSignatureSchemesCallback(section, newState);
@@ -81,7 +84,7 @@ export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<Appli
                 break;
             default:
                 const logger = Logger.getLogger();
-                logger.warn("Unhandled section type: {type}", {type: section.type});
+                logger.warn(`Unhandled section ${SectionLabel.getSectionLabelFromSection(section)}`);
         }
         return newState;
     }
@@ -107,7 +110,9 @@ export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<Appli
         const {id: createdActorId, name: createdActorName} = section;
         
         // ensure the number of actors is consistent with the actor identifier
-        if (createdActorId != localState.getNumberOfActors()) {
+        const expectedActorId = localState.getNumberOfActors();
+        if (createdActorId != expectedActorId) {
+            this.logger.error(`Actor creation failure: Invalid actor identifier found for actor ${createdActorName}: expected ${expectedActorId}, got ${createdActorId}`);
             throw new InvalidActorError(createdActorId, localState.getNumberOfActors());
         }
         
@@ -115,6 +120,7 @@ export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<Appli
         if (localState.isActorDefinedByName(createdActorName)) throw new ActorAlreadyDefinedError(createdActorName);
         
         // initially, the actor has no shared invitation, neither shared secrets.
+        this.logger.info(`Creating actor ${createdActorName} with id ${createdActorId} `);
         localState.createActor({
             name: createdActorName,
             subscribed: false,

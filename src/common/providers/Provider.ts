@@ -109,10 +109,9 @@ export class Provider extends AbstractProvider {
 
     async getAccountIdByPublicKey(
         publicKey: PublicSignatureKey,
-        hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
     ) {
         const rawPublicKey = await publicKey.getPublicKeyAsBytes();
-        const publicKeyHash = hashScheme.hash(rawPublicKey);
+        const publicKeyHash = Crypto.Hashes.sha256AsBinary(rawPublicKey);
         return await this.getAccountByPublicKeyHash(publicKeyHash);
     }
 

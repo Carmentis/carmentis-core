@@ -5,6 +5,7 @@ import {SectionType} from '../type/valibot/blockchain/section/SectionType';
 // ============================================================================================================================ //
 //  Constraints                                                                                                                 //
 // ============================================================================================================================ //
+/*
 export const ZERO         = 0;
 export const ONE          = 1;
 export const AT_LEAST_ONE = 2;
@@ -18,6 +19,8 @@ export const CONSTRAINT_NAMES = [
   'at most one section',
   'any number of sections'
 ];
+
+ */
 
 export const SIGNATURE     = SectionType.SIGNATURE;
 export const SIGNATURE_SCHEMA = {

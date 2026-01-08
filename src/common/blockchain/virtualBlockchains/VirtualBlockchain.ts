@@ -98,6 +98,10 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         return Utils.binaryIsEqual(vbOwner.toBytes(), accountId.toBytes())
     }
 
+    getProvider(): IProvider {
+        return this.provider;
+    }
+
     addOnMicroblockInsertionEventListener(listener: OnMicroblockInsertionEventListener) {
         this.onMicroblockInsertionEventListeners.push(listener);
     }
@@ -386,10 +390,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
 
         // should load the local state updater version
         const protocolState = await this.provider.getProtocolVariables();
-
-
-
-
         this.internalState = await this.updateInternalState(protocolState, this.internalState, microblock);
 
         // if the current state of the vb is empty (no microblock), then update the identifier

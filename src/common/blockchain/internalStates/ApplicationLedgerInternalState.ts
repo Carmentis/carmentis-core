@@ -77,7 +77,7 @@ export class ApplicationLedgerInternalState implements IInternalState {
 
     createChannel(createdChannel: {name: string; isPrivate: boolean; creatorId: number}) {
         // ensure that the creator id is defined
-        if (this.isActorDefinedById(createdChannel.creatorId)) throw new ActorNotDefinedError(`Id: ${createdChannel.creatorId}`);
+        if (!this.isActorDefinedById(createdChannel.creatorId)) throw new ActorNotDefinedError(`Id: ${createdChannel.creatorId}`);
 
         // ensure that there is no channel with the same name
         if (this.isChannelDefinedByName(createdChannel.name)) throw new ChannelAlreadyDefinedError(createdChannel.name);
@@ -168,4 +168,7 @@ export class ApplicationLedgerInternalState implements IInternalState {
         this.internalState.channels[channelId] = updatedChannel;
     }
 
+    getAllActors() {
+        return this.internalState.actors;
+    }
 }

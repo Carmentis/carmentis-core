@@ -7,6 +7,7 @@ import {
 } from "../type/valibot/node/AccountInformation";
 import {Utils} from "./utils";
 import {CMTSToken} from "../economics/currencies/token";
+import {AccountStateAbciResponse} from "../type/valibot/provider/abci/AbciResponse";
 
 
 /**
@@ -15,6 +16,13 @@ import {CMTSToken} from "../economics/currencies/token";
  * It keeps track of the balance, the locks (escrow, vesting and staking) and provides methods to add, remove and query tokens.
  */
 export class BalanceAvailability {
+
+
+    static createFromAccountStateAbciResponse(response: AccountStateAbciResponse) {
+        const balance = new BalanceAvailability(response.balance, response.locks);
+        balance.getBreakdown();
+        return balance;
+    }
 
     /**
      * The balance of the account.

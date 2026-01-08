@@ -215,29 +215,34 @@ function binaryFrom(...arg: (number | Uint8Array | string)[]) {
 /**
  * Tests whether two Uint8Array's are equal
  */
-function binaryIsEqual(a: Uint8Array, b: Uint8Array) {
-    // reject non-binary inputs
-    if (!(a instanceof Uint8Array)) throw new Error(`Cannot compare object except Uint8array: got ${typeof a}`)
-    if (!(b instanceof Uint8Array)) throw new Error(`Cannot compare object except Uint8array: got ${typeof b}`)
+function binaryIsEqual(
+    a: ArrayBufferView,
+    b: ArrayBufferView
+): boolean {
+    if (!a || !b) {
+        throw new Error('Cannot compare null or undefined');
+    }
 
-    // if one is a buffer, cast it into a Uint8Array
-    if (a instanceof Buffer) a = new Uint8Array(a)
-    if (b instanceof Buffer) b = new Uint8Array(b)
+    const ua = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+    const ub = new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
 
-
-    if (a.length != b.length) {
-        logger.debug(`Comparison result is false (distinct length): ${a.length} != ${b.length}`)
+    if (ua.byteLength !== ub.byteLength) {
+        logger.debug(
+            `Comparison result is false (distinct length): ${ua.byteLength} != ${ub.byteLength}`
+        );
         return false;
     }
 
-    for (const i in a) {
-        if (a[i] != b[i]) {
-            logger.debug(`Comparison result is false (distinct value): ${a[i]} != ${b[i]}`)
+    for (let i = 0; i < ua.byteLength; i++) {
+        if (ua[i] !== ub[i]) {
+            logger.debug(
+                `Comparison result is false (distinct value): ${ua[i]} != ${ub[i]}`
+            );
             return false;
         }
     }
 
-    logger.debug(`Comparison result is true`)
+    logger.debug(`Comparison result is true`);
     return true;
 }
 

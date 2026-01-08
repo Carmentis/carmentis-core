@@ -63,7 +63,7 @@ export class AccountCrypto implements ICryptoKeyHandler {
         const seed = kdf.deriveKeyNoSalt(
             this.accountSeed,
             info,
-            32
+            64 // TODO(fix): be dynamic
         );
         return CryptoSchemeFactory.createPrivateDecryptionKey( schemeId, seed );
     }

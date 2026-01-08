@@ -217,8 +217,8 @@ function binaryFrom(...arg: (number | Uint8Array | string)[]) {
  */
 function binaryIsEqual(a: Uint8Array, b: Uint8Array) {
     // reject non-binary inputs
-    if (!(a instanceof Uint8Array)) throw new Error(`Cannot compare object except Uint8array: got ${typeof a}`)
-    if (!(b instanceof Uint8Array)) throw new Error(`Cannot compare object except Uint8array: got ${typeof b}`)
+    if (!(a instanceof Uint8Array)) throw new Error(`Excepted Uint8array, got ${typeof a}`)
+    if (!(b instanceof Uint8Array)) throw new Error(`Excepted Uint8array, got ${typeof b}`)
 
     // if one is a buffer, cast it into a Uint8Array
     if (a instanceof Buffer) a = new Uint8Array(a)

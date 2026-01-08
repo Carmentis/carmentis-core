@@ -326,7 +326,7 @@ export class NetworkProvider implements IExternalProvider {
         const binary = Base64.decodeBinary(rawBase64EncodedResponse);
         const abciResponse = AbciQueryEncoder.decodeAbciResponse(binary);
 
-        // we raise an exception of the resposne is an error
+        // we raise an exception if the response is an error
         if (abciResponse.responseType == AbciResponseType.ERROR) {
             const errorMsg = abciResponse.error;
             NetworkProvider.staticLogger.error(`sendABCIQueryToNodeServer <- {*}`, () => ({error: errorMsg}));

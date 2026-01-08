@@ -15,7 +15,7 @@ import {IllegalStateError} from "../../errors/carmentis-error";
 import {Hash} from "../../entities/Hash";
 import {IProvider} from "../../providers/IProvider";
 import {BlockchainUtils} from "../../utils/BlockchainUtils";
-import {FeesCalculationFormulaFactory} from "../feesCalculator/FeesCalcuationFormulaFactory";
+import {FeesCalculationFormulaFactory} from "../feesCalculator/FeesCalculationFormulaFactory";
 import {IFeesFormula} from "../feesCalculator/IFeesFormula";
 
 type MicroblockCheckerState =

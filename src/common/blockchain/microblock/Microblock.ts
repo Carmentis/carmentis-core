@@ -134,12 +134,8 @@ export class Microblock {
 
         const mb = new Microblock(microblockType);
         mb.header = structuredClone(header);
-
-
-
         mb.addSections(body.sections);
-        // e50ec05381ab72a6be436031734bc866d0cedb3fe7de9a2629454ebb5cc255df
-        // e50ec05381ab72a6be436031734bc866d0cedb3fe7de9a2629454ebb5cc255df
+
         // we check that the hash of the body is consistent with the body hash contained in the header
         const computedBodyHash = mb.computeBodyHash();
         const areBodyHashMatching = Utils.binaryIsEqual(bodyHashContainedInHeader, computedBodyHash)
@@ -419,15 +415,9 @@ export class Microblock {
         this.hash = Microblock.computeMicroblockHash(this.header);
     }
 
-   
-
-
-
     computeBodyHash() {
         return Microblock.computeBodyHashFromSections(this.sections)
     }
-
-
 
     serializeHeader(): Uint8Array {
         return BlockchainUtils.encodeMicroblockHeader(this.header);
@@ -464,10 +454,6 @@ export class Microblock {
         return {microblockHash, headerData, bodyHash, bodyData, microblockData};
     }
 
-
-    
-
-
     /**
      *
      * Returns the first section for which the given callback function returns true.
@@ -479,7 +465,6 @@ export class Microblock {
         if (section === undefined) throw new SectionNotFoundError()
         return section;
     }
-
 
     /**
      * Retrieves the total number of sections.
@@ -769,7 +754,7 @@ export class Microblock {
         if (section === undefined) throw new SectionNotFoundError();
         return section
     }
-    
+
     toString(): string {
         const encoder = EncoderFactory.bytesToHexEncoder();
         let output = `Microblock:\n`;
@@ -779,7 +764,7 @@ export class Microblock {
         output += `    Microblock type: ${this.header.microblockType} or ${this.type}\n`;
         output += `    Magic String: ${this.header.magicString}\n`;
         output += `    Protocol Version: ${this.header.protocolVersion}\n`;
-        output += `    Fees payer account: ${this.header.feesPayerAccount}\n`;
+        output += `    Fees payer account: ${encoder.encode(this.header.feesPayerAccount)}\n`;
         output += `    Height: ${this.header.height}\n`;
         output += `    Previous Hash: ${encoder.encode(this.header.previousHash)}\n`;
         output += `    Timestamp: ${this.header.timestamp}\n`;

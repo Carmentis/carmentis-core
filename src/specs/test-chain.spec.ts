@@ -14,7 +14,7 @@ import {Utils} from "../common/utils/utils";
 const NODE_URL = "http://localhost:26657";
 import * as v from 'valibot';
 import {ProtocolVariablesSchema} from "../common/type/valibot/blockchain/protocol/ProtocolVariables";
-import {FeesCalculationFormulaFactory} from "../common/blockchain/feesCalculator/FeesCalcuationFormulaFactory";
+import {FeesCalculationFormulaFactory} from "../common/blockchain/feesCalculator/FeesCalculationFormulaFactory";
 
 describe('Chain test', () => {
     const TEST_TIMEOUT = 45000;

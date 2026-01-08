@@ -8,13 +8,13 @@ export const Economics = {
 
 function getAccountTypeFromIdentifier(accountIdentifier: Uint8Array): number {
   if(accountIdentifier.length != 32) {
-    throw `invalid account identifier`;
+    throw new Error(`invalid account identifier`);
   }
   if(accountIdentifier.slice(0, -1).every((v: number) => v == 0x00)) {
     const type = accountIdentifier[31];
 
     if(type == ECO.ACCOUNT_STANDARD || !ECO.ACCOUNT_NAMES[type]) {
-      throw `special account format detected, but with an invalid type (${type})`;
+      throw new Error(`special account format detected, but with an invalid type (${type})`);
     }
     return type;
   }
@@ -23,7 +23,7 @@ function getAccountTypeFromIdentifier(accountIdentifier: Uint8Array): number {
 
 function getSpecialAccountTypeIdentifier(type: number): Uint8Array {
   if(type == ECO.ACCOUNT_STANDARD || !ECO.ACCOUNT_NAMES[type]) {
-    throw `${type} is not a valid special account type`;
+    throw new Error(`${type} is not a valid special account type`);
   }
   const identifier = new Uint8Array(32);
   identifier[31] = type;

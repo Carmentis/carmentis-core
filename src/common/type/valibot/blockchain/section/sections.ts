@@ -301,6 +301,7 @@ export const SectionSchema = val.variant(
         AccountEscrowTransferSectionSchema,
         AccountEscrowSettlementSectionSchema,
         AccountStakeSectionSchema,
+        AccountUnstakeSectionSchema,
 
         ValidatorNodeCreationSectionSchema,
         ValidatorNodeCometbftPublicKeyDeclarationSectionSchema,

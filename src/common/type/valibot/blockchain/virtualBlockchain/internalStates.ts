@@ -98,6 +98,10 @@ export type ApplicationLedgerActor = val.InferOutput<typeof ApplicationLedgerAct
  * Describes the local state of the application ledger.
  */
 export const ApplicationLedgerInternalStateObjectSchema = val.object({
+    /**
+     * This field contains the list of additional writers that are allowed to write to the virtual blockchain.
+     */
+    allowedAdditionalWriters: val.array(accountId()),
     allowedSignatureSchemeIds: val.array(number()),
     allowedPkeSchemeIds: val.array(number()),
     applicationId: accountId(),

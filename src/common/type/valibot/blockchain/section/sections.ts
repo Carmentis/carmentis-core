@@ -14,6 +14,12 @@ export const SignatureSectionSchema = val.object({
 })
 export type SignatureSection = val.InferOutput<typeof SignatureSectionSchema>;
 
+export const AllowedAdditionalWriterSectionSchema = val.object({
+    type: val.literal(SectionType.ALLOWED_ADDITIONAL_WRITER),
+    allowedWriterAccountId: uint8array(),
+})
+export type AllowedAdditionalWriterSection = val.InferOutput<typeof AllowedAdditionalWriterSectionSchema>;
+
 // ---------------------------------------------------------------------------
 // Protocol Sections
 // ---------------------------------------------------------------------------
@@ -288,6 +294,7 @@ export const SectionSchema = val.variant(
     "type",
     [
         SignatureSectionSchema,
+        AllowedAdditionalWriterSectionSchema,
 
         ProtocolCreationSectionSchema,
         ProtocolUpdateSectionSchema,

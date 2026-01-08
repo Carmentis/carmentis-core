@@ -28,6 +28,7 @@ export class ApplicationLedgerMicroblockStructureChecker implements IMicroblockS
                     [SectionConstraint.ANY, SectionType.APP_LEDGER_SHARED_SECRET],
                     [SectionConstraint.ANY, SectionType.APP_LEDGER_CHANNEL_CREATION],
                     [SectionConstraint.ANY, SectionType.APP_LEDGER_CHANNEL_INVITATION],
+                    [SectionConstraint.ANY, SectionType.ALLOWED_ADDITIONAL_WRITER],
                 ]
             );
             checker.expects(SectionConstraint.ONE, SectionType.SIGNATURE);

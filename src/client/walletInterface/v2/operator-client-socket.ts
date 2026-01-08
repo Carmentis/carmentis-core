@@ -60,7 +60,7 @@ export class CarmentisWebExtensionCaller {
     }
 
 }
-
+/*
 export abstract class OperatorClientSocket<T> {
     private operatorEndpoint: string;
     private socket: Socket;
@@ -134,15 +134,7 @@ export abstract class OperatorClientSocket<T> {
     }
 }
 
-export class AuthenticationByPublicKeySocket extends OperatorClientSocket<{challenge: string, signature: string, publicKey: string}> {
-    constructor(operatorEndpoint: string) {
-        super(operatorEndpoint);
-    }
+ */
 
-    async authenticate(challenge: string) {
-        const encoder = EncoderFactory.defaultBytesToStringEncoder();
-        return this.sendMessage( SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY, { challenge: encoder.decode(challenge) });
-    }
-}
 
 

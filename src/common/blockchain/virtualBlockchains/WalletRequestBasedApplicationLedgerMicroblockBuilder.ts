@@ -34,13 +34,13 @@ import {
     ApplicationLedgerSharedSecretSection,
     Section
 } from "../../type/valibot/blockchain/section/sections";
+import {IProvider} from "../../providers/IProvider";
 
-export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedgerMicroblockBuilder {
+export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends ApplicationLedgerMicroblockBuilder {
 
-    static async createFromVirtualBlockchain(provider: Provider, vb: ApplicationLedgerVb, authorPrivateSignatureKey: PrivateSignatureKey) {
-        const copyVb = structuredClone(vb);
-        const mb = await copyVb.createMicroblock();
-        return new ApplicationLedgerStateUpdateRequestHandler(mb, copyVb, provider, authorPrivateSignatureKey)
+    static async createFromVirtualBlockchain(vb: ApplicationLedgerVb) {
+        const mb = await vb.createMicroblock();
+        return new WalletRequestBasedApplicationLedgerMicroblockBuilder(mb, vb)
     }
 
 
@@ -50,10 +50,8 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
     constructor(
         mbUnderConstruction: Microblock,
         vb: ApplicationLedgerVb,
-        provider: Provider,
-        private readonly authorPrivateSignatureKey: PrivateSignatureKey
     ) {
-        super(mbUnderConstruction, vb, provider);
+        super(mbUnderConstruction, vb, vb.getProvider());
     }
 
     private get state() {
@@ -100,6 +98,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
         // add the new actors
         let freeActorId = this.state.getNumberOfActors();
         for (const def of object.actors || []) {
+            console.log(this.state.getAllActors())
             const section: ApplicationLedgerActorCreationSection = {
                 type: SectionType.APP_LEDGER_ACTOR_CREATION,
                 id: freeActorId,
@@ -120,7 +119,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
             const authorPublicEncryptionKey = await hostPrivateDecryptionKey.getPublicKey();
             await this.subscribeActor(
                 authorName,
-                await this.authorPrivateSignatureKey.getPublicKey(),
+                await hostPrivateSignatureKey.getPublicKey(),
                 authorPublicEncryptionKey
             );
         }
@@ -347,7 +346,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
 
     private async generateSharedKeyAndEncryptedSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, guestId: number) {
         const vbGenesisSeed = await this.getGenesisSeed();
-        const hostGuestSharedKey = ApplicationLedgerStateUpdateRequestHandler.deriveHostGuestSharedKey(hostPrivateDecryptionKey, vbGenesisSeed.toBytes(), guestId);
+        const hostGuestSharedKey = WalletRequestBasedApplicationLedgerMicroblockBuilder.deriveHostGuestSharedKey(hostPrivateDecryptionKey, vbGenesisSeed.toBytes(), guestId);
 
 
         // we encrypt the shared key with the guest's public key
@@ -380,7 +379,7 @@ export class ApplicationLedgerStateUpdateRequestHandler extends ApplicationLedge
      *
      * @returns
      */
-    private async subscribeActor(
+    async subscribeActor(
         actorName: string,
         actorPublicSignatureKey: PublicSignatureKey,
         actorPublicEncryptionKey: AbstractPublicEncryptionKey,

@@ -28,6 +28,8 @@ import {
 } from "../type/valibot/provider/abci/AbciResponse";
 import {Crypto} from "../crypto/crypto";
 import {VirtualBlockchain} from "../blockchain/virtualBlockchains/VirtualBlockchain";
+import {NetworkProvider} from "./NetworkProvider";
+import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseSchema";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -107,10 +109,9 @@ export class Provider extends AbstractProvider {
 
     async getAccountIdByPublicKey(
         publicKey: PublicSignatureKey,
-        hashScheme: CryptographicHash = CryptoSchemeFactory.createDefaultCryptographicHash()
     ) {
         const rawPublicKey = await publicKey.getPublicKeyAsBytes();
-        const publicKeyHash = hashScheme.hash(rawPublicKey);
+        const publicKeyHash = Crypto.Hashes.sha256AsBinary(rawPublicKey);
         return await this.getAccountByPublicKeyHash(publicKeyHash);
     }
 
@@ -436,36 +437,18 @@ export class Provider extends AbstractProvider {
         return Hash.from(answer.accountHash);
     }
 
-    publishMicroblock(microblockToPublish: Microblock) {
+    async publishMicroblock(microblockToPublish: Microblock): Promise<Hash> {
         this.logger.info(`Publishing microblock ${microblockToPublish.getHash().encode()}`)
         const {microblockData} = microblockToPublish.serialize();
-        return this.externalProvider.sendSerializedMicroblock(microblockData)
+        await this.externalProvider.sendSerializedMicroblock(microblockData)
+        return microblockToPublish.getHash();
     }
 
-    async loadVirtualBlockchain(vbId: Hash): Promise<VirtualBlockchain> {
-        const vbStatus = await this.getVirtualBlockchainState(vbId.toBytes());
-        if (vbStatus === null) throw new Error(
-            `Virtual Blockchain with hash ${vbId.encode()} does not exist.`
-        );
-        const vbType = vbStatus.type;
-        switch (vbType) {
-            case VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN: return await this.loadAccountVirtualBlockchain(vbId);
-            case VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN: return await this.loadOrganizationVirtualBlockchain(vbId);
-            case VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN: return await this.loadApplicationVirtualBlockchain(vbId);
-            case VirtualBlockchainType.NODE_VIRTUAL_BLOCKCHAIN:  return await this.loadValidatorNodeVirtualBlockchain(vbId);
-            case VirtualBlockchainType.PROTOCOL_VIRTUAL_BLOCKCHAIN: return await this.loadProtocolVirtualBlockchain(vbId);
-            case VirtualBlockchainType.APP_LEDGER_VIRTUAL_BLOCKCHAIN: return await this.loadApplicationLedgerVirtualBlockchain(vbId);
-            default: throw new Error(`Unknown virtual blockchain type: ${vbType}`);
-        }
+    async getNodeStatus(nodeUrl: string): Promise<RPCNodeStatusResponseType> {
+        return NetworkProvider.sendStatusQueryToNodeServer(nodeUrl);
     }
 
-    async loadMicroblockByMicroblockHash(microblockHash: Hash): Promise<Microblock> {
-        this.logger.info(`Loading microblock ${microblockHash.encode()}`)
-        const header = await this.getMicroblockHeader(microblockHash);
-        const body = await this.getMicroblockBody(microblockHash);
-        if (header === null || body === null) throw new Error(`Microblock ${microblockHash.encode()} not found`);
-        return Microblock.loadFromHeaderAndBody(header, body)
-    }
+
 
 
 }

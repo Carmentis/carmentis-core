@@ -4,6 +4,8 @@ import {Microblock} from "../microblock/Microblock";
 import {SECTIONS} from "../../constants/constants";
 import {Logger} from "../../utils/Logger";
 import {MicroblockStructureCheckingError} from "../../errors/carmentis-error";
+import {SectionConstraint} from "./SectionConstraint";
+import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 
 export class ApplicationMicroblockStructureChecker implements IMicroblockStructureChecker {
     private logger = Logger.getMicroblockStructureCheckerLogger();
@@ -12,16 +14,16 @@ export class ApplicationMicroblockStructureChecker implements IMicroblockStructu
             const checker = new StructureChecker(microblock);
 
             checker.expects(
-                checker.isFirstBlock() ? SECTIONS.ONE : SECTIONS.ZERO,
-                SECTIONS.APP_CREATION
+                checker.isFirstBlock() ? SectionConstraint.ONE : SectionConstraint.ZERO,
+                SectionType.APP_CREATION
             );
             checker.group(
-                SECTIONS.AT_LEAST_ONE,
+                SectionConstraint.AT_LEAST_ONE,
                 [
-                    [ SECTIONS.AT_MOST_ONE, SECTIONS.APP_DESCRIPTION ]
+                    [ SectionConstraint.AT_MOST_ONE, SectionType.APP_DESCRIPTION ]
                 ]
             );
-            checker.expects(SECTIONS.ONE, SECTIONS.SIGNATURE);
+            checker.expects(SectionConstraint.ONE, SectionType.SIGNATURE);
             checker.endsHere();
             return true;
         } catch (e) {

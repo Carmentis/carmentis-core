@@ -651,7 +651,7 @@ NODE_MESSAGES[MSG_GENESIS_SNAPSHOT] = {
 // ============================================================================================================================ //
 //  Wallet interface                                                                                                            //
 // ============================================================================================================================ //
-export const WI_MAX_SERVER_URL_LENGTH = 100;
+const WI_MAX_SERVER_URL_LENGTH = 100;
 
 export const WI_QR_CODE: Schema = {
   label: 'WiQrCode',
@@ -749,7 +749,7 @@ WI_MESSAGES[WIMSG_FORWARDED_REQUEST] = {
     { name: 'request',     type: DATA.TYPE_BINARY }
   ]
 };
-
+/*
 export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x00;
 export const WIRQ_DATA_APPROVAL      = 0x01;
 export const WIRQ_GET_EMAIL          = 0x02;
@@ -817,9 +817,12 @@ WI_ANSWERS[WIRQ_GET_USER_DATA] = {
   ]
 };
 
+ */
+
 // ============================================================================================================================ //
 //  Wallet <-> operator network messages                                                                                        //
 // ============================================================================================================================ //
+/*
 export const MSG_ANS_ERROR              = 0x00;
 export const MSG_APPROVAL_HANDSHAKE     = 0x01;
 export const MSG_ACTOR_KEY              = 0x02;
@@ -884,6 +887,8 @@ WALLET_OP_MESSAGES[MSG_ANS_APPROVAL_SIGNATURE] = {
   ]
 };
 
+ */
+
 // ============================================================================================================================ //
 //  All schemas are summarized here for automated translation to interfaces                                                     //
 // ============================================================================================================================ //
@@ -909,8 +914,8 @@ export const ALL_SCHEMAS = {
     { label: 'VbState', list: VB_STATES },
     { label: 'NodeMessage', list: NODE_MESSAGES },
     { label: 'WiMessage', list: WI_MESSAGES },
-    { label: 'WiRequest', list: WI_REQUESTS },
-    { label: 'WiAnswer', list: WI_ANSWERS },
-    { label: 'WalletOpMessage', list: WALLET_OP_MESSAGES }
+    //{ label: 'WiRequest', list: WI_REQUESTS },
+    //{ label: 'WiAnswer', list: WI_ANSWERS },
+    //{ label: 'WalletOpMessage', list: WALLET_OP_MESSAGES }
   ]
 };

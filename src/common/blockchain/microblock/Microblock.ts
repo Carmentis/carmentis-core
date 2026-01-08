@@ -528,9 +528,6 @@ export class Microblock {
      * @return {Uint8Array} The generated digital signature as a byte array.
      */
     async sign(privateKey: PrivateSignatureKey, includeGas: boolean = true): Promise<Uint8Array> {
-        // we need the distinction between sign and verif to sign all sections contained in the microblock (and hence
-        // excluding the last signature when verifying).
-        const numberOfSections = this.sections.length;
         const sections = this.sections;
         const bodyHash = Microblock.computeBodyHashFromSections(sections);
         const headerToBeSigned: MicroblockHeader = {

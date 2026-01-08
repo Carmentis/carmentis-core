@@ -4,6 +4,7 @@ import {Section} from "../type/valibot/blockchain/section/sections";
 const sectionLabelBySectionType: Record<SectionType, string> = {
     // Generic sections
     [SectionType.SIGNATURE]: 'SIGNATURE',
+    [SectionType.ALLOWED_ADDITIONAL_WRITER]: 'ALLOWED_ADDITIONAL_WRITER_CREATION',
 
     // Protocol
     [SectionType.PROTOCOL_CREATION]: 'PROTOCOL_CREATION',

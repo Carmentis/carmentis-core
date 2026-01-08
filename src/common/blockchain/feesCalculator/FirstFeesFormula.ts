@@ -20,13 +20,12 @@ export class FirstFeesFormula implements IFeesFormula {
         const definedGasPrice = microblock.getGasPrice();
         const usedGasPrice = definedGasPrice.isZero() ? FirstFeesFormula.DEFAULT_GAS_PRICE : definedGasPrice;
         const additionalCosts =  this.getAdditionalCosts(signatureSchemeId)
-        return CMTSToken.createAtomic(
-            (
-                ECO.FIXED_GAS_FEE +
-                ECO.GAS_PER_BYTE * totalSize +
-                additionalCosts
-            ) * usedGasPrice.getAmountAsAtomic()
-        );
+        const feesInAtomic =  (
+            ECO.FIXED_GAS_FEE +
+            ECO.GAS_PER_BYTE * totalSize +
+            additionalCosts
+        ) * usedGasPrice.getAmountAsAtomic();
+        return CMTSToken.createAtomic(feesInAtomic);
     }
 
     private getAdditionalCosts(signatureSchemeId: SignatureSchemeId) {

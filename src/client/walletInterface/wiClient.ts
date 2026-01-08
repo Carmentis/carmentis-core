@@ -6,6 +6,21 @@ import {SchemaSerializer, SchemaUnserializer} from "../../common/data/schemaSeri
 import {randomBytes} from "@noble/post-quantum/utils";
 import {bytesToHex, hexToBytes} from "@noble/ciphers/utils";
 import {EncoderFactory, EncoderInterface} from "../../common/utils/encoder";
+import {
+  WalletRequest,
+  WalletRequestType,
+  WalletResponse,
+  WalletResponseType
+} from "../../common/type/valibot/walletRequest/walletRequests";
+import {
+  WalletRequestEncoder,
+  WalletRequestValidation
+} from "../../common/type/valibot/walletRequest/WalletRequestEncoder";
+import {
+  ClientBridgeMessage,
+  ClientBridgeMessage_Request,
+  ClientBridgeMessageType
+} from "../../common/type/valibot/clientBridge/clientBridgeMessages";
 
 //import { wiError } from "../../common/errors/error";
 
@@ -21,7 +36,10 @@ export class wiClient {
   constructor() {
     window.addEventListener(
       "message",
-      event => this.messageCallback && this.messageCallback(event),
+      event => {
+        console.log(event);
+        this.messageCallback && this.messageCallback(event);
+      },
       false
     );
     this.encoder = EncoderFactory.defaultBytesToStringEncoder();
@@ -102,7 +120,7 @@ export class wiClient {
   /**
    * Authenticates using a public key based mechanism by verifying the digital signature of a challenge.
    *
-   * @param {string} challengeString - An optional hexadecimal string representing the challenge.
+   * @param {string} b64EncodedChallenge - An optional hexadecimal string representing the challenge.
    *                                    If not provided, a random challenge will be generated.
    * @return {Promise<{
    *     challenge: string,
@@ -114,19 +132,28 @@ export class wiClient {
    *                           - signature: The digital signature verifying the challenge.
    * @throws {Error} If the public key signature verification fails.
    */
-  async authenticationByPublicKey(challengeString: any) {
-    let challenge;
-
-    if(challengeString == undefined) {
-      challenge = randomBytes(32);
-      challengeString = bytesToHex(challenge);
-    }
-    else {
-      challenge = hexToBytes(challengeString);
+  async authenticationByPublicKey(b64EncodedChallenge: string) {
+    // attempt to decode the challenge to be sure it is b64
+    const b64 = EncoderFactory.bytesToBase64Encoder();
+    try {
+      b64.decode(b64EncodedChallenge)
+    } catch (e) {
+      throw new Error(`Challenge is not a valid base64 string: got ${b64EncodedChallenge}`);
     }
 
     console.log("[wiClient] performing the authentication request...")
+    const response = await this.request({
+      type: WalletRequestType.AUTH_BY_PUBLIC_KEY,
+      base64EncodedChallenge: b64EncodedChallenge,
+    })
 
+    if (response.type === WalletResponseType.AUTH_BY_PUBLIC_KEY) {
+      return response;
+    } else {
+      throw new Error("Authentication failed: unknown response type");
+    }
+
+  /*
     let answer = await this.request<{publicKey: string, signature: string}>(
       SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY,
       {
@@ -144,13 +171,11 @@ export class wiClient {
       publicKey: answer.publicKey,
       signature: answer.signature
     };
+
+   */
   }
 
-  /**
-   * Retrieves the email information by sending a request using a predefined schema.
-   *
-   * @return {Promise<{email: string}>} A promise that resolves to an object containing the email address.
-   */
+  /*
   async getEmail() {
     let answer = await this.request(
       SCHEMAS.WIRQ_GET_EMAIL,
@@ -165,12 +190,9 @@ export class wiClient {
     };
   }
 
-  /**
-   * Retrieves user data based on the provided required data.
-   *
-   * @param {Object} requiredData - The data required to request user information.
-   * @return {Promise<Object>} A promise that resolves to an object containing the user's email.
    */
+
+  /*
   async getUserData(requiredData: any) {
     let answer = await this.request(
       SCHEMAS.WIRQ_GET_USER_DATA,
@@ -187,6 +209,7 @@ export class wiClient {
     };
   }
 
+   */
 
   /**
    * Data approval process.
@@ -197,7 +220,18 @@ export class wiClient {
    * @throws {Error} If the process fails.
    */
   async getApprovalData(anchorRequestId: string) {
-    const encoder = EncoderFactory.defaultBytesToStringEncoder();
+    const response = await this.request({
+      type: WalletRequestType.DATA_APPROVAL,
+      anchorRequestId: anchorRequestId,
+      serverUrl: this.serverUrl
+    });
+
+    if (response.type === WalletResponseType.DATA_APPROVAL) {
+      return response;
+    } else {
+      throw new Error("Data approval failed: unknown response type");
+    }
+    /*
     let answer = await this.request<{vbHash: Uint8Array, mbHash: Uint8Array, height: number}>(
       SCHEMAS.WIRQ_DATA_APPROVAL,
       {
@@ -206,18 +240,22 @@ export class wiClient {
       }
     );
 
-    return answer;
+     */
+
+    //return answer;
   }
 
-  async request<T = unknown>(type: any, object: any): Promise<T> {
-    console.log("[client] request", type, object);
+  private async request(request: WalletRequest): Promise<WalletResponse> {
 
+    console.log("[client] request", request);
+    /*
     const schemaSerializer = new SchemaSerializer(SCHEMAS.WI_REQUESTS[type]);
     let request = schemaSerializer.serialize(object);
+     */
 
-    let reqObject = {
-      requestType: type,
-      request    : request,
+    let reqObject: ClientBridgeMessage_Request = {
+      type: ClientBridgeMessageType.REQUEST,
+      walletRequest: request,
       deviceId   : new Uint8Array(32),
       withToken  : 0
     };
@@ -230,7 +268,8 @@ export class wiClient {
       _this.socket = clientSocket.getSocket(_this.serverUrl, onConnect.bind(_this), onData.bind(_this));
 
       // @ts-expect-error TS(2339): Property 'socket' does not exist on type 'wiClient... Remove this comment to see the full error message
-      _this.socket.sendMessage(SCHEMAS.WIMSG_REQUEST, reqObject);
+      //_this.socket.sendMessage(SCHEMAS.WIMSG_REQUEST, reqObject);
+      _this.socket.sendMessage(reqObject);
       _this.buttonCallback = sendRequestToExtension;
 
       function sendRequestToExtension() {
@@ -247,7 +286,11 @@ export class wiClient {
           console.log("[wiClient] received answer:", event);
 
           if(event.data.from == "carmentis/walletResponse") {
+            const walletResponse = WalletRequestValidation.validateWalletResponse(event.data.data);
+            resolve(walletResponse);
+          }
 
+            /*
             let object = event.data.data,
                 schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]),
                 //binary = base64.decodeBinary(object.answer, base64.BASE64),
@@ -256,28 +299,34 @@ export class wiClient {
 
             resolve(answerObject as T);
           }
+
+             */
         };
 
+        /*
         let message = {
           requestType: type,
           request: _this.encoder.encode(request)
           //request: base64.encodeBinary(request, base64.BASE64)
         };
 
+         */
+
         // @ts-expect-error TS(2339): Property 'carmentisWallet' does not exist on type ... Remove this comment to see the full error message
-        window.carmentisWallet.openPopup(message);
+        window.carmentisWallet.openPopup(request);
       }
 
       function onConnect() {
         console.log("[client] connected");
       }
 
-      function onData(id: any, object: any) {
-        console.log("[client] incoming data", id, object);
-
+      function onData(res: ClientBridgeMessage) {
+        console.log("[client] incoming data", res);
+        const id = res.type;
         switch(id) {
-          case SCHEMAS.WIMSG_UPDATE_QR: {
-            let qr = qrCode.create(object.qrId, object.timestamp, _this.serverUrl);
+          case ClientBridgeMessageType.UPDATE_QR: {
+            const {base64EncodedQrId, timestamp} = res;
+            let qr = qrCode.create(base64EncodedQrId, timestamp, _this.serverUrl);
 
             _this.qrElement.setAttribute("qrData", qr.data);
             if ('html' in _this.qrElement) _this.qrElement.html(qr.imageTag);
@@ -285,11 +334,8 @@ export class wiClient {
             break;
           }
 
-          case SCHEMAS.WIMSG_FORWARDED_ANSWER: {
-            const schemaSerializer = new SchemaUnserializer(SCHEMAS.WI_ANSWERS[object.answerType]);
-            let answerObject = schemaSerializer.unserialize(object.answer);
-
-            resolve(answerObject as T);
+          case ClientBridgeMessageType.FORWARDED_ANSWER: {
+            resolve(res.walletResponse);
             break;
           }
         }

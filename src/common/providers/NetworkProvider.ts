@@ -233,7 +233,6 @@ export class NetworkProvider implements IExternalProvider {
 
     async getVirtualBlockchainUpdate(virtualBlockchainId: Uint8Array, knownHeight: number) {
         this.requestLogger.info(`Request virtual blockchain update for virtualBlockchainId: ${Utils.binaryToHexa(virtualBlockchainId)}, knownHeight: ${knownHeight}`);
-
         const answer = await this.abciQuery({
             requestType: AbciRequestType.GET_VIRTUAL_BLOCKCHAIN_UPDATE,
             virtualBlockchainId: virtualBlockchainId,
@@ -300,7 +299,10 @@ export class NetworkProvider implements IExternalProvider {
     }
 
     async abciQuery(request: AbciRequest): Promise<AbciResponse> {
-        return await NetworkProvider.sendABCIQueryToNodeServer(this.nodeUrl, AbciQueryEncoder.encodeAbciRequest(request));
+        if (request === undefined) throw new IllegalParameterError("Cannot send an undefined request");
+        this.logger.debug(`Sending ABCI request:`, request)
+        const encodedRequest = AbciQueryEncoder.encodeAbciRequest(request);
+        return await NetworkProvider.sendABCIQueryToNodeServer(this.nodeUrl, encodedRequest);
     }
 
     static async sendABCIQueryToNodeServer(nodeUrl: string, serializedRequest: Uint8Array): Promise<AbciResponse> {

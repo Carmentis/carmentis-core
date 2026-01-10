@@ -39,8 +39,8 @@ export const WalletResponseAuthByPublicKeySchema = v.object({
 
 export const WalletResponseDataApprovalSchema = v.object({
     type: v.literal(WalletResponseType.DATA_APPROVAL),
-    vbHash: binary(),
-    mbHash: binary(),
+    b64VbHash: v.string(),
+    b64MbHash: v.string(),
     height: v.number()
 });
 

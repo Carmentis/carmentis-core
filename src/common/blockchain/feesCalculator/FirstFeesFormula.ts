@@ -44,18 +44,33 @@ export class FirstFeesFormula implements IFeesFormula {
         const sections = microblock.getAllSections();
         if (sections.length === 0) return 0;
 
-        // if the last section is a signature, we exclude it from the computation of the total size
-        const isLastSectionSig = sections[sections.length - 1].type === SectionType.SIGNATURE;
-        let sectionsUsedInComputeOfSize = isLastSectionSig ?
-            sections.slice(0, sections.length - 1) :
-            sections;
-        const totalSize = sectionsUsedInComputeOfSize.reduce(
+        // if the gas fees are set (non-zero) in the microblock then, with high probabilities, the microblock
+        // will not be modified later one and so we exclude the last signature section.
+        // otherwise, the microblock will be modified later one and so we include the last signature section.
+        const gasFeesContainedInMicroblock = microblock.getGas();
+        if (gasFeesContainedInMicroblock.isZero()) {
+            let totalSize = this.getSizeOfListOfSections(sections);
+            return totalSize
+        } else {
+            // if the last section is a signature, we exclude it from the computation of the total size
+            const isLastSectionSig = sections[sections.length - 1].type === SectionType.SIGNATURE;
+            let sectionsUsedInComputeOfSize = isLastSectionSig ?
+                sections.slice(0, sections.length - 1) :
+                sections;
+            const totalSize = this.getSizeOfListOfSections(sectionsUsedInComputeOfSize)
+            return totalSize
+        }
+
+
+    }
+
+    private getSizeOfListOfSections(sections: Section[]): number {
+        return sections.reduce(
             (total: number, section: Section) => {
                 const serializedSection = BlockchainUtils.encodeSection(section)
                 return total + serializedSection.length
             },
             0
         );
-        return totalSize
     }
 }

@@ -312,6 +312,16 @@ export class ProtocolError extends CarmentisError {
     }
 }
 
+export class ActorNotSubscribedError extends ProtocolError {
+    constructor(private actorId: number, private actorName: string) {
+        super(`Actor ${actorName} (id ${actorId})  has not subscribed to a public encryption key.`);
+    }
+
+    getNotSubscribedActorName() {
+        return this.actorName;
+    }
+}
+
 export class SectionNotFoundError extends ProtocolError {
     constructor() {
         super(`Section not found`);

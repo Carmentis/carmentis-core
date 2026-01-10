@@ -1,4 +1,4 @@
-import {BytesToHexEncoder, EncoderFactory, EncoderInterface} from "../utils/encoder";
+import {BytesToBase64Encoder, BytesToHexEncoder, EncoderFactory, EncoderInterface} from "../utils/encoder";
 
 /**
  * Represents a hash object that allows encoding and creation from a string or Uint8Array.
@@ -29,10 +29,14 @@ export class Hash {
         const isString = typeof hash === "string";
         const isBinary = hash instanceof Uint8Array;
         if (!isString && !isBinary) throw new TypeError(`Expected hash of type string or Uint8Array: got ${typeof hash}`);
-        const hexEncoder = EncoderFactory.bytesToHexEncoder();
+        const encoder = EncoderFactory.bytesToHexEncoder();
         return new Hash(
-            typeof hash == 'string' ? hexEncoder.decode(hash) : hash
+            typeof hash == 'string' ? encoder.decode(hash) : hash
         )
+    }
+
+    static fromHex(hash: string) {
+        return new Hash( EncoderFactory.bytesToHexEncoder().decode(hash) )
     }
 
     /**
@@ -45,7 +49,7 @@ export class Hash {
      * const hexString = hash.encode(); // '0x1234567890abcdef'
      * ```
      *
-     * @param {EncoderInterface<Uint8Array, string>} [encoder=new BytesToHexEncoder()] - The encoder used to encode the hash. Defaults to a BytesToHexEncoder.
+     * @param {EncoderInterface<Uint8Array, string>} [encoder=new BytesToBase64Encoder()] - The encoder used to encode the hash. Defaults to a BytesToBase64Encoder.
      * @return {string} The encoded string representation of the hash.
      */
     encode(encoder: EncoderInterface<Uint8Array, string> = new BytesToHexEncoder()): string {
@@ -63,7 +67,7 @@ export class Hash {
      * @return {Uint8Array} The hash value as a Uint8Array.
      */
     toBytes(): Uint8Array {
-        return this.hash
+        return new Uint8Array(this.hash);
     }
 
     /**

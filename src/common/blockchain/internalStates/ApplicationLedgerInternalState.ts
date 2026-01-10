@@ -171,4 +171,8 @@ export class ApplicationLedgerInternalState implements IInternalState {
     getAllActors() {
         return this.internalState.actors;
     }
+
+    getAllChannels() {
+        return this.internalState.channels;
+    }
 }

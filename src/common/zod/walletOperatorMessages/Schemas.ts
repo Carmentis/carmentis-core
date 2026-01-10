@@ -32,7 +32,7 @@ export const WalletInteractiveAnchoringRequestActorKeySchema = v.object({
 export const WalletInteractiveAnchoringRequestApprovalSignatureSchema = v.object({
     type: v.literal(WalletInteractiveAnchoringRequestType.APPROVAL_SIGNATURE),
     anchorRequestId: v.string(),
-    signature: uint8array()
+    b64Signature: v.string()
 });
 
 export const WalletInteractiveAnchoringRequestSchema = v.variant("type", [
@@ -49,18 +49,18 @@ export const WalletInteractiveAnchoringResponseErrorSchema = v.object({
 
 export const WalletInteractiveAnchoringResponseActorKeyRequiredSchema = v.object({
     type: v.literal(WalletInteractiveAnchoringResponseType.ACTOR_KEY_REQUIRED),
-    genesisSeed: uint8array()
+    b64GenesisSeed: v.string()
 });
 
 export const WalletInteractiveAnchoringResponseApprovalDataSchema = v.object({
     type: v.literal(WalletInteractiveAnchoringResponseType.APPROVAL_DATA),
-    serializedMicroblock: uint8array()
+    b64SerializedMicroblock: v.string()
 });
 
 export const WalletInteractiveAnchoringResponseApprovalSignatureSchema = v.object({
     type: v.literal(WalletInteractiveAnchoringResponseType.APPROVAL_SIGNATURE),
-    vbHash: uint8array(),
-    mbHash: uint8array(),
+    b64VbHash: v.string(),
+    b64MbHash: v.string(),
     height: v.number()
 });
 

@@ -17,7 +17,7 @@ function sha256AsBinary(data: Uint8Array): Uint8Array {
     throw new InternalError(`Argument passed to compute sha256 is not an instance of Uint8Array: got ${typeof data}`);
   }
   const hash = H256(data);
-  logger.debug(`Computed sha256 hash for data ${Utils.binaryToHexa(data)} (${data.length} bytes): ${Utils.binaryToHexa(hash)}`);
+  //logger.debug(`Computed sha256 hash for data ${Utils.binaryToHexa(data)} (${data.length} bytes): ${Utils.binaryToHexa(hash)}`);
   return hash;
 }
 

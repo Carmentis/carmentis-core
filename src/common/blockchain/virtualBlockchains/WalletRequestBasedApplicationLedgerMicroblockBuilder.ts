@@ -1,6 +1,5 @@
 import {ApplicationLedgerMicroblockBuilder} from "./ApplicationLedgerMicroblockBuilder";
 import {ApplicationLedgerVb} from "./ApplicationLedgerVb";
-import {AppLedgerStateUpdateRequest} from "../../type/AppLedgerStateUpdateRequest";
 import {
     AbstractPrivateDecryptionKey,
     AbstractPublicEncryptionKey
@@ -35,12 +34,27 @@ import {
     Section
 } from "../../type/valibot/blockchain/section/sections";
 import {IProvider} from "../../providers/IProvider";
+import {Hash} from "../../entities/Hash";
+import {
+    AppLedgerMicroblockBuildRequest,
+    AppLedgerMicroblockBuildRequestValidation
+} from "../../type/AppLedgerStateUpdateRequest";
 
 export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends ApplicationLedgerMicroblockBuilder {
 
-    static async createFromVirtualBlockchain(vb: ApplicationLedgerVb) {
+    static async createFromVirtualBlockchain(applicationId: Hash, vb: ApplicationLedgerVb) {
         const mb = await vb.createMicroblock();
-        return new WalletRequestBasedApplicationLedgerMicroblockBuilder(mb, vb)
+        const builder = new WalletRequestBasedApplicationLedgerMicroblockBuilder(mb, vb)
+        vb.setMicroblockSearchFailureFallback(builder);
+        if (vb.isEmpty()) {
+            const section: Section = {
+                type: SectionType.APP_LEDGER_CREATION,
+                applicationId: applicationId.toBytes()
+            };
+            mb.addSection(section)
+            await builder.updateStateWithSection(section);
+        }
+        return builder;
     }
 
 
@@ -69,45 +83,25 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
 
     async createMicroblockFromStateUpdateRequest(
         hostIdentity: ICryptoKeyHandler,
-        object: AppLedgerStateUpdateRequest
+        request: AppLedgerMicroblockBuildRequest
     ) {
+        const object = AppLedgerMicroblockBuildRequestValidation.validate(request);
         const hostPrivateDecryptionKey = await this.getActorPrivateDecryptionKey(hostIdentity);
         const hostPrivateSignatureKey = await this.getActorPrivateSignatureKey(hostIdentity);
-        const validator = new SchemaValidator(SCHEMAS.RECORD_DESCRIPTION);
-        validator.validate(object);
-
-        // if there's a reference to an existing VB, load it
-        /* THIS SHOULD BE DONE OUTSIDE OF THE APPLICATIONLEDGERVB!!!
-        if (object.virtualBlockchainId) {
-            await this.vb.load(Utils.binaryFromHexa(object.virtualBlockchainId));
-        }
-         */
 
 
-        const isBuildingGenesisMicroBlock = this.vb.isEmpty();
-        if (isBuildingGenesisMicroBlock) {
-            // genesis -> link the application ledger with the application id
-            const section: Section = {
-                type: SectionType.APP_LEDGER_CREATION,
-                applicationId: Utils.binaryFromHexa(object.applicationId)
-            }
-            this.mbUnderConstruction.addSection(section);
-            await this.updateStateWithSection(section);
-        }
 
         // add the new actors
         let freeActorId = this.state.getNumberOfActors();
         for (const def of object.actors || []) {
             console.log(this.state.getAllActors())
-            const section: ApplicationLedgerActorCreationSection = {
-                type: SectionType.APP_LEDGER_ACTOR_CREATION,
-                id: freeActorId,
-                actorType: ActorType.UNKNOWN,
-                name: def.name
+            const actorName = def.name;
+            if (this.vb.isActorDefined(actorName)) {
+                console.log(`Skipping actor creation: ${actorName} already created`)
+            } else {
+                await this.createActor(freeActorId, def.name)
+                freeActorId = freeActorId + 1;
             }
-            this.mbUnderConstruction.addSection(section)
-            await this.updateStateWithSection(section);
-            freeActorId = freeActorId + 1;
         }
 
 
@@ -115,6 +109,7 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         // subscribed (it should also be created above so it must be specified in the actors section).
         const authorName = object.author;
         const authorId = this.getActorIdFromActorName(authorName);
+        const isBuildingGenesisMicroBlock = this.vb.isEmpty();
         if (isBuildingGenesisMicroBlock) {
             const authorPublicEncryptionKey = await hostPrivateDecryptionKey.getPublicKey();
             await this.subscribeActor(
@@ -184,9 +179,12 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         for (const channelData of channelDataList) {
             const {isPrivate: isPrivateChannel, channelId} = channelData;
             if (isPrivateChannel) {
+                const logger = Logger.getLogger(["critical"]);
+                const height = this.vb.getHeight() + 1; // we are constructing a microblock so the height should be incremented to consider this microblock
                 const channelKey = await this.vb.getChannelKey(authorId, channelId, hostIdentity);
-                const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, this.vb.getHeight(), channelId);
-                const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, this.vb.getHeight(), channelId);
+                const channelSectionKey = this.vb.deriveChannelSectionKey(channelKey, height, channelId);
+                const channelSectionIv = this.vb.deriveChannelSectionIv(channelKey, height, channelId);
+                logger.debug(`Channel key ${channelKey} at height ${height} and channel id ${channelId} -> Channel section key: ${channelSectionKey} (iv ${channelSectionIv}) `)
                 const encryptedData = Crypto.Aes.encryptGcm(channelSectionKey, channelData.data, channelSectionIv);
                 const section: ApplicationLedgerPrivateChannelDataSection = {
                     type: SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA,
@@ -232,8 +230,21 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         return this.mbUnderConstruction
     }
 
+    async createActor(actorId: number, actorName: string) {
+        console.log(`Creating actor ${actorName} (id ${actorId})`)
+        const section: ApplicationLedgerActorCreationSection = {
+            type: SectionType.APP_LEDGER_ACTOR_CREATION,
+            id: actorId,
+            actorType: ActorType.UNKNOWN,
+            name: actorName
+        }
+        this.mbUnderConstruction.addSection(section)
+        await this.updateStateWithSection(section);
+    }
+
 
     async inviteActorOnChannel(actorName: string, channelName: string, actorIdentity: ICryptoKeyHandler) {
+        console.log("Inviting actor " + actorName + " on channel " + channelName)
         const channelId = this.state.getChannelIdFromChannelName(channelName);
         const actorId = this.getActorIdFromActorName(actorName);
         Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId} for channel ${channelName}`)
@@ -261,6 +272,7 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         let hostGuestSharedKey: AES256GCMSymmetricEncryptionKey;
         const hostPrivateDecryptionKey = await this.getActorPrivateDecryptionKey(actorIdentity);
         if (hostGuestEncryptedSharedKey !== undefined) {
+            console.log("Found existing shared key, attempting to decrypt it")
             try {
                 hostGuestSharedKey = AES256GCMSymmetricEncryptionKey.createFromBytes(
                     await hostPrivateDecryptionKey.decrypt(hostGuestEncryptedSharedKey)
@@ -273,6 +285,7 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
                 }
             }
         } else {
+            console.log("No existing shared key found, creating a new one")
             hostGuestSharedKey = await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
         }
 
@@ -384,13 +397,22 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         actorPublicSignatureKey: PublicSignatureKey,
         actorPublicEncryptionKey: AbstractPublicEncryptionKey,
     ) {
-        const actorId = this.getActorIdFromActorName(actorName);
+        console.debug(`Subscribing ${actorName}`)
+
+        // if the actor currently do not exist, create it
+        if (!this.vb.isActorDefined(actorName)) {
+            console.log(`It appears that ${actorName} does not exist: create it`)
+            const freeActorId = this.vb.getNumberOfActors();
+            await this.createActor(freeActorId, actorName);
+        }
+
 
         // The actor type is currently not used in the protocol
         const unknownActorType = ActorType.UNKNOWN;
 
         // The organization id is currently not used in the protocol.
         // Initially, it has been designed to handle the case where a user from another organization is added to an external vb.
+        const actorId = this.getActorIdFromActorName(actorName);
         const nullOrganizationId = Utils.getNullHash();
         const section: ApplicationLedgerActorSubscriptionSection = {
             type: SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION,

@@ -18,9 +18,13 @@ import {
     WalletInteractiveAnchoringRequestApprovalHandshake, WalletInteractiveAnchoringRequestApprovalSignature,
     WalletInteractiveAnchoringRequestType, WalletInteractiveAnchoringResponse, WalletInteractiveAnchoringResponseType
 } from "../../common/zod/walletOperatorMessages/Schemas";
-import {EncoderFactory} from "../../common/utils/encoder";
-import {WalletInteractiveAnchoringEncoder} from "../../common/utils/WalletInteractiveAnchoringEncoder";
+import {BytesToBase64Encoder, EncoderFactory} from "../../common/utils/encoder";
+import {
+    WalletInteractiveAnchoringEncoder,
+    WalletInteractiveAnchoringValidation
+} from "../../common/utils/WalletInteractiveAnchoringEncoder";
 import axios from "axios";
+import {Hash} from "../../common/entities/Hash";
 
 export abstract class wiWallet<T> {
 
@@ -78,15 +82,15 @@ export abstract class wiWallet<T> {
         console.log(`Sending request to operator at ${endpoint}: `, request)
 
         // encode the payload
-        const serializedRequest = WalletInteractiveAnchoringEncoder.encodeRequest(request);
-        const encoder = EncoderFactory.defaultBytesToStringEncoder();
-        const b64 = encoder.encode(serializedRequest);
+        //const serializedRequest = WalletInteractiveAnchoringEncoder.encodeRequest(request);
+        //const encoder = EncoderFactory.bytesToBase64Encoder();
+        //const b64 = encoder.encode(serializedRequest);
 
         try {
 
             // send the request to the provided url
 
-            const response = await axios.post(endpoint, { data: b64 }, {
+            const httpResponse = await axios.post(endpoint, { data: request }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
@@ -94,43 +98,10 @@ export abstract class wiWallet<T> {
             });
 
             // parse the response
-            const base64EncodedResponse: string = response.data;
-            const serializedRespnse = encoder.decode(base64EncodedResponse);
-            const responseObject = WalletInteractiveAnchoringEncoder.decodeResponse(serializedRespnse);
-            console.log("Received response from operator: ", responseObject)
-            return responseObject;
-
-
-            // TODO: remove if not correct
-            /*
-            if (!responseObject.success) {
-                resolve(responseObject)
-                return
-            }
-
-             */
-
-            /*
-            let binary = encoder.decode(responseObject.data);
-            const serializer = new MessageUnserializer(schema)
-            let { type, object } = serializer.unserialize(binary);
-            console.debug("Receiving object from operator:", object);
-             */
-
-            // update the response
-            //lastAnswerId = type;
-
-            /*
-            if (type == SCHEMAS.MSG_ANS_ERROR) {
-                // @ts-expect-error TS(2556): A spread argument must either have a tuple type or... Remove this comment to see the full error message
-                let error = new Error(object.error.type, object.error.id, ...object.error.arg);
-                reject(error);
-            } else {
-                resolve(object);
-            }
-
-             */
-
+            const unverifiedResponse: object = httpResponse.data;
+            console.log(`Received  response:`, JSON.stringify(unverifiedResponse))
+            const response = WalletInteractiveAnchoringValidation.validateResponse(unverifiedResponse);
+            return response
 
         } catch (error) {
             let errorMessage = "Unspecified error occurred while communicating with the operator"
@@ -162,7 +133,7 @@ export abstract class wiWallet<T> {
             anchorRequestId,
         }
         const handshakeResponse = await this.sendRequestToOperator(object.serverUrl, handshakeRequest);
-        console.log("Received getApprovalData answer: ")
+        console.log(`Received getApprovalData response:`, JSON.stringify(handshakeResponse))
 
 
 
@@ -171,26 +142,16 @@ export abstract class wiWallet<T> {
             console.debug("Operator asking for actor key: proceeding to the actor key generation")
 
             // asserts that the genesisSeed is provided by the operator
-            const genesisSeed = handshakeResponse.genesisSeed;
-            if (genesisSeed === undefined) throw 'Invalid genesisSeed provided, expected string, got: ' + typeof genesisSeed;
+            const genesisSeed = BytesToBase64Encoder.decode(handshakeResponse.b64GenesisSeed);
 
             // derive the actor key from the private key and the genesis seed
             const actorCrypto = accountCrypto.deriveActorFromVbSeed(genesisSeed);
-            /*
-            const schemeId = privateKey.getSignatureSchemeId();
-            const kdf = CryptoSchemeFactory.createDefaultKDF();
-            const actorSignaturePrivateKey = CryptoSchemeFactory.createVirtualBlockchainPrivateSignature(
-                kdf,
-                schemeId,
-                walletSeed,
-                genesisSeed
-            );
-             */
 
             // TODO: decide the signature and pke scheme id
             // derive the actor public signature key
             const signatureSchemeId = SignatureSchemeId.SECP256K1;
             const actorSignaturePublicKey = await actorCrypto.getPublicSignatureKey(signatureSchemeId);
+
 
             // derive the actor public encryption key
             const pkeSchemeId = PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM;
@@ -199,10 +160,13 @@ export abstract class wiWallet<T> {
             // send the actor key to the operator and awaits for the response
             const signatureEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
             const pkeEncoder = HCVPkeEncoder.createBase64HCVPkeEncoder();
+            const encodedPk =  await signatureEncoder.encodePublicKey(actorSignaturePublicKey);
+            const b64 = EncoderFactory.bytesToBase64Encoder();
+            console.log(`Generated signature public key for genesisSeed ${b64.encode(genesisSeed)}: ${encodedPk}`)
             const actorKeyResponse = await this.sendRequestToOperator(object.serverUrl, {
                 type: WalletInteractiveAnchoringRequestType.ACTOR_KEY,
                 anchorRequestId: object.anchorRequestId,
-                actorSignaturePublicKey: await signatureEncoder.encodePublicKey(actorSignaturePublicKey),
+                actorSignaturePublicKey: encodedPk,
                 actorPkePublicKey: await pkeEncoder.encodePublicEncryptionKey(actorPublicEncryptionKey)
             })
 
@@ -215,6 +179,8 @@ export abstract class wiWallet<T> {
             }
         } else if (handshakeResponse.type == WalletInteractiveAnchoringResponseType.APPROVAL_DATA) {
             return handshakeResponse
+        } else if (handshakeResponse.type === WalletInteractiveAnchoringResponseType.ERROR) {
+            throw new Error("An error occurred while getting the approval data: " + handshakeResponse.errorMessage + "")
         } else {
             throw new Error(`Unexpected handshake response type: ${handshakeResponse.type}`);
         }
@@ -225,10 +191,11 @@ export abstract class wiWallet<T> {
      * Returns the answer to be sent to the client, which consists of { vbHash, mbHash, height }.
      */
     async sendApprovalSignature(serverUrl: string, anchorRequestId: string, signature: Uint8Array) {
+        const encoder = EncoderFactory.bytesToBase64Encoder();
         const approvalSignatureRequest: WalletInteractiveAnchoringRequestApprovalSignature = {
             type: WalletInteractiveAnchoringRequestType.APPROVAL_SIGNATURE,
             anchorRequestId,
-            signature: signature
+            b64Signature: encoder.encode(signature)
         }
         const approvalSignatureResponse = await this.sendRequestToOperator(serverUrl, approvalSignatureRequest);
         if (approvalSignatureResponse.type === WalletInteractiveAnchoringResponseType.ERROR) {
@@ -236,8 +203,8 @@ export abstract class wiWallet<T> {
         } else if (approvalSignatureResponse.type === WalletInteractiveAnchoringResponseType.APPROVAL_SIGNATURE) {
             const walletResponse: WalletResponseDataApproval = {
                 type: WalletResponseType.DATA_APPROVAL,
-                vbHash: new Uint8Array(approvalSignatureResponse.vbHash),
-                mbHash: new Uint8Array(approvalSignatureResponse.mbHash),
+                b64MbHash: approvalSignatureResponse.b64MbHash,
+                b64VbHash: approvalSignatureResponse.b64MbHash,
                 height: approvalSignatureResponse.height
             }
             return walletResponse;

@@ -71,6 +71,27 @@ export class EncoderFactory {
  * - decode: Converts a base64 string back into a Uint8Array representation.
  */
 export class BytesToBase64Encoder implements EncoderInterface<Uint8Array, string> {
+
+    /**
+     * Statically decodes a base64 string into a Uint8Array.
+     *
+     * @param {string} data The base64 string to decode.
+     * @return {Uint8Array} The Uint8Array representation of the decoded data.
+     */
+    static decode(data: string): Uint8Array {
+        return Base64.decodeBinary(data, Base64.BASE64);
+    }
+
+    /**
+     * Statically encodes the given Uint8Array data into a base64 string representation.
+     *
+     * @param {Uint8Array} data - The byte array to be encoded.
+     * @return {string} The base64 string representation of the input data.
+     */
+    static encode(data: Uint8Array): string {
+        return Base64.encodeBinary(data, Base64.BASE64, true);
+    }
+
     /**
      * Decodes a base64 string into a Uint8Array.
      *

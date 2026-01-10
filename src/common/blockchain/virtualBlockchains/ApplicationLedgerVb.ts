@@ -5,7 +5,7 @@ import {IntermediateRepresentation} from "../../records/intermediateRepresentati
 import {Utils} from "../../utils/utils";
 
 import {
-    ActorNotInvitedError,
+    ActorNotInvitedError, ActorNotSubscribedError,
     CurrentActorNotFoundError,
     DecryptionError,
     MicroBlockNotFoundInVirtualBlockchainAtHeightError,
@@ -41,6 +41,7 @@ import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {ApplicationLedgerChannelInvitationSection} from "../../type/valibot/blockchain/section/sections";
+import {SeedEncoder} from "../../utils/SeedEncoder";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInternalState> {
 
@@ -228,7 +229,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
                 return CryptoSchemeFactory.createPublicEncryptionKey(pkeSchemeId, rawPkePublicKey);
             }
         }
-        throw new ProtocolError(`Actor ${actorId} has not subscribed to a public encryption key.`)
+        const actorName = this.getActorNameById(actorId);
+        throw new ActorNotSubscribedError(actorId, actorName)
     }
 
     /**
@@ -325,6 +327,14 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         return this.internalState.getActorByName(name);
     }
 
+    getAllActors() {
+        return this.internalState.getAllActors();
+    }
+
+    getAllChannels() {
+        return this.internalState.getAllChannels();
+    }
+
 
     async getOrganizationId(): Promise<Hash> {
         const applicationId = this.getApplicationId();
@@ -416,6 +426,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
                         const channelKey = await this.getChannelKey(currentActorId, channelId, hostIdentity);
                         const channelSectionKey = this.deriveChannelSectionKey(channelKey, height, channelId);
                         const channelSectionIv = this.deriveChannelSectionIv(channelKey, height, channelId);
+                        logger.debug(`Channel key ${channelKey} at height ${height} and channel id ${channelId} -> Channel section key: ${channelSectionKey} (iv ${channelSectionIv}) `)
                         const data = Crypto.Aes.decryptGcm(channelSectionKey, encryptedData, channelSectionIv);
 
                         logger.debug(`Allowed to access private channel {channelName} (channel id={channelId})`, () => ({
@@ -506,10 +517,15 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         const creatorId = state.getChannelCreatorIdFromChannelId(channelId);
         const actorPrivateDecryptionKey = await hostIdentity.getPrivateDecryptionKey(PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM);
         if (creatorId === actorId) {
+            logger.debug(`Identified as the created of channel ${channelId}`)
+            const usedSeed = hostIdentity.getSeedAsBytes();
+            // TODO(log): remove this log
+            logger.warn(`Deriving channel key from ${usedSeed} (${new SeedEncoder().encode(usedSeed)}) and channel id ${channelId}`)
             const channelKey = await this.deriveChannelKey(
-                hostIdentity.getSeedAsBytes(),
+                usedSeed,
                 channelId
             );
+            logger.debug(`Channel key for channel ${channelId} has been derived: ${channelKey}`)
             return channelKey;
         }
 
@@ -526,6 +542,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
      */
     async deriveChannelKey(seed: Uint8Array, channelId: number) {
         const genesisSeed = await this.getGenesisSeed();
+        // TODO(log): remove this log
+        const logger = Logger.getLogger(['critical']);
+        logger.warn(`Used genesis seed for channel key derivation: ${genesisSeed.toBytes()}`)
         const encoder = new TextEncoder;
         const info = Utils.binaryFrom(encoder.encode("CHANNEL_KEY"));
         const inputKeyMaterial = Utils.binaryFrom(
@@ -535,6 +554,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
             encoder.encode("CHANNEL_ID"),
             Utils.binaryFrom(channelId)
         );
+        logger.warn(`Used input key material for channel key derivation: ${inputKeyMaterial}`)
+        logger.warn(`Used info for channel key derivation: ${info}`)
 
         const hkdf = new HKDF();
         return hkdf.deriveKeyNoSalt(inputKeyMaterial, info, 32);

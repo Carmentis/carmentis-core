@@ -17,7 +17,7 @@ export class ApplicationLedgerMicroblockStructureChecker implements IMicroblockS
                 SectionType.APP_LEDGER_CREATION
             );
             checker.group(
-                SectionConstraint.AT_MOST_ONE,
+                SectionConstraint.ANY,
                 [
                     [SectionConstraint.ANY, SectionType.APP_LEDGER_ACTOR_CREATION],
                     [SectionConstraint.ANY, SectionType.APP_LEDGER_ACTOR_SUBSCRIPTION],
@@ -31,8 +31,9 @@ export class ApplicationLedgerMicroblockStructureChecker implements IMicroblockS
                     [SectionConstraint.ANY, SectionType.ALLOWED_ADDITIONAL_WRITER],
                 ]
             );
-            checker.expects(SectionConstraint.ONE, SectionType.SIGNATURE);
-            checker.expects(SectionConstraint.AT_MOST_ONE, SectionType.SIGNATURE) // between one and two (included) signatures
+            // between one and two (included) signatures
+            // TODO(fix): allow more signatures
+            checker.expects(SectionConstraint.AT_LEAST_ONE, SectionType.SIGNATURE);
             checker.endsHere();
             return true;
         } catch (e) {

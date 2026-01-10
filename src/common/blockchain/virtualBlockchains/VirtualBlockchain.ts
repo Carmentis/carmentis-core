@@ -1,6 +1,10 @@
 import {Microblock} from "../microblock/Microblock";
 import {Hash} from "../../entities/Hash";
-import {IllegalParameterError, MicroBlockNotFoundInVirtualBlockchainAtHeightError} from "../../errors/carmentis-error";
+import {
+    IllegalParameterError,
+    IllegalStateError,
+    MicroBlockNotFoundInVirtualBlockchainAtHeightError
+} from "../../errors/carmentis-error";
 import {VirtualBlockchainType} from "../../type/VirtualBlockchainType";
 import {EncoderFactory} from "../../utils/encoder";
 import {IMicroblockSearchFailureFallback} from "./fallbacks/IMicroblockSearchFailureFallback";
@@ -334,7 +338,7 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
      * @return {Hash} The hash representation of the virtual blockchain identifier.
      */
     getIdentifier(): Hash {
-        if (this.identifier === undefined) throw new TypeError(`Got undefined virtual blockchain identifier`)
+        if (this.identifier === undefined) throw new IllegalStateError(`You cannot access identifier of an empty virtual blockchain (current height is ${this.height})`)
         return Hash.from(this.identifier);
     }
 

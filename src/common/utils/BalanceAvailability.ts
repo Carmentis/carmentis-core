@@ -151,6 +151,8 @@ export class BalanceAvailability {
             lockedAmountInAtomics: amountInAtomics,
             parameters: {
                 validatorNodeAccountId: nodeAccountId,
+                plannedUnlockAmountInAtomics: 0,
+                plannedUnlockTimestamp: 0,
             }
         });
     }

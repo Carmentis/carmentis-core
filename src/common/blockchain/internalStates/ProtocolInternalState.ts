@@ -6,6 +6,7 @@ import {
 } from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
 import * as v from 'valibot';
 import {ProtocolVariables} from "../../type/valibot/blockchain/protocol/ProtocolVariables";
+import {CMTSToken} from "../../economics/currencies/token";
 
 enum ProtocolName {
     INITIAL_PROTOCOL_VERSION_NAME = "Stockolm"
@@ -38,7 +39,9 @@ export class ProtocolInternalState implements IInternalState {
                 organizationInternalStateUpdaterVersion: 1,
                 validatorNodeInternalStateUpdaterVersion: 1,
                 accountInternalStateUpdaterVersion: 1,
-                protocolInternalStateUpdaterVersion: 1
+                protocolInternalStateUpdaterVersion: 1,
+                minimumNodeStakingAmountInAtomics: CMTSToken.create(1_000_000).getAmountAsAtomic(),
+                maximumNodeStakingAmountInAtomics: CMTSToken.create(10_000_000).getAmountAsAtomic(),
             },
             protocolUpdates: []
         });

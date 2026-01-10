@@ -619,11 +619,14 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         }
         // raise an error if the actor is not invited to the channel
         if (invitationSection === undefined) throw new ActorNotInvitedError(actorId, channelId);
+        const encryptedChannelKey = invitationSection.encryptedChannelKey;
+        return await actorPrivateDecryptionKey.decrypt(encryptedChannelKey);
+        /*
 
 
         // look for the shared secret between actorId and hostId
         const hostId = invitationSection.hostId;
-        const encryptedChannelKey = invitationSection.encryptedChannelKey;
+
         const sharedSecret = actor.sharedSecrets.find(
             (sharedSecret) => sharedSecret.peerActorId == hostId
         );
@@ -645,6 +648,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         }
         // at this point, no shared key has been found
         throw new NoSharedSecretError(actorId, hostId);
+
+         */
 
     }
 
@@ -931,5 +936,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
      */
 
 
-
+    async isActorInChannel(channelId: number, actorId: number) {
+        const actor = this.internalState.getActorById(actorId);
+        return actor.invitations.some(invitation => invitation.channelId == channelId);
+    }
 }

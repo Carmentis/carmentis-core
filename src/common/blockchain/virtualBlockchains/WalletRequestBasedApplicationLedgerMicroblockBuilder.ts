@@ -243,22 +243,57 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
     }
 
 
-    async inviteActorOnChannel(actorName: string, channelName: string, actorIdentity: ICryptoKeyHandler) {
+    async inviteActorOnChannel(actorName: string, channelName: string, hostIdentity: ICryptoKeyHandler) {
         console.log("Inviting actor " + actorName + " on channel " + channelName)
         const channelId = this.state.getChannelIdFromChannelName(channelName);
         const actorId = this.getActorIdFromActorName(actorName);
+        const hostPrivateSignatureKey = await this.getActorPrivateSignatureKey(hostIdentity);
+        const hostId = await this.vb.getActorIdByPublicSignatureKey(await hostPrivateSignatureKey.getPublicKey());
         Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId} for channel ${channelName}`)
-
-
-        const actorPrivateSignatureKey = await this.getActorPrivateSignatureKey(actorIdentity);
-        const authorId = await this.vb.getActorIdByPublicSignatureKey(await actorPrivateSignatureKey.getPublicKey());
-        const hostId = authorId; // the host is the author (and in the current version of the protocol, this is the operator)
         const guestId = actorId; // the guest is the actor assigned to the channel
 
+
+        // to invite an actor on channel, we first need to known if the actor is already in the channel.
+        // If yes, then we have nothing to do.
+        if (await this.vb.isActorInChannel(channelId, guestId)) return;
+
+        // we first have to ensure that the host is able to recover the channel key
+        const channelKey = await this.vb.getChannelKey(hostId, channelId, hostIdentity);
+
+        // if the host is already able to recover the channel key, then we do not need to create an invitation
+        const guestPublicEncryptionKey = await this.vb.getPublicEncryptionKeyByActorId(guestId);
+        const encryptedChannelKey = await guestPublicEncryptionKey.encrypt(channelKey);
+
+        // we log the result
+        const logger = Logger.getLogger([ApplicationLedgerVb.name]);
+        logger.info(`Actor {guestName} invited to channel ${channelName}`, () => ({
+            guestName: actorName,
+        }))
+        logger.debug(`Channel key for channel ${channelName}: ${channelKey}`)
+
+        // we create the section containing the encrypted channel key (that can only be decrypted by the host and the guest)
+        const section: ApplicationLedgerChannelInvitationSection = {
+            type: SectionType.APP_LEDGER_CHANNEL_INVITATION,
+            channelId,
+            hostId,
+            guestId,
+            encryptedChannelKey,
+        }
+        this.mbUnderConstruction.addSection(section)
+        await this.updateStateWithSection(section);
+
+
+        /*
         // if the guestId equals the hostId, it is likely a misuse of the record. In this case, we do not do anything
         // because the author is already in the channel by definition (no need to create a shared key, ...).
-        if (hostId === guestId) return;
+        if (hostId === guestId) return
+         */
 
+
+
+
+
+        /*
         // To invite the actor in the channel, we first retrieve or generate a symmetric encryption key used to establish
         // secure communication between both peers. The key is then used to encrypt the channel key and put in a dedicated
         // section of the microblock.
@@ -266,7 +301,10 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
             await this.vb.getExistingSharedKey(hostId, guestId) ||
             await this.vb.getExistingSharedKey(guestId, hostId);
 
+         */
 
+
+        /*
         // if we have found the (encrypted) shared secret key, then we *attempt* to decrypt it, otherwise
         // there is no shared secret key and then we create a new one
         let hostGuestSharedKey: AES256GCMSymmetricEncryptionKey;
@@ -289,28 +327,11 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
             hostGuestSharedKey = await this.createSharedKey(hostPrivateDecryptionKey, hostId, guestId);
         }
 
+         */
 
-        // we encrypt the channel key using the shared secret key
-        const channelKey = await this.vb.getChannelKey(hostId, channelId, actorIdentity);
-        const encryptedChannelKey = await hostGuestSharedKey.encrypt(channelKey);
 
-        // we log the result
-        const logger = Logger.getLogger([ApplicationLedgerVb.name]);
-        logger.info(`Actor {guestName} invited to channel ${channelName}`, () => ({
-            guestName: actorName,
-        }))
-        logger.debug(`Channel key for channel ${channelName}: ${channelKey}`)
 
-        // we create the section containing the encrypted channel key (that can only be decrypted by the host and the guest)
-        const section: ApplicationLedgerChannelInvitationSection = {
-            type: SectionType.APP_LEDGER_CHANNEL_INVITATION,
-            channelId,
-            hostId,
-            guestId,
-            encryptedChannelKey,
-        }
-        this.mbUnderConstruction.addSection(section)
-        await this.updateStateWithSection(section);
+
     }
 
 

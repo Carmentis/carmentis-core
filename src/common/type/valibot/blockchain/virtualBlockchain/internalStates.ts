@@ -42,7 +42,7 @@ export const ValidatorNodeVBInternalStateObjectSchema = val.object({
     organizationId: accountId(),
     cometbftPublicKeyDeclarationHeight: height(),
     rpcEndpointHeight: height(),
-    lastKnownVotingPower: number(),
+    lastKnownApprovalStatus: boolean(),
 });
 export type ValidatorNodeVBInternalStateObject = val.InferOutput<typeof ValidatorNodeVBInternalStateObjectSchema>;
 

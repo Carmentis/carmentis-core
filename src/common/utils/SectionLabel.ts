@@ -26,7 +26,7 @@ const sectionLabelBySectionType: Record<SectionType, string> = {
     [SectionType.VN_CREATION]: 'VN_CREATION',
     [SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION]: 'VN_COMETBFT_PUBLIC_KEY_DECLARATION',
     [SectionType.VN_RPC_ENDPOINT]: 'VN_RPC_ENDPOINT',
-    [SectionType.VN_VOTING_POWER_UPDATE]: 'VN_VOTING_POWER_UPDATE',
+    [SectionType.VN_APPROVAL]: 'VN_APPROVAL',
 
     // Organization
     [SectionType.ORG_CREATION]: 'ORG_CREATION',

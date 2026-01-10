@@ -160,10 +160,8 @@ ACCOUNT[ACCOUNT_STAKE] = {
 export const VN_CREATION         = SectionType.VN_CREATION;
 export const VN_COMETBFT_PUBLIC_KEY_DECLARATION         = SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION;
 export const VN_RPC_ENDPOINT        = SectionType.VN_RPC_ENDPOINT;
-export const VN_VOTING_POWER_UPDATE = SectionType.VN_VOTING_POWER_UPDATE;
+export const VN_APPROVAL = SectionType.VN_APPROVAL;
 const VALIDATOR_NODE: Schema[] = [] as const;
-
-
 
 VALIDATOR_NODE[VN_CREATION] = {
   label: 'VN_CREATION',
@@ -187,10 +185,10 @@ VALIDATOR_NODE[VN_RPC_ENDPOINT] = {
   ]
 };
 
-VALIDATOR_NODE[VN_VOTING_POWER_UPDATE] = {
-  label: 'VN_VOTING_POWER_UPDATE',
+VALIDATOR_NODE[VN_APPROVAL] = {
+  label: 'VN_APPROVAL',
   definition: [
-    { name: 'votingPower', type: DATA.TYPE_UINT48 }
+    { name: 'status', type: DATA.TYPE_BOOLEAN }
   ]
 };
 

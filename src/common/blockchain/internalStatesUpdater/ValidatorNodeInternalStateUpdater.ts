@@ -13,8 +13,8 @@ export class ValidatorNodeInternalStateUpdater implements IInternalStateUpdater<
                 case SectionType.VN_CREATION:
                     newState.setOrganizationId(section.organizationId);
                     break;
-                case SectionType.VN_VOTING_POWER_UPDATE:
-                    this.updateVotingPower(newState, section);
+                case SectionType.VN_APPROVAL:
+                    this.updateApproval(newState, section);
                     break;
                 case SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION:
                     newState.setCometbftPublicKeyDeclarationHeight(microblock.getHeight());
@@ -27,9 +27,7 @@ export class ValidatorNodeInternalStateUpdater implements IInternalStateUpdater<
         return newState;
     }
 
-    private updateVotingPower(state: ValidatorNodeInternalState, section: ValidatorNodeVotingPowerUpdateSection) {
-        state.setVotingPower(section.votingPower)
+    private updateApproval(state: ValidatorNodeInternalState, section: ValidatorNodeVotingPowerUpdateSection) {
+        state.setApprovalStatus(section.status)
     }
-
-
 }

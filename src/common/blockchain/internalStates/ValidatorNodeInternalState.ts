@@ -13,7 +13,7 @@ export class ValidatorNodeInternalState {
     static createInitialState() {
         return new ValidatorNodeInternalState({
             cometbftPublicKeyDeclarationHeight: 0,
-            lastKnownVotingPower: 0,
+            lastKnownApprovalStatus: false,
             organizationId: Utils.getNullHash(),
             rpcEndpointHeight: 0,
         });
@@ -27,8 +27,8 @@ export class ValidatorNodeInternalState {
         return Hash.from(this.internalState.organizationId);
     }
 
-    getLastKnownVotingPower(): number {
-        return this.internalState.lastKnownVotingPower;
+    getLastKnownApprovalStatus(): boolean {
+        return this.internalState.lastKnownApprovalStatus;
     }
 
     getCometbftPublicKeyDeclarationHeight() {
@@ -43,8 +43,8 @@ export class ValidatorNodeInternalState {
         return structuredClone(this)
     }
 
-    setVotingPower(votingPower: number) {
-        this.internalState.lastKnownVotingPower = votingPower;
+    setApprovalStatus(approvalStatus: boolean) {
+        this.internalState.lastKnownApprovalStatus = approvalStatus;
     }
 
     setCometbftPublicKeyDeclarationHeight(height: number) {

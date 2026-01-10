@@ -145,11 +145,11 @@ export const ValidatorNodeRpcEndpointSectionSchema = val.object({
 })
 export type ValidatorNodeRpcEndpointSection = val.InferOutput<typeof ValidatorNodeRpcEndpointSectionSchema>;
 
-export const ValidatorNodeVotingPowerUpdateSectionSchema = val.object({
-    type: val.literal(SectionType.VN_VOTING_POWER_UPDATE),
-    votingPower: number(),
+export const ValidatorNodeApprovalSectionSchema = val.object({
+    type: val.literal(SectionType.VN_APPROVAL),
+    status: boolean(),
 })
-export type ValidatorNodeVotingPowerUpdateSection = val.InferOutput<typeof ValidatorNodeVotingPowerUpdateSectionSchema>;
+export type ValidatorNodeVotingPowerUpdateSection = val.InferOutput<typeof ValidatorNodeApprovalSectionSchema>;
 
 
 // ---------------------------------------------------------------------------
@@ -313,7 +313,7 @@ export const SectionSchema = val.variant(
         ValidatorNodeCreationSectionSchema,
         ValidatorNodeCometbftPublicKeyDeclarationSectionSchema,
         ValidatorNodeRpcEndpointSectionSchema,
-        ValidatorNodeVotingPowerUpdateSectionSchema,
+        ValidatorNodeApprovalSectionSchema,
 
         OrganizationCreationSectionSchema,
         OrganizationDescriptionSectionSchema,

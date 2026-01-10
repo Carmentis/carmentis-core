@@ -30,7 +30,7 @@ export enum SectionType {
     VN_CREATION = 33,
     VN_COMETBFT_PUBLIC_KEY_DECLARATION = 34,
     VN_RPC_ENDPOINT = 35,
-    VN_VOTING_POWER_UPDATE = 36,
+    VN_APPROVAL = 36,
 
     // Organization
     ORG_CREATION = 52,

@@ -1,6 +1,6 @@
 # Carmentis SDK
 
-Carmentis SDK is a JavaScript/TypeScript library for interacting with the Carmentis blockchain platform.
+Carmentis SDK is a TypeScript library for interacting with the Carmentis blockchain platform.
 
 ## Installation
 

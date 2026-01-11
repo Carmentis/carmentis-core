@@ -8,6 +8,7 @@ import {
 import {Utils} from "./utils";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountStateAbciResponse} from "../type/valibot/provider/abci/AbciResponse";
+import {Logger} from "./Logger";
 
 
 /**
@@ -23,6 +24,8 @@ export class BalanceAvailability {
         balance.getBreakdown();
         return balance;
     }
+
+    private readonly logger = Logger.getLogger([ 'accounts', BalanceAvailability.name ]);
 
     /**
      * The balance of the account.
@@ -44,7 +47,6 @@ export class BalanceAvailability {
         this.balanceInAtomics = initialBalance;
         this.locks = initialLocks;
     }
-
     /**
      * Getters and setters for balance and locks.
      */
@@ -68,16 +70,63 @@ export class BalanceAvailability {
         return this.locks;
     }
 
+    hasNodeStakingLocks() {
+        return this.locks.some((lock) => lock.type == LockType.NodeStaking);
+    }
+
     getNodeStakingLocks() {
         return this.locks.filter((lock) => lock.type == LockType.NodeStaking);
+    }
+
+    getNodeStakingLock(nodeAccountId: Uint8Array) {
+        const nodeStakingLocks = this.getNodeStakingLocks();
+        const lock = nodeStakingLocks.find((lock) =>
+            Utils.binaryIsEqual(lock.parameters.validatorNodeAccountId, nodeAccountId)
+        );
+        return lock;
+    }
+
+    getNodeStakingLockAmount(nodeAccountId: Uint8Array) {
+        const lock = this.getNodeStakingLock(nodeAccountId);
+        if (lock === undefined) {
+            return 0;
+        }
+        return lock.lockedAmountInAtomics;
+    }
+
+    hasEscrowLocks() {
+        return this.locks.some((lock) => lock.type == LockType.Escrow);
     }
 
     getEscrowLocks() {
         return this.locks.filter((lock) => lock.type == LockType.Escrow);
     }
 
+    hasVestingLocks() {
+        return this.locks.some((lock) => lock.type == LockType.Vesting);
+    }
+
     getVestingLocks() {
         return this.locks.filter((lock) => lock.type == LockType.Vesting);
+    }
+
+    /**
+     * Methods to remove expired locks (i.e. with a locked amount set to 0)
+     */
+    private removeExpiredEscrowLocks() {
+        this.removeExpiredLocks(LockType.Escrow);
+    }
+
+    private removeExpiredVestingLocks() {
+        this.removeExpiredLocks(LockType.Vesting);
+    }
+
+    private removeExpiredStakingLocks() {
+        this.removeExpiredLocks(LockType.NodeStaking);
+    }
+
+    private removeExpiredLocks(type: number) {
+        this.locks = this.locks.filter((lock) => !(lock.type == type && lock.lockedAmountInAtomics == 0));
     }
 
     /**
@@ -136,41 +185,87 @@ export class BalanceAvailability {
     }
 
     /**
-     * Stakes a given amount of tokens for a given object identified by a type and an identifier.
+     * Stakes a given amount of tokens for a given node.
+     * If a staking is already defined for this node, the new amount is added to the current staked amount.
      */
     addNodeStaking(amountInAtomics: number, nodeAccountId: Uint8Array) {
         // we must ensure the node has enough stakeable tokens to stake the requested amount
         const breakdown = this.getBreakdown();
+        if (amountInAtomics < 0) {
+            throw new Error(`Stake amount must be greater than 0`);
+        }
         if (amountInAtomics > breakdown.stakeable) {
-            throw new Error(`Cannot stake more than ${breakdown.stakeable} tokens`);
+            throw new Error(`Cannot stake more than ${breakdown.stakeable} atomic units`);
         }
 
-        // add the stake lock to the account
-        this.locks.push({
-            type: LockType.NodeStaking,
-            lockedAmountInAtomics: amountInAtomics,
-            parameters: {
-                validatorNodeAccountId: nodeAccountId,
-                plannedUnlockAmountInAtomics: 0,
-                plannedUnlockTimestamp: 0,
-            }
-        });
+        const existingLock = this.getNodeStakingLock(nodeAccountId);
+
+        if(existingLock === undefined) {
+            this.locks.push({
+                type: LockType.NodeStaking,
+                lockedAmountInAtomics: amountInAtomics,
+                parameters: {
+                    validatorNodeAccountId: nodeAccountId,
+                    plannedUnlockAmountInAtomics: 0,
+                    plannedUnlockTimestamp: 0,
+                }
+            });
+        }
+        else {
+            existingLock.lockedAmountInAtomics += amountInAtomics;
+        }
     }
 
     /**
-     * Unstakes tokens for a given object.
+     * Sets a plan to unlock staked tokens for a given node.
      */
-    removeNodeStaking(nodeAccountId: Uint8Array) {
-        const lockIndex = this.locks.findIndex((lock) =>
-            lock.type == LockType.NodeStaking &&
-            Utils.binaryIsEqual(lock.parameters.validatorNodeAccountId, nodeAccountId)
-        );
+    planNodeStakingUnlock(plannedUnlockAmountInAtomics: number, plannedUnlockTimestamp: number, nodeAccountId: Uint8Array) {
+        const existingLock = this.getNodeStakingLock(nodeAccountId);
 
-        if (lockIndex == -1) {
+        if(existingLock === undefined) {
             throw new Error(`Staking not found`);
         }
+        if(existingLock.parameters.plannedUnlockAmountInAtomics != 0) {
+            throw new Error(`There's already a pending staking unlock for this node`);
+        }
+        existingLock.parameters.plannedUnlockAmountInAtomics = plannedUnlockAmountInAtomics;
+        existingLock.parameters.plannedUnlockTimestamp = Utils.addDaysToTimestamp(plannedUnlockTimestamp, 0);
+    }
 
-        this.locks.splice(lockIndex, 1);
+    /**
+     * Applies node staking unlocks for which the planned date has been reached (or exceeded).
+     */
+    applyNodeStakingUnlocks(referenceTimestamp: number) {
+        const nodeStakingLocks = this.getNodeStakingLocks();
+
+        for(const lock of nodeStakingLocks) {
+            if(lock.parameters.plannedUnlockTimestamp != 0 && referenceTimestamp >= lock.parameters.plannedUnlockTimestamp) {
+                this.removeNodeStaking(
+                    lock.parameters.plannedUnlockAmountInAtomics,
+                    lock.parameters.validatorNodeAccountId
+                );
+            }
+        }
+        this.removeExpiredStakingLocks();
+    }
+
+    /**
+     * Unstakes tokens for a given node.
+     */
+    removeNodeStaking(amountInAtomics: number, nodeAccountId: Uint8Array) {
+        const lock = this.getNodeStakingLock(nodeAccountId);
+
+        if (lock === undefined) {
+            throw new Error(`Staking not found`);
+        }
+        if (amountInAtomics < 0) {
+            throw new Error(`Unstake amount must be greater than 0`);
+        }
+        if (amountInAtomics > lock.lockedAmountInAtomics) {
+            throw new Error(`Cannot unstake more than ${lock.lockedAmountInAtomics} atomic units`);
+        }
+
+        lock.lockedAmountInAtomics -= amountInAtomics;
     }
 
     /**
@@ -190,18 +285,35 @@ export class BalanceAvailability {
         let releasable = breakdown.releasable;
         let totalReleased = 0;
 
-        //const vestingLocks = this.locks.filter((lock) => lock.type == LockType.Vesting);
         const vestingLocks = this.getVestingLocks();
+
         for(const lock of vestingLocks) {
             const initialVestedAmountInAtomics = lock.parameters.initialVestedAmountInAtomics;
             const cliffStartTimestamp = lock.parameters.cliffStartTimestamp;
             const cliffDurationDays = lock.parameters.cliffDurationDays;
             const vestingDurationDays = lock.parameters.vestingDurationDays;
-            const cliffTimestamp = Utils.addDaysToTimestamp(cliffStartTimestamp, cliffDurationDays);
+            const cliffEndTimestamp = Utils.addDaysToTimestamp(cliffStartTimestamp, cliffDurationDays);
 
             const elapsed = Math.min(
-                Utils.timestampDifferenceInDays(cliffTimestamp, referenceTimestamp),
+                Utils.timestampDifferenceInDays(cliffEndTimestamp, referenceTimestamp),
                 vestingDurationDays
+            );
+
+            this.logger.debug(
+                `start date: {cliffStartDate}, initial amount: {initialAmount}, cliff during {cliffDurationDays} day(s), vesting during {vestingDurationDays} day(s)`, () => ({
+                    cliffStartDate: new Date(cliffStartTimestamp * 1000).toISOString(),
+                    initialAmount: initialVestedAmountInAtomics,
+                    cliffDurationDays,
+                    vestingDurationDays
+                })
+            );
+
+            this.logger.debug(
+                `cliff end date: {cliffEndDay}, today: {today}, elapsed time in vesting: {elapsed} day(s)`, () => ({
+                    cliffEndDay: new Date(cliffEndTimestamp * 1000).toISOString(),
+                    today: new Date(referenceTimestamp * 1000).toISOString(),
+                    elapsed
+                })
             );
 
             if(elapsed > 0) {
@@ -209,11 +321,18 @@ export class BalanceAvailability {
                 const maximumRelease = Math.floor(initialVestedAmountInAtomics * elapsed / vestingDurationDays);
                 const released = Math.min(maximumRelease - alreadyReleased, releasable);
 
+                this.logger.debug(`already released: ${alreadyReleased}, max. release: ${maximumRelease}, released today: ${released}`);
+
                 lock.lockedAmountInAtomics -= released;
                 releasable -= released;
                 totalReleased += released;
             }
+            else {
+                this.logger.debug(`nothing is released today`);
+            }
         }
+        this.removeExpiredVestingLocks();
+
         return totalReleased;
     }
 

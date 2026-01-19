@@ -35,6 +35,7 @@ import {
     VirtualBlockchainUpdateAbciResponseSchema
 } from "../type/valibot/provider/abci/AbciResponse";
 import {AbciQueryEncoder} from "../utils/AbciQueryEncoder";
+import {EncoderFactory} from "../utils/encoder";
 
 export class NetworkProvider implements IExternalProvider {
     private static staticLogger = Logger.getNetworkProviderLogger();
@@ -259,9 +260,9 @@ export class NetworkProvider implements IExternalProvider {
     }
 
 
-    private static async query(urlObject: any): Promise<{data: string}> {
+    private static async query(urlObject: any, postBody: object = {}): Promise<{data: string}> {
         try {
-            const response = await axios.post(urlObject, {}, {
+            const response = await axios.post(urlObject, postBody, {
                 headers: {
                     'Content-Type': 'application/json; charset=UTF-8',
                     'Accept': 'application/json',
@@ -286,15 +287,22 @@ export class NetworkProvider implements IExternalProvider {
         }
     }
 
-    async broadcastTx(data: any) {
+    async broadcastTx(data: Uint8Array) {
         const urlObject = new URL(this.nodeUrl);
 
         this.logger.info(`broadcastTx -> ${data.length} bytes to ${this.nodeUrl}`);
 
-        urlObject.pathname = "broadcast_tx_sync";
-        urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));
-
-        const result = await NetworkProvider.query(urlObject);
+        //urlObject.pathname = "broadcast_tx_sync";
+        //urlObject.searchParams.append("tx", "0x" + Utils.binaryToHexa(data));
+        const encoder = EncoderFactory.bytesToBase64Encoder();
+        const result = await NetworkProvider.query(urlObject, {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "broadcast_tx_sync", // TODO(sync): use async
+            "params": {
+                "tx": encoder.encode(data)
+            }
+        });
         return result;
     }
 

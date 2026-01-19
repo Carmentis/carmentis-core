@@ -1,5 +1,4 @@
 import * as v from 'valibot';
-import {uint8array} from "../../type/valibot/primitives";
 
 // Request enum
 export enum WalletInteractiveAnchoringRequestType {

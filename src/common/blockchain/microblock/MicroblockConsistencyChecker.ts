@@ -173,7 +173,7 @@ export class MicroblockConsistencyChecker {
     }
 
     private async getFeesCalculationFormulaFromProvider() {
-        const protocolParameters = await this.provider.getProtocolVariables();
+        const protocolParameters = await this.provider.getProtocolState();
         const feesCalculationVersion = protocolParameters.getFeesCalculationVersion();
         return FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(feesCalculationVersion);
     }

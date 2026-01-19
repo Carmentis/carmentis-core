@@ -393,7 +393,7 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         if (!isValid) throw new IllegalParameterError("Provided microblock has an invalid structure")
 
         // should load the local state updater version
-        const protocolState = await this.provider.getProtocolVariables();
+        const protocolState = await this.provider.getProtocolState();
         this.internalState = await this.updateInternalState(protocolState, this.internalState, microblock);
 
         // if the current state of the vb is empty (no microblock), then update the identifier

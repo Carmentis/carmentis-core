@@ -29,9 +29,9 @@ export class ApplicationLedgerMicroblockBuilder implements IMicroblockSearchFail
     protected async updateStateWithSection(section: Section) {
         // if not already defined, create the state updater with the current protocol state
         if (!this.stateUpdater)  {
-            const variables = await this.provider.getProtocolVariables();
+            const protocolState = await this.provider.getProtocolState();
             this.stateUpdater = InternalStateUpdaterFactory.createApplicationLedgerInternalStateUpdater(
-                variables.getApplicationLedgerInternalStateUpdaterVersion()
+                protocolState.getApplicationLedgerInternalStateUpdaterVersion()
             );
         }
 

@@ -1,7 +1,7 @@
-import {z} from "zod";
+import * as v from 'valibot';
 
-const PositiveInt = z.number().int().gt(0);
-type PositiveInt = z.infer<typeof PositiveInt>;
+const PositiveInt = v.pipe(v.number(), v.integer(), v.minValue(1));
+type PositiveInt = v.InferOutput<typeof PositiveInt>;
 
 /**
  * Defines the height in a (virtual) blockchain.

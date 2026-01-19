@@ -42,11 +42,11 @@ export class ProtocolInternalState implements IInternalState {
                 protocolInternalStateUpdaterVersion: 1,
                 minimumNodeStakingAmountInAtomics: CMTSToken.create(1_000_000).getAmountAsAtomic(),
                 maximumNodeStakingAmountInAtomics: CMTSToken.create(10_000_000).getAmountAsAtomic(),
+                unstakingDelayInDays: 30,
             },
             protocolUpdates: []
         });
     }
-
 
     getProtocolVariables() {
         return this.internalState.currentProtocolVariables;
@@ -76,6 +76,17 @@ export class ProtocolInternalState implements IInternalState {
         return this.internalState.currentProtocolVariables.protocolInternalStateUpdaterVersion;
     }
 
+    getMinimumNodeStakingAmountInAtomics() {
+        return this.internalState.currentProtocolVariables.minimumNodeStakingAmountInAtomics;
+    }
+
+    getMaximumNodeStakingAmountInAtomics() {
+        return this.internalState.currentProtocolVariables.maximumNodeStakingAmountInAtomics;
+    }
+
+    getUnstakingDelayInDays() {
+        return this.internalState.currentProtocolVariables.unstakingDelayInDays;
+    }
 
     toObject(): ProtocolVBInternalStateObject {
         return this.internalState;

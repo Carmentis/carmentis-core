@@ -17,7 +17,7 @@ import {
     WalletInteractiveAnchoringRequest,
     WalletInteractiveAnchoringRequestApprovalHandshake, WalletInteractiveAnchoringRequestApprovalSignature,
     WalletInteractiveAnchoringRequestType, WalletInteractiveAnchoringResponse, WalletInteractiveAnchoringResponseType
-} from "../../common/zod/walletOperatorMessages/Schemas";
+} from "../../common/type/valibot/walletOperatorMessages/Schemas";
 import {BytesToBase64Encoder, EncoderFactory} from "../../common/utils/encoder";
 import {
     WalletInteractiveAnchoringEncoder,

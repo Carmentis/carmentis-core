@@ -13,5 +13,6 @@ export const ProtocolVariablesSchema = v.object({
     protocolInternalStateUpdaterVersion: v.number(),
     minimumNodeStakingAmountInAtomics: v.number(),
     maximumNodeStakingAmountInAtomics: v.number(),
+    unstakingDelayInDays: v.number(),
 });
 export type ProtocolVariables = v.InferOutput<typeof ProtocolVariablesSchema>

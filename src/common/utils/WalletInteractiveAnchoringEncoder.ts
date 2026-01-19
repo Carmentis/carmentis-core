@@ -1,8 +1,11 @@
-import {WalletInteractiveAnchoringRequest, WalletInteractiveAnchoringRequestSchema} from "../zod/walletOperatorMessages/Schemas";
+import {
+    WalletInteractiveAnchoringRequest,
+    WalletInteractiveAnchoringRequestSchema,
+    WalletInteractiveAnchoringResponse,
+    WalletInteractiveAnchoringResponseSchema
+} from "../type/valibot/walletOperatorMessages/Schemas";
 import {Encoder, Decoder} from "cbor-x";
-import {WalletInteractiveAnchoringResponse, WalletInteractiveAnchoringResponseSchema} from "../zod/walletOperatorMessages/Schemas";
 import * as v from 'valibot';
-
 
 export class WalletInteractiveAnchoringEncoder {
     private static encoder = new Encoder({

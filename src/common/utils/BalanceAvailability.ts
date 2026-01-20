@@ -21,6 +21,13 @@ import {Logger} from "./Logger";
  */
 export class BalanceAvailability {
 
+    public static createFromAccountStateAbciResponse(accountStateResponse: AccountStateAbciResponse): BalanceAvailability {
+        return new BalanceAvailability(
+            accountStateResponse.balance,
+            accountStateResponse.locks
+        );
+    }
+
     private readonly logger = Logger.getLogger([ 'accounts', BalanceAvailability.name ]);
 
     /**

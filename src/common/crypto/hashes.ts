@@ -25,7 +25,7 @@ function sha256(data: Uint8Array) {
   return Utils.binaryToHexa(sha256AsBinary(data));
 }
 
-function sha512AsBinary(data: any) {
+function sha512AsBinary(data: any): Uint8Array {
   const isBinary = data instanceof Uint8Array;
   if(!isBinary) {
     throw "Argument passed to compute sha512 is not an instance of Uint8Array";

@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import {uint8array} from "../type/valibot/primitives";
 
 export type JsonData =
     | string
@@ -161,13 +162,13 @@ export type MerkleLeafPlainType = v.InferOutput<typeof MerkleLeafPlainSchema>;
 const MerkleLeafHashedSchema = v.object({
     type: v.literal(MerkleLeafTypeEnum.Hashed),
     salt: v.instance(Uint8Array),
-    hash: v.instance(Uint8Array),
+    hash: uint8array(),
 });
 
 export type MerkleLeafHashedType = v.InferOutput<typeof MerkleLeafHashedSchema>;
 
 const MerkleLeafMaskedPartsSchema = v.object({
-    salt: v.instance(Uint8Array),
+    salt: uint8array(),
     parts: v.array(v.string()),
 });
 
@@ -175,8 +176,8 @@ export type MerkleLeafMaskedPartsType = v.InferOutput<typeof MerkleLeafMaskedPar
 
 const MerkleLeafMaskedSchema = v.object({
     type: v.literal(MerkleLeafTypeEnum.Masked),
-    visibleHash: v.instance(Uint8Array),
-    hiddenHash: v.instance(Uint8Array),
+    visibleHash: uint8array(),
+    hiddenHash: uint8array(),
 });
 
 export type MerkleLeafMaskedType = v.InferOutput<typeof MerkleLeafMaskedSchema>;

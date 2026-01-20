@@ -1,6 +1,4 @@
-import {Utils} from "./utils";
-import {CMTSToken} from "../economics/currencies/token";
-import { getLogger, Logger } from '@logtape/logtape';
+import { getLogger, Logger as LogtapeLogger} from '@logtape/logtape';
 import {
     LockType,
     EscrowParameters,
@@ -10,6 +8,11 @@ import {
     AccountBreakdown
 } from "../type/valibot/node/AccountInformation";
 import * as v from "valibot";
+import {Utils} from "./utils";
+import {CMTSToken} from "../economics/currencies/token";
+import {AccountStateAbciResponse} from "../type/valibot/provider/abci/AbciResponse";
+import {Logger} from "./Logger";
+
 
 /**
  * This class models the availability of tokens for a given account.
@@ -17,7 +20,8 @@ import * as v from "valibot";
  * It keeps track of the balance, the locks (escrow, vesting and staking) and provides methods to add, remove and query tokens.
  */
 export class BalanceAvailability {
-    private readonly logger: Logger;
+
+    private readonly logger = Logger.getLogger([ 'accounts', BalanceAvailability.name ]);
 
     /**
      * The balance of the account.
@@ -40,7 +44,6 @@ export class BalanceAvailability {
         this.locks = initialLocks;
         this.logger = getLogger([ 'node', 'accounts', BalanceAvailability.name ])
     }
-
     /**
      * Getters and setters for balance and locks.
      */
@@ -213,16 +216,17 @@ export class BalanceAvailability {
         }
     }
 
+
     /**
      * Sets a plan to unlock staked tokens for a given node.
      */
     planNodeStakingUnlock(plannedUnlockAmountInAtomics: number, plannedUnlockTimestamp: number, nodeAccountId: Uint8Array) {
         const existingLock = this.getNodeStakingLock(nodeAccountId);
 
-        if (existingLock === undefined) {
+        if(existingLock === undefined) {
             throw new Error(`Staking not found`);
         }
-        if (existingLock.parameters.plannedUnlockAmountInAtomics != 0) {
+        if(existingLock.parameters.plannedUnlockAmountInAtomics != 0) {
             throw new Error(`There's already a pending staking unlock for this node`);
         }
         existingLock.parameters.plannedUnlockAmountInAtomics = plannedUnlockAmountInAtomics;

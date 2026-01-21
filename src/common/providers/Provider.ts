@@ -30,6 +30,9 @@ import {Crypto} from "../crypto/crypto";
 import {VirtualBlockchain} from "../blockchain/virtualBlockchains/VirtualBlockchain";
 import {NetworkProvider} from "./NetworkProvider";
 import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseSchema";
+import {CometBFTPublicKey} from "../cometbft/CometBFTPublicKey";
+import {CometBFTPublicKeyConverter} from "../utils/CometBFTPublicKeyConverter";
+import {EncoderFactory} from "../utils/encoder";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -448,6 +451,23 @@ export class Provider extends AbstractProvider {
         return NetworkProvider.sendStatusQueryToNodeServer(nodeUrl);
     }
 
+
+    /**
+     * Returns the validator node id by address
+     * @param address
+     */
+    async getValidatorNodeIdByAddress(address: Hash) {
+         const response = await this.externalProvider.getValidatorNodeByAddress(address.toBytes());
+         return response.validatorNodeHash;
+    }
+
+    async getValidatorNodeIdByCometbftPublicKey(b64EncodedCometbftPublicKey: string) {
+        const b64 = EncoderFactory.bytesToBase64Encoder();
+        const address = CometBFTPublicKeyConverter.convertRawPublicKeyIntoAddress(
+            b64.decode(b64EncodedCometbftPublicKey)
+        );
+        return this.getValidatorNodeIdByAddress(Hash.from(address))
+    }
 
 
 

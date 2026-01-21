@@ -98,7 +98,7 @@ export class AppLedgerLocalStateUpdaterV1 implements IInternalStateUpdater<Appli
     }
 
     async allowedPkeSchemesCallback(section: ApplicationLedgerAllowedPkeSchemesSection, localState: ApplicationLedgerInternalState) {
-        localState.setAllowedSignatureSchemeIds(section.schemeIds)
+        localState.setAllowedPkeSchemeIds(section.schemeIds)
         //localState.allowedPkeSchemeIds = section.object.schemeIds;
     }
 

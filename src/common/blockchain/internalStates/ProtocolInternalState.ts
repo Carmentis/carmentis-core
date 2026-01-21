@@ -107,4 +107,8 @@ export class ProtocolInternalState implements IInternalState {
     setProtocolVariables(protocolVariables: ProtocolVariables) {
         this.internalState.currentProtocolVariables = protocolVariables;
     }
+
+	setOrganizationId(organizationId: Uint8Array) {
+		this.internalState.organizationId = organizationId;
+	}
 }

@@ -4,6 +4,7 @@ import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {Logger} from "../../utils/Logger";
 import {IProvider} from "../../providers/IProvider";
+import {Utils} from "../../utils/utils";
 
 export class ProtocolInternalStateUpdater implements IInternalStateUpdater<ProtocolInternalState> {
     private logger = Logger.getInternalStateUpdaterLogger(ProtocolInternalStateUpdater.name)
@@ -14,6 +15,12 @@ export class ProtocolInternalStateUpdater implements IInternalStateUpdater<Proto
                 const protocolUpdate = section;
                 this.logger.debug(`Updating protocol variables: ${JSON.stringify(protocolUpdate.protocolVariables)}`);
                 prevState.setProtocolVariables(protocolUpdate.protocolVariables);
+            }
+
+            if (section.type === SectionType.PROTOCOL_CREATION) {
+                const organizationId = section.organizationId;
+                this.logger.debug(`Updating organization ID: ${Utils.binaryToHexa(organizationId)}`)
+                prevState.setOrganizationId(organizationId);
             }
         }
         return prevState;

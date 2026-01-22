@@ -29,7 +29,7 @@ describe('Chain test', () => {
     Logger.enableLogs();
 
     async function getProtocolVariables() {
-        const protocolParams = await provider.getProtocolVariables();
+        const protocolParams = await provider.getProtocolState();
         const parseResult = v.safeParse(ProtocolVariablesSchema, protocolParams.getProtocolVariables());
         expect(protocolParams).toBeDefined();
         expect(parseResult.success).toBeTruthy();

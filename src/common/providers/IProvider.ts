@@ -49,5 +49,5 @@ export interface IProvider {
      *
      * Note that the protocol parameters are defined in the internal state of the protocol virtual blockchain.
      */
-    getProtocolVariables(): Promise<ProtocolInternalState>;
+    getProtocolState(): Promise<ProtocolInternalState>;
 }

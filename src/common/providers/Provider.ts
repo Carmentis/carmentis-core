@@ -115,7 +115,7 @@ export class Provider extends AbstractProvider {
         return await this.getAccountByPublicKeyHash(publicKeyHash);
     }
 
-    async getProtocolVariables(): Promise<ProtocolInternalState> {
+    async getProtocolState(): Promise<ProtocolInternalState> {
         const id = await this.getProtocolVirtualBlockchainId();
         const state = await this.getVirtualBlockchainState(id.toBytes());
         if (state === null) {

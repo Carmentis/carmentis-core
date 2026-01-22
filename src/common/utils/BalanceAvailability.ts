@@ -1,10 +1,13 @@
+import { getLogger, Logger as LogtapeLogger} from '@logtape/logtape';
 import {
-    EscrowParameters,
     LockType,
+    EscrowParameters,
     VestingParameters,
     Lock,
+    NodeStakingLock,
     AccountBreakdown
 } from "../type/valibot/node/AccountInformation";
+import * as v from "valibot";
 import {Utils} from "./utils";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountStateAbciResponse} from "../type/valibot/provider/abci/AbciResponse";
@@ -18,11 +21,11 @@ import {Logger} from "./Logger";
  */
 export class BalanceAvailability {
 
-
-    static createFromAccountStateAbciResponse(response: AccountStateAbciResponse) {
-        const balance = new BalanceAvailability(response.balance, response.locks);
-        balance.getBreakdown();
-        return balance;
+    public static createFromAccountStateAbciResponse(accountStateResponse: AccountStateAbciResponse): BalanceAvailability {
+        return new BalanceAvailability(
+            accountStateResponse.balance,
+            accountStateResponse.locks
+        );
     }
 
     private readonly logger = Logger.getLogger([ 'accounts', BalanceAvailability.name ]);
@@ -46,6 +49,7 @@ export class BalanceAvailability {
     constructor(private initialBalance: number = 0, private initialLocks: Lock[] = []) {
         this.balanceInAtomics = initialBalance;
         this.locks = initialLocks;
+        this.logger = getLogger([ 'node', 'accounts', BalanceAvailability.name ])
     }
     /**
      * Getters and setters for balance and locks.
@@ -175,7 +179,7 @@ export class BalanceAvailability {
             Utils.binaryIsEqual(lock.parameters.fundEmitterAccountId, fundEmitterAccountId)
         );
 
-        if(lockIndex == -1) {
+        if (lockIndex == -1) {
             throw new Error(`Escrow not found`);
         }
 
@@ -200,7 +204,7 @@ export class BalanceAvailability {
 
         const existingLock = this.getNodeStakingLock(nodeAccountId);
 
-        if(existingLock === undefined) {
+        if (existingLock === undefined) {
             this.locks.push({
                 type: LockType.NodeStaking,
                 lockedAmountInAtomics: amountInAtomics,
@@ -208,6 +212,9 @@ export class BalanceAvailability {
                     validatorNodeAccountId: nodeAccountId,
                     plannedUnlockAmountInAtomics: 0,
                     plannedUnlockTimestamp: 0,
+                    slashed: false,
+                    plannedSlashingAmountInAtomics: 0,
+                    plannedSlashingTimestamp: 0,
                 }
             });
         }
@@ -215,6 +222,7 @@ export class BalanceAvailability {
             existingLock.lockedAmountInAtomics += amountInAtomics;
         }
     }
+
 
     /**
      * Sets a plan to unlock staked tokens for a given node.
@@ -238,8 +246,11 @@ export class BalanceAvailability {
     applyNodeStakingUnlocks(referenceTimestamp: number) {
         const nodeStakingLocks = this.getNodeStakingLocks();
 
-        for(const lock of nodeStakingLocks) {
-            if(lock.parameters.plannedUnlockTimestamp != 0 && referenceTimestamp >= lock.parameters.plannedUnlockTimestamp) {
+        for (const lock of nodeStakingLocks) {
+            if (
+                lock.parameters.plannedUnlockTimestamp != 0 &&
+                referenceTimestamp >= lock.parameters.plannedUnlockTimestamp
+            ) {
                 this.removeNodeStaking(
                     lock.parameters.plannedUnlockAmountInAtomics,
                     lock.parameters.validatorNodeAccountId
@@ -247,6 +258,78 @@ export class BalanceAvailability {
             }
         }
         this.removeExpiredStakingLocks();
+    }
+
+    /**
+     * Cancels slashing for a given node.
+     */
+    cancelNodeSlashing(nodeAccountId: Uint8Array) {
+        const nodeStakingLocks = this.getNodeStakingLocks();
+        const nodeStakingLock = nodeStakingLocks.find((obj) => obj.parameters.validatorNodeAccountId == nodeAccountId);
+        if (nodeStakingLock == undefined) {
+            throw new Error(`Staking not found`);
+        }
+        if (nodeStakingLock.parameters.slashed) {
+            nodeStakingLock.parameters.slashed = false;
+            nodeStakingLock.parameters.plannedSlashingAmountInAtomics = 0;
+            nodeStakingLock.parameters.plannedSlashingTimestamp = 0;
+        }
+        else {
+            this.logger.warn(`No pending slashing for this node`);
+        }
+    }
+
+    /**
+     * Applies slashing.
+     */
+    applyNodeSlashing(referenceTimestamp: number) {
+        const nodeStakingLocks = this.getNodeStakingLocks();
+
+        for (const lock of nodeStakingLocks) {
+            const slashedAmountInAtomics = lock.parameters.plannedSlashingAmountInAtomics;
+            if (
+                slashedAmountInAtomics > 0 &&
+                lock.parameters.plannedSlashingTimestamp != 0 &&
+                referenceTimestamp >= lock.parameters.plannedSlashingTimestamp
+            ) {
+                lock.lockedAmountInAtomics -= slashedAmountInAtomics;
+                this.balanceInAtomics -= slashedAmountInAtomics;
+            }
+        }
+        this.adjustVesting();
+        this.removeExpiredStakingLocks();
+    }
+
+    /**
+     * Adjusts vesting locks so that the total amount of vested tokens doesn't exceed the balance.
+     * This applies when vested tokens are slashed.
+     * Some vesting locks may be removed entirely.
+     */
+    adjustVesting() {
+        const vestedAmountInAtomics = this.getBreakdown().vested;
+        const exceededAmountInAtomics = vestedAmountInAtomics - this.balanceInAtomics;
+
+        if (exceededAmountInAtomics > 0) {
+            const vestingLocks = this.getVestingLocks();
+            let totalSubtractedAmountInAtomics = 0;
+
+            // first pass: subtract amounts rounded towards 0
+            // this is off by 1 at most once per vesting
+            for (const vestingLock of vestingLocks) {
+                const subtractedAmountInAtomics = Math.floor(exceededAmountInAtomics * vestingLock.lockedAmountInAtomics / vestedAmountInAtomics);
+                vestingLock.lockedAmountInAtomics -= subtractedAmountInAtomics;
+                totalSubtractedAmountInAtomics += subtractedAmountInAtomics;
+            }
+            // second pass: fix rounding errors by subtracting 1 more atomic unit
+            // this must be done at most once per vesting
+            for (const vestingLock of vestingLocks) {
+                if (totalSubtractedAmountInAtomics < exceededAmountInAtomics && vestingLock.lockedAmountInAtomics > 0) {
+                    vestingLock.lockedAmountInAtomics--;
+                    totalSubtractedAmountInAtomics++;
+                }
+            }
+            this.removeExpiredVestingLocks();
+        }
     }
 
     /**
@@ -287,7 +370,7 @@ export class BalanceAvailability {
 
         const vestingLocks = this.getVestingLocks();
 
-        for(const lock of vestingLocks) {
+        for (const lock of vestingLocks) {
             const initialVestedAmountInAtomics = lock.parameters.initialVestedAmountInAtomics;
             const cliffStartTimestamp = lock.parameters.cliffStartTimestamp;
             const cliffDurationDays = lock.parameters.cliffDurationDays;
@@ -316,7 +399,7 @@ export class BalanceAvailability {
                 })
             );
 
-            if(elapsed > 0) {
+            if (elapsed > 0) {
                 const alreadyReleased = initialVestedAmountInAtomics - lock.lockedAmountInAtomics;
                 const maximumRelease = Math.floor(initialVestedAmountInAtomics * elapsed / vestingDurationDays);
                 const released = Math.min(maximumRelease - alreadyReleased, releasable);
@@ -341,8 +424,8 @@ export class BalanceAvailability {
      */
     getBreakdown(): AccountBreakdown {
         // compute for each type of lock the amount of locked tokens
-        const lockedAmountInAtomicsByLockType = new Map<LockType, number>(); //Array(LOCK_TYPE_COUNT).fill(0);
-        for(const lock of this.locks) {
+        const lockedAmountInAtomicsByLockType = new Map<LockType, number>();
+        for (const lock of this.locks) {
             const lockedAmountForLockType = lockedAmountInAtomicsByLockType.get(lock.type) || 0;
             lockedAmountInAtomicsByLockType.set(lock.type, lockedAmountForLockType + lock.lockedAmountInAtomics);
         }

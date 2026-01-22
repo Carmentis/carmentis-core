@@ -35,8 +35,6 @@ export class ProtocolVb extends VirtualBlockchain<ProtocolInternalState> {
         return localStateUpdater.updateState(this.provider, state, microblock);
     }
 
-
-
     async getVirtualBlockchainState() {
         const height = this.getHeight();
         const lastMicroblockHash = height === 0 ?

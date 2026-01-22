@@ -1,7 +1,6 @@
 import * as v from 'valibot';
 import {uint8array} from "../primitives";
 
-
 export const LOCK_TYPE_COUNT = 3;
 export enum LockType {
     Escrow = 0,
@@ -46,7 +45,10 @@ export type VestingLock = v.InferOutput<typeof VestingLockSchema>;
 export const NodeStakingParametersSchema = v.object({
     validatorNodeAccountId: uint8array(),
     plannedUnlockAmountInAtomics: v.number(),
-    plannedUnlockTimestamp: v.number()
+    plannedUnlockTimestamp: v.number(),
+    slashed: v.boolean(),
+    plannedSlashingAmountInAtomics: v.number(),
+    plannedSlashingTimestamp: v.number()
 });
 export type NodeStakingParameters = v.InferOutput<typeof NodeStakingParametersSchema>;
 

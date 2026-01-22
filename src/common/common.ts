@@ -213,6 +213,7 @@ export * from "./utils/Assertion";
 export * from "./utils/BalanceAvailability";
 export * from "./utils/BinaryToStringEncoderInterface";
 export * from "./utils/BlockchainUtils";
+export * from "./utils/CometBFTPublicKeyConverter";
 export * from "./utils/HCVCodec";
 export * from "./utils/Logger";
 export * from "./utils/SectionLabel";

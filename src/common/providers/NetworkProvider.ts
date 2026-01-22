@@ -142,11 +142,10 @@ export class NetworkProvider implements IExternalProvider {
         });
 
         const response = v.parse(AccountStateAbciResponseSchema, answer);
-        this.responseLogger.info(`Receiving account state: height={height}, balance={balance}, lastHistoryHash={lastHistoryHash}`, () => {
+        this.responseLogger.info(`Receiving account state: height={height}, balance={balance}`, () => {
             const height = response.height;
             const balance = CMTSToken.createAtomic(response.balance).toString();
-            const lastHistoryHash = response.lastHistoryHash;
-            return {height, balance, lastHistoryHash}
+            return {height, balance}
         });
         return response;
     }

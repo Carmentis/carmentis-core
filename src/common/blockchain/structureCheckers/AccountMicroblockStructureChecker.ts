@@ -31,6 +31,7 @@ export class AccountMicroblockStructureChecker implements IMicroblockStructureCh
                         [ SectionConstraint.ANY, SectionType.ACCOUNT_TRANSFER ],
                         [ SectionConstraint.ANY, SectionType.ACCOUNT_VESTING_TRANSFER ],
                         [ SectionConstraint.ANY, SectionType.ACCOUNT_STAKE ],
+                        [ SectionConstraint.ANY, SectionType.ACCOUNT_UNSTAKE ],
                         [ SectionConstraint.ANY, SECTIONS.ACCOUNT_ESCROW_TRANSFER ],
                         [ SectionConstraint.ANY, SectionType.ACCOUNT_ESCROW_SETTLEMENT ]
                     ]

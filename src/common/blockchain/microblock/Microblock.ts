@@ -656,6 +656,16 @@ export class Microblock {
         }
     }
 
+    /**
+     * Checks if all sections in the current instance have types that are included in the provided section types array.
+     *
+     * @param {SectionType[]} sectionTypes - An array of section types to validate against.
+     * @return {boolean} Returns true if all sections have types included in the provided array, otherwise false.
+     */
+    containsOnlyTheseSections(sectionTypes: SectionType[]) {
+        return this.sections.every(section => sectionTypes.includes(section.type));
+    }
+
     getIndexOfSection(sectionType: SectionType): number {
         return this.sections.findIndex(section => section.type === sectionType);
     }

@@ -168,6 +168,7 @@ export const OrganizationDescriptionSectionSchema = val.object({
     city: string(),
     countryCode: string(),
     website: string(),
+    misc: val.optional(val.record(val.string(), val.string())),
 })
 export type OrganizationDescriptionSection = val.InferOutput<typeof OrganizationDescriptionSectionSchema>;
 

@@ -43,9 +43,17 @@ export class ProtocolInternalState implements IInternalState {
                 minimumNodeStakingAmountInAtomics: CMTSToken.create(1_000_000).getAmountAsAtomic(),
                 maximumNodeStakingAmountInAtomics: CMTSToken.create(10_000_000).getAmountAsAtomic(),
                 unstakingDelayInDays: 30,
+                maxBlockSizeInBytes: 4194304,
             },
             protocolUpdates: []
         });
+    }
+
+    /**
+     * Returns the maximum block size in bytes allowed by the current protocol variables.
+     */
+    getMaximumBlockSizeInBytes() {
+        return this.internalState.currentProtocolVariables.maxBlockSizeInBytes;
     }
 
     getProtocolVariables() {

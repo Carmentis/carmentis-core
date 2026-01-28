@@ -14,5 +14,6 @@ export const ProtocolVariablesSchema = v.object({
     minimumNodeStakingAmountInAtomics: v.number(),
     maximumNodeStakingAmountInAtomics: v.number(),
     unstakingDelayInDays: v.number(),
+    maxBlockSizeInBytes: v.number(),
 });
 export type ProtocolVariables = v.InferOutput<typeof ProtocolVariablesSchema>

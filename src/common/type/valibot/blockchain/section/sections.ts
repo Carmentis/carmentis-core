@@ -188,6 +188,7 @@ export const ApplicationDescriptionSectionSchema = val.object({
     logoUrl: string(),
     homepageUrl: string(),
     description: string(),
+    misc: val.optional(val.record(val.string(), val.string())),
 })
 export type ApplicationDescriptionSection = val.InferOutput<typeof ApplicationDescriptionSectionSchema>;
 

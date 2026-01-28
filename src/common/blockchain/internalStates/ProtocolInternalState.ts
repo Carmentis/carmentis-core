@@ -44,9 +44,19 @@ export class ProtocolInternalState implements IInternalState {
                 maximumNodeStakingAmountInAtomics: CMTSToken.create(10_000_000).getAmountAsAtomic(),
                 unstakingDelayInDays: 30,
                 maxBlockSizeInBytes: 4194304,
+                abciVersion: 1,
             },
             protocolUpdates: []
         });
+    }
+
+    /**
+     * Returns the ABCI version to use.
+     *
+     * See https://docs.cometbft.com/v0.38/spec/abci/
+     */
+    getAbciVersion() {
+        return this.internalState.currentProtocolVariables.abciVersion;
     }
 
     /**

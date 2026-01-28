@@ -9,7 +9,7 @@ import {ProtocolVariables} from "../../type/valibot/blockchain/protocol/Protocol
 import {CMTSToken} from "../../economics/currencies/token";
 
 enum ProtocolName {
-    INITIAL_PROTOCOL_VERSION_NAME = "Stockolm"
+    INITIAL_PROTOCOL_VERSION_NAME = "Stockholm"
 }
 
 export class ProtocolInternalState implements IInternalState {

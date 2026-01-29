@@ -1,6 +1,6 @@
 import {MerkleLeaf} from "./MerkleLeaf";
 import {MerkleTree} from "../trees/merkleTree";
-import {FlattenedRecord} from './FlattenedRecord';
+import {RecordByChannels} from './RecordByChannels';
 import {SaltShaker} from './SaltShaker';
 import {PositionedLeaf} from './PositionedLeaf';
 import {
@@ -17,16 +17,16 @@ type ChannelMapEntry = {
 
 export class MerkleRecord {
     private channelMap: Map<number, ChannelMapEntry>;
-    private flattenedRecord: FlattenedRecord | undefined;
+    private recordByChannels: RecordByChannels | undefined;
 
     constructor() {
         this.channelMap = new Map;
     }
 
-    fromFlattenedRecord(flattenedRecord: FlattenedRecord, peppers: Map<number, Uint8Array>|undefined = undefined) {
+    fromRecordByChannels(recordByChannels: RecordByChannels, peppers: Map<number, Uint8Array>|undefined = undefined) {
         this.channelMap.clear();
-        this.flattenedRecord = flattenedRecord;
-        const channelIds = this.flattenedRecord.getChannelIds();
+        this.recordByChannels = recordByChannels;
+        const channelIds = this.recordByChannels.getChannelIds();
 
         for (const channelId of channelIds) {
             const pepper =
@@ -36,7 +36,7 @@ export class MerkleRecord {
             if (pepper === undefined) {
                 throw new Error(`no pepper specified for channel ${channelId}`);
             }
-            const flatItemList = this.flattenedRecord.getFlatItems(channelId);
+            const flatItemList = this.recordByChannels.getFlatItems(channelId);
             this.storeChannel(channelId, flatItemList, pepper);
         }
     }
@@ -58,12 +58,12 @@ export class MerkleRecord {
         return leavesByChannelMap;
     }
 
-    getFlattenedRecord() {
-        const flattenedRecord = this.flattenedRecord;
-        if(flattenedRecord === undefined) {
-            throw new Error(`flattenedRecord is not set`);
+    getRecordByChannels() {
+        const recordByChannels = this.recordByChannels;
+        if(recordByChannels === undefined) {
+            throw new Error(`recordByChannels is not set`);
         }
-        return flattenedRecord;
+        return recordByChannels;
     }
 
     getChannelIds() {

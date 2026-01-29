@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import {Encoder, encode, decode} from "cbor-x";
 import {Utils} from '../utils/utils';
-import {FlattenedRecord} from "./FlattenedRecord";
+import {RecordByChannels} from "./RecordByChannels";
 import {MerkleRecord} from "./MerkleRecord";
 import {Record} from "./Record";
 import {
@@ -27,13 +27,13 @@ export class OnChainRecord {
 
     fromMerkleRecord(merkleRecord: MerkleRecord) {
         this.channelMap.clear();
-        const flattenedRecord = merkleRecord.getFlattenedRecord();
+        const recordByChannels = merkleRecord.getRecordByChannels();
         const channelIds = merkleRecord.getChannelIds();
 
         for (const channelId of channelIds) {
             const pepper = merkleRecord.getChannelPepper(channelId);
             const rootHash = merkleRecord.getChannelRootHash(channelId);
-            const flatItems = flattenedRecord.getFlatItems(channelId);
+            const flatItems = recordByChannels.getFlatItems(channelId);
             const onChainItems: OnChainItem[] = flatItems.map((flatItem) => {
                 return {
                     path: flatItem.path,
@@ -87,7 +87,7 @@ export class OnChainRecord {
     }
 
     toMerkleRecord(checkHashes = true) {
-        const flattenedRecord = new FlattenedRecord;
+        const recordByChannels = new RecordByChannels;
         const peppers: Map<number, Uint8Array> = new Map();
         for (const [ channelId, channel ] of this.channelMap) {
             const flatItems: FlatItem[] = channel.onChainItems.map((field: OnChainItem) => {
@@ -102,11 +102,11 @@ export class OnChainRecord {
                     item,
                 };
             });
-            flattenedRecord.setChannel(channelId, flatItems);
+            recordByChannels.setChannel(channelId, flatItems);
             peppers.set(channelId, channel.pepper);
         }
         const merkleRecord = new MerkleRecord;
-        merkleRecord.fromFlattenedRecord(flattenedRecord, peppers);
+        merkleRecord.fromRecordByChannels(recordByChannels, peppers);
 
         // optionally check root hashes
         if (checkHashes) {

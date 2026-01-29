@@ -166,7 +166,7 @@ export * from "./records/messageManager";
 export * from "./records/pathManager";
 export * from "./records/PepperMerklizer";
 export * from "./records/SaltMerklizer";
-export * from "./records-new/FlattenedRecord";
+export * from "./records-new/RecordByChannels";
 export * from "./records-new/MerkleLeaf";
 export * from "./records-new/MerkleRecord";
 export * from "./records-new/OnChainRecord";

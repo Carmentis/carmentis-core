@@ -2,49 +2,71 @@ import * as v from 'valibot';
 import {
     Path,
     MaskPart,
-    JsonData,
     JsonSchema,
     Json,
     TransformationTypeEnum,
     TypeEnum,
     Item,
+    FlatItem,
     StringItem,
     NumberItem,
     BooleanItem,
     NullItem,
-    ArrayItem,
-    ObjectItem,
 } from './types';
 
 export class Record {
-    private tree: Item;
+    private itemList: FlatItem[];
+    private publicChannels: Set<number>;
 
     constructor() {
-        this.tree = this.buildNullItem();
+        this.itemList = [];
+        this.publicChannels = new Set;
     }
 
     fromJson(object: unknown) {
+        this.itemList = [];
+        this.publicChannels.clear();
         const parsedObject = v.parse(JsonSchema, object);
-        this.tree = this.buildTreeByDfs(parsedObject);
+        this.buildItemListByDfs(parsedObject);
     }
 
-    toJson() {
-        return this.buildJsonByDfs(this.tree);
+    setChannelAsPublic(channelId: number) {
+        this.publicChannels.add(channelId);
+    }
+
+    setChannelAsPrivate(channelId: number) {
+        this.publicChannels.delete(channelId);
+    }
+
+    getPublicChannels() {
+        return this.publicChannels;
+    }
+
+    setChannel(pathString: string, channelId: number) {
+        const fields = this.getFieldsByPathString(pathString);
+        for (const field of fields) {
+            this.setFieldChannel(field.item, channelId);
+        }
     }
 
     /**
      * Sets the channel ID of a field identified by its path.
      */
-    setChannel(path: Path, channelId: number) {
-        const field = this.getFieldByPath(path);
+    private setFieldChannel(field: Item, channelId: number) {
         field.channelId = channelId;
+    }
+
+    setAsHashable(pathString: string) {
+        const fields = this.getFieldsByPathString(pathString);
+        for (const field of fields) {
+            this.setFieldAsHashable(field.item);
+        }
     }
 
     /**
      * Sets a field identified by its path as hashable.
      */
-    setAsHashable(path: Path) {
-        const field = this.getFieldByPath(path);
+    private setFieldAsHashable(field: Item) {
         if (field.type !== TypeEnum.String) {
             throw new Error('only a string may be set as hashable');
         }
@@ -56,8 +78,7 @@ export class Record {
      * defined as { start, end, replacement } where 'start' and 'end' are the 0-based indices of the
      * masked part and 'replacement' the replacement string when this part is not revealed.
      */
-    setMask(path: Path, maskParts: MaskPart[]) {
-        const field = this.getFieldByPath(path);
+    private setMaskOnField(field: Item, maskParts: MaskPart[]) {
         if (field.type !== TypeEnum.String) {
             throw new Error('a mask may only be applied to a string');
         }
@@ -97,6 +118,13 @@ export class Record {
         field.transformation = { type: TransformationTypeEnum.Maskable, visibleParts, hiddenParts };
     }
 
+    setMaskByRegex(pathString: string, regex: RegExp, substitutionString: string) {
+        const fields = this.getFieldsByPathString(pathString);
+        for (const field of fields) {
+            this.setMaskByRegexOnField(field.item, regex, substitutionString);
+        }
+    }
+
     /**
      * Sets a mask on a field identified by its path, using a regular expression and a substitution
      * string. The regular expression must capture all parts of the string. The substitution string
@@ -104,8 +132,7 @@ export class Record {
      * Example: /^(.)(.*)(@.)(.*)$/ and '$1***$3***' applied to 'john.do@gmail.com' will produce
      * 'j***@g***'.
      */
-    setMaskByRegex(path: Path, regex: RegExp, substitutionString: string) {
-        const field = this.getFieldByPath(path);
+    private setMaskByRegexOnField(field: Item, regex: RegExp, substitutionString: string) {
         if (field.type !== TypeEnum.String) {
             throw new Error('a mask may only be applied to a string');
         }
@@ -143,54 +170,42 @@ export class Record {
             }
             ptr = newPtr;
         });
-        this.setMask(path, markParts);
+        this.setMaskOnField(field, markParts);
     }
 
-    getTree() {
-        return this.tree;
+    getItemList() {
+        return this.itemList;
     }
 
-    private getFieldByPath(path: Path): Item {
-        let field: Item = this.tree;
-        for (const part of path) {
-            if (typeof part == 'string' && field.type == TypeEnum.Object) {
-                field = field.value.find((item: Item) => item.key == part);
-                field = field?.value;
-            }
-            else if (typeof part == 'number' && field.type == TypeEnum.Array) {
-                field = field.value[part];
+    private getFieldsByPathString(pathString: string): FlatItem[] {
+        const parts = pathString.match(/\[\d+\]|[^.[]+/g) || [];
+        const path: Path = parts.map((part) =>
+            part[0] == '[' ? Number(part.slice(1, -1)) : part
+        );
+        const hasInvalidWildcard = path.some((part, index) =>
+            part == '*' && index != path.length - 1
+        );
+        if (hasInvalidWildcard) {
+            throw new Error(`a wildcard may only appear at the end of the path`);
+        }
+        const hasWildcard = path[path.length - 1] == '*';
+        const fieldList = this.itemList.filter((field) => {
+            let expectedMatchingParts;
+
+            if (hasWildcard) {
+                if (field.path.length < path.length) return false;
+                expectedMatchingParts = path.slice(0, -1);
             }
             else {
-                throw new Error('invalid path');
+                if (field.path.length != path.length) return false;
+                expectedMatchingParts = path;
             }
-            if (field === undefined) {
-                throw new Error('invalid path');
-            }
-        }
-        if (field.type == TypeEnum.Object || field.type == TypeEnum.Array) {
-            throw new Error('incomplete path');
-        }
-        return field;
-    }
-
-    private buildJsonByDfs(item: Item): JsonData {
-        switch (item.type) {
-            case TypeEnum.Array: {
-                const value = (item as ArrayItem).value;
-                return value.map((item) => this.buildJsonByDfs(item));
-            }
-            case TypeEnum.Object: {
-                const object: { [key: string]: any } = {};
-                const value = (item as ObjectItem).value;
-                for (const entry of value) {
-                    object[entry.key] = this.buildJsonByDfs(entry.value);
-                }
-                return object;
-            }
-            default: {
-                return item.value;
-            }
-        }
+            return expectedMatchingParts.every((part, index) =>
+                part === field.path[index]
+            )
+        });
+        console.log(pathString, fieldList);
+        return fieldList;
     }
 
     static getValueType(field: Json) {
@@ -223,29 +238,42 @@ export class Record {
         return type;
     }
 
-    private buildTreeByDfs(field: Json): Item {
+    private buildItemListByDfs(field: Json, path: Path = []): Item {
         const type = Record.getValueType(field);
         switch (type) {
             case TypeEnum.String: {
-                return this.buildStringItem(field as string);
+                this.addFlatItem(path, this.buildStringItem(field as string));
+                break;
             }
             case TypeEnum.Number: {
-                return this.buildNumberItem(field as number);
+                this.addFlatItem(path, this.buildNumberItem(field as number));
+                break;
             }
             case TypeEnum.Boolean: {
-                return this.buildBooleanItem(field as boolean);
+                this.addFlatItem(path, this.buildBooleanItem(field as boolean));
+                break;
             }
             case TypeEnum.Null: {
-                return this.buildNullItem();
+                this.addFlatItem(path, this.buildNullItem());
+                break;
             }
             case TypeEnum.Array: {
-                return this.buildArrayItem(field as Json[]);
+                this.buildArrayItem(field as Json[], path);
+                break;
             }
             case TypeEnum.Object: {
-                return this.buildObjectItem(field as {[key: string]: Json});
+                this.buildObjectItem(field as {[key: string]: Json}, path);
+                break;
+            }
+            default: {
+                throw new Error('unsupported field type');
             }
         }
-        throw new Error('unsupported field type');
+    }
+
+    private addFlatItem(path: Path, item: Item) {
+        const flatItem: FlatItem = { path, item };
+        this.itemList.push(flatItem);
     }
 
     private buildStringItem(field: string): StringItem {
@@ -281,21 +309,16 @@ export class Record {
         };
     }
 
-    private buildArrayItem(field: Item[]): ArrayItem {
-        return {
-            type: TypeEnum.Array,
-            value: field.map((field) => this.buildTreeByDfs(field)),
-        };
+    private buildArrayItem(field: Item[], path: Path) {
+        field.forEach((childField, index) => {
+            this.buildItemListByDfs(childField, [...path, index]);
+        });
     }
 
-    private buildObjectItem(field: { [key: string]: Item }): ObjectItem {
-        const value = Object.keys(field).map((key) => ({
-            key,
-            value: this.buildTreeByDfs(field[key]),
-        }));
-        return {
-            type: TypeEnum.Object,
-            value,
-        };
+    private buildObjectItem(field: { [key: string]: Item }, path: Path) {
+        Object.keys(field).forEach((key) => {
+            const childField = field[key];
+            this.buildItemListByDfs(childField, [...path, key]);
+        });
     }
 }

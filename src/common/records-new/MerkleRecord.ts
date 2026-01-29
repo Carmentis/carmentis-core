@@ -1,3 +1,4 @@
+import {Utils} from '../utils/utils';
 import {MerkleLeaf} from "./MerkleLeaf";
 import {MerkleTree} from "../trees/merkleTree";
 import {RecordByChannels} from './RecordByChannels';
@@ -18,21 +19,29 @@ type ChannelMapEntry = {
 export class MerkleRecord {
     private channelMap: Map<number, ChannelMapEntry>;
     private recordByChannels: RecordByChannels | undefined;
+    private publicChannels: Set<number>;
 
     constructor() {
         this.channelMap = new Map;
+        this.publicChannels = new Set;
     }
 
     fromRecordByChannels(recordByChannels: RecordByChannels, peppers: Map<number, Uint8Array>|undefined = undefined) {
         this.channelMap.clear();
+        this.publicChannels = recordByChannels.getPublicChannels();
         this.recordByChannels = recordByChannels;
         const channelIds = this.recordByChannels.getChannelIds();
 
         for (const channelId of channelIds) {
+            const isPublic = this.publicChannels.has(channelId);
             const pepper =
-                peppers === undefined
-                ? SaltShaker.generatePepper()
-                : peppers.get(channelId);
+                isPublic ?
+                    Utils.getNullHash()
+                :
+                    peppers === undefined ?
+                        SaltShaker.generatePepper()
+                    :
+                        peppers.get(channelId);
             if (pepper === undefined) {
                 throw new Error(`no pepper specified for channel ${channelId}`);
             }
@@ -47,6 +56,10 @@ export class MerkleRecord {
             channelId,
             { pepper, positionedLeaves }
         );
+    }
+
+    getPublicChannels() {
+        return this.publicChannels;
     }
 
     getLeavesByChannelMap() {
@@ -77,6 +90,9 @@ export class MerkleRecord {
 
     getChannelRootHash(channelId: number) {
         const channel = this.getChannel(channelId);
+        if (this.publicChannels.has(channelId)) {
+            return Utils.getNullHash();
+        }
         const tree = new MerkleTree;
 
         for (const obj of channel.positionedLeaves) {

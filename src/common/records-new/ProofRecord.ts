@@ -21,15 +21,18 @@ type ChannelMapEntry = {
 export class ProofRecord {
     private channelMap: Map<number, ChannelMapEntry>;
     private fieldMap: Map<string, { channelId: number, index: number }>;
+    private publicChannels: Set<number>;
 
     constructor() {
         this.channelMap = new Map;
         this.fieldMap = new Map;
+        this.publicChannels = new Set;
     }
 
     fromMerkleRecord(merkleRecord: MerkleRecord) {
-        const leavesByChannelMap = merkleRecord.getLeavesByChannelMap();
         this.channelMap.clear();
+        this.publicChannels = merkleRecord.getPublicChannels();
+        const leavesByChannelMap = merkleRecord.getLeavesByChannelMap();
         for (const [ channelId, leaves ] of leavesByChannelMap) {
             this.channelMap.set(
                 channelId,
@@ -47,10 +50,10 @@ export class ProofRecord {
 
     fromProofChannels(proofChannels: ProofChannel[]) {
         this.channelMap.clear();
+        this.publicChannels.clear();
         for (const proofChannel of proofChannels) {
             const leaves: PositionedLeaf[] = [];
             for (const field of proofChannel.fields) {
-                if (field.type == ProofFieldTypeEnum.Public) continue;
                 const leaf = new MerkleLeaf;
                 leaf.fromProofFormat(field);
                 leaves.push({
@@ -63,6 +66,9 @@ export class ProofRecord {
             const witnesses = witnessesHexList.map((hex) =>
                 Utils.binaryFromHexa(hex)
             );
+            if (proofChannel.isPublic) {
+                this.publicChannels.add(proofChannel.id);
+            }
             this.channelMap.set(
                 proofChannel.id,
                 {
@@ -112,38 +118,44 @@ export class ProofRecord {
     }
 
     private buildTrees() {
-        for (const channelLeaves of this.channelMap.values()) {
-            for (const entry of channelLeaves.leaves) {
-                if (entry === null) continue;
-                channelLeaves.tree.setLeaf(entry.index, entry.leaf.getHash());
+        for (const [ channelId, channel ] of this.channelMap) {
+            if (this.publicChannels.has(channelId)) {
+                continue;
             }
-            channelLeaves.tree.finalize(channelLeaves.nLeaves);
-            channelLeaves.tree.setWitnesses(channelLeaves.witnesses);
+            for (const entry of channel.leaves) {
+                if (entry === null) continue;
+                channel.tree.setLeaf(entry.index, entry.leaf.getHash());
+            }
+            channel.tree.finalize(channel.nLeaves);
+            channel.tree.setWitnesses(channel.witnesses);
         }
     }
 
     private buildWitnesses() {
-        for (const channelLeaves of this.channelMap.values()) {
+        for (const [ channelId, channel ] of this.channelMap) {
+            if (this.publicChannels.has(channelId)) {
+                continue;
+            }
             const knownPositions = new Set<number>;
-            for (const entry of channelLeaves.leaves) {
+            for (const entry of channel.leaves) {
                 if (entry === null) continue;
                 knownPositions.add(entry.index);
             }
             const unknownPositions: number[] = [];
-            for (let index = 0; index < channelLeaves.nLeaves; index++) {
+            for (let index = 0; index < channel.nLeaves; index++) {
                 if (!knownPositions.has(index)) {
                     unknownPositions.push(index);
                 }
             }
-            channelLeaves.witnesses = channelLeaves.tree.getWitnesses(unknownPositions);
+            channel.witnesses = channel.tree.getWitnesses(unknownPositions);
         }
     }
 
     private buildFieldMap() {
         this.fieldMap.clear();
-        for (const [ channelId, channelLeaves ] of this.channelMap) {
-            for (let index = 0; index < channelLeaves.leaves.length; index++) {
-                const entry = channelLeaves.leaves[index];
+        for (const [ channelId, channel ] of this.channelMap) {
+            for (let index = 0; index < channel.leaves.length; index++) {
+                const entry = channel.leaves[index];
                 if (entry === null) continue;
                 const path = entry.path;
                 const normalizedPath = JSON.stringify(path);
@@ -154,8 +166,8 @@ export class ProofRecord {
 
     private getLeafByPath(path: Path) {
         const { channelId, index } = this.getFieldByPath(path);
-        const channelLeaves = this.getChannelLeaves(channelId);
-        const entry = channelLeaves.leaves[index];
+        const channel = this.getChannel(channelId);
+        const entry = channel.leaves[index];
 
         if (entry === null) {
             throw new Error(`this field has been removed`);
@@ -173,19 +185,19 @@ export class ProofRecord {
         return entry;
     }
 
-    private getChannelLeaves(channelId: number) {
-        const channelLeaves = this.channelMap.get(channelId);
+    private getChannel(channelId: number) {
+        const channel = this.channelMap.get(channelId);
 
-        if (channelLeaves === undefined) {
+        if (channel === undefined) {
             throw new Error(`unknown channel ID ${channelId}`);
         }
-        return channelLeaves;
+        return channel;
     }
 
     removeField(path: Path) {
         const { channelId, index } = this.getFieldByPath(path);
-        const channelLeaves = this.getChannelLeaves(channelId);
-        channelLeaves.leaves[index] = null;
+        const channel = this.getChannel(channelId);
+        channel.leaves[index] = null;
     }
 
     setFieldToHashed(path: Path) {
@@ -199,8 +211,11 @@ export class ProofRecord {
     }
 
     getRootHashAsBinary(channelId: number) {
-        const channelLeaves = this.getChannelLeaves(channelId);
-        const rootHash = channelLeaves.tree.getRootHash();
+        const channel = this.getChannel(channelId);
+        if (this.publicChannels.has(channelId)) {
+            return Utils.getNullHash();
+        }
+        const rootHash = channel.tree.getRootHash();
         return rootHash;
     }
 
@@ -214,20 +229,21 @@ export class ProofRecord {
         this.buildWitnesses();
         const proofChannels: ProofChannel[] = [];
 
-        for (const [ channelId, channelLeaves ] of this.channelMap) {
+        for (const [ channelId, channel ] of this.channelMap) {
+            const isPublic = this.publicChannels.has(channelId);
             const fields: ProofField[] = [];
-            for (const entry of channelLeaves.leaves) {
+            for (const entry of channel.leaves) {
                 if (entry === null) continue;
-                const field = entry.leaf.toProofFormat(entry.path, entry.index);
+                const field: ProofField = entry.leaf.toProofFormat(entry.path, entry.index);
                 fields.push(field);
             }
-            const witnesses = channelLeaves.witnesses.map((witness) =>
+            const witnesses = channel.witnesses.map((witness) =>
                 Utils.binaryToHexa(witness)
             ).join('');
             proofChannels.push({
                 id: channelId,
-                isPrivate: true,
-                nLeaves: channelLeaves.nLeaves,
+                isPublic,
+                nLeaves: channel.nLeaves,
                 fields,
                 witnesses,
             });

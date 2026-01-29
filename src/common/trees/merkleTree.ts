@@ -59,7 +59,7 @@ export class MerkleTree {
 
         for(let index = 0; index < this.tree[0].length; index++) {
             if(!unknownPositionSet.has(index) && !this.tree[0][index]) {
-                throw `cannot find leaf at index ${index}`;
+                throw new Error(`cannot find leaf at index ${index}`);
             }
         }
 
@@ -67,7 +67,7 @@ export class MerkleTree {
             const witness = this.tree[depth][index];
 
             if(!witness) {
-                throw `cannot find witness hash at depth ${depth}, index ${index}`;
+                throw new Error(`cannot find witness hash at depth ${depth}, index ${index}`);
             }
             witnesses.push(witness);
         }
@@ -86,7 +86,7 @@ export class MerkleTree {
         const witnessPositions = this.getWitnessPositions(unknownPositionSet);
 
         if(witnesses.length != witnessPositions.length) {
-            throw "invalid witness list";
+            throw new Error(`invalid witness list: expected ${witnessPositions.length} witness(es), got ${witnesses.length}`);
         }
 
         let ptr = 0;

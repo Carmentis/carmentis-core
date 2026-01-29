@@ -204,7 +204,6 @@ export class Record {
                 part === field.path[index]
             )
         });
-        console.log(pathString, fieldList);
         return fieldList;
     }
 

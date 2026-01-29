@@ -268,42 +268,32 @@ export enum ProofFieldTypeEnum {
 
 const ProofPFieldCommonProperties = {
     path: PathSchema,
-};
-
-const ProofPrivateFieldCommonProperties = {
-    ...ProofPFieldCommonProperties,
     index: v.number(),
 };
 
-const ProofFieldPublicSchema = v.object({
-    ...ProofPFieldCommonProperties,
-    type: v.literal(ProofFieldTypeEnum.Public),
-    value: PrimitiveValueSchema,
-});
-
 const ProofFieldPlainSchema = v.object({
-    ...ProofPrivateFieldCommonProperties,
+    ...ProofPFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.Plain),
     salt: v.string(),
     value: PrimitiveValueSchema,
 });
 
 const ProofFieldHashableAsPlainSchema = v.object({
-    ...ProofPrivateFieldCommonProperties,
+    ...ProofPFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.HashableAsPlain),
     salt: v.string(),
     value: PrimitiveValueSchema,
 });
 
 const ProofFieldHashableAsHashSchema = v.object({
-    ...ProofPrivateFieldCommonProperties,
+    ...ProofPFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.HashableAsHash),
     salt: v.string(),
     hash: v.string(),
 });
 
 const ProofFieldMaskableAsAllPartsSchema = v.object({
-    ...ProofPrivateFieldCommonProperties,
+    ...ProofPFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.MaskableAsAllParts),
     vSalt: v.string(),
     vParts: v.array(v.string()),
@@ -312,7 +302,7 @@ const ProofFieldMaskableAsAllPartsSchema = v.object({
 });
 
 const ProofFieldMaskableAsVisiblePartsSchema = v.object({
-    ...ProofPrivateFieldCommonProperties,
+    ...ProofPFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.MaskableAsVisibleParts),
     vSalt: v.string(),
     vParts: v.array(v.string()),
@@ -322,7 +312,6 @@ const ProofFieldMaskableAsVisiblePartsSchema = v.object({
 const ProofFieldSchema = v.variant(
     'type',
     [
-        ProofFieldPublicSchema,
         ProofFieldPlainSchema,
         ProofFieldHashableAsPlainSchema,
         ProofFieldHashableAsHashSchema,
@@ -345,7 +334,7 @@ export type ProofInfo = v.InferOutput<typeof ProofInfoSchema>;
 
 const ProofChannelSchema = v.object({
     id: v.number(),
-    isPrivate: v.boolean(),
+    isPublic: v.boolean(),
     nLeaves: v.number(),
     fields: v.array(ProofFieldSchema),
     witnesses: v.string(),

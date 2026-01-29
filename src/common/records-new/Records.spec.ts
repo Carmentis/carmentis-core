@@ -6,6 +6,7 @@ import {ProofRecord} from "./ProofRecord";
 import {OnChainRecord} from "./OnChainRecord";
 
 const initialJson = `{
+    "publicField": "This is public",
     "array0": [ { "thisIsARepeatedKey": 0 }, { "thisIsARepeatedKey": 1 }, { "thisIsARepeatedKey": 2 } ],
     "array1": [ "thisIsARepeatedValue", "thisIsARepeatedValue", "thisIsARepeatedValue" ],
     "firstname": "John",
@@ -21,7 +22,7 @@ const initialJson = `{
     }
 }`;
 
-const finalJson = `{"array0":[{"thisIsARepeatedKey":0},{"thisIsARepeatedKey":1},{"thisIsARepeatedKey":2}],"array1":["thisIsARepeatedValue","thisIsARepeatedValue","thisIsARepeatedValue"],"email":"j***@g***","null":null,"object":{"foo":123,"bar":[null,"CB835593E4FA3633CC971FCBD1EB080CA322258220548EB7087BEAF8EF6D7FF4"]}}`;
+const finalJson = `{"array0":[{"thisIsARepeatedKey":0},{"thisIsARepeatedKey":1},{"thisIsARepeatedKey":2}],"array1":["thisIsARepeatedValue","thisIsARepeatedValue","thisIsARepeatedValue"],"email":"j***@g***","null":null,"object":{"foo":123,"bar":[null,"CB835593E4FA3633CC971FCBD1EB080CA322258220548EB7087BEAF8EF6D7FF4"]},"publicField":"This is public"}`;
 
 describe('Record', () => {
     it('Testing record classes', async () => {
@@ -35,6 +36,8 @@ describe('Record', () => {
         const record1 = new Record;
         record1.fromJson(jsonObject1);
         record1.setChannel("*", 1);
+        record1.setChannel("publicField", 2);
+        record1.setChannelAsPublic(2);
         record1.setAsHashable("object.bar[1]");
         record1.setMaskByRegex("email", /^(.)(.*)(@.)(.*)$/, '$1***$3***');
 
@@ -51,11 +54,15 @@ describe('Record', () => {
         onChainRecord.fromMerkleRecord(merkleRecord);
         const onChainData = onChainRecord.getOnChainData(1);
         const onChainRootHashAsHex = Utils.binaryToHexa(onChainData.rootHash);
+        expect(onChainRootHashAsHex).not.toEqual("0".repeat(64));
+        const onChainPublicData = onChainRecord.getOnChainData(2);
+        const onChainPublicRootHashAsHex = Utils.binaryToHexa(onChainPublicData.rootHash);
+        expect(onChainPublicRootHashAsHex).toEqual("0".repeat(64));
 
         // rebuild a MerkleRecord from the on-chain data
         // and then a ProofRecord from this MerkleRecord
         const rebuiltOnChainRecord = new OnChainRecord;
-        rebuiltOnChainRecord.addOnChainData(1, onChainData.rootHash, onChainData.data);
+        rebuiltOnChainRecord.addOnChainData(1, onChainData.isPublic, onChainData.rootHash, onChainData.data);
         const rebuiltMerkleRecord = rebuiltOnChainRecord.toMerkleRecord();
         const rebuiltProofRecord = new ProofRecord;
         rebuiltProofRecord.fromMerkleRecord(rebuiltMerkleRecord);
@@ -72,6 +79,7 @@ describe('Record', () => {
         const proofRootHashAsHex0 = proofRecord0.getRootHashAsHexString(1);
         expect(proofRootHashAsHex0).toEqual(onChainRootHashAsHex);
         const proofChannels0 = proofRecord0.toProofChannels();
+//      console.log(JSON.stringify(proofChannels0, null, 2));
 
         // build a 2nd proof from the 1st proof
         const proofRecord1 = new ProofRecord;

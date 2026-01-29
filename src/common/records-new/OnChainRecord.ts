@@ -20,13 +20,16 @@ type ChannelMapEntry = {
 
 export class OnChainRecord {
     private channelMap: Map<number, ChannelMapEntry>;
+    private publicChannels: Set<number>;
 
     constructor() {
         this.channelMap = new Map;
+        this.publicChannels = new Set();
     }
 
     fromMerkleRecord(merkleRecord: MerkleRecord) {
         this.channelMap.clear();
+        this.publicChannels = merkleRecord.getPublicChannels();
         const recordByChannels = merkleRecord.getRecordByChannels();
         const channelIds = merkleRecord.getChannelIds();
 
@@ -61,15 +64,23 @@ export class OnChainRecord {
             data: encodedPayload,
         };
         const encodedOnChainData = encode(onChainData);
+        const isPublic = this.publicChannels.has(channelId);
         return {
+            isPublic,
             rootHash: channel.rootHash,
             data: encodedOnChainData,
         };
     }
 
-    addOnChainData(channelId: number, rootHash: Uint8Array, encodedData: Uint8Array) {
+    addOnChainData(channelId: number, isPublic: boolean, rootHash: Uint8Array, encodedData: Uint8Array) {
         if (this.channelMap.has(channelId)) {
             throw new Error(`channel ${channelId} has already been set`);
+        }
+        if (isPublic) {
+            this.publicChannels.add(channelId);
+        }
+        else {
+            this.publicChannels.delete(channelId);
         }
         const onChainData: OnChainChannel = decode(encodedData);
         v.parse(OnChainChannelSchema, onChainData);
@@ -102,7 +113,8 @@ export class OnChainRecord {
                     item,
                 };
             });
-            recordByChannels.setChannel(channelId, flatItems);
+            const isPublic = this.publicChannels.has(channelId);
+            recordByChannels.setChannel(channelId, isPublic, flatItems);
             peppers.set(channelId, channel.pepper);
         }
         const merkleRecord = new MerkleRecord;
@@ -111,13 +123,15 @@ export class OnChainRecord {
         // optionally check root hashes
         if (checkHashes) {
             for (const [channelId, channel] of this.channelMap) {
-                const rootHash = merkleRecord.getChannelRootHash(channelId);
-                if (!Utils.binaryIsEqual(rootHash, channel.rootHash)) {
-                    throw new Error(
-                        `inconsistent Merkle root hash for channel ${channelId} ` +
-                        `(computed ${Utils.binaryToHexa(rootHash)}, ` +
-                        `on-chain value is ${Utils.binaryToHexa(channel.rootHash)})`
-                    )
+                if (!this.publicChannels.has(channelId)) {
+                    const rootHash = merkleRecord.getChannelRootHash(channelId);
+                    if (!Utils.binaryIsEqual(rootHash, channel.rootHash)) {
+                        throw new Error(
+                            `inconsistent Merkle root hash for private channel ${channelId} ` +
+                            `(computed ${Utils.binaryToHexa(rootHash)}, ` +
+                            `on-chain value is ${Utils.binaryToHexa(channel.rootHash)})`
+                        )
+                    }
                 }
             }
         }

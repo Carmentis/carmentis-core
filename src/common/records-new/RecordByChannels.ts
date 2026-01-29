@@ -5,27 +5,40 @@ import {
 
 export class RecordByChannels {
     private channelMap: Map<number, FlatItem[]>;
+    private publicChannels: Set<number>;
 
     constructor() {
         this.channelMap = new Map;
+        this.publicChannels = new Set;
     }
 
     fromRecord(record: Record) {
         this.channelMap.clear();
+        this.publicChannels = record.getPublicChannels();
         const list = record.getItemList();
         for (const flatItem of list) {
             const channelId = flatItem.item.channelId;
             let flatItems = this.channelMap.get(channelId);
             if (flatItems === undefined) {
                 flatItems = [];
-                this.setChannel(channelId, flatItems);
+                this.channelMap.set(channelId, flatItems);
             }
             flatItems.push(flatItem);
         }
     }
 
-    setChannel(channelId: number, flatItems: FlatItem[]) {
+    setChannel(channelId: number, isPublic: boolean, flatItems: FlatItem[]) {
+        if (isPublic) {
+            this.publicChannels.add(channelId);
+        }
+        else {
+            this.publicChannels.delete(channelId);
+        }
         this.channelMap.set(channelId, flatItems);
+    }
+
+    getPublicChannels() {
+        return this.publicChannels;
     }
 
     getChannelIds() {

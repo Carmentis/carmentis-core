@@ -1,101 +1,137 @@
-import {decode, encode} from 'cbor-x';
+import {MerkleLeaf} from "./MerkleLeaf";
+import {MerkleTree} from "../trees/merkleTree";
 import {FlattenedRecord} from './FlattenedRecord';
 import {SaltShaker} from './SaltShaker';
-import {Crypto} from '../crypto/crypto';
+import {PositionedLeaf} from './PositionedLeaf';
 import {
     TypeEnum,
     TransformationTypeEnum,
-    FlatItemType,
-    MerkleLeafTypeEnum,
-    MerkleLeafDataType,
-    MerkleLeafPlainType,
-    MerkleLeafHashedType,
-    MerkleLeafMaskedPartsType,
-    MerkleLeafMaskedType,
-    MerkleLeafType,
+    FlatItem,
+    Item,
 } from './types';
 
+type ChannelMapEntry = {
+    pepper: Uint8Array,
+    positionedLeaves: PositionedLeaf[]
+}
+
 export class MerkleRecord {
+    private channelMap: Map<number, ChannelMapEntry>;
+    private flattenedRecord: FlattenedRecord | undefined;
+
     constructor() {
+        this.channelMap = new Map;
     }
 
-    fromFlattenedRecord(flattenedRecord: FlattenedRecord) {
-        const lists = flattenedRecord.getLists();
+    fromFlattenedRecord(flattenedRecord: FlattenedRecord, peppers: Map<number, Uint8Array>|undefined = undefined) {
+        this.channelMap.clear();
+        this.flattenedRecord = flattenedRecord;
+        const channelIds = this.flattenedRecord.getChannelIds();
 
-        for (const [ channelId, list ] of lists) {
-            this.serializeChannel(list);
-        }
-    }
-
-    private serializeChannel(list: FlatItemType[]) {
-        const pepper = SaltShaker.generatePepper();
-        const saltShaker = new SaltShaker(pepper);
-
-        for (const entry of list) {
-            const item = entry.item;
-            const transformationType = item.type == TypeEnum.String ? item.transformation.type : TransformationTypeEnum.None;
-            let data: MerkleLeafDataType;
-
-            switch (transformationType) {
-                case TransformationTypeEnum.None: {
-                    data = this.getPlainLeafData(saltShaker, entry);
-                    break;
-                }
-                case TransformationTypeEnum.Hashable: {
-                    data = this.getHashedLeafData(saltShaker, entry);
-                    break;
-                }
-                case TransformationTypeEnum.Maskable: {
-                    data = this.getMaskedLeafData(saltShaker, entry);
-                    break;
-                }
-                default: {
-                    throw new Error(`unsupported transformation type '${transformationType}'`);
-                }
+        for (const channelId of channelIds) {
+            const pepper =
+                peppers === undefined
+                ? SaltShaker.generatePepper()
+                : peppers.get(channelId);
+            if (pepper === undefined) {
+                throw new Error(`no pepper specified for channel ${channelId}`);
             }
-            const leaf: MerkleLeafType = {
-                path: entry.path,
-                data,
-            };
-            const encodedLeaf = encode(leaf);
-            console.log(leaf, encodedLeaf);
+            const flatItemList = this.flattenedRecord.getFlatItems(channelId);
+            this.storeChannel(channelId, flatItemList, pepper);
         }
     }
 
-    private getPlainLeafData(saltShaker: SaltShaker, entry: FlatItemType): MerkleLeafPlainType {
-        return {
-            type: MerkleLeafTypeEnum.Plain,
-            salt: saltShaker.getSalt(),
-            value: entry.item.value,
-        };
+    private storeChannel(channelId: number, flatItemList: FlatItem[], pepper: Uint8Array) {
+        const positionedLeaves = this.flatItemsToPositionedLeaves(flatItemList, pepper);
+        this.channelMap.set(
+            channelId,
+            { pepper, positionedLeaves }
+        );
     }
 
-    private getHashedLeafData(saltShaker: SaltShaker, entry: FlatItemType): MerkleLeafHashedType {
-        const serializedValue = encode(entry.item.value);
+    getLeavesByChannelMap() {
+        const leavesByChannelMap = new Map;
 
-        return {
-            type: MerkleLeafTypeEnum.Hashed,
-            salt: saltShaker.getSalt(),
-            hash: Crypto.Hashes.sha512AsBinary(serializedValue),
-        };
+        for (const [ channelId, entry ] of this.channelMap) {
+            leavesByChannelMap.set(channelId, entry.positionedLeaves);
+        }
+        return leavesByChannelMap;
     }
 
-    private getMaskedLeafData(saltShaker: SaltShaker, entry: FlatItemType): MerkleLeafMaskedType {
-        const visibleParts: MerkleLeafMaskedPartsType = {
-            salt: saltShaker.getSalt(),
-            parts: entry.item.transformation.visibleParts,
-        };
-        const hiddenParts: MerkleLeafMaskedPartsType = {
-            salt: saltShaker.getSalt(),
-            parts: entry.item.transformation.hiddenParts,
-        };
-        const serializedVisibleParts = encode(visibleParts);
-        const serializedHiddenParts = encode(visibleParts);
+    getFlattenedRecord() {
+        const flattenedRecord = this.flattenedRecord;
+        if(flattenedRecord === undefined) {
+            throw new Error(`flattenedRecord is not set`);
+        }
+        return flattenedRecord;
+    }
 
-        return {
-            type: MerkleLeafTypeEnum.Masked,
-            visibleHash: Crypto.Hashes.sha512AsBinary(serializedVisibleParts),
-            hiddenHash: Crypto.Hashes.sha512AsBinary(serializedHiddenParts),
-        };
+    getChannelIds() {
+        return [...this.channelMap.keys()].sort((a, b) => a - b);
+    }
+
+    getChannelPepper(channelId: number) {
+        const channel = this.getChannel(channelId);
+        return channel.pepper;
+    }
+
+    getChannelRootHash(channelId: number) {
+        const channel = this.getChannel(channelId);
+        const tree = new MerkleTree;
+
+        for (const obj of channel.positionedLeaves) {
+            const leafHash = obj.leaf.getHash();
+            tree.addLeaf(leafHash);
+        }
+
+        tree.finalize();
+        const rootHash = tree.getRootHash();
+        return rootHash;
+    }
+
+    private getChannel(channelId: number) {
+        const channel = this.channelMap.get(channelId);
+        if (channel === undefined) {
+            throw new Error(`channel ${channelId} not found`);
+        }
+        return channel;
+    }
+
+    private flatItemsToPositionedLeaves(flatItemList: FlatItem[], pepper: Uint8Array) {
+        const saltShaker = new SaltShaker(pepper);
+        const positionedLeaves = flatItemList.map((flatItem, index) => ({
+            leaf: this.flatItemToLeaf(saltShaker, flatItem.item),
+            index,
+            path: flatItem.path,
+        }));
+        return positionedLeaves;
+    }
+
+    private flatItemToLeaf(saltShaker: SaltShaker, item: Item) {
+        const leaf = new MerkleLeaf();
+        const transformationType =
+            item.type == TypeEnum.String ?
+                item.transformation.type
+            :
+                TransformationTypeEnum.None;
+
+        switch (transformationType) {
+            case TransformationTypeEnum.None: {
+                leaf.setPlainDataFromItem(saltShaker, item);
+                break;
+            }
+            case TransformationTypeEnum.Hashable: {
+                leaf.setHashedDataFromItem(saltShaker, item);
+                break;
+            }
+            case TransformationTypeEnum.Maskable: {
+                leaf.setMaskedDataFromItem(saltShaker, item);
+                break;
+            }
+            default: {
+                throw new Error(`unsupported transformation type ${transformationType}`);
+            }
+        }
+        return leaf;
     }
 }

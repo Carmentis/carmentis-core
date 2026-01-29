@@ -1,42 +1,51 @@
-import { Record } from './Record';
+import {Record} from './Record';
 import {
+    Path,
     TypeEnum,
-    ItemType,
-    FlatItemType,
-    ArrayItemType,
-    ObjectItemType,
+    Item,
+    FlatItem,
+    ArrayItem,
+    ObjectItem,
 } from './types';
 
 export class FlattenedRecord {
-    private lists: Map<number, FlatItemType[]>;
+    private channelMap: Map<number, FlatItem[]>;
 
     constructor() {
-        this.lists = new Map;
+        this.channelMap = new Map;
     }
 
     fromRecord(record: Record) {
-        this.lists = new Map;
+        this.channelMap.clear();
         const tree = record.getTree();
         this.flattenByDfs(tree, []);
+    }
 
-        for (const [ channelId, list ] of this.lists) {
-            console.log(channelId, JSON.stringify(list, null, 2));
+    setChannel(channelId: number, flatItems: FlatItem[]) {
+        this.channelMap.set(channelId, flatItems);
+    }
+
+    getChannelIds() {
+        return [...this.channelMap.keys()].sort((a, b) => a - b);
+    }
+
+    getFlatItems(channelId: number) {
+        const flatItems = this.channelMap.get(channelId);
+        if (flatItems == undefined) {
+            throw new Error(`Channel ${channelId} not found`);
         }
+        return flatItems;
     }
 
-    getLists() {
-        return this.lists;
-    }
-
-    private flattenByDfs(item: ItemType, path: string[]) {
+    private flattenByDfs(item: Item, path: Path) {
         switch (item.type) {
             case TypeEnum.Array: {
-                const value = (item as ArrayItemType).value;
-                value.forEach((item, index) => this.flattenByDfs(item, [...path, index.toString()]));
+                const value = (item as ArrayItem).value;
+                value.forEach((item, index) => this.flattenByDfs(item, [...path, index]));
                 break;
             }
             case TypeEnum.Object: {
-                const value = (item as ObjectItemType).value;
+                const value = (item as ObjectItem).value;
                 for (const entry of value) {
                     this.flattenByDfs(entry.value, [...path, entry.key]);
                 }
@@ -44,14 +53,14 @@ export class FlattenedRecord {
             }
             default: {
                 const channelId = item.channelId;
-                let list = this.lists.get(channelId);
+                let flatItems = this.channelMap.get(channelId);
 
-                if (list === undefined) {
-                    list = [];
-                    this.lists.set(channelId, list);
+                if (flatItems === undefined) {
+                    flatItems = [];
+                    this.setChannel(channelId, flatItems);
                 }
 
-                list.push({
+                flatItems.push({
                     path,
                     item,
                 });

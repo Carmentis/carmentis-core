@@ -1,0 +1,237 @@
+import {Utils} from '../utils/utils';
+import {MerkleTree} from "../trees/merkleTree";
+import {MerkleLeaf} from "./MerkleLeaf";
+import {MerkleRecord} from "./MerkleRecord";
+import {
+    Path,
+    ProofField,
+    ProofChannel,
+    ProofFieldTypeEnum,
+    JsonData,
+} from './types';
+import {PositionedLeaf} from "./PositionedLeaf";
+
+type ChannelMapEntry = {
+    nLeaves: number,
+    leaves: (PositionedLeaf | null)[],
+    tree: MerkleTree,
+    witnesses: Uint8Array[],
+}
+
+export class ProofRecord {
+    private channelMap: Map<number, ChannelMapEntry>;
+    private fieldMap: Map<string, { channelId: number, index: number }>;
+
+    constructor() {
+        this.channelMap = new Map;
+        this.fieldMap = new Map;
+    }
+
+    fromMerkleRecord(merkleRecord: MerkleRecord) {
+        const leavesByChannelMap = merkleRecord.getLeavesByChannelMap();
+        this.channelMap.clear();
+        for (const [ channelId, leaves ] of leavesByChannelMap) {
+            this.channelMap.set(
+                channelId,
+                {
+                    nLeaves: leaves.length,
+                    leaves,
+                    tree: new MerkleTree,
+                    witnesses: [],
+                }
+            );
+        }
+        this.buildTrees();
+        this.buildFieldMap();
+    }
+
+    fromProofChannels(proofChannels: ProofChannel[]) {
+        this.channelMap.clear();
+        for (const proofChannel of proofChannels) {
+            const leaves: PositionedLeaf[] = [];
+            for (const field of proofChannel.fields) {
+                if (field.type == ProofFieldTypeEnum.Public) continue;
+                const leaf = new MerkleLeaf;
+                leaf.fromProofFormat(field);
+                leaves.push({
+                    leaf,
+                    path: field.path,
+                    index: field.index
+                });
+            }
+            const witnessesHexList = proofChannel.witnesses.match(/.{64}/g) || [];
+            const witnesses = witnessesHexList.map((hex) =>
+                Utils.binaryFromHexa(hex)
+            );
+            this.channelMap.set(
+                proofChannel.id,
+                {
+                    nLeaves: proofChannel.nLeaves,
+                    leaves,
+                    tree: new MerkleTree,
+                    witnesses,
+                }
+            );
+        }
+        this.buildTrees();
+        this.buildFieldMap();
+    }
+
+    toJson(withDisclosureTypes: boolean = false): JsonData {
+        const object: {[key: string]: any} = {};
+        const list: PositionedLeaf[] = [];
+        for (const {leaves} of this.channelMap.values()) {
+            for (const leaf of leaves) {
+                if (leaf === null) continue;
+                list.push(leaf);
+            }
+        }
+        for(const {path, leaf} of list) {
+            const pathWithRoot = [ 'root', ...path ];
+            let node = object;
+            for(let n = 0; n < pathWithRoot.length; n++) {
+                const key = pathWithRoot[n];
+                const isLast = n == pathWithRoot.length - 1;
+                if(isLast) {
+                    node[key] = withDisclosureTypes ? leaf.getTypedValue() : leaf.getRawValue();
+                }
+                else {
+                    const shouldBeArray = typeof pathWithRoot[n + 1] == 'number';
+                    if (node[key] === undefined) {
+                        node[key] = shouldBeArray ? [] : {};
+                    }
+                    else if (Array.isArray(node[key]) !== shouldBeArray) {
+                        const fieldPath = pathWithRoot.slice(0, n + 1).join('.');
+                        throw new Error(`${fieldPath} is defined as both an array and an object`);
+                    }
+                    node = node[key];
+                }
+            }
+        }
+        return object.root;
+    }
+
+    private buildTrees() {
+        for (const channelLeaves of this.channelMap.values()) {
+            for (const entry of channelLeaves.leaves) {
+                if (entry === null) continue;
+                channelLeaves.tree.setLeaf(entry.index, entry.leaf.getHash());
+            }
+            channelLeaves.tree.finalize(channelLeaves.nLeaves);
+            channelLeaves.tree.setWitnesses(channelLeaves.witnesses);
+        }
+    }
+
+    private buildWitnesses() {
+        for (const channelLeaves of this.channelMap.values()) {
+            const knownPositions = new Set<number>;
+            for (const entry of channelLeaves.leaves) {
+                if (entry === null) continue;
+                knownPositions.add(entry.index);
+            }
+            const unknownPositions: number[] = [];
+            for (let index = 0; index < channelLeaves.nLeaves; index++) {
+                if (!knownPositions.has(index)) {
+                    unknownPositions.push(index);
+                }
+            }
+            channelLeaves.witnesses = channelLeaves.tree.getWitnesses(unknownPositions);
+        }
+    }
+
+    private buildFieldMap() {
+        this.fieldMap.clear();
+        for (const [ channelId, channelLeaves ] of this.channelMap) {
+            for (let index = 0; index < channelLeaves.leaves.length; index++) {
+                const entry = channelLeaves.leaves[index];
+                if (entry === null) continue;
+                const path = entry.path;
+                const normalizedPath = JSON.stringify(path);
+                this.fieldMap.set(normalizedPath, { channelId, index });
+            }
+        }
+    }
+
+    private getLeafByPath(path: Path) {
+        const { channelId, index } = this.getFieldByPath(path);
+        const channelLeaves = this.getChannelLeaves(channelId);
+        const entry = channelLeaves.leaves[index];
+
+        if (entry === null) {
+            throw new Error(`this field has been removed`);
+        }
+        return entry.leaf;
+    }
+
+    private getFieldByPath(path: Path) {
+        const normalizedPath = JSON.stringify(path);
+        const entry = this.fieldMap.get(normalizedPath);
+
+        if (entry === undefined) {
+            throw new Error(`unknown path ${normalizedPath}`);
+        }
+        return entry;
+    }
+
+    private getChannelLeaves(channelId: number) {
+        const channelLeaves = this.channelMap.get(channelId);
+
+        if (channelLeaves === undefined) {
+            throw new Error(`unknown channel ID ${channelId}`);
+        }
+        return channelLeaves;
+    }
+
+    removeField(path: Path) {
+        const { channelId, index } = this.getFieldByPath(path);
+        const channelLeaves = this.getChannelLeaves(channelId);
+        channelLeaves.leaves[index] = null;
+    }
+
+    setFieldToHashed(path: Path) {
+        const leaf = this.getLeafByPath(path);
+        leaf.setToHashed();
+    }
+
+    setFieldToMasked(path: Path) {
+        const leaf = this.getLeafByPath(path);
+        leaf.setToMasked();
+    }
+
+    getRootHashAsBinary(channelId: number) {
+        const channelLeaves = this.getChannelLeaves(channelId);
+        const rootHash = channelLeaves.tree.getRootHash();
+        return rootHash;
+    }
+
+    getRootHashAsHexString(channelId: number) {
+        const rootHash = this.getRootHashAsBinary(channelId);
+        const hexString = Utils.binaryToHexa(rootHash);
+        return hexString;
+    }
+
+    toProofChannels(): ProofChannel[] {
+        this.buildWitnesses();
+        const proofChannels: ProofChannel[] = [];
+
+        for (const [ channelId, channelLeaves ] of this.channelMap) {
+            const fields: ProofField[] = [];
+            for (const entry of channelLeaves.leaves) {
+                if (entry === null) continue;
+                const field = entry.leaf.toProofFormat(entry.path, entry.index);
+                fields.push(field);
+            }
+            const witnesses = channelLeaves.witnesses.map((witness) =>
+                Utils.binaryToHexa(witness)
+            ).join('');
+            proofChannels.push({
+                id: channelId,
+                isPrivate: true,
+                nLeaves: channelLeaves.nLeaves,
+                fields,
+                witnesses,
+            });
+        }
+        return proofChannels;
+    }
+}

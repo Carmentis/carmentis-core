@@ -1,0 +1,340 @@
+import {Crypto} from '../crypto/crypto';
+import {Utils} from '../utils/utils';
+import {encode} from 'cbor-x';
+import {SaltShaker} from './SaltShaker';
+import {
+    Path,
+    Item,
+    PrimitiveValue,
+    TypedPrimitiveValue,
+    MerkleLeafTypeEnum,
+    MerkleLeafData,
+    MerkleLeafMaskableParts,
+    MerkleLeafCommitment,
+    ProofFieldTypeEnum,
+    ProofField,
+} from './types';
+
+export class MerkleLeaf {
+    private internalData: MerkleLeafData | undefined = undefined;
+
+    setPlainDataFromItem(saltShaker: SaltShaker, item: Item) {
+        const salt = saltShaker.getSalt();
+        this.setPlainDataFromValue(salt, item.value);
+    }
+
+    setPlainDataFromValue(salt: Uint8Array, value: PrimitiveValue) {
+        this.internalData = {
+            type: MerkleLeafTypeEnum.Plain,
+            salt,
+            value,
+        };
+    }
+
+    setHashedDataFromItem(saltShaker: SaltShaker, item: Item) {
+        const salt = saltShaker.getSalt();
+        this.setHashedDataFromValue(salt, item.value);
+    }
+
+    setHashedDataFromValue(salt: Uint8Array, value: PrimitiveValue) {
+        this.internalData = {
+            type: MerkleLeafTypeEnum.HashableFromValue,
+            salt,
+            value,
+        };
+    }
+
+    setHashedDataFromHash(salt: Uint8Array, hash: Uint8Array) {
+        this.internalData = {
+            type: MerkleLeafTypeEnum.Hashable,
+            salt,
+            hash,
+        };
+    }
+
+    setMaskedDataFromItem(saltShaker: SaltShaker, item: Item) {
+        const visibleSalt = saltShaker.getSalt();
+        const hiddenSalt = saltShaker.getSalt();
+
+        this.setMaskedDataFromAllParts(
+            visibleSalt,
+            item.transformation.visibleParts,
+            hiddenSalt,
+            item.transformation.hiddenParts,
+        );
+    }
+
+    setMaskedDataFromAllParts(visibleSalt: Uint8Array, visibleParts: string[], hiddenSalt: Uint8Array, hiddenParts: string[]) {
+        const visible: MerkleLeafMaskableParts = {
+            salt: visibleSalt,
+            parts: visibleParts,
+        };
+        const hidden: MerkleLeafMaskableParts = {
+            salt: hiddenSalt,
+            parts: hiddenParts,
+        };
+
+        this.internalData = {
+            type: MerkleLeafTypeEnum.MaskableFromAllParts,
+            visible,
+            hidden,
+        }
+    }
+
+    setMaskedDataFromVisibleParts(visibleSalt: Uint8Array, visibleParts: string[], hiddenHash: Uint8Array) {
+        const visible: MerkleLeafMaskableParts = {
+            salt: visibleSalt,
+            parts: visibleParts,
+        };
+
+        this.internalData = {
+            type: MerkleLeafTypeEnum.MaskableFromVisibleParts,
+            visible,
+            hiddenHash,
+        }
+    }
+
+    setToHashed() {
+        const data = this.getInternalData();
+        if (data.type == MerkleLeafTypeEnum.Hashable) {
+            // the field is already hashed -> ignore
+            return;
+        }
+        if (data.type != MerkleLeafTypeEnum.HashableFromValue) {
+            throw new Error('this field is not hashable');
+        }
+        const serializedValue = encode(data.value);
+        const hash = Crypto.Hashes.sha256AsBinary(serializedValue);
+        this.setHashedDataFromHash(data.salt, hash);
+    }
+
+    setToMasked() {
+        const data = this.getInternalData();
+        if (data.type == MerkleLeafTypeEnum.MaskableFromVisibleParts) {
+            // the field is already masked -> ignore
+            return;
+        }
+        if (data.type != MerkleLeafTypeEnum.MaskableFromAllParts) {
+            throw new Error('this field is not maskable');
+        }
+        const serializedHidden = encode(data.hidden);
+        const hiddenHash = Crypto.Hashes.sha256AsBinary(serializedHidden);
+        this.setMaskedDataFromVisibleParts(data.visible.salt, data.visible.parts, hiddenHash);
+    }
+
+    private getInternalData(): MerkleLeafData {
+        if (this.internalData === undefined) {
+            throw new Error(`internal leaf data has not been set`);
+        }
+        return this.internalData;
+    }
+
+    fromProofFormat(field: ProofField) {
+        switch (field.type) {
+            case ProofFieldTypeEnum.Plain: {
+                this.setPlainDataFromValue(
+                    Utils.binaryFromHexa(field.salt),
+                    field.value
+                );
+                break;
+            }
+            case ProofFieldTypeEnum.HashableAsPlain: {
+                this.setHashedDataFromValue(
+                    Utils.binaryFromHexa(field.salt),
+                    field.value
+                );
+                break;
+            }
+            case ProofFieldTypeEnum.HashableAsHash: {
+                this.setHashedDataFromHash(
+                    Utils.binaryFromHexa(field.salt),
+                    Utils.binaryFromHexa(field.hash)
+                );
+                break;
+            }
+            case ProofFieldTypeEnum.MaskableAsAllParts: {
+                this.setMaskedDataFromAllParts(
+                    Utils.binaryFromHexa(field.vSalt),
+                    field.vParts,
+                    Utils.binaryFromHexa(field.hSalt),
+                    field.hParts
+                );
+                break;
+            }
+            case ProofFieldTypeEnum.MaskableAsVisibleParts: {
+                this.setMaskedDataFromVisibleParts(
+                    Utils.binaryFromHexa(field.vSalt),
+                    field.vParts,
+                    Utils.binaryFromHexa(field.hHash)
+                );
+                break;
+            }
+        }
+    }
+
+    toProofFormat(path: Path, index: number): ProofField {
+        const data = this.getInternalData();
+
+        switch (data.type) {
+            case MerkleLeafTypeEnum.Plain: {
+                return {
+                    path,
+                    index,
+                    type: ProofFieldTypeEnum.Plain,
+                    salt: Utils.binaryToHexa(data.salt),
+                    value: data.value,
+                }
+            }
+            case MerkleLeafTypeEnum.HashableFromValue: {
+                return {
+                    path,
+                    index,
+                    type: ProofFieldTypeEnum.HashableAsPlain,
+                    salt: Utils.binaryToHexa(data.salt),
+                    value: data.value,
+                };
+            }
+            case MerkleLeafTypeEnum.Hashable: {
+                return {
+                    path,
+                    index,
+                    type: ProofFieldTypeEnum.HashableAsHash,
+                    salt: Utils.binaryToHexa(data.salt),
+                    hash: Utils.binaryToHexa(data.hash),
+                };
+            }
+            case MerkleLeafTypeEnum.MaskableFromAllParts: {
+                return {
+                    path,
+                    index,
+                    type: ProofFieldTypeEnum.MaskableAsAllParts,
+                    vSalt: Utils.binaryToHexa(data.visible.salt),
+                    vParts: data.visible.parts,
+                    hSalt: Utils.binaryToHexa(data.hidden.salt),
+                    hParts: data.hidden.parts,
+                };
+            }
+            case MerkleLeafTypeEnum.MaskableFromVisibleParts: {
+                return {
+                    path,
+                    index,
+                    type: ProofFieldTypeEnum.MaskableAsVisibleParts,
+                    vSalt: Utils.binaryToHexa(data.visible.salt),
+                    vParts: data.visible.parts,
+                    hHash: Utils.binaryToHexa(data.hiddenHash),
+                };
+            }
+            default: {
+                throw new Error(`invalid internal data type ${data.type}`);
+            }
+        }
+    }
+
+    private getCommitmentData(): MerkleLeafCommitment {
+        const data = this.getInternalData();
+
+        switch (data.type) {
+            case MerkleLeafTypeEnum.Plain: {
+                return data;
+            }
+            case MerkleLeafTypeEnum.HashableFromValue: {
+                const serializedValue = encode(data.value);
+                const hash = Crypto.Hashes.sha256AsBinary(serializedValue);
+
+                return {
+                    type: MerkleLeafTypeEnum.Hashable,
+                    salt: data.salt,
+                    hash,
+                };
+            }
+            case MerkleLeafTypeEnum.Hashable: {
+                return data;
+            }
+            case MerkleLeafTypeEnum.MaskableFromAllParts: {
+                const serializedVisible = encode(data.visible);
+                const visibleHash = Crypto.Hashes.sha256AsBinary(serializedVisible);
+                const serializedHidden = encode(data.hidden);
+                const hiddenHash = Crypto.Hashes.sha256AsBinary(serializedHidden);
+
+                return {
+                    type: MerkleLeafTypeEnum.Maskable,
+                    visibleHash,
+                    hiddenHash,
+                };
+            }
+            case MerkleLeafTypeEnum.MaskableFromVisibleParts: {
+                const serializedVisible = encode(data.visible);
+                const visibleHash = Crypto.Hashes.sha256AsBinary(serializedVisible);
+
+                return {
+                    type: MerkleLeafTypeEnum.Maskable,
+                    visibleHash,
+                    hiddenHash: data.hiddenHash,
+                };
+            }
+            default: {
+                throw new Error(`invalid internal data type ${data.type}`);
+            }
+        }
+    }
+
+    getHash() {
+        const commitmentData = this.getCommitmentData();
+        const encodedCommitmentData = encode(commitmentData);
+        const hash = Crypto.Hashes.sha256AsBinary(encodedCommitmentData);
+        return hash;
+    }
+
+    getRawValue(): PrimitiveValue {
+        const data = this.getInternalData();
+
+        switch (data.type) {
+            case MerkleLeafTypeEnum.Plain: {
+                return data.value;
+            }
+            case MerkleLeafTypeEnum.HashableFromValue: {
+                return data.value;
+            }
+            case MerkleLeafTypeEnum.Hashable: {
+                return Utils.binaryToHexa(data.hash);
+            }
+            case MerkleLeafTypeEnum.MaskableFromAllParts: {
+                return data.visible.parts.map((s, i) =>
+                    i & 1 ? data.hidden.parts[i >> 1] : s
+                ).join('');
+            }
+            case MerkleLeafTypeEnum.MaskableFromVisibleParts: {
+                return data.visible.parts.join('');
+            }
+            default: {
+                throw new Error(`invalid internal data type ${data.type}`);
+            }
+        }
+    }
+
+    getTypedValue(): TypedPrimitiveValue {
+        const data = this.getInternalData();
+        const value = this.getRawValue();
+
+        switch (data.type) {
+            case MerkleLeafTypeEnum.Plain: {
+                return { disclosure: 'plain', value };
+            }
+            case MerkleLeafTypeEnum.HashableFromValue: {
+                return { disclosure: 'plain', value };
+            }
+            case MerkleLeafTypeEnum.Hashable: {
+                return { disclosure: 'hashed', value };
+            }
+            case MerkleLeafTypeEnum.MaskableFromAllParts: {
+                return { disclosure: 'plain', value };
+            }
+            case MerkleLeafTypeEnum.MaskableFromVisibleParts: {
+                return { disclosure: 'masked', value };
+            }
+            default: {
+                throw new Error(`invalid internal data type ${data.type}`);
+            }
+        }
+    }
+}

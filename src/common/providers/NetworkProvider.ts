@@ -76,7 +76,6 @@ export class NetworkProvider implements IExternalProvider {
             requestType: AbciRequestType.AWAIT_MICROBLOCK_ANCHORING,
             hash: hash
         });
-
         return v.parse(MicroblockInformationSchema, answer);
     }
 
@@ -368,7 +367,7 @@ export class NetworkProvider implements IExternalProvider {
         });
 
         const genesisSnapshotResponse = v.parse(GenesisSnapshotAbciResponseSchema, answer);
-        this.responseLogger.info(`Received genesis snapshots containing {chunksNumber}`, () => ({
+        this.responseLogger.info(`Received genesis snapshots containing {chunksNumber} chunks`, () => ({
             chunksNumber: genesisSnapshotResponse.base64EncodedChunks.length,
         }));
         return genesisSnapshotResponse;

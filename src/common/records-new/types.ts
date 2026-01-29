@@ -20,7 +20,15 @@ export const JsonSchema: v.GenericSchema<JsonData> = v.lazy(() =>
     ])
 );
 
-export type JsonType = v.InferOutput<typeof JsonSchema>;
+export type Json = v.InferOutput<typeof JsonSchema>;
+
+const MaskPartSchema = v.object({
+    start: v.number(),
+    end: v.number(),
+    replacement: v.string(),
+})
+
+export type MaskPart = v.InferOutput<typeof MaskPartSchema>;
 
 export enum TransformationTypeEnum {
     None = 0,
@@ -62,48 +70,49 @@ export enum TypeEnum {
 
 let ItemSchema: v.GenericSchema<any>;
 
-const PrimitiveItemFields = {
+const PrimitiveItemCommonProperties = {
     channelId: v.number(),
 };
 
 const StringItemSchema = v.object({
+    ...PrimitiveItemCommonProperties,
     type: v.literal(TypeEnum.String),
     value: v.string(),
     transformation: TransformationSchema,
-    ...PrimitiveItemFields,
 });
 
-export type StringItemType = v.InferOutput<typeof StringItemSchema>;
+export type StringItem = v.InferOutput<typeof StringItemSchema>;
 
 const NumberItemSchema = v.object({
+    ...PrimitiveItemCommonProperties,
     type: v.literal(TypeEnum.Number),
     value: v.number(),
-    ...PrimitiveItemFields,
 });
 
-export type NumberItemType = v.InferOutput<typeof NumberItemSchema>;
+export type NumberItem = v.InferOutput<typeof NumberItemSchema>;
 
 const BooleanItemSchema = v.object({
+    ...PrimitiveItemCommonProperties,
     type: v.literal(TypeEnum.Boolean),
     value: v.boolean(),
-    ...PrimitiveItemFields,
 });
 
-export type BooleanItemType = v.InferOutput<typeof BooleanItemSchema>;
+export type BooleanItem = v.InferOutput<typeof BooleanItemSchema>;
 
 const NullItemSchema = v.object({
+    ...PrimitiveItemCommonProperties,
     type: v.literal(TypeEnum.Null),
-    ...PrimitiveItemFields,
+    value: v.null(),
 });
 
-export type NullItemType = v.InferOutput<typeof NullItemSchema>;
+export type NullItem = v.InferOutput<typeof NullItemSchema>;
 
 const ArrayItemSchema = v.object({
     type: v.literal(TypeEnum.Array),
     value: v.array(v.lazy(() => ItemSchema)),
 });
 
-export type ArrayItemType = v.InferOutput<typeof ArrayItemSchema>;
+export type ArrayItem = v.InferOutput<typeof ArrayItemSchema>;
 
 const ObjectItemSchema = v.object({
     type: v.literal(TypeEnum.Object),
@@ -115,7 +124,7 @@ const ObjectItemSchema = v.object({
     ),
 });
 
-export type ObjectItemType = v.InferOutput<typeof ObjectItemSchema>;
+export type ObjectItem = v.InferOutput<typeof ObjectItemSchema>;
 
 ItemSchema = v.variant(
     'type',
@@ -129,73 +138,244 @@ ItemSchema = v.variant(
     ]
 );
 
-export type ItemType = v.InferOutput<typeof ItemSchema>;
+export type Item = v.InferOutput<typeof ItemSchema>;
 
-export type FlatItemType = {
-    path: string[],
-    item: ItemType
-};
-
-export enum MerkleLeafTypeEnum {
-    Plain = 0,
-    Hashed = 1,
-    Masked = 2,
-}
-
-const MerkleLeafPrimitiveSchema = v.union([
+const PrimitiveValueSchema = v.union([
     v.string(),
     v.number(),
     v.boolean(),
     v.null(),
 ]);
 
-export type MerkleLeafPrimitiveType = v.InferOutput<typeof MerkleLeafPrimitiveSchema>;
+export type PrimitiveValue = v.InferOutput<typeof PrimitiveValueSchema>;
+
+const PathSchema = v.array(v.union([ v.string(), v.number() ]));
+
+export type Path = v.InferOutput<typeof PathSchema>;
+
+export type FlatItem = {
+    path: Path,
+    item: Item
+};
+
+export const OnChainChannelSchema = v.object({
+    pepper: v.instance(Uint8Array),
+    data: v.instance(Uint8Array),
+});
+
+export type OnChainChannel = v.InferOutput<typeof OnChainChannelSchema>;
+
+export const OnChainItemSchema = v.object({
+    path: PathSchema,
+    value: PrimitiveValueSchema,
+    transformation: v.optional(TransformationSchema),
+});
+
+export type OnChainItem = v.InferOutput<typeof OnChainItemSchema>;
+
+export const OnChainItemListSchema = v.array(OnChainItemSchema);
+
+export enum MerkleLeafTypeEnum {
+    Plain = 0,
+    HashableFromValue = 1,
+    Hashable = 2,
+    MaskableFromAllParts = 3,
+    MaskableFromVisibleParts = 4,
+    Maskable = 5,
+}
 
 const MerkleLeafPlainSchema = v.object({
     type: v.literal(MerkleLeafTypeEnum.Plain),
     salt: uint8array(),
-    value: MerkleLeafPrimitiveSchema,
+    value: PrimitiveValueSchema,
 });
 
-export type MerkleLeafPlainType = v.InferOutput<typeof MerkleLeafPlainSchema>;
+export type MerkleLeafPlain = v.InferOutput<typeof MerkleLeafPlainSchema>;
 
-const MerkleLeafHashedSchema = v.object({
-    type: v.literal(MerkleLeafTypeEnum.Hashed),
+const MerkleLeafHashableFromValueSchema = v.object({
+    type: v.literal(MerkleLeafTypeEnum.HashableFromValue),
+    salt: uint8array(),
+    value: PrimitiveValueSchema,
+});
+
+const MerkleLeafHashableSchema = v.object({
+    type: v.literal(MerkleLeafTypeEnum.Hashable),
     salt: uint8array(),
     hash: uint8array(),
 });
 
-export type MerkleLeafHashedType = v.InferOutput<typeof MerkleLeafHashedSchema>;
+export type MerkleLeafHashable = v.InferOutput<typeof MerkleLeafHashableSchema>;
 
-const MerkleLeafMaskedPartsSchema = v.object({
+const MerkleLeafMaskablePartsSchema = v.object({
     salt: uint8array(),
     parts: v.array(v.string()),
 });
 
-export type MerkleLeafMaskedPartsType = v.InferOutput<typeof MerkleLeafMaskedPartsSchema>;
+export type MerkleLeafMaskableParts = v.InferOutput<typeof MerkleLeafMaskablePartsSchema>;
 
-const MerkleLeafMaskedSchema = v.object({
-    type: v.literal(MerkleLeafTypeEnum.Masked),
+const MerkleLeafMaskableFromAllPartsSchema = v.object({
+    type: v.literal(MerkleLeafTypeEnum.MaskableFromAllParts),
+    visible: MerkleLeafMaskablePartsSchema,
+    hidden: MerkleLeafMaskablePartsSchema,
+});
+
+const MerkleLeafMaskableFromVisiblePartsSchema = v.object({
+    type: v.literal(MerkleLeafTypeEnum.MaskableFromVisibleParts),
+    visible: MerkleLeafMaskablePartsSchema,
+    hiddenHash: uint8array(),
+});
+
+const MerkleLeafMaskableSchema = v.object({
+    type: v.literal(MerkleLeafTypeEnum.Maskable),
     visibleHash: uint8array(),
     hiddenHash: uint8array(),
 });
 
-export type MerkleLeafMaskedType = v.InferOutput<typeof MerkleLeafMaskedSchema>;
+export type MerkleLeafMaskable = v.InferOutput<typeof MerkleLeafMaskableSchema>;
 
 const MerkleLeafDataSchema = v.variant(
     'type',
     [
         MerkleLeafPlainSchema,
-        MerkleLeafHashedSchema,
-        MerkleLeafMaskedSchema,
+        MerkleLeafHashableFromValueSchema,
+        MerkleLeafHashableSchema,
+        MerkleLeafMaskableFromAllPartsSchema,
+        MerkleLeafMaskableFromVisiblePartsSchema,
+        MerkleLeafMaskableSchema,
     ]
 );
 
-export type MerkleLeafDataType = v.InferOutput<typeof MerkleLeafDataSchema>;
+export type MerkleLeafData = v.InferOutput<typeof MerkleLeafDataSchema>;
+
+export type MerkleLeafCommitment =
+    MerkleLeafPlain |
+    MerkleLeafHashable |
+    MerkleLeafMaskable;
 
 const MerkleLeafSchema = v.object({
-    path: v.array(v.string()),
+    path: PathSchema,
     data: MerkleLeafDataSchema,
 });
 
-export type MerkleLeafType = v.InferOutput<typeof MerkleLeafSchema>;
+export enum ProofFieldTypeEnum {
+    Public = 0,
+    Plain = 1,
+    HashableAsPlain = 2,
+    HashableAsHash = 3,
+    MaskableAsAllParts = 4,
+    MaskableAsVisibleParts = 5,
+}
+
+const ProofPFieldCommonProperties = {
+    path: PathSchema,
+};
+
+const ProofPrivateFieldCommonProperties = {
+    ...ProofPFieldCommonProperties,
+    index: v.number(),
+};
+
+const ProofFieldPublicSchema = v.object({
+    ...ProofPFieldCommonProperties,
+    type: v.literal(ProofFieldTypeEnum.Public),
+    value: PrimitiveValueSchema,
+});
+
+const ProofFieldPlainSchema = v.object({
+    ...ProofPrivateFieldCommonProperties,
+    type: v.literal(ProofFieldTypeEnum.Plain),
+    salt: v.string(),
+    value: PrimitiveValueSchema,
+});
+
+const ProofFieldHashableAsPlainSchema = v.object({
+    ...ProofPrivateFieldCommonProperties,
+    type: v.literal(ProofFieldTypeEnum.HashableAsPlain),
+    salt: v.string(),
+    value: PrimitiveValueSchema,
+});
+
+const ProofFieldHashableAsHashSchema = v.object({
+    ...ProofPrivateFieldCommonProperties,
+    type: v.literal(ProofFieldTypeEnum.HashableAsHash),
+    salt: v.string(),
+    hash: v.string(),
+});
+
+const ProofFieldMaskableAsAllPartsSchema = v.object({
+    ...ProofPrivateFieldCommonProperties,
+    type: v.literal(ProofFieldTypeEnum.MaskableAsAllParts),
+    vSalt: v.string(),
+    vParts: v.array(v.string()),
+    hSalt: v.string(),
+    hParts: v.array(v.string()),
+});
+
+const ProofFieldMaskableAsVisiblePartsSchema = v.object({
+    ...ProofPrivateFieldCommonProperties,
+    type: v.literal(ProofFieldTypeEnum.MaskableAsVisibleParts),
+    vSalt: v.string(),
+    vParts: v.array(v.string()),
+    hHash: v.string(),
+});
+
+const ProofFieldSchema = v.variant(
+    'type',
+    [
+        ProofFieldPublicSchema,
+        ProofFieldPlainSchema,
+        ProofFieldHashableAsPlainSchema,
+        ProofFieldHashableAsHashSchema,
+        ProofFieldMaskableAsAllPartsSchema,
+        ProofFieldMaskableAsVisiblePartsSchema,
+    ]
+);
+
+export type ProofField = v.InferOutput<typeof ProofFieldSchema>;
+
+const ProofInfoSchema = v.object({
+    title: v.string(),
+    date: v.string(),
+    description: v.string(),
+    author: v.string(),
+    virtualBlockchainIdentifier: v.string(),
+});
+
+export type ProofInfo = v.InferOutput<typeof ProofInfoSchema>;
+
+const ProofChannelSchema = v.object({
+    id: v.number(),
+    isPrivate: v.boolean(),
+    nLeaves: v.number(),
+    fields: v.array(ProofFieldSchema),
+    witnesses: v.string(),
+});
+
+export type ProofChannel = v.InferOutput<typeof ProofChannelSchema>;
+
+const ProofMicroblockSchema = v.object({
+    height: v.number(),
+    channels: v.array(ProofChannelSchema),
+});
+
+export type ProofMicroblock = v.InferOutput<typeof ProofMicroblockSchema>;
+
+const ProofSignatureSchema = v.object({
+    hash: v.string(),
+    signature: v.string(),
+});
+
+const ProofWrapperSchema = v.object({
+    info: ProofInfoSchema,
+    signature: v.optional(ProofSignatureSchema),
+    microblocks: v.array(ProofMicroblockSchema),
+});
+
+export type ProofWrapper = v.InferOutput<typeof ProofWrapperSchema>;
+
+const TypedPrimitiveValueSchema = v.object({
+    disclosure: v.picklist(['plain', 'hashed', 'masked']),
+    value: PrimitiveValueSchema
+});
+
+export type TypedPrimitiveValue = v.InferOutput<typeof TypedPrimitiveValueSchema>;

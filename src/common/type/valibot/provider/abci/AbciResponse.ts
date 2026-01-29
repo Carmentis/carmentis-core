@@ -93,7 +93,8 @@ export const MicroblockInformationAbciResponseSchema = v.object({
 // MSG_MICROBLOCK_ANCHORING (0x0E)
 export const MicroblockAnchoringAbciResponseSchema = v.object({
   responseType: v.literal(AbciResponseType.MICROBLOCK_ANCHORING),
-  ...VirtualBlockchainInfoSchema.entries
+  ...MicroblockInformationSchema.entries
+//...VirtualBlockchainInfoSchema.entries
 });
 
 export const MicroblockBodyItemSchema = v.object({

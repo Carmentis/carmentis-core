@@ -106,7 +106,7 @@ describe('Chain test', () => {
         await provider.awaitMicroblockAnchoring(carmentisOrganizationMicroblock.getHash().toBytes());
 
         // now create the
-    })
+    }, TEST_TIMEOUT)
 
     /*
     const sigEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();

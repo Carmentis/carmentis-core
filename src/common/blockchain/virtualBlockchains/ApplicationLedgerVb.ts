@@ -266,11 +266,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         throw new ProtocolError(`Actor ${actorId} has not subscribed to a public signature key.`)
     }
 
-
-
-
-
-
     /**
      * Retrieves an existing shared key between two peers, or undefined.
      */
@@ -302,12 +297,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         throw new NoSharedSecretError(guestId, hostId);
     }
 
-
-
     getChannelIdByChannelName(channelName: string) {
         return this.internalState.getChannelIdFromChannelName(channelName)
     }
-
 
     private getActorNameById(actorId: number) {
         const actor = this.internalState.getActorById(actorId);
@@ -335,14 +327,12 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         return this.internalState.getAllChannels();
     }
 
-
     async getOrganizationId(): Promise<Hash> {
         const applicationId = this.getApplicationId();
         const applicationVb = await this.provider.loadApplicationVirtualBlockchain(applicationId);
         const orgId = applicationVb.getOrganizationId();
         return orgId;
     }
-
 
     /**
      * Retrieves the application ID from the current state.
@@ -393,7 +383,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
                 data: data
             });
         }
-
 
         // we now load private channels that might be protected (encrypted)
         const logger = Logger.getLogger([ApplicationLedgerVb.name]);
@@ -453,8 +442,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
                     }
                 }
             }
-
-
         } else {
             console.warn("No private channel loaded: no private decryption key provided.")
         }
@@ -465,7 +452,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         return ir;
     }
 
-
     deriveChannelSectionKey(channelKey: Uint8Array, height: number, channelId: number) {
         return this.deriveChannelSectionMaterial(channelKey, "CHANNEL_SECTION_KEY", height, channelId, 32);
     }
@@ -473,9 +459,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     deriveChannelSectionIv(channelKey: Uint8Array, height: number, channelId: number) {
         return this.deriveChannelSectionMaterial(channelKey, "CHANNEL_SECTION_IV", height, channelId, 12);
     }
-
-
-
 
     deriveChannelSectionMaterial(channelKey: Uint8Array, prefix: string, height: number, channelId: number, keyLength: number) {
         const salt = new Uint8Array();
@@ -491,8 +474,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
 
         return hkdf.deriveKey(channelKey, salt, info, keyLength);
     }
-
-
 
     /**
      *
@@ -535,7 +516,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         return channelKey;
     }
 
-
     /**
      * Returns a channel key derived directly from the private key of the current actor.
      * @param channelId
@@ -561,7 +541,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         return hkdf.deriveKeyNoSalt(inputKeyMaterial, info, 32);
     }
 
-
     /**
      * Returns a channel key from an invitation obtained directly from a microblock.
      *
@@ -584,7 +563,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     ) {
         Assertion.assert(typeof actorId === 'number', `actorId should be a number, got ${typeof actorId}`)
         Assertion.assert(typeof channelId === 'number', `channelId should be a number, got ${typeof actorId}`)
-
 
         // look for an invitation of actorId to channelId and extract the encrypted channel key
         const actor = this.internalState.getActorById(actorId);
@@ -673,8 +651,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         return ir;
     }
 
-
-
     /**
      * Exports a proof containing intermediate representations for all microblocks up to the current height of the virtual blockchain.
      *
@@ -755,16 +731,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         return data;
     }
 
-
-
-
-    /**
-     * Creates a shared key between two peers.
-     */
-
-
-
-
     /**
      * Retrieves a record by fetching the microblock intermediate representation
      * and exporting it to JSON.
@@ -781,9 +747,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         const ir = await this.getMicroblockIntermediateRepresentation(height, hostIdentity);
         return ir.exportToJson() as T;
     }
-
-
-
 
     /**
      Section callbacks

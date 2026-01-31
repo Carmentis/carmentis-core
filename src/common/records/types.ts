@@ -327,6 +327,7 @@ const ProofInfoSchema = v.object({
     date: v.string(),
     description: v.string(),
     author: v.string(),
+    proofVersion: v.number(),
     virtualBlockchainIdentifier: v.string(),
 });
 
@@ -337,7 +338,7 @@ const ProofChannelSchema = v.object({
     isPublic: v.boolean(),
     nLeaves: v.number(),
     fields: v.array(ProofFieldSchema),
-    witnesses: v.string(),
+    witnesses: v.array(v.string()),
 });
 
 export type ProofChannel = v.InferOutput<typeof ProofChannelSchema>;

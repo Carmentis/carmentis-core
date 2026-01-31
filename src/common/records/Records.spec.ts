@@ -53,16 +53,16 @@ describe('Record', () => {
         const onChainRecord = new OnChainRecord;
         onChainRecord.fromMerkleRecord(merkleRecord);
         const onChainData = onChainRecord.getOnChainData(1);
-        const onChainRootHashAsHex = Utils.binaryToHexa(onChainData.rootHash);
+        const onChainRootHashAsHex = Utils.binaryToHexa(onChainData.merkleRootHash);
         expect(onChainRootHashAsHex).not.toEqual("0".repeat(64));
         const onChainPublicData = onChainRecord.getOnChainData(2);
-        const onChainPublicRootHashAsHex = Utils.binaryToHexa(onChainPublicData.rootHash);
+        const onChainPublicRootHashAsHex = Utils.binaryToHexa(onChainPublicData.merkleRootHash);
         expect(onChainPublicRootHashAsHex).toEqual("0".repeat(64));
 
         // rebuild a MerkleRecord from the on-chain data
         // and then a ProofRecord from this MerkleRecord
         const rebuiltOnChainRecord = new OnChainRecord;
-        rebuiltOnChainRecord.addOnChainData(1, onChainData.isPublic, onChainData.rootHash, onChainData.data);
+        rebuiltOnChainRecord.addOnChainData(1, onChainData.isPublic, onChainData.merkleRootHash, onChainData.data);
         const rebuiltMerkleRecord = rebuiltOnChainRecord.toMerkleRecord();
         const rebuiltProofRecord = new ProofRecord;
         rebuiltProofRecord.fromMerkleRecord(rebuiltMerkleRecord);

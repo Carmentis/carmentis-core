@@ -55,6 +55,10 @@ export class OnChainRecord {
         }
     }
 
+    getChannelIds() {
+        return [...this.channelMap.keys()].sort((a, b) => a - b);
+    }
+
     getOnChainData(channelId: number, pack = false) {
         const channel = this.getChannel(channelId);
         const encoder = new Encoder({pack});
@@ -67,7 +71,7 @@ export class OnChainRecord {
         const isPublic = this.publicChannels.has(channelId);
         return {
             isPublic,
-            rootHash: channel.rootHash,
+            merkleRootHash: channel.rootHash,
             data: encodedOnChainData,
         };
     }

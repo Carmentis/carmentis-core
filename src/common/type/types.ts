@@ -1,57 +1,9 @@
+import {JsonData} from '../records/types';
+
 export interface ImportedProof {
     height: number;
-    data: {
-        recordData: RecordEntry[];
-        merkleData: MerkleProof[];
-    };
+    data: JsonData;
 }
-
-export interface RecordEntry {
-    type: number;
-    name: string;
-    properties: Property[];
-    channels: Record<string, unknown>; // vide ici
-}
-
-export interface Property {
-    type: number;
-    name: string;
-
-    // Champs pour propriété simple
-    attributes?: number;
-    channelId?: number;
-    leafIndex?: number;
-    salt?: string;
-    value?: string;
-    valueBinary?: { [key: string]: number };
-
-    // Champs pour collection (entries)
-    entries?: Property[];
-
-    // Champs pour objets imbriqués (properties)
-    properties?: Property[];
-
-    // Présent dans tous les cas
-    channels: Record<string, unknown>;
-
-    // Présent uniquement dans les "entries"
-    index?: number;
-}
-
-export interface MerkleProof {
-    channelId: number;
-    nLeaves: number;
-    witnesses: string;
-}
-
-
-
-
-
-
-
-
-
 
 export interface MicroblockHeaderObject {
     magicString: string;

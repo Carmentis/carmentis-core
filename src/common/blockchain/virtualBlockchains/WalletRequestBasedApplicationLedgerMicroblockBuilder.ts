@@ -5,23 +5,23 @@ import {
     AbstractPublicEncryptionKey
 } from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeInterface";
 import {Microblock} from "../microblock/Microblock";
-import {SchemaValidator} from "../../data/schemaValidator";
 import {Utils} from "../../utils/utils";
 import {ActorType} from "../../constants/ActorType";
 import {Crypto} from "../../crypto/crypto";
 import {DecryptionError, IllegalParameterError, SharedKeyDecryptionError} from "../../errors/carmentis-error";
-import {SCHEMAS} from "../../constants/constants";
 import {PublicSignatureKey} from "../../crypto/signature/PublicSignatureKey";
 import {Assertion} from "../../utils/Assertion";
 import {Logger} from "../../utils/Logger";
 import {HKDF} from "../../crypto/kdf/HKDF";
 import {AES256GCMSymmetricEncryptionKey} from "../../crypto/encryption/symmetric-encryption/encryption-interface";
-import {PrivateSignatureKey} from "../../crypto/signature/PrivateSignatureKey";
 import {ICryptoKeyHandler} from "../../wallet/ICryptoKeyHandler";
 import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-encryption/PublicKeyEncryptionSchemeId";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
-import {Provider} from "../../providers/Provider";
 import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
+import {Record} from "../../records/Record";
+import {RecordByChannels} from "../../records/RecordByChannels";
+import {MerkleRecord} from "../../records/MerkleRecord";
+import {OnChainRecord} from "../../records/OnChainRecord";
 import {
     ApplicationLedgerActorCreationSection,
     ApplicationLedgerActorSubscriptionSection,
@@ -33,12 +33,12 @@ import {
     ApplicationLedgerSharedSecretSection,
     Section
 } from "../../type/valibot/blockchain/section/sections";
-import {IProvider} from "../../providers/IProvider";
 import {Hash} from "../../entities/Hash";
 import {
     AppLedgerMicroblockBuildRequest,
     AppLedgerMicroblockBuildRequestValidation
 } from "../../type/AppLedgerStateUpdateRequest";
+import {MaskPart} from "../../records/types";
 
 export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends ApplicationLedgerMicroblockBuilder {
 
@@ -56,7 +56,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         }
         return builder;
     }
-
 
     private usedSignatureSchemeId: SignatureSchemeId = SignatureSchemeId.SECP256K1;
     private usedPkeSchemeId: PublicKeyEncryptionSchemeId = PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM;
@@ -80,7 +79,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         return actorIdentity.getPrivateDecryptionKey(this.usedPkeSchemeId);
     }
 
-
     async createMicroblockFromStateUpdateRequest(
         hostIdentity: ICryptoKeyHandler,
         request: AppLedgerMicroblockBuildRequest
@@ -88,8 +86,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         const object = AppLedgerMicroblockBuildRequestValidation.validate(request);
         const hostPrivateDecryptionKey = await this.getActorPrivateDecryptionKey(hostIdentity);
         const hostPrivateSignatureKey = await this.getActorPrivateSignatureKey(hostIdentity);
-
-
 
         // add the new actors
         let freeActorId = this.state.getNumberOfActors();
@@ -104,7 +100,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
             }
         }
 
-
         // when creating the virtual blockchain application ledger, the author is automatically
         // subscribed (it should also be created above so it must be specified in the actors section).
         const authorName = object.author;
@@ -118,8 +113,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
                 authorPublicEncryptionKey
             );
         }
-
-
 
         // add the new channels
         let freeChannelId = this.state.getNumberOfChannels();
@@ -136,16 +129,14 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
             freeChannelId += 1;
         }
 
-
-
-        // initialize an IR object, set the channels and load the data
-        const ir = this.vb.getChannelSpecializedIntermediateRepresentationInstance();
-        ir.buildFromJson(object.data);
+        // initialize a Record object and load the JSON data
+        const record = new Record;
+        record.fromJson(object.data);
 
         // process field assignations
         for (const def of object.channelAssignations || []) {
             const channelId = this.state.getChannelIdFromChannelName(def.channelName);
-            ir.setChannel(def.fieldPath, channelId);
+            record.setChannel(def.fieldPath, channelId);
         }
 
         // process actor assignations
@@ -163,22 +154,42 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
 
         // process hashable fields
         for (const def of object.hashableFields || []) {
-            ir.setAsHashable(def.fieldPath);
+            record.setAsHashable(def.fieldPath);
         }
 
         // process maskable fields
         for (const def of object.maskableFields || []) {
-            const list = def.maskedParts.map((obj: any) => [obj.position, obj.position + obj.length, obj.replacementString]);
-            ir.setAsMaskable(def.fieldPath, list);
+            const list: MaskPart[] = def.maskedParts.map((obj: any) => ({
+                start: obj.position,
+                end: obj.position + obj.length,
+                replacement: obj.replacementString
+            }));
+            record.setMaskByPositions(def.fieldPath, list);
         }
 
-        // process channel data
-        ir.finalizeChannelData();
+        // Record -> RecordByChannels -> MerkleRecord -> OnChainRecord
+        const recordByChannels = new RecordByChannels;
+        recordByChannels.fromRecord(record);
+        const merkleRecord = new MerkleRecord;
+        merkleRecord.fromRecordByChannels(recordByChannels);
+        const onChainRecord = new OnChainRecord;
+        onChainRecord.fromMerkleRecord(merkleRecord);
 
-        const channelDataList = ir.exportToSectionFormat();
-        for (const channelData of channelDataList) {
-            const {isPrivate: isPrivateChannel, channelId} = channelData;
-            if (isPrivateChannel) {
+        // process channel data
+        const channelIds = onChainRecord.getChannelIds();
+
+        for (const channelId of channelIds) {
+            const channelData = onChainRecord.getOnChainData(1);
+            const {isPublic, merkleRootHash} = channelData;
+            if (isPublic) {
+                const section: ApplicationLedgerPublicChannelDataSection = {
+                    type: SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA,
+                    channelId: channelId,
+                    data: channelData.data
+                }
+                this.mbUnderConstruction.addSection(section)
+                await this.updateStateWithSection(section)
+            } else {
                 const logger = Logger.getLogger(["critical"]);
                 const height = this.vb.getHeight() + 1; // we are constructing a microblock so the height should be incremented to consider this microblock
                 const channelKey = await this.vb.getChannelKey(authorId, channelId, hostIdentity);
@@ -189,19 +200,11 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
                 const section: ApplicationLedgerPrivateChannelDataSection = {
                     type: SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA,
                     channelId: channelId,
-                    merkleRootHash: Utils.binaryFromHexa(channelData.merkleRootHash),
+                    merkleRootHash: Utils.binaryFromHexa(merkleRootHash),
                     encryptedData: encryptedData
                 }
                 this.mbUnderConstruction.addSection(section);
-                await this.updateStateWithSection(section)
-            } else {
-                const section: ApplicationLedgerPublicChannelDataSection = {
-                    type: SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA,
-                    channelId: channelId,
-                    data: channelData.data
-                }
-                this.mbUnderConstruction.addSection(section)
-                await this.updateStateWithSection(section)
+                await this.updateStateWithSection(section);
             }
         }
 
@@ -242,7 +245,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         await this.updateStateWithSection(section);
     }
 
-
     async inviteActorOnChannel(actorName: string, channelName: string, hostIdentity: ICryptoKeyHandler) {
         console.log("Inviting actor " + actorName + " on channel " + channelName)
         const channelId = this.state.getChannelIdFromChannelName(channelName);
@@ -251,7 +253,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         const hostId = await this.vb.getActorIdByPublicSignatureKey(await hostPrivateSignatureKey.getPublicKey());
         Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId} for channel ${channelName}`)
         const guestId = actorId; // the guest is the actor assigned to the channel
-
 
         // to invite an actor on channel, we first need to known if the actor is already in the channel.
         // If yes, then we have nothing to do.
@@ -282,16 +283,11 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         this.mbUnderConstruction.addSection(section)
         await this.updateStateWithSection(section);
 
-
         /*
         // if the guestId equals the hostId, it is likely a misuse of the record. In this case, we do not do anything
         // because the author is already in the channel by definition (no need to create a shared key, ...).
         if (hostId === guestId) return
          */
-
-
-
-
 
         /*
         // To invite the actor in the channel, we first retrieve or generate a symmetric encryption key used to establish
@@ -302,7 +298,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
             await this.vb.getExistingSharedKey(guestId, hostId);
 
          */
-
 
         /*
         // if we have found the (encrypted) shared secret key, then we *attempt* to decrypt it, otherwise
@@ -328,12 +323,7 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         }
 
          */
-
-
-
-
     }
-
 
     private async createSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, hostId: number, guestId: number) {
         const {
@@ -354,11 +344,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         return hostGuestSharedKey;
     }
 
-
-
-
-
-
     /**
      * TODO: SHOULD NOT DERIVE FROM THE PRIVATE DECRYPTION KEY BUT FROM A DEDICATED SEED
      * @param hostPrivateDecryptionKey
@@ -377,11 +362,9 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         return hostGuestSharedKey;
     }
 
-
     private async generateSharedKeyAndEncryptedSharedKey(hostPrivateDecryptionKey: AbstractPrivateDecryptionKey, guestId: number) {
         const vbGenesisSeed = await this.getGenesisSeed();
         const hostGuestSharedKey = WalletRequestBasedApplicationLedgerMicroblockBuilder.deriveHostGuestSharedKey(hostPrivateDecryptionKey, vbGenesisSeed.toBytes(), guestId);
-
 
         // we encrypt the shared key with the guest's public key
         const guestPublicEncryptionKey = await this.vb.getPublicEncryptionKeyByActorId(guestId);
@@ -427,7 +410,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
             await this.createActor(freeActorId, actorName);
         }
 
-
         // The actor type is currently not used in the protocol
         const unknownActorType = ActorType.UNKNOWN;
 
@@ -448,8 +430,6 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         this.mbUnderConstruction.addSection(section);
         await this.updateStateWithSection(section);
     }
-
-
 
     private getActorIdFromActorName(actorName: string) {
         return this.state.getActorIdByName(actorName);

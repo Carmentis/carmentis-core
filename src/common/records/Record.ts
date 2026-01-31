@@ -118,6 +118,13 @@ export class Record {
         field.transformation = { type: TransformationTypeEnum.Maskable, visibleParts, hiddenParts };
     }
 
+    setMaskByPositions(pathString: string, maskParts: MaskPart[]) {
+        const fields = this.getFieldsByPathString(pathString);
+        for (const field of fields) {
+            this.setMaskOnField(field.item, maskParts);
+        }
+    }
+
     setMaskByRegex(pathString: string, regex: RegExp, substitutionString: string) {
         const fields = this.getFieldsByPathString(pathString);
         for (const field of fields) {
@@ -179,7 +186,10 @@ export class Record {
 
     private getFieldsByPathString(pathString: string): FlatItem[] {
         const parts = pathString.match(/\[\d+\]|[^.[]+/g) || [];
-        const path: Path = parts.map((part) =>
+        if (parts[0] !== 'this') {
+            throw new Error(`the path should begin with 'this'`);
+        }
+        const path: Path = parts.slice(1).map((part) =>
             part[0] == '[' ? Number(part.slice(1, -1)) : part
         );
         const hasInvalidWildcard = path.some((part, index) =>

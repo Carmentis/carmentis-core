@@ -187,8 +187,12 @@ export class ChannelNotDefinedError extends IllegalUsageError {
 }
 
 export class ProofVerificationFailedError extends CarmentisError {
-    constructor() {
-        super("Proof verification failed", CarmentisErrorCode.PROOF_VERIFICATION_FAILURE)
+    constructor(channelId: number, computedHash: string, onChainHash: string) {
+        super(
+            `Proof verification failed on channel ${channelId} ` +
+            `(computed hash is ${computedHash}, on-chain hash is ${onChainHash})`,
+            CarmentisErrorCode.PROOF_VERIFICATION_FAILURE
+        )
     }
 }
 

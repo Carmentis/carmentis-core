@@ -1,11 +1,10 @@
 import {VirtualBlockchain} from "./VirtualBlockchain";
 import {HKDF} from "../../crypto/kdf/HKDF";
-import {ImportedProof, Proof} from "../../type/types";
-import {IntermediateRepresentation} from "../../records/intermediateRepresentation";
 import {Utils} from "../../utils/utils";
 
 import {
-    ActorNotInvitedError, ActorNotSubscribedError,
+    ActorNotInvitedError,
+    ActorNotSubscribedError,
     CurrentActorNotFoundError,
     DecryptionError,
     MicroBlockNotFoundInVirtualBlockchainAtHeightError,
@@ -42,6 +41,11 @@ import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-en
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {ApplicationLedgerChannelInvitationSection} from "../../type/valibot/blockchain/section/sections";
 import {SeedEncoder} from "../../utils/SeedEncoder";
+import {ProofDocument} from "../../records/ProofDocument";
+import {ProofWrapper, JsonData} from "../../records/types";
+import {ImportedProof} from "../../type/types";
+import {ProofRecord} from "../../records/ProofRecord";
+import {OnChainRecord} from "../../records/OnChainRecord";
 
 export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInternalState> {
 
@@ -370,9 +374,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         return this.internalState.getNumberOfActors()
     }
 
-    private async getMicroblockIntermediateRepresentation(height: number, hostIdentity?: ICryptoKeyHandler) {
+    private async getMicroblockMerkleRecord(height: number, hostIdentity?: ICryptoKeyHandler) {
         const microblock = await this.getMicroblock(height);
-        const listOfChannels: { channelId: number, data: object, merkleRootHash?: string }[] = [];
+        const listOfChannels: { channelId: number, isPublic: boolean, merkleRootHash: Uint8Array, data: Uint8Array }[] = [];
 
         // we load the public channels that should be always accessible
         for (const section of microblock.getAllSections()) {
@@ -380,6 +384,8 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
             const {channelId, data} = section;
             listOfChannels.push({
                 channelId: channelId,
+                isPublic: true,
+                merkleRootHash: Utils.getNullHash(),
                 data: data
             });
         }
@@ -425,8 +431,9 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
 
                         listOfChannels.push({
                             channelId: channelId,
-                            merkleRootHash: Utils.binaryToHexa(merkleRootHash),
-                            data: data as Uint8Array
+                            isPublic: false,
+                            merkleRootHash: merkleRootHash,
+                            data: data
                         });
                     } catch (e) {
                         if (e instanceof DecryptionError || e instanceof ActorNotInvitedError) {
@@ -446,10 +453,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
             console.warn("No private channel loaded: no private decryption key provided.")
         }
 
-        // import the channels to the intermediate representation
-        const ir = this.getChannelSpecializedIntermediateRepresentationInstance();
-        ir.importFromSectionFormat(listOfChannels);
-        return ir;
+        // import the channels to an OnChainRecord, then export a MerkleRecord
+        const onChainRecord = new OnChainRecord();
+        for (const channel of listOfChannels) {
+            onChainRecord.addOnChainData(channel.channelId, channel.isPublic, channel.merkleRootHash, channel.data);
+        }
+        const merkleRecord = onChainRecord.toMerkleRecord();
+        return merkleRecord;
     }
 
     deriveChannelSectionKey(channelKey: Uint8Array, height: number, channelId: number) {
@@ -634,6 +644,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     /**
      * Returns an instance of an intermediate representation defining only the channels.
      */
+/*
     getChannelSpecializedIntermediateRepresentationInstance() {
         const ir = new IntermediateRepresentation;
 
@@ -650,7 +661,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         }
         return ir;
     }
-
+*/
     /**
      * Exports a proof containing intermediate representations for all microblocks up to the current height of the virtual blockchain.
      *
@@ -671,29 +682,20 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     async exportProof(
         customInfo: { author: string },
         hostIdentity: ICryptoKeyHandler
-    ): Promise<Proof> {
-        const proofs = [];
+    ): Promise<ProofWrapper> {
+        const proofDocument = new ProofDocument();
+        proofDocument.setAuthor(customInfo.author);
+        proofDocument.setVirtualBlockchainIdentifier(Utils.binaryToHexa(this.getIdentifier().toBytes()));
 
         for (let height = 1; height <= this.getHeight(); height++) {
-            const ir = await this.getMicroblockIntermediateRepresentation(height, hostIdentity);
-
-            proofs.push({
-                height: height,
-                data: ir.exportToProof()
-            });
+            const merkleRecord = await this.getMicroblockMerkleRecord(height, hostIdentity);
+            const proofRecord = new ProofRecord;
+            proofRecord.fromMerkleRecord(merkleRecord);
+            const proofChannels = proofRecord.toProofChannels();
+            proofDocument.addMicroblock(height, proofChannels);
         }
 
-        const info = {
-            title: "Carmentis proof file - Visit www.carmentis.io for more information",
-            date: new Date().toJSON(),
-            author: customInfo.author,
-            virtualBlockchainIdentifier: Utils.binaryToHexa(this.getIdentifier().toBytes())
-        };
-
-        return {
-            info,
-            proofs
-        };
+        return proofDocument.toJson();
     }
 
     /**
@@ -704,27 +706,53 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
      * @throws ProofVerificationFailedError Occurs when the provided proof is not verified.
      */
     async importProof(
-        proofObject: Proof,
-        hostIdentity?: ICryptoKeyHandler
+        proofWrapper: ProofWrapper,
     ): Promise<ImportedProof[]> {
         const data: ImportedProof[] = [];
+        const proofDocument = new ProofDocument();
+        proofDocument.fromProofWrapper(proofWrapper);
+        const proofMicroblocks = proofDocument.getMicroblocks();
 
-        for (let height = 1; height <= this.getHeight(); height++) {
-            const proof = proofObject.proofs.find((proof: any) => proof.height == height);
-            const ir = await this.getMicroblockIntermediateRepresentation(height, hostIdentity);
-            const merkleData = ir.importFromProof(proof?.data);
+        for (const proofMicroblock of proofMicroblocks) {
+            // get the microblock at the expected height, extract all channel data sections
+            // and store their channel IDs and Merkle root hashes in listOfChannels
+            const height = proofMicroblock.height;
+            const onChainMicroblock = await this.getMicroblock(height);
+            const listOfChannels: { channelId: number, merkleRootHash: Uint8Array }[] = [];
 
-            // TODO: check Merkle root hash
-            const verified = true;
-            if (!verified) {
-                throw new ProofVerificationFailedError();
+            for (const section of onChainMicroblock.getAllSections()) {
+                if (section.type === SectionType.APP_LEDGER_PUBLIC_CHANNEL_DATA) {
+                    const {channelId} = section;
+                    listOfChannels.push({
+                        channelId,
+                        merkleRootHash: Utils.getNullHash(),
+                    });
+                }
+                else if (section.type === SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA) {
+                    const {channelId, merkleRootHash} = section;
+                    listOfChannels.push({
+                        channelId,
+                        merkleRootHash,
+                    });
+                }
+            }
+
+            // extract the channels from the proof microblock and compare all Merkle root hashes
+            const proofRecord = new ProofRecord;
+            proofRecord.fromProofChannels(proofMicroblock.channels);
+
+            for (const channel of listOfChannels) {
+                const computedMerkleRootHash = proofRecord.getRootHashAsBinary(channel.channelId);
+                if (!Utils.binaryIsEqual(channel.merkleRootHash, computedMerkleRootHash)) {
+                    const computedHash = Utils.binaryToHexa(computedMerkleRootHash);
+                    const onChainHash = Utils.binaryToHexa(channel.merkleRootHash);
+                    throw new ProofVerificationFailedError(channel.channelId, computedHash, onChainHash);
+                }
             }
 
             data.push({
                 height,
-                // TODO(fix): need attention
-                // @ts-ignore
-                data: ir.exportToJson()
+                data: proofRecord.toJson()
             });
         }
 
@@ -740,12 +768,14 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
      * @param {AbstractPrivateDecryptionKey} [hostPrivateDecryptionKey] - Optional private decryption key for the host.
      * @return {Promise<T>} A promise that resolves with the exported record in JSON format.
      */
-    async getRecord<T = any>(
+    async getRecord(
         height: Height,
         hostIdentity?: ICryptoKeyHandler
-    ) {
-        const ir = await this.getMicroblockIntermediateRepresentation(height, hostIdentity);
-        return ir.exportToJson() as T;
+    ): Promise<JsonData> {
+        const merkleRecord = await this.getMicroblockMerkleRecord(height, hostIdentity);
+        const proofRecord = new ProofRecord;
+        proofRecord.fromMerkleRecord(merkleRecord);
+        return proofRecord.toJson();
     }
 
     /**

@@ -62,7 +62,7 @@ export class ProofRecord {
                     index: field.index
                 });
             }
-            const witnessesHexList = proofChannel.witnesses.match(/.{64}/g) || [];
+            const witnessesHexList = proofChannel.witnesses;
             const witnesses = witnessesHexList.map((hex) =>
                 Utils.binaryFromHexa(hex)
             );
@@ -239,7 +239,7 @@ export class ProofRecord {
             }
             const witnesses = channel.witnesses.map((witness) =>
                 Utils.binaryToHexa(witness)
-            ).join('');
+            );
             proofChannels.push({
                 id: channelId,
                 isPublic,

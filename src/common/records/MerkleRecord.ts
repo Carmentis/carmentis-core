@@ -26,8 +26,13 @@ export class MerkleRecord {
         this.publicChannels = new Set;
     }
 
-    fromRecordByChannels(recordByChannels: RecordByChannels, peppers: Map<number, Uint8Array>|undefined = undefined) {
-        this.channelMap.clear();
+    static fromRecordByChannels(recordByChannels: RecordByChannels, peppers: Map<number, Uint8Array>|undefined = undefined) {
+        const merkleRecord = new MerkleRecord();
+        merkleRecord.setChannelsFromRecordByChannels(recordByChannels, peppers);
+        return merkleRecord;
+    }
+
+    private setChannelsFromRecordByChannels(recordByChannels: RecordByChannels, peppers: Map<number, Uint8Array>|undefined = undefined) {
         this.publicChannels = recordByChannels.getPublicChannels();
         this.recordByChannels = recordByChannels;
         const channelIds = this.recordByChannels.getChannelIds();
@@ -46,12 +51,12 @@ export class MerkleRecord {
                 throw new Error(`no pepper specified for channel ${channelId}`);
             }
             const flatItemList = this.recordByChannels.getFlatItems(channelId);
-            this.storeChannel(channelId, flatItemList, pepper);
+            this.storeChannel(channelId, isPublic, flatItemList, pepper);
         }
     }
 
-    private storeChannel(channelId: number, flatItemList: FlatItem[], pepper: Uint8Array) {
-        const positionedLeaves = this.flatItemsToPositionedLeaves(flatItemList, pepper);
+    private storeChannel(channelId: number, isPublic: boolean, flatItemList: FlatItem[], pepper: Uint8Array) {
+        const positionedLeaves = this.flatItemsToPositionedLeaves(flatItemList, isPublic, pepper);
         this.channelMap.set(
             channelId,
             { pepper, positionedLeaves }
@@ -64,7 +69,6 @@ export class MerkleRecord {
 
     getLeavesByChannelMap() {
         const leavesByChannelMap = new Map;
-
         for (const [ channelId, entry ] of this.channelMap) {
             leavesByChannelMap.set(channelId, entry.positionedLeaves);
         }
@@ -113,41 +117,43 @@ export class MerkleRecord {
         return channel;
     }
 
-    private flatItemsToPositionedLeaves(flatItemList: FlatItem[], pepper: Uint8Array) {
+    private flatItemsToPositionedLeaves(flatItemList: FlatItem[], isPublic: boolean, pepper: Uint8Array) {
         const saltShaker = new SaltShaker(pepper);
         const positionedLeaves = flatItemList.map((flatItem, index) => ({
-            leaf: this.flatItemToLeaf(saltShaker, flatItem.item),
+            leaf: this.flatItemToLeaf(saltShaker, isPublic, flatItem.item),
             index,
             path: flatItem.path,
         }));
         return positionedLeaves;
     }
 
-    private flatItemToLeaf(saltShaker: SaltShaker, item: Item) {
-        const leaf = new MerkleLeaf();
+    private flatItemToLeaf(saltShaker: SaltShaker, isPublic: boolean, item: Item) {
         const transformationType =
             item.type == TypeEnum.String ?
                 item.transformation.type
             :
                 TransformationTypeEnum.None;
 
+        if (isPublic && transformationType != TransformationTypeEnum.None) {
+            throw new Error(`no transformation may be applied to a public field`);
+        }
+
         switch (transformationType) {
             case TransformationTypeEnum.None: {
-                leaf.setPlainDataFromItem(saltShaker, item);
-                break;
+                if (isPublic) {
+                    return MerkleLeaf.fromItemWithPublicData(item);
+                }
+                return MerkleLeaf.fromItemWithPlainData(saltShaker, item);
             }
             case TransformationTypeEnum.Hashable: {
-                leaf.setHashedDataFromItem(saltShaker, item);
-                break;
+                return MerkleLeaf.fromItemWithHashedData(saltShaker, item);
             }
             case TransformationTypeEnum.Maskable: {
-                leaf.setMaskedDataFromItem(saltShaker, item);
-                break;
+                return MerkleLeaf.fromItemWithMaskedData(saltShaker, item);
             }
             default: {
                 throw new Error(`unsupported transformation type ${transformationType}`);
             }
         }
-        return leaf;
     }
 }

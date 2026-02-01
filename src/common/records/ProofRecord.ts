@@ -29,8 +29,19 @@ export class ProofRecord {
         this.publicChannels = new Set;
     }
 
-    fromMerkleRecord(merkleRecord: MerkleRecord) {
-        this.channelMap.clear();
+    static fromMerkleRecord(merkleRecord: MerkleRecord) {
+        const proofRecord = new ProofRecord();
+        proofRecord.setChannelsFromMerkleRecord(merkleRecord);
+        return proofRecord;
+    }
+
+    static fromProofChannels(proofChannels: ProofChannel[]) {
+        const proofRecord = new ProofRecord();
+        proofRecord.setChannelsFromProofChannels(proofChannels);
+        return proofRecord;
+    }
+
+    private setChannelsFromMerkleRecord(merkleRecord: MerkleRecord) {
         this.publicChannels = merkleRecord.getPublicChannels();
         const leavesByChannelMap = merkleRecord.getLeavesByChannelMap();
         for (const [ channelId, leaves ] of leavesByChannelMap) {
@@ -48,31 +59,29 @@ export class ProofRecord {
         this.buildFieldMap();
     }
 
-    fromProofChannels(proofChannels: ProofChannel[]) {
-        this.channelMap.clear();
-        this.publicChannels.clear();
+    private setChannelsFromProofChannels(proofChannels: ProofChannel[]) {
         for (const proofChannel of proofChannels) {
             const leaves: PositionedLeaf[] = [];
             for (const field of proofChannel.fields) {
-                const leaf = new MerkleLeaf;
-                leaf.fromProofFormat(field);
+                const leaf = MerkleLeaf.fromProofFormat(field);
+                const index = field.type == ProofFieldTypeEnum.Public ? 0 : field.index;
                 leaves.push({
                     leaf,
                     path: field.path,
-                    index: field.index
+                    index,
                 });
             }
             const witnessesHexList = proofChannel.witnesses;
             const witnesses = witnessesHexList.map((hex) =>
                 Utils.binaryFromHexa(hex)
             );
-            if (proofChannel.isPublic) {
+            if (proofChannel.is_public) {
                 this.publicChannels.add(proofChannel.id);
             }
             this.channelMap.set(
                 proofChannel.id,
                 {
-                    nLeaves: proofChannel.nLeaves,
+                    nLeaves: proofChannel.n_leaves,
                     leaves,
                     tree: new MerkleTree,
                     witnesses,
@@ -242,8 +251,8 @@ export class ProofRecord {
             );
             proofChannels.push({
                 id: channelId,
-                isPublic,
-                nLeaves: channel.nLeaves,
+                is_public: isPublic,
+                n_leaves: channel.nLeaves,
                 fields,
                 witnesses,
             });

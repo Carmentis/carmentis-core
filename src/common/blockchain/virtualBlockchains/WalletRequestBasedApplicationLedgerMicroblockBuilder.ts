@@ -129,9 +129,8 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
             freeChannelId += 1;
         }
 
-        // initialize a Record object and load the JSON data
-        const record = new Record;
-        record.fromJson(object.data);
+        // initialize a Record object from the JSON object
+        const record = Record.fromObject(object.data);
 
         // process field assignations
         for (const def of object.channelAssignations || []) {
@@ -168,12 +167,9 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         }
 
         // Record -> RecordByChannels -> MerkleRecord -> OnChainRecord
-        const recordByChannels = new RecordByChannels;
-        recordByChannels.fromRecord(record);
-        const merkleRecord = new MerkleRecord;
-        merkleRecord.fromRecordByChannels(recordByChannels);
-        const onChainRecord = new OnChainRecord;
-        onChainRecord.fromMerkleRecord(merkleRecord);
+        const recordByChannels = RecordByChannels.fromRecord(record);
+        const merkleRecord = MerkleRecord.fromRecordByChannels(recordByChannels);
+        const onChainRecord = OnChainRecord.fromMerkleRecord(merkleRecord);
 
         // process channel data
         const channelIds = onChainRecord.getChannelIds();

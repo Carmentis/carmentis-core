@@ -41,6 +41,7 @@ import {PublicKeyEncryptionSchemeId} from "../../crypto/encryption/public-key-en
 import {ProtocolInternalState} from "../internalStates/ProtocolInternalState";
 import {ApplicationLedgerChannelInvitationSection} from "../../type/valibot/blockchain/section/sections";
 import {SeedEncoder} from "../../utils/SeedEncoder";
+import {ProofDocumentVB} from "../../records/ProofDocumentVB";
 import {ProofDocument} from "../../records/ProofDocument";
 import {ProofWrapper, JsonData} from "../../records/types";
 import {ImportedProof} from "../../type/types";
@@ -683,19 +684,21 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         customInfo: { author: string },
         hostIdentity: ICryptoKeyHandler
     ): Promise<ProofWrapper> {
-        const proofDocument = new ProofDocument();
-        proofDocument.setAuthor(customInfo.author);
-        proofDocument.setVirtualBlockchainIdentifier(Utils.binaryToHexa(this.getIdentifier().toBytes()));
+        const proofDocumentVB = new ProofDocumentVB();
+        proofDocumentVB.setIdentifier(Utils.binaryToHexa(this.getIdentifier().toBytes()))
 
         for (let height = 1; height <= this.getHeight(); height++) {
             const merkleRecord = await this.getMicroblockMerkleRecord(height, hostIdentity);
-            const proofRecord = new ProofRecord;
-            proofRecord.fromMerkleRecord(merkleRecord);
+            const proofRecord = ProofRecord.fromMerkleRecord(merkleRecord);
             const proofChannels = proofRecord.toProofChannels();
-            proofDocument.addMicroblock(height, proofChannels);
+            proofDocumentVB.addMicroblock(height, proofChannels);
         }
 
-        return proofDocument.toJson();
+        const proofDocument = new ProofDocument();
+        proofDocument.setAuthor(customInfo.author);
+        proofDocument.addVirtualBlockchain(proofDocumentVB);
+
+        return proofDocument.getObject();
     }
 
     /**
@@ -709,9 +712,16 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         proofWrapper: ProofWrapper,
     ): Promise<ImportedProof[]> {
         const data: ImportedProof[] = [];
-        const proofDocument = new ProofDocument();
-        proofDocument.fromProofWrapper(proofWrapper);
-        const proofMicroblocks = proofDocument.getMicroblocks();
+        const proofDocument = ProofDocument.fromObject(proofWrapper);
+        const proofVirtualBlockchains = proofDocument.getVirtualBlockchains();
+        if (proofVirtualBlockchains.length == 0) {
+            throw new Error(`no virtual blockchain is defined in this proof`);
+        }
+        if (proofVirtualBlockchains.length > 1) {
+            throw new Error(`proofs with multiple virtual blockchains are not supported at this time`);
+        }
+        const proofVirtualBlockchain = proofVirtualBlockchains[0];
+        const proofMicroblocks = proofVirtualBlockchain.getMicroblocks();
 
         for (const proofMicroblock of proofMicroblocks) {
             // get the microblock at the expected height, extract all channel data sections
@@ -738,8 +748,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
             }
 
             // extract the channels from the proof microblock and compare all Merkle root hashes
-            const proofRecord = new ProofRecord;
-            proofRecord.fromProofChannels(proofMicroblock.channels);
+            const proofRecord = ProofRecord.fromProofChannels(proofMicroblock.channels);
 
             for (const channel of listOfChannels) {
                 const computedMerkleRootHash = proofRecord.getRootHashAsBinary(channel.channelId);
@@ -773,8 +782,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         hostIdentity?: ICryptoKeyHandler
     ): Promise<JsonData> {
         const merkleRecord = await this.getMicroblockMerkleRecord(height, hostIdentity);
-        const proofRecord = new ProofRecord;
-        proofRecord.fromMerkleRecord(merkleRecord);
+        const proofRecord = ProofRecord.fromMerkleRecord(merkleRecord);
         return proofRecord.toJson();
     }
 

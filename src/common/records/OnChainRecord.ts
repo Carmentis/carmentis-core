@@ -27,8 +27,13 @@ export class OnChainRecord {
         this.publicChannels = new Set();
     }
 
-    fromMerkleRecord(merkleRecord: MerkleRecord) {
-        this.channelMap.clear();
+    static fromMerkleRecord(merkleRecord: MerkleRecord) {
+        const onChainRecord = new OnChainRecord();
+        onChainRecord.setChannelsFromMerkleRecord(merkleRecord);
+        return onChainRecord;
+    }
+
+    private setChannelsFromMerkleRecord(merkleRecord: MerkleRecord) {
         this.publicChannels = merkleRecord.getPublicChannels();
         const recordByChannels = merkleRecord.getRecordByChannels();
         const channelIds = merkleRecord.getChannelIds();
@@ -121,8 +126,7 @@ export class OnChainRecord {
             recordByChannels.setChannel(channelId, isPublic, flatItems);
             peppers.set(channelId, channel.pepper);
         }
-        const merkleRecord = new MerkleRecord;
-        merkleRecord.fromRecordByChannels(recordByChannels, peppers);
+        const merkleRecord = MerkleRecord.fromRecordByChannels(recordByChannels, peppers);
 
         // optionally check root hashes
         if (checkHashes) {

@@ -176,13 +176,21 @@ export type OnChainItem = v.InferOutput<typeof OnChainItemSchema>;
 export const OnChainItemListSchema = v.array(OnChainItemSchema);
 
 export enum MerkleLeafTypeEnum {
-    Plain = 0,
-    HashableFromValue = 1,
-    Hashable = 2,
-    MaskableFromAllParts = 3,
-    MaskableFromVisibleParts = 4,
-    Maskable = 5,
+    Public = 0,
+    Plain = 1,
+    HashableFromValue = 2,
+    Hashable = 3,
+    MaskableFromAllParts = 4,
+    MaskableFromVisibleParts = 5,
+    Maskable = 6,
 }
+
+const MerkleLeafPublicSchema = v.object({
+    type: v.literal(MerkleLeafTypeEnum.Public),
+    value: PrimitiveValueSchema,
+});
+
+export type MerkleLeafPublic = v.InferOutput<typeof MerkleLeafPublicSchema>;
 
 const MerkleLeafPlainSchema = v.object({
     type: v.literal(MerkleLeafTypeEnum.Plain),
@@ -236,6 +244,7 @@ export type MerkleLeafMaskable = v.InferOutput<typeof MerkleLeafMaskableSchema>;
 const MerkleLeafDataSchema = v.variant(
     'type',
     [
+        MerkleLeafPublicSchema,
         MerkleLeafPlainSchema,
         MerkleLeafHashableFromValueSchema,
         MerkleLeafHashableSchema,
@@ -248,6 +257,7 @@ const MerkleLeafDataSchema = v.variant(
 export type MerkleLeafData = v.InferOutput<typeof MerkleLeafDataSchema>;
 
 export type MerkleLeafCommitment =
+    MerkleLeafPublic |
     MerkleLeafPlain |
     MerkleLeafHashable |
     MerkleLeafMaskable;
@@ -266,52 +276,59 @@ export enum ProofFieldTypeEnum {
     MaskableAsVisibleParts = 5,
 }
 
-const ProofPFieldCommonProperties = {
+const ProofFieldPublicSchema = v.object({
+    path: PathSchema,
+    type: v.literal(ProofFieldTypeEnum.Public),
+    value: PrimitiveValueSchema,
+});
+
+const ProofPrivateFieldCommonProperties = {
     path: PathSchema,
     index: v.number(),
 };
 
 const ProofFieldPlainSchema = v.object({
-    ...ProofPFieldCommonProperties,
+    ...ProofPrivateFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.Plain),
     salt: v.string(),
     value: PrimitiveValueSchema,
 });
 
 const ProofFieldHashableAsPlainSchema = v.object({
-    ...ProofPFieldCommonProperties,
+    ...ProofPrivateFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.HashableAsPlain),
     salt: v.string(),
     value: PrimitiveValueSchema,
 });
 
 const ProofFieldHashableAsHashSchema = v.object({
-    ...ProofPFieldCommonProperties,
+    ...ProofPrivateFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.HashableAsHash),
     salt: v.string(),
     hash: v.string(),
 });
 
 const ProofFieldMaskableAsAllPartsSchema = v.object({
-    ...ProofPFieldCommonProperties,
+    ...ProofPrivateFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.MaskableAsAllParts),
-    vSalt: v.string(),
-    vParts: v.array(v.string()),
-    hSalt: v.string(),
-    hParts: v.array(v.string()),
+    v_salt: v.string(),
+    v_parts: v.array(v.string()),
+    h_salt: v.string(),
+    h_parts: v.array(v.string()),
 });
 
 const ProofFieldMaskableAsVisiblePartsSchema = v.object({
-    ...ProofPFieldCommonProperties,
+    ...ProofPrivateFieldCommonProperties,
     type: v.literal(ProofFieldTypeEnum.MaskableAsVisibleParts),
-    vSalt: v.string(),
-    vParts: v.array(v.string()),
-    hHash: v.string(),
+    v_salt: v.string(),
+    v_parts: v.array(v.string()),
+    h_hash: v.string(),
 });
 
 const ProofFieldSchema = v.variant(
     'type',
     [
+        ProofFieldPublicSchema,
         ProofFieldPlainSchema,
         ProofFieldHashableAsPlainSchema,
         ProofFieldHashableAsHashSchema,
@@ -327,16 +344,14 @@ const ProofInfoSchema = v.object({
     date: v.string(),
     description: v.string(),
     author: v.string(),
-    proofVersion: v.number(),
-    virtualBlockchainIdentifier: v.string(),
 });
 
 export type ProofInfo = v.InferOutput<typeof ProofInfoSchema>;
 
 const ProofChannelSchema = v.object({
     id: v.number(),
-    isPublic: v.boolean(),
-    nLeaves: v.number(),
+    is_public: v.boolean(),
+    n_leaves: v.number(),
     fields: v.array(ProofFieldSchema),
     witnesses: v.array(v.string()),
 });
@@ -350,15 +365,37 @@ const ProofMicroblockSchema = v.object({
 
 export type ProofMicroblock = v.InferOutput<typeof ProofMicroblockSchema>;
 
-const ProofSignatureSchema = v.object({
-    hash: v.string(),
-    signature: v.string(),
+const ProofVirtualBlockchainSchema = v.object({
+    id: v.string(),
+    microblocks: v.array(ProofMicroblockSchema),
 });
 
+export type ProofVirtualBlockchain = v.InferOutput<typeof ProofVirtualBlockchainSchema>;
+
+const ProofSignatureCommitmentSchema = v.object({
+    issued_at: v.optional(v.string()),
+    digest_alg: v.optional(v.picklist(['sha256'])),
+    digest_target: v.optional(v.picklist(['cbor_proof'])),
+    digest: v.optional(v.string()),
+});
+
+export type ProofSignatureCommitment = v.InferOutput<typeof ProofSignatureCommitmentSchema>;
+
+const ProofSignatureSchema = v.object({
+    commitment: ProofSignatureCommitmentSchema,
+    signer: v.string(),
+    pubkey: v.string(),
+    alg: v.picklist(['ed25519']),
+    sig: v.string(),
+});
+
+export type ProofSignature = v.InferOutput<typeof ProofSignatureSchema>;
+
 const ProofWrapperSchema = v.object({
+    version: v.number(),
     info: ProofInfoSchema,
+    virtual_blockchains: v.array(ProofVirtualBlockchainSchema),
     signature: v.optional(ProofSignatureSchema),
-    microblocks: v.array(ProofMicroblockSchema),
 });
 
 export type ProofWrapper = v.InferOutput<typeof ProofWrapperSchema>;

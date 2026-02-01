@@ -23,11 +23,11 @@ export class Record {
         this.publicChannels = new Set;
     }
 
-    fromJson(object: unknown) {
-        this.itemList = [];
-        this.publicChannels.clear();
+    static fromObject(object: unknown) {
+        const record = new Record();
         const parsedObject = v.parse(JsonSchema, object);
-        this.buildItemListByDfs(parsedObject);
+        record.buildItemListByDfs(parsedObject);
+        return record;
     }
 
     setChannelAsPublic(channelId: number) {

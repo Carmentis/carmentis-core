@@ -164,6 +164,7 @@ export * from "./records/MerkleRecord";
 export * from "./records/OnChainRecord";
 export * from "./records/PositionedLeaf";
 export * from "./records/ProofDocument";
+export * from "./records/ProofDocumentVB";
 export * from "./records/ProofRecord";
 export * from "./records/Record";
 export * from "./records/RecordByChannels";

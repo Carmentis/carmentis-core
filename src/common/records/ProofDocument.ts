@@ -1,9 +1,10 @@
 import {Crypto} from '../crypto/crypto';
 import {Utils} from '../utils/utils';
+import {ProofDocumentVB} from './ProofDocumentVB';
 import {encode} from 'cbor-x';
+import * as v from 'valibot';
 import {
-    ProofChannel,
-    ProofMicroblock,
+    ProofSignatureCommitment,
     ProofWrapper,
 } from './types';
 
@@ -14,20 +15,21 @@ export class ProofDocument {
 
     constructor() {
         this.wrapper = {
+            version: PROOF_VERSION,
             info: {
                 title: "Carmentis proof",
                 description: "This is a Carmentis proof file. Visit www.carmentis.io for more information.",
                 author: "",
                 date: (new Date()).toISOString(),
-                proofVersion: PROOF_VERSION,
-                virtualBlockchainIdentifier: ""
             },
-            microblocks: []
+            virtual_blockchains: [],
         };
     }
 
-    fromProofWrapper(proofWrapper: ProofWrapper) {
-        this.wrapper = proofWrapper;
+    static fromObject(proofWrapper: ProofWrapper) {
+        const doc = new ProofDocument();
+        doc.wrapper = proofWrapper;
+        return doc;
     }
 
     setTitle(title: string) {
@@ -62,50 +64,55 @@ export class ProofDocument {
         return new Date(this.wrapper.info.date);
     }
 
-    setVirtualBlockchainIdentifier(virtualBlockchainIdentifier: string) {
-        this.wrapper.info.virtualBlockchainIdentifier = virtualBlockchainIdentifier;
+    addVirtualBlockchain(proofDocumentVB: ProofDocumentVB) {
+        this.wrapper.virtual_blockchains.push(proofDocumentVB.toObject());
     }
 
-    getVirtualBlockchainIdentifier() {
-        return this.wrapper.info.virtualBlockchainIdentifier;
+    getVirtualBlockchain(virtualBlockchainIdentifier: string) {
+
     }
 
-    addMicroblock(height: number, channels: ProofChannel[]) {
-        const microblock: ProofMicroblock = {
-            height,
-            channels,
+    getVirtualBlockchains() {
+        return this.wrapper.virtual_blockchains.map((vb) =>
+            ProofDocumentVB.fromObject(vb)
+        );
+    }
+
+    sign(issuedAt: Date = new Date) {
+        const digest = this.computeDigest();
+        const commitment: ProofSignatureCommitment = {
+            issued_at: issuedAt.toISOString(),
+            digest_alg: 'sha256',
+            digest_target: 'cbor_proof',
+            digest: Utils.binaryToHexa(digest),
         };
-        this.wrapper.microblocks.push(microblock);
-    }
-
-    getMicroblock(height: number): ProofMicroblock {
-        const microblock = this.wrapper.microblocks.find((m) => m.height === height);
-        if (!microblock) {
-            throw new Error(`no microblock found for height ${height}`);
-        }
-        return microblock;
-    }
-
-    getMicroblocks(): ProofMicroblock[] {
-        return this.wrapper.microblocks;
-    }
-
-    sign() {
-        const serializedContent = encode(this.wrapper.microblocks);
-        const contentHash = Crypto.Hashes.sha256AsBinary(serializedContent);
-        const signedData = {
-            date: this.wrapper.info.date,
-            virtualBlockchainIdentifier: this.wrapper.info.virtualBlockchainIdentifier,
-            hash: Utils.binaryToHexa(contentHash)
+        const serializedCommitment = encode(commitment);
+        const commitmentHash = Crypto.Hashes.sha256AsBinary(serializedCommitment);
+        const sig = '';
+        this.wrapper.signature = {
+            commitment,
+            signer: '',
+            pubkey: '',
+            alg: 'ed25519',
+            sig,
         };
-        const serializedSignedData = encode(signedData);
-        const signedHash = Crypto.Hashes.sha256AsBinary(serializedSignedData);
     }
 
     verifySignature() {
+        const digest = this.computeDigest();
     }
 
-    toJson(): ProofWrapper {
+    computeDigest() {
+        const signedContent = {
+            info: this.wrapper.info,
+            virtual_blockchains: this.wrapper.virtual_blockchains,
+        }
+        const serializedSignedContent = encode(signedContent);
+        const signedContentHash = Crypto.Hashes.sha256AsBinary(serializedSignedContent);
+        return signedContentHash;
+    }
+
+    getObject(): ProofWrapper {
         return this.wrapper;
     }
 }

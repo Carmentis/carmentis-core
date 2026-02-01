@@ -18,12 +18,54 @@ import {
 export class MerkleLeaf {
     private internalData: MerkleLeafData | undefined = undefined;
 
-    setPlainDataFromItem(saltShaker: SaltShaker, item: Item) {
-        const salt = saltShaker.getSalt();
-        this.setPlainDataFromValue(salt, item.value);
+    static fromProofFormat(field: ProofField) {
+        const merkleLeaf = new MerkleLeaf();
+        merkleLeaf.fromProofField(field);
+        return merkleLeaf;
     }
 
-    setPlainDataFromValue(salt: Uint8Array, value: PrimitiveValue) {
+    static fromItemWithPublicData(item: Item) {
+        const merkleLeaf = new MerkleLeaf();
+        merkleLeaf.setPublicDataFromValue(item.value);
+        return merkleLeaf;
+    }
+
+    static fromItemWithPlainData(saltShaker: SaltShaker, item: Item) {
+        const merkleLeaf = new MerkleLeaf();
+        const salt = saltShaker.getSalt();
+        merkleLeaf.setPlainDataFromValue(salt, item.value);
+        return merkleLeaf;
+    }
+
+    static fromItemWithHashedData(saltShaker: SaltShaker, item: Item) {
+        const merkleLeaf = new MerkleLeaf();
+        const salt = saltShaker.getSalt();
+        merkleLeaf.setHashedDataFromValue(salt, item.value);
+        return merkleLeaf;
+    }
+
+    static fromItemWithMaskedData(saltShaker: SaltShaker, item: Item) {
+        const merkleLeaf = new MerkleLeaf();
+        const visibleSalt = saltShaker.getSalt();
+        const hiddenSalt = saltShaker.getSalt();
+
+        merkleLeaf.setMaskedDataFromAllParts(
+            visibleSalt,
+            item.transformation.visibleParts,
+            hiddenSalt,
+            item.transformation.hiddenParts,
+        );
+        return merkleLeaf;
+    }
+
+    private setPublicDataFromValue(value: PrimitiveValue) {
+        this.internalData = {
+            type: MerkleLeafTypeEnum.Public,
+            value,
+        };
+    }
+
+    private setPlainDataFromValue(salt: Uint8Array, value: PrimitiveValue) {
         this.internalData = {
             type: MerkleLeafTypeEnum.Plain,
             salt,
@@ -31,12 +73,7 @@ export class MerkleLeaf {
         };
     }
 
-    setHashedDataFromItem(saltShaker: SaltShaker, item: Item) {
-        const salt = saltShaker.getSalt();
-        this.setHashedDataFromValue(salt, item.value);
-    }
-
-    setHashedDataFromValue(salt: Uint8Array, value: PrimitiveValue) {
+    private setHashedDataFromValue(salt: Uint8Array, value: PrimitiveValue) {
         this.internalData = {
             type: MerkleLeafTypeEnum.HashableFromValue,
             salt,
@@ -44,7 +81,7 @@ export class MerkleLeaf {
         };
     }
 
-    setHashedDataFromHash(salt: Uint8Array, hash: Uint8Array) {
+    private setHashedDataFromHash(salt: Uint8Array, hash: Uint8Array) {
         this.internalData = {
             type: MerkleLeafTypeEnum.Hashable,
             salt,
@@ -52,19 +89,7 @@ export class MerkleLeaf {
         };
     }
 
-    setMaskedDataFromItem(saltShaker: SaltShaker, item: Item) {
-        const visibleSalt = saltShaker.getSalt();
-        const hiddenSalt = saltShaker.getSalt();
-
-        this.setMaskedDataFromAllParts(
-            visibleSalt,
-            item.transformation.visibleParts,
-            hiddenSalt,
-            item.transformation.hiddenParts,
-        );
-    }
-
-    setMaskedDataFromAllParts(visibleSalt: Uint8Array, visibleParts: string[], hiddenSalt: Uint8Array, hiddenParts: string[]) {
+    private setMaskedDataFromAllParts(visibleSalt: Uint8Array, visibleParts: string[], hiddenSalt: Uint8Array, hiddenParts: string[]) {
         const visible: MerkleLeafMaskableParts = {
             salt: visibleSalt,
             parts: visibleParts,
@@ -81,7 +106,7 @@ export class MerkleLeaf {
         }
     }
 
-    setMaskedDataFromVisibleParts(visibleSalt: Uint8Array, visibleParts: string[], hiddenHash: Uint8Array) {
+    private setMaskedDataFromVisibleParts(visibleSalt: Uint8Array, visibleParts: string[], hiddenHash: Uint8Array) {
         const visible: MerkleLeafMaskableParts = {
             salt: visibleSalt,
             parts: visibleParts,
@@ -129,8 +154,14 @@ export class MerkleLeaf {
         return this.internalData;
     }
 
-    fromProofFormat(field: ProofField) {
+    private fromProofField(field: ProofField) {
         switch (field.type) {
+            case ProofFieldTypeEnum.Public: {
+                this.setPublicDataFromValue(
+                    field.value
+                );
+                break;
+            }
             case ProofFieldTypeEnum.Plain: {
                 this.setPlainDataFromValue(
                     Utils.binaryFromHexa(field.salt),
@@ -154,18 +185,18 @@ export class MerkleLeaf {
             }
             case ProofFieldTypeEnum.MaskableAsAllParts: {
                 this.setMaskedDataFromAllParts(
-                    Utils.binaryFromHexa(field.vSalt),
-                    field.vParts,
-                    Utils.binaryFromHexa(field.hSalt),
-                    field.hParts
+                    Utils.binaryFromHexa(field.v_salt),
+                    field.v_parts,
+                    Utils.binaryFromHexa(field.h_salt),
+                    field.h_parts
                 );
                 break;
             }
             case ProofFieldTypeEnum.MaskableAsVisibleParts: {
                 this.setMaskedDataFromVisibleParts(
-                    Utils.binaryFromHexa(field.vSalt),
-                    field.vParts,
-                    Utils.binaryFromHexa(field.hHash)
+                    Utils.binaryFromHexa(field.v_salt),
+                    field.v_parts,
+                    Utils.binaryFromHexa(field.h_hash)
                 );
                 break;
             }
@@ -176,6 +207,13 @@ export class MerkleLeaf {
         const data = this.getInternalData();
 
         switch (data.type) {
+            case MerkleLeafTypeEnum.Public: {
+                return {
+                    path,
+                    type: ProofFieldTypeEnum.Public,
+                    value: data.value,
+                }
+            }
             case MerkleLeafTypeEnum.Plain: {
                 return {
                     path,
@@ -208,10 +246,10 @@ export class MerkleLeaf {
                     path,
                     index,
                     type: ProofFieldTypeEnum.MaskableAsAllParts,
-                    vSalt: Utils.binaryToHexa(data.visible.salt),
-                    vParts: data.visible.parts,
-                    hSalt: Utils.binaryToHexa(data.hidden.salt),
-                    hParts: data.hidden.parts,
+                    v_salt: Utils.binaryToHexa(data.visible.salt),
+                    v_parts: data.visible.parts,
+                    h_salt: Utils.binaryToHexa(data.hidden.salt),
+                    h_parts: data.hidden.parts,
                 };
             }
             case MerkleLeafTypeEnum.MaskableFromVisibleParts: {
@@ -219,9 +257,9 @@ export class MerkleLeaf {
                     path,
                     index,
                     type: ProofFieldTypeEnum.MaskableAsVisibleParts,
-                    vSalt: Utils.binaryToHexa(data.visible.salt),
-                    vParts: data.visible.parts,
-                    hHash: Utils.binaryToHexa(data.hiddenHash),
+                    v_salt: Utils.binaryToHexa(data.visible.salt),
+                    v_parts: data.visible.parts,
+                    h_hash: Utils.binaryToHexa(data.hiddenHash),
                 };
             }
             default: {
@@ -234,7 +272,9 @@ export class MerkleLeaf {
         const data = this.getInternalData();
 
         switch (data.type) {
-            case MerkleLeafTypeEnum.Plain: {
+            case MerkleLeafTypeEnum.Public:
+            case MerkleLeafTypeEnum.Plain:
+            case MerkleLeafTypeEnum.Hashable: {
                 return data;
             }
             case MerkleLeafTypeEnum.HashableFromValue: {
@@ -246,9 +286,6 @@ export class MerkleLeaf {
                     salt: data.salt,
                     hash,
                 };
-            }
-            case MerkleLeafTypeEnum.Hashable: {
-                return data;
             }
             case MerkleLeafTypeEnum.MaskableFromAllParts: {
                 const serializedVisible = encode(data.visible);
@@ -289,9 +326,8 @@ export class MerkleLeaf {
         const data = this.getInternalData();
 
         switch (data.type) {
-            case MerkleLeafTypeEnum.Plain: {
-                return data.value;
-            }
+            case MerkleLeafTypeEnum.Public:
+            case MerkleLeafTypeEnum.Plain:
             case MerkleLeafTypeEnum.HashableFromValue: {
                 return data.value;
             }
@@ -317,17 +353,14 @@ export class MerkleLeaf {
         const value = this.getRawValue();
 
         switch (data.type) {
-            case MerkleLeafTypeEnum.Plain: {
-                return { disclosure: 'plain', value };
-            }
-            case MerkleLeafTypeEnum.HashableFromValue: {
+            case MerkleLeafTypeEnum.Public:
+            case MerkleLeafTypeEnum.Plain:
+            case MerkleLeafTypeEnum.HashableFromValue:
+            case MerkleLeafTypeEnum.MaskableFromAllParts: {
                 return { disclosure: 'plain', value };
             }
             case MerkleLeafTypeEnum.Hashable: {
                 return { disclosure: 'hashed', value };
-            }
-            case MerkleLeafTypeEnum.MaskableFromAllParts: {
-                return { disclosure: 'plain', value };
             }
             case MerkleLeafTypeEnum.MaskableFromVisibleParts: {
                 return { disclosure: 'masked', value };

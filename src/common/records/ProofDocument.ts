@@ -6,6 +6,7 @@ import * as v from 'valibot';
 import {
     ProofSignatureCommitment,
     ProofWrapper,
+    ProofWrapperSchema,
 } from './types';
 
 const PROOF_VERSION = 1;
@@ -27,6 +28,7 @@ export class ProofDocument {
     }
 
     static fromObject(proofWrapper: ProofWrapper) {
+        v.parse(ProofWrapperSchema, proofWrapper);
         const doc = new ProofDocument();
         doc.wrapper = proofWrapper;
         return doc;
@@ -68,8 +70,12 @@ export class ProofDocument {
         this.wrapper.virtual_blockchains.push(proofDocumentVB.toObject());
     }
 
-    getVirtualBlockchain(virtualBlockchainIdentifier: string) {
-
+    getVirtualBlockchain(id: string) {
+        const virtualBlockchain = this.wrapper.virtual_blockchains.find((vb) => vb.id === id);
+        if (!virtualBlockchain) {
+            throw new Error(`no virtual blockchain found with ID ${id}`);
+        }
+        return virtualBlockchain;
     }
 
     getVirtualBlockchains() {
@@ -88,6 +94,7 @@ export class ProofDocument {
         };
         const serializedCommitment = encode(commitment);
         const commitmentHash = Crypto.Hashes.sha256AsBinary(serializedCommitment);
+        // TODO: implement actual signature
         const sig = '';
         this.wrapper.signature = {
             commitment,
@@ -100,6 +107,7 @@ export class ProofDocument {
 
     verifySignature() {
         const digest = this.computeDigest();
+        // TODO: implement signature verification
     }
 
     computeDigest() {

@@ -7,7 +7,7 @@ import {OnChainRecord} from "./OnChainRecord";
 import {ProofDocument} from "./ProofDocument";
 import {ProofDocumentVB} from "./ProofDocumentVB";
 
-const initialJson = `{
+const initialJson = {
     "publicField": "This is public",
     "array0": [ { "thisIsARepeatedKey": 0 }, { "thisIsARepeatedKey": 1 }, { "thisIsARepeatedKey": 2 } ],
     "array1": [ "thisIsARepeatedValue", "thisIsARepeatedValue", "thisIsARepeatedValue" ],
@@ -17,14 +17,21 @@ const initialJson = `{
     "null": null,
     "object": {
         "foo": 123,
-        "bar": [
-            456,
-            "hello"
-        ]
+        "bar": [ 456, "hello" ]
     }
-}`;
+};
 
-const finalJson = `{"array0":[{"thisIsARepeatedKey":0},{"thisIsARepeatedKey":1},{"thisIsARepeatedKey":2}],"array1":["thisIsARepeatedValue","thisIsARepeatedValue","thisIsARepeatedValue"],"email":"j***@g***","null":null,"object":{"foo":123,"bar":[null,"CB835593E4FA3633CC971FCBD1EB080CA322258220548EB7087BEAF8EF6D7FF4"]},"publicField":"This is public"}`;
+const finalJson = {
+    "array0": [ {"thisIsARepeatedKey": 0 }, { "thisIsARepeatedKey": 1 }, { "thisIsARepeatedKey": 2 } ],
+    "array1": [ "thisIsARepeatedValue", "thisIsARepeatedValue", "thisIsARepeatedValue" ],
+    "email": "j***@g***",
+    "null": null,
+    "object":{
+        "foo": 123,
+        "bar": [ null, "CB835593E4FA3633CC971FCBD1EB080CA322258220548EB7087BEAF8EF6D7FF4" ]
+    },
+    "publicField": "This is public"
+};
 
 describe('Record', () => {
     it('Testing record classes', async () => {
@@ -33,8 +40,7 @@ describe('Record', () => {
         const record0 = Record.fromObject(jsonObject0);
 
         // build a Record with a hashable field and a maskable field
-        const jsonObject1 = JSON.parse(initialJson);
-        const record1 = Record.fromObject(jsonObject1);
+        const record1 = Record.fromObject(initialJson);
         record1.setChannel("this.*", 1);
         record1.setChannel("this.publicField", 2);
         record1.setChannelAsPublic(2);
@@ -75,8 +81,8 @@ describe('Record', () => {
         expect(proofRootHashAsHex0).toEqual(onChainRootHashAsHex);
         const proofChannels0 = proofRecord0.toProofChannels();
 
-        // build a ProofDocument from proofChannels0
-        // TODO: right now, nothing is verified
+        // build a ProofDocument from proofChannels0 and export it to an object
+        // then attempt to build a new ProofDocument with and without an expected error
         const proofDocumentVB = new ProofDocumentVB();
         proofDocumentVB.setIdentifier(Utils.binaryToHexa(Utils.getNullHash()));
         proofDocumentVB.addMicroblock(1, proofChannels0);
@@ -85,6 +91,9 @@ describe('Record', () => {
         proofDocument.sign();
         const proofDocumentObject = proofDocument.getObject();
         console.log(JSON.stringify(proofDocumentObject, null, 2));
+        expect(() => ProofDocument.fromObject(proofDocumentObject)).not.toThrow();
+        delete (proofDocumentObject as any).info.author;
+        expect(() => ProofDocument.fromObject(proofDocumentObject)).toThrow();
 
         // build a 2nd proof from the 1st proof
         const proofRecord1 = ProofRecord.fromProofChannels(proofChannels0);
@@ -107,6 +116,6 @@ describe('Record', () => {
         const proofRootHashAsHex3 = proofRecord3.getRootHashAsHexString(1);
         expect(proofRootHashAsHex3).toEqual(onChainRootHashAsHex);
         const recoveredFinalJson = proofRecord3.toJson();
-        expect(JSON.stringify(recoveredFinalJson)).toEqual(finalJson);
+        expect(JSON.stringify(recoveredFinalJson)).toEqual(JSON.stringify(finalJson));
     });
 })

@@ -391,7 +391,7 @@ const ProofSignatureSchema = v.object({
 
 export type ProofSignature = v.InferOutput<typeof ProofSignatureSchema>;
 
-const ProofWrapperSchema = v.object({
+export const ProofWrapperSchema = v.object({
     version: v.number(),
     info: ProofInfoSchema,
     virtual_blockchains: v.array(ProofVirtualBlockchainSchema),

@@ -459,7 +459,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         for (const channel of listOfChannels) {
             onChainRecord.addOnChainData(channel.channelId, channel.isPublic, channel.merkleRootHash, channel.data);
         }
-        const merkleRecord = onChainRecord.toMerkleRecord();
+        const merkleRecord = onChainRecord.toMerkleRecord(false);
         return merkleRecord;
     }
 
@@ -689,8 +689,11 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
 
         for (let height = 1; height <= this.getHeight(); height++) {
             const merkleRecord = await this.getMicroblockMerkleRecord(height, hostIdentity);
+            console.log(`Merkle record at height ${height}:`, merkleRecord)
             const proofRecord = ProofRecord.fromMerkleRecord(merkleRecord);
+            console.log(`Proof record at height ${height}:`, proofRecord)
             const proofChannels = proofRecord.toProofChannels();
+            console.log(`Proof channels at height ${height}:`, proofChannels)
             proofDocumentVB.addMicroblock(height, proofChannels);
         }
 
@@ -741,11 +744,13 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
             }
 
             // extract the channels from the proof microblock and compare all Merkle root hashes
+            console.log("ProofMicroblock.channels=", proofMicroblock.channels)
             const proofRecord = ProofRecord.fromProofChannels(proofMicroblock.channels);
 
             for (const channel of listOfChannels) {
                 const computedMerkleRootHash = proofRecord.getRootHashAsBinary(channel.channelId);
                 if (!Utils.binaryIsEqual(channel.merkleRootHash, computedMerkleRootHash)) {
+                    console.log(computedMerkleRootHash, channel)
                     const computedHash = Utils.binaryToHexa(computedMerkleRootHash);
                     const onChainHash = Utils.binaryToHexa(channel.merkleRootHash);
                     throw new ProofVerificationFailedError(channel.channelId, computedHash, onChainHash);

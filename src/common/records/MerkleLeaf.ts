@@ -127,7 +127,7 @@ export class MerkleLeaf {
         if (data.type != MerkleLeafTypeEnum.HashableFromValue) {
             throw new Error('this field is not hashable');
         }
-        const serializedValue = encode(data.value);
+        const serializedValue = this.encoder.encode(data.value);
         const hash = Crypto.Hashes.sha256AsBinary(serializedValue);
         this.setHashedDataFromHash(data.salt, hash);
     }
@@ -141,7 +141,7 @@ export class MerkleLeaf {
         if (data.type != MerkleLeafTypeEnum.MaskableFromAllParts) {
             throw new Error('this field is not maskable');
         }
-        const serializedHidden = encode(data.hidden);
+        const serializedHidden = this.encoder.encode(data.hidden);
         const hiddenHash = Crypto.Hashes.sha256AsBinary(serializedHidden);
         this.setMaskedDataFromVisibleParts(data.visible.salt, data.visible.parts, hiddenHash);
     }
@@ -277,7 +277,7 @@ export class MerkleLeaf {
                 return data;
             }
             case MerkleLeafTypeEnum.HashableFromValue: {
-                const serializedValue = encode(data.value);
+                const serializedValue = this.encoder.encode(data.value);
                 const hash = Crypto.Hashes.sha256AsBinary(serializedValue);
 
                 return {
@@ -287,9 +287,9 @@ export class MerkleLeaf {
                 };
             }
             case MerkleLeafTypeEnum.MaskableFromAllParts: {
-                const serializedVisible = encode(data.visible);
+                const serializedVisible =this.encoder.encode(data.visible);
                 const visibleHash = Crypto.Hashes.sha256AsBinary(serializedVisible);
-                const serializedHidden = encode(data.hidden);
+                const serializedHidden =this.encoder.encode(data.hidden);
                 const hiddenHash = Crypto.Hashes.sha256AsBinary(serializedHidden);
 
                 return {
@@ -299,7 +299,7 @@ export class MerkleLeaf {
                 };
             }
             case MerkleLeafTypeEnum.MaskableFromVisibleParts: {
-                const serializedVisible = encode(data.visible);
+                const serializedVisible =this.encoder.encode(data.visible);
                 const visibleHash = Crypto.Hashes.sha256AsBinary(serializedVisible);
 
                 return {
@@ -316,7 +316,7 @@ export class MerkleLeaf {
 
     getHash() {
         const commitmentData = this.getCommitmentData();
-        const encodedCommitmentData = encode(commitmentData);
+        const encodedCommitmentData = this.encoder.encode(commitmentData);
         const hash = Crypto.Hashes.sha256AsBinary(encodedCommitmentData);
         return hash;
     }

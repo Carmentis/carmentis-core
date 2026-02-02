@@ -161,14 +161,12 @@ function binaryToHexa(array: any) {
 /**
  * Converts a hexadecimal string to an Uint8Array
  */
-function binaryFromHexa(str: any) {
-    return new Uint8Array(
-        typeof str == "string" && str.match(/^([\da-f]{2})*$/gi) ?
-            // @ts-ignore
-            str.match(/../g).map((s) => parseInt(s, 16))
-            :
-            []
-    );
+function binaryFromHexa(str: string) {
+    if (typeof str !== 'string') throw new IllegalParameterError(`Expecting hex-string value: received ${typeof str}`)
+    if (!str.match(/^([\da-f]{2})*$/gi)) throw new IllegalParameterError(`Expecting hex-string value: received '${str}'`)
+    // @ts-ignore
+    const res =  str.match(/../g).map((s) => parseInt(s, 16));
+     return new Uint8Array(res);
 }
 
 /**

@@ -175,7 +175,7 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
         const channelIds = onChainRecord.getChannelIds();
 
         for (const channelId of channelIds) {
-            const channelData = onChainRecord.getOnChainData(1);
+            const channelData = onChainRecord.getOnChainData(channelId);
             const {isPublic, merkleRootHash} = channelData;
             if (isPublic) {
                 const section: ApplicationLedgerPublicChannelDataSection = {

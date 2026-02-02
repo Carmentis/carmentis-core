@@ -155,8 +155,8 @@ export type FlatItem = {
 };
 
 export const OnChainChannelSchema = v.object({
-    pepper: v.instance(Uint8Array),
-    data: v.instance(Uint8Array),
+    pepper: uint8array(),
+    data: uint8array(),
 });
 
 export type OnChainChannel = v.InferOutput<typeof OnChainChannelSchema>;

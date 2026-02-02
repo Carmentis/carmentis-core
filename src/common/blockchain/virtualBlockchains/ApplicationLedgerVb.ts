@@ -501,29 +501,22 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
         Assertion.assert(typeof actorId === 'number', 'Expected actor id with type number')
         Assertion.assert(typeof channelId === 'number', `Expected channel id of type number: got ${typeof channelId}`)
 
-        const logger = Logger.getLogger(['critical']);
-
 
         // if the actor id is the creator of the channel, then we have to derive the channel key locally...
         const state = this.internalState;
         const creatorId = state.getChannelCreatorIdFromChannelId(channelId);
         const actorPrivateDecryptionKey = await hostIdentity.getPrivateDecryptionKey(PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM);
         if (creatorId === actorId) {
-            logger.debug(`Identified as the created of channel ${channelId}`)
             const usedSeed = hostIdentity.getSeedAsBytes();
-            // TODO(log): remove this log
-            logger.warn(`Deriving channel key from ${usedSeed} (${new SeedEncoder().encode(usedSeed)}) and channel id ${channelId}`)
             const channelKey = await this.deriveChannelKey(
                 usedSeed,
                 channelId
             );
-            logger.debug(`Channel key for channel ${channelId} has been derived: ${channelKey}`)
             return channelKey;
         }
 
         // ... otherwise we have to obtain the (encryption of the) channel key from an invitation section.
         const channelKey = await this.getChannelKeyFromInvitation(actorId, channelId, actorPrivateDecryptionKey);
-        logger.debug(`Channel key decrypted from invitation for channel ${channelId}: ${channelKey}`)
         return channelKey;
     }
 
@@ -533,9 +526,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
      */
     async deriveChannelKey(seed: Uint8Array, channelId: number) {
         const genesisSeed = await this.getGenesisSeed();
-        // TODO(log): remove this log
-        const logger = Logger.getLogger(['critical']);
-        logger.warn(`Used genesis seed for channel key derivation: ${genesisSeed.toBytes()}`)
         const encoder = new TextEncoder;
         const info = Utils.binaryFrom(encoder.encode("CHANNEL_KEY"));
         const inputKeyMaterial = Utils.binaryFrom(
@@ -545,9 +535,6 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
             encoder.encode("CHANNEL_ID"),
             Utils.binaryFrom(channelId)
         );
-        logger.warn(`Used input key material for channel key derivation: ${inputKeyMaterial}`)
-        logger.warn(`Used info for channel key derivation: ${info}`)
-
         const hkdf = new HKDF();
         return hkdf.deriveKeyNoSalt(inputKeyMaterial, info, 32);
     }

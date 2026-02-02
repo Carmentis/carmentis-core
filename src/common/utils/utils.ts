@@ -2,6 +2,7 @@ import {DATA} from "../constants/constants";
 import {TypeManager} from "../data/types";
 import {Utf8Encoder} from "../data/utf8Encoder";
 import {Logger} from "./Logger";
+import {IllegalParameterError} from "../errors/carmentis-error";
 
 export const Utils = {
     numberToHexa,

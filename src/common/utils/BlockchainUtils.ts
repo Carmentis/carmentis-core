@@ -1,6 +1,6 @@
 import {Crypto} from "../crypto/crypto";
 import {Utils} from "./utils";
-import {Encoder} from 'cbor-x';
+
 
 import {MicroblockHeader, MicroblockHeaderSchema} from "../type/valibot/blockchain/microblock/MicroblockHeader";
 import {MicroblockBody, MicroblockBodySchema} from "../type/valibot/blockchain/microblock/MicroblockBody";

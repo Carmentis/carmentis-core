@@ -1,5 +1,4 @@
 import * as v from "valibot";
-import {Encoder, encode, decode} from "cbor-x";
 import {Utils} from '../utils/utils';
 import {RecordByChannels} from "./RecordByChannels";
 import {MerkleRecord} from "./MerkleRecord";
@@ -11,6 +10,8 @@ import {
     OnChainChannelSchema,
     OnChainItemListSchema,
 } from "./types";
+import {Logger} from "../utils/Logger";
+import {CBORCryptoBinaryEncoder} from "../crypto/encoder/CryptoEncoderFactory";
 
 type ChannelMapEntry = {
     rootHash: Uint8Array,
@@ -19,6 +20,7 @@ type ChannelMapEntry = {
 }
 
 export class OnChainRecord {
+    private encoder = new CBORCryptoBinaryEncoder()
     private channelMap: Map<number, ChannelMapEntry>;
     private publicChannels: Set<number>;
 
@@ -33,6 +35,7 @@ export class OnChainRecord {
         return onChainRecord;
     }
 
+    private logger = Logger.getLogger([OnChainRecord.name]);
     private setChannelsFromMerkleRecord(merkleRecord: MerkleRecord) {
         this.publicChannels = merkleRecord.getPublicChannels();
         const recordByChannels = merkleRecord.getRecordByChannels();
@@ -66,13 +69,14 @@ export class OnChainRecord {
 
     getOnChainData(channelId: number, pack = false) {
         const channel = this.getChannel(channelId);
-        const encoder = new Encoder({pack});
+        const encoder = new CBORCryptoBinaryEncoder();
+        //const encoder = new Encoder({pack});
         const encodedPayload = encoder.encode(channel.onChainItems);
         const onChainData: OnChainChannel = {
             pepper: channel.pepper,
             data: encodedPayload,
         };
-        const encodedOnChainData = encode(onChainData);
+        const encodedOnChainData = this.encoder.encode(onChainData);
         const isPublic = this.publicChannels.has(channelId);
         return {
             isPublic,
@@ -91,10 +95,10 @@ export class OnChainRecord {
         else {
             this.publicChannels.delete(channelId);
         }
-        const onChainData: OnChainChannel = decode(encodedData);
+        const onChainData: OnChainChannel = this.encoder.decode(encodedData);
         v.parse(OnChainChannelSchema, onChainData);
         const pepper = onChainData.pepper;
-        const onChainItems: OnChainItem[] = decode(onChainData.data);
+        const onChainItems: OnChainItem[] = this.encoder.decode(onChainData.data);
         v.parse(OnChainItemListSchema, onChainItems);
         this.channelMap.set(
             channelId,

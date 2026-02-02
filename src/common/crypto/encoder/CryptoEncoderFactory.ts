@@ -5,20 +5,16 @@ import {SignatureEncoderInterface} from "./signature/SignatureEncoderInterface";
 import {HandlerBasedSignatureEncoder} from "./signature/HandlerBasedSignatureEncoder";
 import {Encoder} from "cbor-x";
 
-class CBORCryptoBinaryEncoder implements EncoderInterface<object, Uint8Array> {
+export class CBORCryptoBinaryEncoder implements EncoderInterface<any, Uint8Array> {
     private static encoder = new Encoder({
-        tagUint8Array: false,
-        //encodeUndefinedAsNil: false,
-        useRecords: true,
-        copyBuffers: true,
-        mapsAsObjects: true,
+        tagUint8Array: false
     });
 
-    decode(data: Uint8Array): object {
+    decode(data: Uint8Array): any {
         return CBORCryptoBinaryEncoder.encoder.decode(data);
     }
 
-    encode(data: object): Uint8Array {
+    encode(data: any): Uint8Array {
         return CBORCryptoBinaryEncoder.encoder.encode(data);
     }
 

@@ -1,6 +1,5 @@
 import {Crypto} from '../crypto/crypto';
 import {Utils} from '../utils/utils';
-import {encode} from 'cbor-x';
 import {SaltShaker} from './SaltShaker';
 import {
     Path,
@@ -14,9 +13,11 @@ import {
     ProofFieldTypeEnum,
     ProofField,
 } from './types';
+import {CBORCryptoBinaryEncoder} from "../crypto/encoder/CryptoEncoderFactory";
 
 export class MerkleLeaf {
     private internalData: MerkleLeafData | undefined = undefined;
+    private encoder = new CBORCryptoBinaryEncoder();
 
     static fromProofFormat(field: ProofField) {
         const merkleLeaf = new MerkleLeaf();

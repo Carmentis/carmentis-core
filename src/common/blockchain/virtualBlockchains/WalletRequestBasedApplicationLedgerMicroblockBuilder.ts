@@ -42,6 +42,7 @@ import {MaskPart} from "../../records/types";
 
 export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends ApplicationLedgerMicroblockBuilder {
 
+    private logger = Logger.getLogger([WalletRequestBasedApplicationLedgerMicroblockBuilder.name]);
     static async createFromVirtualBlockchain(applicationId: Hash, vb: ApplicationLedgerVb) {
         const mb = await vb.createMicroblock();
         const builder = new WalletRequestBasedApplicationLedgerMicroblockBuilder(mb, vb)
@@ -196,7 +197,7 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
                 const section: ApplicationLedgerPrivateChannelDataSection = {
                     type: SectionType.APP_LEDGER_PRIVATE_CHANNEL_DATA,
                     channelId: channelId,
-                    merkleRootHash: Utils.binaryFromHexa(merkleRootHash),
+                    merkleRootHash: merkleRootHash,
                     encryptedData: encryptedData
                 }
                 this.mbUnderConstruction.addSection(section);

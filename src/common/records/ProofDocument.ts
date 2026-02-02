@@ -1,17 +1,18 @@
 import {Crypto} from '../crypto/crypto';
 import {Utils} from '../utils/utils';
 import {ProofDocumentVB} from './ProofDocumentVB';
-import {encode} from 'cbor-x';
 import * as v from 'valibot';
 import {
     ProofSignatureCommitment,
     ProofWrapper,
     ProofWrapperSchema,
 } from './types';
+import {CBORCryptoBinaryEncoder} from "../crypto/encoder/CryptoEncoderFactory";
 
 const PROOF_VERSION = 1;
 
 export class ProofDocument {
+    private encoder = new CBORCryptoBinaryEncoder();
     private wrapper: ProofWrapper;
 
     constructor() {
@@ -103,7 +104,7 @@ export class ProofDocument {
             digest_target: 'cbor_proof',
             digest: Utils.binaryToHexa(digest),
         };
-        const serializedCommitment = encode(commitment);
+        const serializedCommitment = this.encoder.encode(commitment);
         const commitmentHash = Crypto.Hashes.sha256AsBinary(serializedCommitment);
         // TODO: implement actual signature
         const sig = '';
@@ -126,7 +127,7 @@ export class ProofDocument {
             info: this.wrapper.info,
             virtual_blockchains: this.wrapper.virtual_blockchains,
         }
-        const serializedSignedContent = encode(signedContent);
+        const serializedSignedContent = this.encoder.encode(signedContent);
         const signedContentHash = Crypto.Hashes.sha256AsBinary(serializedSignedContent);
         return signedContentHash;
     }

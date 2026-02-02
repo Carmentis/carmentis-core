@@ -100,7 +100,7 @@ export class ProofDocument {
             commitment,
             signer: '',
             pubkey: '',
-            alg: 'ed25519',
+            alg: 'ecdsa-secp256k1',
             sig,
         };
     }

@@ -70,6 +70,17 @@ export class ProofDocument {
         this.wrapper.virtual_blockchains.push(proofDocumentVB.toObject());
     }
 
+    getSingleVirtualBlockchainOrFail() {
+        const virtualBlockchains = this.getVirtualBlockchains();
+        if (virtualBlockchains.length == 0) {
+            throw new Error(`no virtual blockchain is defined in this proof`);
+        }
+        if (virtualBlockchains.length > 1) {
+            throw new Error(`proofs with multiple virtual blockchains are not supported at this time`);
+        }
+        return virtualBlockchains[0];
+    }
+
     getVirtualBlockchain(id: string) {
         const virtualBlockchain = this.wrapper.virtual_blockchains.find((vb) => vb.id === id);
         if (!virtualBlockchain) {

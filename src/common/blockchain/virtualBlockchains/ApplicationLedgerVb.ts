@@ -713,14 +713,7 @@ export class ApplicationLedgerVb extends VirtualBlockchain<ApplicationLedgerInte
     ): Promise<ImportedProof[]> {
         const data: ImportedProof[] = [];
         const proofDocument = ProofDocument.fromObject(proofWrapper);
-        const proofVirtualBlockchains = proofDocument.getVirtualBlockchains();
-        if (proofVirtualBlockchains.length == 0) {
-            throw new Error(`no virtual blockchain is defined in this proof`);
-        }
-        if (proofVirtualBlockchains.length > 1) {
-            throw new Error(`proofs with multiple virtual blockchains are not supported at this time`);
-        }
-        const proofVirtualBlockchain = proofVirtualBlockchains[0];
+        const proofVirtualBlockchain = proofDocument.getSingleVirtualBlockchainOrFail();
         const proofMicroblocks = proofVirtualBlockchain.getMicroblocks();
 
         for (const proofMicroblock of proofMicroblocks) {

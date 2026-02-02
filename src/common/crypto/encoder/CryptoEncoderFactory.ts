@@ -7,7 +7,7 @@ import {Encoder} from "cbor-x";
 
 export class CBORCryptoBinaryEncoder implements EncoderInterface<any, Uint8Array> {
     private static encoder = new Encoder({
-        tagUint8Array: false
+        tagUint8Array: false,
     });
 
     decode(data: Uint8Array): any {

@@ -98,7 +98,6 @@ export class MerkleLeaf {
             salt: hiddenSalt,
             parts: hiddenParts,
         };
-
         this.internalData = {
             type: MerkleLeafTypeEnum.MaskableFromAllParts,
             visible,
@@ -111,7 +110,6 @@ export class MerkleLeaf {
             salt: visibleSalt,
             parts: visibleParts,
         };
-
         this.internalData = {
             type: MerkleLeafTypeEnum.MaskableFromVisibleParts,
             visible,

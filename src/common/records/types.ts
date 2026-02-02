@@ -22,6 +22,10 @@ export const JsonSchema: v.GenericSchema<JsonData> = v.lazy(() =>
 
 export type Json = v.InferOutput<typeof JsonSchema>;
 
+const PathSchema = v.array(v.union([ v.string(), v.number() ]));
+
+export type Path = v.InferOutput<typeof PathSchema>;
+
 const MaskPartSchema = v.object({
     start: v.number(),
     end: v.number(),
@@ -112,8 +116,6 @@ const ArrayItemSchema = v.object({
     value: v.array(v.lazy(() => ItemSchema)),
 });
 
-export type ArrayItem = v.InferOutput<typeof ArrayItemSchema>;
-
 const ObjectItemSchema = v.object({
     type: v.literal(TypeEnum.Object),
     value: v.array(
@@ -123,8 +125,6 @@ const ObjectItemSchema = v.object({
         })
     ),
 });
-
-export type ObjectItem = v.InferOutput<typeof ObjectItemSchema>;
 
 ItemSchema = v.variant(
     'type',
@@ -148,10 +148,6 @@ const PrimitiveValueSchema = v.union([
 ]);
 
 export type PrimitiveValue = v.InferOutput<typeof PrimitiveValueSchema>;
-
-const PathSchema = v.array(v.union([ v.string(), v.number() ]));
-
-export type Path = v.InferOutput<typeof PathSchema>;
 
 export type FlatItem = {
     path: Path,
@@ -262,11 +258,6 @@ export type MerkleLeafCommitment =
     MerkleLeafHashable |
     MerkleLeafMaskable;
 
-const MerkleLeafSchema = v.object({
-    path: PathSchema,
-    data: MerkleLeafDataSchema,
-});
-
 export enum ProofFieldTypeEnum {
     Public = 0,
     Plain = 1,
@@ -346,8 +337,6 @@ const ProofInfoSchema = v.object({
     author: v.string(),
 });
 
-export type ProofInfo = v.InferOutput<typeof ProofInfoSchema>;
-
 const ProofChannelSchema = v.object({
     id: v.number(),
     is_public: v.boolean(),
@@ -385,11 +374,9 @@ const ProofSignatureSchema = v.object({
     commitment: ProofSignatureCommitmentSchema,
     signer: v.string(),
     pubkey: v.string(),
-    alg: v.picklist(['ed25519']),
+    alg: v.picklist(['ecdsa-secp256k1','ml-dsa-65']),
     sig: v.string(),
 });
-
-export type ProofSignature = v.InferOutput<typeof ProofSignatureSchema>;
 
 export const ProofWrapperSchema = v.object({
     version: v.number(),

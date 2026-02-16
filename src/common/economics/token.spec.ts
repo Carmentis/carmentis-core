@@ -14,6 +14,23 @@ describe('TokenAmount', () => {
             expect(result.toString()).toBe('123.45 CMTS');
         });
 
+        it('should reject an invalid atomic amount', () => {
+            expect(() => CMTSToken.parse('  123.45 aCMTS  ')).toThrow(EconomicsError);
+        });
+
+        it('should reject with a too precise atomic', () => {
+            expect(() => CMTSToken.parse('  123.123456789 CMTS  ')).toThrow(EconomicsError);
+        });
+
+        it('should accept decimal token', () => {
+            expect(CMTSToken.parse('  123.12345 CMTS  ')).toBeInstanceOf(CMTSToken)
+        });
+
+        it('should correctly parse a valid token amount string with trailing spaces', () => {
+            const result = CMTSToken.parse('  123.45 CMTS  ');
+            expect(result.toString()).toBe('123.45 CMTS');
+        });
+
         it('should throw an error for an invalid token amount format', () => {
             expect(() => CMTSToken.parse('123.456 TOKEN')).toThrow(EconomicsError);
         });
@@ -75,9 +92,9 @@ describe('TokenAmount', () => {
 
     describe("Add and sub correctly", () =>  {
         it("Should add two amounts correctly", () => {
-            const a = CMTSToken.createCMTS(100);
+            const a = CMTSToken.createCMTS(10);
             const b = CMTSToken.createCMTS(90);
-            const c = CMTSToken.createCMTS(10);
+            const c = CMTSToken.createCMTS(100);
             expect(a.add(b)).toEqual(c)
         })
 

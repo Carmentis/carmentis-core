@@ -68,23 +68,27 @@ export class CMTSToken implements Currency{
     }
 
     static createCMTS(amount: number) {
-        return new CMTSToken(amount * TokenUnit.TOKEN, TokenUnit.ATOMIC);
+        return this.createAtomic(amount * TokenUnit.TOKEN);
     }
 
     static createDeciToken(amount: number) {
-        return new CMTSToken(amount * TokenUnit.DECI_TOKEN, TokenUnit.ATOMIC);
+        return this.createAtomic(amount * TokenUnit.DECI_TOKEN);
     }
 
     static createMicroToken(amount: number) {
-        return new CMTSToken(amount * TokenUnit.MICRO_TOKEN, TokenUnit.ATOMIC);
+        return this.createAtomic(amount * TokenUnit.MICRO_TOKEN);
     }
 
     static createMillionToken(amount: number) {
-        return new CMTSToken(amount * TokenUnit.MICRO_TOKEN, TokenUnit.ATOMIC);
+        return this.createAtomic(amount * TokenUnit.MICRO_TOKEN);
     }
 
     static createAtomic(amount: number) {
-        return new CMTSToken(amount, TokenUnit.ATOMIC);
+        if (Number.isInteger(amount)) {
+            return new CMTSToken(amount, TokenUnit.ATOMIC);
+        } else {
+            throw new EconomicsError(`Invalid amount: An atomic token should be insecable: got ${amount}`)
+        }
     }
 
     /**
@@ -112,7 +116,7 @@ export class CMTSToken implements Currency{
      * @throws {InvalidTokenUnitError} If the unit in the input string is not valid.
      */
     static parse(value: string) {
-        const match = value.trim().match(/^(\d+(?:\.\d{1,2})?)\s*([A-Z]{2,})$/);
+        const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*([A-Z]{2,})$/);
         if (!match) {
             throw new EconomicsError(`Invalid token amount format: "${value}"`);
         }

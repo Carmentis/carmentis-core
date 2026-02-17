@@ -98,6 +98,7 @@
     "axios": "^1.10.0",
     "cbor-x": "^1.6.0",
     "clipanion": "^3.2.1",
+    "decimal.js": "^10.6.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "valibot": "^1.2.0"

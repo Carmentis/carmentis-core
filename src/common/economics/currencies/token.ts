@@ -1,5 +1,7 @@
 import {EconomicsError, InvalidTokenUnitError} from "../../errors/carmentis-error";
 import {Currency} from "./currency";
+import Decimal from "decimal.js";
+import {toNumber} from "valibot";
 
 /**
  * Enum representing the units of a tokenized system.
@@ -52,7 +54,7 @@ export enum TokenUnitLabel {
  */
 export class CMTSToken implements Currency{
 
-    private constructor(private amount: number, private unit: TokenUnit) {}
+    private constructor(private amount: Decimal) {}
 
     /**
      * Creates an instance of TokenAmount with the given amount and unit.
@@ -68,26 +70,39 @@ export class CMTSToken implements Currency{
     }
 
     static createCMTS(amount: number) {
-        return this.createAtomic(amount * TokenUnit.TOKEN);
+        return this.createSafeCmtsToken(Decimal(amount), Decimal(TokenUnit.TOKEN));
     }
 
     static createDeciToken(amount: number) {
-        return this.createAtomic(amount * TokenUnit.DECI_TOKEN);
+        return this.createSafeCmtsToken(Decimal(amount), Decimal(TokenUnit.DECI_TOKEN));
     }
 
     static createMicroToken(amount: number) {
-        return this.createAtomic(amount * TokenUnit.MICRO_TOKEN);
+        return this.createSafeCmtsToken(Decimal(amount), Decimal(TokenUnit.MICRO_TOKEN));
+    }
+
+    static createMilliToken(amount: number) {
+        return this.createSafeCmtsToken(Decimal(amount), Decimal(TokenUnit.MILLI_TOKEN));
+    }
+
+    static createCentiToken(amount: number) {
+        return this.createSafeCmtsToken(Decimal(amount), Decimal(TokenUnit.CENTI_TOKEN));
     }
 
     static createMillionToken(amount: number) {
-        return this.createAtomic(amount * TokenUnit.MICRO_TOKEN);
+        return this.createSafeCmtsToken(Decimal(amount), Decimal(TokenUnit.MICRO_TOKEN));
     }
 
     static createAtomic(amount: number) {
-        if (Number.isInteger(amount)) {
-            return new CMTSToken(amount, TokenUnit.ATOMIC);
+        return this.createSafeCmtsToken(Decimal(amount), Decimal(TokenUnit.ATOMIC));
+    }
+
+    private static createSafeCmtsToken(amount: Decimal, unit: Decimal) {
+        const amountInAtomic = amount.mul(unit);
+        if (amountInAtomic.isInteger()) {
+            return new CMTSToken(amountInAtomic);
         } else {
-            throw new EconomicsError(`Invalid amount: An atomic token should be insecable: got ${amount}`)
+            throw new EconomicsError(`Invalid amount: An atomic token should be insecable: got ${amountInAtomic}`)
         }
     }
 
@@ -110,30 +125,45 @@ export class CMTSToken implements Currency{
     /**
      * Parses a string representing a token amount and returns a TokenAmount instance.
      *
-     * @param {string} value - The input string containing a numeric amount followed by a unit (e.g., "10.50 TOKEN").
+     * @param {string} value - The input string containing a numeric amount followed by a unit (e.g., "10.50 CMTS", "5 mCMTS").
      * @return {CMTSToken} A TokenAmount object containing the parsed numeric amount and the token unit.
      * @throws {EconomicsError} If the input string format is invalid.
      * @throws {InvalidTokenUnitError} If the unit in the input string is not valid.
      */
     static parse(value: string) {
-        const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*([A-Z]{2,})$/);
+        const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*(\S+)$/);
         if (!match) {
             throw new EconomicsError(`Invalid token amount format: "${value}"`);
         }
         const [, amountStr, unit] = match;
-        if (unit != TokenUnitLabel.TOKEN) throw new InvalidTokenUnitError();
         const amount = parseFloat(amountStr);
-        return CMTSToken.createCMTS(amount);
+
+        switch (unit) {
+            case TokenUnitLabel.TOKEN:
+                return CMTSToken.createCMTS(amount);
+            case TokenUnitLabel.DECI_TOKEN:
+                return CMTSToken.createDeciToken(amount);
+            case TokenUnitLabel.CENTI_TOKEN:
+                return CMTSToken.createCentiToken(amount);
+            case TokenUnitLabel.MILLI_TOKEN:
+                return CMTSToken.createMilliToken(amount);
+            case TokenUnitLabel.MICRO_TOKEN:
+                return CMTSToken.createMicroToken(amount);
+            case TokenUnitLabel.ATOMIC:
+                return CMTSToken.createAtomic(amount);
+            default:
+                throw new InvalidTokenUnitError();
+        }
     }
 
     getAmount(unit : TokenUnit = TokenUnit.TOKEN): number {
         switch (unit) {
-            case TokenUnit.TOKEN: return this.amount / TokenUnit.TOKEN;
-            case TokenUnit.CENTI_TOKEN: return this.amount / TokenUnit.CENTI_TOKEN;
-            case TokenUnit.MILLI_TOKEN: return this.amount / TokenUnit.MILLI_TOKEN;
-            case TokenUnit.DECI_TOKEN: return this.amount / TokenUnit.DECI_TOKEN;
-            case TokenUnit.MICRO_TOKEN: return this.amount / TokenUnit.MICRO_TOKEN;
-            case TokenUnit.ATOMIC: return this.amount;
+            case TokenUnit.TOKEN: return this.amount.div(Decimal(TokenUnit.TOKEN)).toNumber();
+            case TokenUnit.CENTI_TOKEN: return this.amount.div(Decimal(TokenUnit.CENTI_TOKEN)).toNumber();
+            case TokenUnit.MILLI_TOKEN: return this.amount.div(Decimal(TokenUnit.MILLI_TOKEN)).toNumber();
+            case TokenUnit.DECI_TOKEN: return this.amount.div(Decimal(TokenUnit.DECI_TOKEN)).toNumber();
+            case TokenUnit.MICRO_TOKEN: return this.amount.div(Decimal(TokenUnit.MICRO_TOKEN)).toNumber();
+            case TokenUnit.ATOMIC: return this.amount.toNumber();
         }
     }
 
@@ -161,7 +191,7 @@ export class CMTSToken implements Currency{
      * @return {boolean} Returns true if the amount is greater than or equal to zero; otherwise, false.
      */
     isPositive(): boolean {
-        return this.amount >= 0;
+        return this.amount.isPositive() || this.amount.isZero();
     }
 
     isPositiveStrict(): boolean {
@@ -169,11 +199,11 @@ export class CMTSToken implements Currency{
     }
 
     isNegative(): boolean {
-        return this.amount < 0;
+        return this.amount.isNegative();
     }
 
     isZero(): boolean {
-        return this.amount === 0;
+        return this.amount.isZero();
     }
 
 
@@ -184,7 +214,7 @@ export class CMTSToken implements Currency{
      * @return {boolean} Returns true if both TokenAmount instances have the same amount and unit, otherwise returns false.
      */
     equals(other: CMTSToken): boolean {
-        return this.amount === other.amount && this.unit === other.unit;
+        return this.amount.equals(other.amount);
     }
 
     /**
@@ -194,7 +224,7 @@ export class CMTSToken implements Currency{
      * @return {boolean} Returns true if the current TokenAmount is greater than the given TokenAmount, otherwise false.
      */
     isGreaterThan(other: CMTSToken): boolean {
-        return this.amount > other.amount;
+        return this.amount.gt(other.amount);
     }
 
     /**
@@ -205,7 +235,7 @@ export class CMTSToken implements Currency{
      * @return {boolean} True if the current instance is less than the specified instance, otherwise false.
      */
     isLessThan(other: CMTSToken): boolean {
-        return this.amount < other.amount;
+        return this.amount.lt(other.amount);
     }
 
     /**

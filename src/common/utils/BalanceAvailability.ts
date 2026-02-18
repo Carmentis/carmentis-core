@@ -6,8 +6,7 @@ import {
     Lock,
     NodeStakingLock,
     AccountBreakdown
-} from "../type/valibot/node/AccountInformation";
-import * as v from "valibot";
+} from "../type/valibot/account/Account";
 import {Utils} from "./utils";
 import {CMTSToken} from "../economics/currencies/token";
 import {AccountStateAbciResponse} from "../type/valibot/provider/abci/AbciResponse";

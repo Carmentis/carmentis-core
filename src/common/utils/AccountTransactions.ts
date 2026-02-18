@@ -1,4 +1,3 @@
-
 import {CMTSToken} from "../economics/currencies/token";
 import {
     BK_EARNED_BLOCK_FEES,
@@ -12,18 +11,16 @@ import {
     BK_SENT_PAYMENT
 } from "../constants/economics";
 import {Height} from "../type/Height";
-import {AccountHistoryAbciResponse, AccountHistoryItem} from "../type/valibot/provider/abci/AbciResponse";
+import {AccountHistoryAbciResponse} from "../type/valibot/provider/abci/AbciResponse";
+import {AccountHistoryEntry, AccountHistory} from "../type/valibot/account/Account";
 import {Hash} from "../entities/Hash";
 
-
 export class AccountTransactions {
-
     static createFromAbciResponse(response: AccountHistoryAbciResponse) {
         return new AccountTransactions(response.list);
     }
 
-    constructor(private readonly transactions: AccountHistoryItem[]) {
-
+    constructor(private readonly transactions: AccountHistory) {
     }
 
     containsTransactions(): boolean {
@@ -31,14 +28,13 @@ export class AccountTransactions {
     }
 
     getTransactions(): AccountTransaction[] {
-        return this.transactions.map(transaction => new AccountTransaction(transaction));
+        return this.transactions.map((transaction) => new AccountTransaction(transaction));
     }
-
 }
 
 export class AccountTransaction {
     constructor(
-        private readonly transaction: AccountHistoryItem
+        private readonly transaction: AccountHistoryEntry
     ) {}
 
     public getHeight(): Height {
@@ -68,9 +64,6 @@ export class AccountTransaction {
         if (this.isSale()) return 'Sale';
         return 'Transaction'
     }
-
-
-
 
     /**
      * Retrieves the linked account associated with the transaction.
@@ -144,7 +137,6 @@ export class AccountTransaction {
         return this.transaction.type === BK_RECEIVED_ISSUANCE
     }
 
-
     public isSentIssuance(): boolean {
         return this.transaction.type === BK_SENT_ISSUANCE
     }
@@ -175,7 +167,6 @@ export class AccountTransaction {
         return this.isPaidBlockFees() || this.isPaidTxFees();
     }
 
-
     /**
      * Determines whether the transaction is categorized as a purchase.
      *
@@ -186,7 +177,6 @@ export class AccountTransaction {
     public isPurchase(): boolean {
         return this.transaction.type == BK_PURCHASE
     }
-
 
     /**
      * Determines whether the transaction is categorized as a received payment.

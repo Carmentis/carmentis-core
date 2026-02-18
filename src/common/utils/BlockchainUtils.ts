@@ -33,7 +33,7 @@ import {
     VestingLockSchema,
     VestingParameters,
     VestingParametersSchema
-} from "../type/valibot/node/AccountInformation";
+} from "../type/valibot/account/Account";
 import {Logger} from "./Logger";
 import {CryptoEncoderFactory} from "../crypto/encoder/CryptoEncoderFactory";
 

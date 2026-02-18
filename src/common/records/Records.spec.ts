@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import {Utils} from '../utils/utils';
 import {Record} from "./Record";
 import {RecordByChannels} from "./RecordByChannels";

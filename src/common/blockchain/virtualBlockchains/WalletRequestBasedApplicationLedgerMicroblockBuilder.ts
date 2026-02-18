@@ -167,6 +167,15 @@ export class WalletRequestBasedApplicationLedgerMicroblockBuilder extends Applic
             record.setMaskByPositions(def.fieldPath, list);
         }
 
+        // declare public channels
+        const allChannels = this.state.getAllChannels();
+        for (const index in allChannels) {
+            const channelId = Number(index);
+            if (!allChannels[channelId].isPrivate) {
+                record.setChannelAsPublic(Number(channelId));
+            }
+        }
+
         // Record -> RecordByChannels -> MerkleRecord -> OnChainRecord
         const recordByChannels = RecordByChannels.fromRecord(record);
         const merkleRecord = MerkleRecord.fromRecordByChannels(recordByChannels);

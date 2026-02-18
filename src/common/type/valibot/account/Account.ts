@@ -1,5 +1,5 @@
-import * as v from 'valibot';
-import {uint8array} from "../primitives";
+import * as v from "valibot";
+import {bin256, uint8array} from "../primitives";
 
 export const LOCK_TYPE_COUNT = 3;
 export enum LockType {
@@ -80,17 +80,13 @@ export const AccountBreakdownSchema = v.object({
 });
 export type AccountBreakdown = v.InferOutput<typeof AccountBreakdownSchema>;
 
-
 export const AccountStateSchema = v.object({
     height: v.number(),
     balance: v.number(),
     lastHistoryHash: uint8array(),
     locks: v.array(LockSchema),
 })
-
 export type AccountState = v.InferOutput<typeof AccountStateSchema>;
-
-
 
 export const AccountInformationSchema = v.object({
     type: v.number(),
@@ -98,3 +94,30 @@ export const AccountInformationSchema = v.object({
     state: AccountStateSchema
 })
 export type AccountInformation = v.InferOutput<typeof AccountInformationSchema>;
+
+export const AccountHistoryEntrySchema = v.object({
+    height: v.pipe(v.number(), v.integer(), v.minValue(0)),
+    previousHistoryHash: bin256(),
+    type: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(255)),
+    timestamp: v.pipe(v.number(), v.integer(), v.minValue(0)),
+    linkedAccount: bin256(),
+    amount: v.pipe(v.number(), v.integer(), v.minValue(0)),
+    chainReference: uint8array(),
+});
+export type AccountHistoryEntry = v.InferOutput<typeof AccountHistoryEntrySchema>;
+
+export const AccountHistorySchema = v.array(AccountHistoryEntrySchema);
+export type AccountHistory = v.InferOutput<typeof AccountHistorySchema>;
+
+export const RequestedAccountUpdateSchema = v.object({
+    accountHash: uint8array(),
+    lastKnownHistoryHash: uint8array(),
+});
+export type RequestedAccountUpdate = v.InferOutput<typeof RequestedAccountUpdateSchema>;
+
+export const AccountUpdateSchema = v.object({
+    accountHash: uint8array(),
+    currentState: AccountStateSchema,
+    historyUpdate: AccountHistorySchema,
+});
+export type AccountUpdate = v.InferOutput<typeof AccountUpdateSchema>;

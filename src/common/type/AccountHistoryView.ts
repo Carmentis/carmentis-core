@@ -1,16 +1,16 @@
-import {AccountTransactionInterface} from "./types";
+import {AccountHistoryEntry} from "./valibot/account/Account";
 import {IllegalParameterError} from "../errors/carmentis-error";
 import {Transaction} from "./Transaction";
 import {Height} from "./Height";
 
 export class AccountHistoryView {
-    private transactionByHeight: Map<number, AccountTransactionInterface>;
+    private transactionByHeight: Map<number, AccountHistoryEntry>;
 
     constructor() {
         this.transactionByHeight = new Map();
     }
 
-    setTransactionAtHeight(height: number, transaction: AccountTransactionInterface) {
+    setTransactionAtHeight(height: number, transaction: AccountHistoryEntry) {
         this.transactionByHeight.set(height, transaction);
     }
 

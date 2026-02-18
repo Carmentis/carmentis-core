@@ -1,4 +1,4 @@
-import {AccountTransactionInterface} from "./types";
+import {AccountHistoryEntry} from "./valibot/account/Account";
 import {Height} from "./Height";
 import {Hash} from "../entities/Hash";
 import {CMTSToken} from "../economics/currencies/token";
@@ -16,10 +16,9 @@ import {
     BK_SENT_PAYMENT
 } from "../constants/economics";
 
-
 export class Transaction {
     constructor(
-       private readonly transaction: AccountTransactionInterface  
+       private readonly transaction: AccountHistoryEntry
     ) {}
 
     public getHeight(): Height {
@@ -37,9 +36,6 @@ export class Transaction {
     public transferredAt(): Date {
         return new Date(this.transaction.timestamp * 1000);
     }
-    
-    
-    
 
     /**
      * Retrieves the linked account associated with the transaction.
@@ -144,7 +140,6 @@ export class Transaction {
         return this.isPaidBlockFees() || this.isPaidTxFees();
     }
 
-
     /**
      * Determines whether the transaction is categorized as a purchase.
      *
@@ -155,7 +150,6 @@ export class Transaction {
     public isPurchase(): boolean {
         return this.transaction.type == BK_PURCHASE
     }
-
 
     /**
      * Determines whether the transaction is categorized as a received payment.

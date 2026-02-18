@@ -22,6 +22,9 @@ export interface AccountHash {
     accountHash: Uint8Array
 }
 
+/**
+ * @deprecated Use `AccountHistoryEntry` instead.
+ */
 export interface AccountTransactionInterface {
     height: number,
     previousHistoryHash: Uint8Array,

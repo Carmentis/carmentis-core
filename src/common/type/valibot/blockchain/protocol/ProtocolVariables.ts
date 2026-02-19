@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import {PriceStructureSchema} from "../economics/PriceStructure";
 
 export const ProtocolVariablesSchema = v.object({
     protocolVersionName: v.string(),
@@ -15,6 +16,7 @@ export const ProtocolVariablesSchema = v.object({
     maximumNodeStakingAmountInAtomics: v.number(),
     unstakingDelayInDays: v.number(),
     maxBlockSizeInBytes: v.number(),
+    priceStructure: PriceStructureSchema,
     abciVersion: v.number(),
 });
 export type ProtocolVariables = v.InferOutput<typeof ProtocolVariablesSchema>

@@ -6,6 +6,7 @@ import {
 } from "../../type/valibot/blockchain/virtualBlockchain/internalStates";
 import * as v from 'valibot';
 import {ProtocolVariables} from "../../type/valibot/blockchain/protocol/ProtocolVariables";
+import {PriceStructure} from "../../type/valibot/blockchain/economics/PriceStructure";
 import {CMTSToken} from "../../economics/currencies/token";
 
 enum ProtocolName {
@@ -27,6 +28,14 @@ export class ProtocolInternalState implements IInternalState {
     }
 
     static createInitialState() {
+        const priceStructure: PriceStructure = [
+            { pricingRate: 100, maximumNumberOfDays: 7 },
+            { pricingRate: 70, maximumNumberOfDays: 30 },
+            { pricingRate: 40, maximumNumberOfDays: 365 },
+            { pricingRate: 20, maximumNumberOfDays: 3650 },
+            { pricingRate: 10, maximumNumberOfDays: 36500 },
+        ];
+
         return new ProtocolInternalState({
             organizationId: Utils.getNullHash(),
             currentProtocolVariables: {
@@ -43,7 +52,8 @@ export class ProtocolInternalState implements IInternalState {
                 minimumNodeStakingAmountInAtomics: CMTSToken.create(1_000_000).getAmountAsAtomic(),
                 maximumNodeStakingAmountInAtomics: CMTSToken.create(10_000_000).getAmountAsAtomic(),
                 unstakingDelayInDays: 30,
-                maxBlockSizeInBytes: 4194304,
+                maxBlockSizeInBytes: 4_194_304,
+                priceStructure,
                 abciVersion: 1,
             },
             protocolUpdates: []
@@ -104,6 +114,10 @@ export class ProtocolInternalState implements IInternalState {
 
     getUnstakingDelayInDays() {
         return this.internalState.currentProtocolVariables.unstakingDelayInDays;
+    }
+
+    getPriceStructure() {
+        return this.internalState.currentProtocolVariables.priceStructure;
     }
 
     toObject(): ProtocolVBInternalStateObject {

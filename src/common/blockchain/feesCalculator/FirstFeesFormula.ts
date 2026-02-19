@@ -29,7 +29,17 @@ export class FirstFeesFormula implements IFeesFormula {
     }
 
     private getAdditionalCosts(signatureSchemeId: SignatureSchemeId) {
-        // TODO: add additional costs based on signature scheme
+        switch (signatureSchemeId) {
+            case SignatureSchemeId.SECP256K1: {
+                return 1000;
+            }
+            case SignatureSchemeId.ML_DSA_65: {
+                return 5000;
+            }
+            case SignatureSchemeId.PKMS_SECP256K1: {
+                return 0;
+            }
+        }
         return 0;
     }
 

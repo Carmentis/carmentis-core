@@ -134,7 +134,6 @@ export class MicroblockConsistencyChecker {
         this.verificationState = { isMicroblockParsingCompleted: true, virtualBlockchain: vb };
     }
 
-
     checkTimestampOrFail(currentTimestamp?: number) {
         if (this.verificationState.isMicroblockParsingCompleted === false)
             throw new IllegalStateError("You have already called reconstructMicroblockAndVirtualBlockchain() method. You can only call it once.")

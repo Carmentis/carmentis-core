@@ -151,8 +151,8 @@ export class MemoryProvider implements IInternalProvider {
     static async set(store: StringToBinaryMap, identifier: Uint8Array, data: Uint8Array) {
         const key = Utils.binaryToHexa(identifier);
         const encodedData = Utils.binaryToHexa(data);
-        if (store.has(key)) {
-            const encodedStoredData = Utils.binaryToHexa(store.get(key));
+        const encodedStoredData = store.get(key);
+        if (encodedStoredData !== undefined) {
             if (encodedStoredData === encodedData) {
                 MemoryProvider.logger.info(`Storing the same data for the same key ${key}`)
             } else {

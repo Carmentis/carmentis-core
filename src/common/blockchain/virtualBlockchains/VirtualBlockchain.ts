@@ -205,8 +205,6 @@ export abstract class VirtualBlockchain<InternalState extends IInternalState = I
         this.expirationDay = day;
     }
 
-
-
     async getSerializedVirtualBlockchainState(): Promise<Uint8Array> {
         return BlockchainUtils.encodeVirtualBlockchainState(
             await this.getVirtualBlockchainState()

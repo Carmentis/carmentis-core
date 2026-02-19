@@ -143,7 +143,6 @@ export class Provider extends AbstractProvider {
         return Hash.from(list.list[0])
     }
 
-
     async getAllAccounts(): Promise<Hash[]> {
         const list = await this.getObjectList(VirtualBlockchainType.ACCOUNT_VIRTUAL_BLOCKCHAIN);
         return list.list.map(Hash.from)
@@ -430,7 +429,6 @@ export class Provider extends AbstractProvider {
 
         return { state: vbState, microblockHashes };
     }
-
 
     async getAccountIdFromPublicKey(publicKey: PublicSignatureKey) {
         const hashScheme = new Sha256CryptographicHash();

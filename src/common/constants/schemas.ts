@@ -2,175 +2,175 @@ import * as CHAIN from './chain';
 import * as DATA from './data';
 
 export interface SchemaItem {
-  name: string;
-  type: number;
-  size?: number;
-  schema?: Schema;
-  definition?: SchemaItem[];
-  optional?: boolean;
-  unspecifiedSchema?: boolean;
+    name: string;
+    type: number;
+    size?: number;
+    schema?: Schema;
+    definition?: SchemaItem[];
+    optional?: boolean;
+    unspecifiedSchema?: boolean;
 }
 
 export interface Schema {
-  label: string;
-  definition: SchemaItem[];
+    label: string;
+    definition: SchemaItem[];
 }
 
 // ============================================================================================================================ //
 //  Error                                                                                                                       //
 // ============================================================================================================================ //
 export const ERROR: Schema = {
-  label: 'Error',
-  definition: [
-    { name: 'type', type: DATA.TYPE_UINT8 },
-    { name: 'id',   type: DATA.TYPE_UINT8 },
-    { name: 'arg',  type: DATA.TYPE_ARRAY_OF | DATA.TYPE_STRING }
-  ]
+    label: 'Error',
+    definition: [
+        { name: 'type', type: DATA.TYPE_UINT8 },
+        { name: 'id',   type: DATA.TYPE_UINT8 },
+        { name: 'arg',  type: DATA.TYPE_ARRAY_OF | DATA.TYPE_STRING }
+    ]
 };
 
 // ============================================================================================================================ //
 //  Contract                                                                                                                    //
 // ============================================================================================================================ //
 export const CONTRACT_PARAMETER_SCHEMA: Schema = {
-  label: 'contractParameter',
-  definition: [
-    { name: 'name',         type: DATA.TYPE_STRING },
-    { name: 'type',         type: DATA.TYPE_STRING },
-    { name: 'defaultValue', type: DATA.TYPE_STRING },
-    { name: 'modifiable',   type: DATA.TYPE_BOOLEAN }
-  ]
+    label: 'contractParameter',
+    definition: [
+        { name: 'name',         type: DATA.TYPE_STRING },
+        { name: 'type',         type: DATA.TYPE_STRING },
+        { name: 'defaultValue', type: DATA.TYPE_STRING },
+        { name: 'modifiable',   type: DATA.TYPE_BOOLEAN }
+    ]
 };
 
 export const CONTRACT_SCHEMA: Schema = {
-  label: 'contract',
-  definition: [
-    { name: 'name',                 type: DATA.TYPE_STRING },
-    { name: 'parametersDefinition', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: CONTRACT_PARAMETER_SCHEMA }
-  ]
+    label: 'contract',
+    definition: [
+        { name: 'name',                 type: DATA.TYPE_STRING },
+        { name: 'parametersDefinition', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: CONTRACT_PARAMETER_SCHEMA }
+    ]
 };
 
 // ============================================================================================================================ //
 //  Record description                                                                                                          //
 // ============================================================================================================================ //
 const RECORD_ACTOR: Schema = {
-  label: 'RecordActor',
-  definition: [
-    { name: 'name', type: DATA.TYPE_STRING }
-  ]
+    label: 'RecordActor',
+    definition: [
+        { name: 'name', type: DATA.TYPE_STRING }
+    ]
 };
 
 const RECORD_CHANNEL: Schema = {
-  label: 'RecordChannel',
-  definition: [
-    { name: 'name',   type: DATA.TYPE_STRING },
-    { name: 'public', type: DATA.TYPE_BOOLEAN }
-  ]
+    label: 'RecordChannel',
+    definition: [
+        { name: 'name',   type: DATA.TYPE_STRING },
+        { name: 'public', type: DATA.TYPE_BOOLEAN }
+    ]
 };
 
 const RECORD_CHANNEL_ASSIGNATION: Schema = {
-  label: 'RecordChannelAssignation',
-  definition: [
-    { name: 'fieldPath',   type: DATA.TYPE_STRING },
-    { name: 'channelName', type: DATA.TYPE_STRING }
-  ]
+    label: 'RecordChannelAssignation',
+    definition: [
+        { name: 'fieldPath',   type: DATA.TYPE_STRING },
+        { name: 'channelName', type: DATA.TYPE_STRING }
+    ]
 };
 
 const RECORD_ACTOR_ASSIGNATION: Schema = {
-  label: 'RecordActorAssignation',
-  definition: [
-    { name: 'actorName',   type: DATA.TYPE_STRING },
-    { name: 'channelName', type: DATA.TYPE_STRING }
-  ]
+    label: 'RecordActorAssignation',
+    definition: [
+        { name: 'actorName',   type: DATA.TYPE_STRING },
+        { name: 'channelName', type: DATA.TYPE_STRING }
+    ]
 };
 
 const RECORD_MASKED_PART: Schema = {
-  label: 'RecordMaskedPart',
-  definition: [
-    { name: 'position',          type: DATA.TYPE_UINT32 },
-    { name: 'length',            type: DATA.TYPE_UINT32 },
-    { name: 'replacementString', type: DATA.TYPE_STRING }
-  ]
+    label: 'RecordMaskedPart',
+    definition: [
+        { name: 'position',          type: DATA.TYPE_UINT32 },
+        { name: 'length',            type: DATA.TYPE_UINT32 },
+        { name: 'replacementString', type: DATA.TYPE_STRING }
+    ]
 };
 
 const RECORD_MASKABLE_FIELD: Schema = {
-  label: 'RecordMaskableField',
-  definition: [
-    { name: 'fieldPath',   type: DATA.TYPE_STRING },
-    { name: 'maskedParts', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: RECORD_MASKED_PART }
-  ]
+    label: 'RecordMaskableField',
+    definition: [
+        { name: 'fieldPath',   type: DATA.TYPE_STRING },
+        { name: 'maskedParts', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: RECORD_MASKED_PART }
+    ]
 };
 
 const RECORD_HASHABLE_FIELD: Schema = {
-  label: 'RecordHashableField',
-  definition: [
-    { name: 'fieldPath', type: DATA.TYPE_STRING }
-  ]
+    label: 'RecordHashableField',
+    definition: [
+        { name: 'fieldPath', type: DATA.TYPE_STRING }
+    ]
 };
 
 export const RECORD_DESCRIPTION: Schema = {
-  label: 'RecordDescription',
-  definition: [
-    { name: 'applicationId',       type: DATA.TYPE_HASH_STR },
-    { name: 'virtualBlockchainId', type: DATA.TYPE_HASH_STR, optional: true },
-    { name: 'data',                type: DATA.TYPE_OBJECT, unspecifiedSchema: true },
-    { name: 'actors',              type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_ACTOR },
-    { name: 'channels',            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_CHANNEL },
-    { name: 'channelAssignations', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_CHANNEL_ASSIGNATION },
-    { name: 'actorAssignations',   type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_ACTOR_ASSIGNATION },
-    { name: 'hashableFields',      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_HASHABLE_FIELD },
-    { name: 'maskableFields',      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_MASKABLE_FIELD },
-    { name: 'author',              type: DATA.TYPE_STRING },
-    { name: 'endorser',            type: DATA.TYPE_STRING, optional: true },
-    { name: 'approvalMessage',     type: DATA.TYPE_STRING, optional: true },
-  ]
+    label: 'RecordDescription',
+    definition: [
+        { name: 'applicationId',       type: DATA.TYPE_HASH_STR },
+        { name: 'virtualBlockchainId', type: DATA.TYPE_HASH_STR, optional: true },
+        { name: 'data',                type: DATA.TYPE_OBJECT, unspecifiedSchema: true },
+        { name: 'actors',              type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_ACTOR },
+        { name: 'channels',            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_CHANNEL },
+        { name: 'channelAssignations', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_CHANNEL_ASSIGNATION },
+        { name: 'actorAssignations',   type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_ACTOR_ASSIGNATION },
+        { name: 'hashableFields',      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_HASHABLE_FIELD },
+        { name: 'maskableFields',      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, optional: true, schema: RECORD_MASKABLE_FIELD },
+        { name: 'author',              type: DATA.TYPE_STRING },
+        { name: 'endorser',            type: DATA.TYPE_STRING, optional: true },
+        { name: 'approvalMessage',     type: DATA.TYPE_STRING, optional: true },
+    ]
 };
 
 // ============================================================================================================================ //
 //  Account                                                                                                                     //
 // ============================================================================================================================ //
 export const ACCOUNT_STATE: Schema = {
-  label: 'AccountState',
-  definition: [
-    { name: 'height',          type: DATA.TYPE_UINT48 },
-    { name: 'balance',         type: DATA.TYPE_UINT48 },
-    { name: 'lastHistoryHash', type: DATA.TYPE_BIN256 },
-    {
-        name: 'locks',
-        type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-        definition: [
-            { name: 'type',       type: DATA.TYPE_UINT8 },
-            { name: 'amount',     type: DATA.TYPE_UINT48 },
-            { name: 'parameters', type: DATA.TYPE_BINARY }
-        ]
-    }
-  ]
+    label: 'AccountState',
+    definition: [
+        { name: 'height',          type: DATA.TYPE_UINT48 },
+        { name: 'balance',         type: DATA.TYPE_UINT48 },
+        { name: 'lastHistoryHash', type: DATA.TYPE_BIN256 },
+        {
+            name: 'locks',
+            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+            definition: [
+                { name: 'type',       type: DATA.TYPE_UINT8 },
+                { name: 'amount',     type: DATA.TYPE_UINT48 },
+                { name: 'parameters', type: DATA.TYPE_BINARY }
+            ]
+        }
+    ]
 };
 
 export const ACCOUNT_HISTORY: Schema = {
-  label: 'AccountHistory',
-  definition: [
-    { name: 'height',              type: DATA.TYPE_UINT48 },
-    { name: 'previousHistoryHash', type: DATA.TYPE_BIN256 },
-    { name: 'type',                type: DATA.TYPE_UINT8 },
-    { name: 'timestamp',           type: DATA.TYPE_UINT48 },
-    { name: 'linkedAccount',       type: DATA.TYPE_BIN256 },
-    { name: 'amount',              type: DATA.TYPE_UINT48 },
-    { name: 'chainReference',      type: DATA.TYPE_BINARY }
-  ]
+    label: 'AccountHistory',
+    definition: [
+        { name: 'height',              type: DATA.TYPE_UINT48 },
+        { name: 'previousHistoryHash', type: DATA.TYPE_BIN256 },
+        { name: 'type',                type: DATA.TYPE_UINT8 },
+        { name: 'timestamp',           type: DATA.TYPE_UINT48 },
+        { name: 'linkedAccount',       type: DATA.TYPE_BIN256 },
+        { name: 'amount',              type: DATA.TYPE_UINT48 },
+        { name: 'chainReference',      type: DATA.TYPE_BINARY }
+    ]
 };
 
 // ============================================================================================================================ //
 //  Virtual blockchain state                                                                                                    //
 // ============================================================================================================================ //
 export const VIRTUAL_BLOCKCHAIN_STATE: Schema = {
-  label: 'VirtualBlockchainState',
-  definition: [
-    { name: 'type',                    type: DATA.TYPE_UINT8 },
-    { name: 'expirationDay',           type: DATA.TYPE_UINT32 },
-    { name: 'height',                  type: DATA.TYPE_UINT48 },
-    { name: 'lastMicroblockHash',      type: DATA.TYPE_BIN256 },
-    { name: 'serializedInternalState', type: DATA.TYPE_BINARY }
-  ]
+    label: 'VirtualBlockchainState',
+    definition: [
+        { name: 'type',                    type: DATA.TYPE_UINT8 },
+        { name: 'expirationDay',           type: DATA.TYPE_UINT32 },
+        { name: 'height',                  type: DATA.TYPE_UINT48 },
+        { name: 'lastMicroblockHash',      type: DATA.TYPE_BIN256 },
+        { name: 'serializedInternalState', type: DATA.TYPE_BINARY }
+    ]
 };
 
 // ============================================================================================================================ //
@@ -193,161 +193,161 @@ export const PROTOCOL_VARIABLES: Schema = {
 }
 
 export const PROTOCOL_VB_STATE: Schema = {
-  label: 'ProtocolVbState',
-  definition: [
-      { name: 'organizationId', type: DATA.TYPE_BIN256 },
-      { name: 'currentProtocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES },
-      {
-          name: 'protocolUpdates',
-          type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-          schema: {
-              label: 'PROTOCOL_UPDATE',
-              definition: [
-                  { name: 'protocolVersion', type: DATA.TYPE_UINT16 },
-                  { name: 'changeLog', type: DATA.TYPE_STRING },
-                  { name: 'protocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES },
-                  { name: 'protocolVersionName', type: DATA.TYPE_STRING }
-              ]
-          }
-      }
-  ]
+    label: 'ProtocolVbState',
+    definition: [
+        { name: 'organizationId', type: DATA.TYPE_BIN256 },
+        { name: 'currentProtocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES },
+        {
+            name: 'protocolUpdates',
+            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+            schema: {
+                label: 'PROTOCOL_UPDATE',
+                definition: [
+                    { name: 'protocolVersion', type: DATA.TYPE_UINT16 },
+                    { name: 'changeLog', type: DATA.TYPE_STRING },
+                    { name: 'protocolVariables', type: DATA.TYPE_OBJECT, schema: PROTOCOL_VARIABLES },
+                    { name: 'protocolVersionName', type: DATA.TYPE_STRING }
+                ]
+            }
+        }
+    ]
 };
 
 // ============================================================================================================================ //
 //  Account VB state                                                                                                            //
 // ============================================================================================================================ //
 const ACCOUNT_VB_STATE: Schema = {
-  label: 'AccountVbState',
-  definition: [
-    { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
-    { name: 'publicKeyHeight',   type: DATA.TYPE_UINT48 }
-  ]
+    label: 'AccountVbState',
+    definition: [
+        { name: 'signatureSchemeId', type: DATA.TYPE_UINT8 },
+        { name: 'publicKeyHeight',   type: DATA.TYPE_UINT48 }
+    ]
 };
 
 // ============================================================================================================================ //
 //  Validator node VB state                                                                                                     //
 // ============================================================================================================================ //
 const VALIDATOR_NODE_VB_STATE: Schema = {
-  label: 'ValidatorNodeVbState',
-  definition: [
-    { name: 'organizationId',           type: DATA.TYPE_BIN256 },
-    { name: 'descriptionHeight',        type: DATA.TYPE_UINT48 },
-    { name: 'rpcEndpointHeight',        type: DATA.TYPE_UINT48 },
-    { name: 'networkIntegrationHeight', type: DATA.TYPE_UINT48 }
-  ]
+    label: 'ValidatorNodeVbState',
+    definition: [
+        { name: 'organizationId',           type: DATA.TYPE_BIN256 },
+        { name: 'descriptionHeight',        type: DATA.TYPE_UINT48 },
+        { name: 'rpcEndpointHeight',        type: DATA.TYPE_UINT48 },
+        { name: 'networkIntegrationHeight', type: DATA.TYPE_UINT48 }
+    ]
 };
 
 // ============================================================================================================================ //
 //  Organization VB state                                                                                                       //
 // ============================================================================================================================ //
 const ORGANIZATION_VB_STATE: Schema = {
-  label: 'OrganizationVbState',
-  definition: [
-    { name: 'accountId', type: DATA.TYPE_BIN256 },
-    { name: 'descriptionHeight', type: DATA.TYPE_UINT48 }
-  ]
+    label: 'OrganizationVbState',
+    definition: [
+        { name: 'accountId', type: DATA.TYPE_BIN256 },
+        { name: 'descriptionHeight', type: DATA.TYPE_UINT48 }
+    ]
 };
 
 // ============================================================================================================================ //
 //  Application VB state                                                                                                        //
 // ============================================================================================================================ //
 const APPLICATION_VB_STATE: Schema = {
-  label: 'ApplicationVbState',
-  definition: [
-    { name: 'organizationId',    type: DATA.TYPE_BIN256 },
-    { name: 'descriptionHeight', type: DATA.TYPE_UINT48 }
-  ]
+    label: 'ApplicationVbState',
+    definition: [
+        { name: 'organizationId',    type: DATA.TYPE_BIN256 },
+        { name: 'descriptionHeight', type: DATA.TYPE_UINT48 }
+    ]
 };
 
 // ============================================================================================================================ //
 //  Application ledger VB state                                                                                                 //
 // ============================================================================================================================ //
 const APP_LEDGER_VB_STATE: Schema = {
-  label: 'AppLedgerVbState',
-  definition: [
-    { name: 'allowedSignatureSchemeIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
-    { name: 'allowedPkeSchemeIds',       type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
-    { name: 'applicationId',             type: DATA.TYPE_BIN256 },
-    {
-      name: 'channels',
-      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-      definition: [
-        { name: 'name',      type: DATA.TYPE_STRING },
-        { name: 'isPrivate', type: DATA.TYPE_BOOLEAN },
-        { name: 'creatorId', type: DATA.TYPE_UINT8 }
-      ]
-    },
-    {
-      name: 'actors',
-      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-      definition: [
-        { name: 'name',               type: DATA.TYPE_STRING },
-        { name: 'subscribed',         type: DATA.TYPE_BOOLEAN },
-        { name: 'signatureKeyHeight', type: DATA.TYPE_UINT48 },
-        { name: 'pkeKeyHeight',       type: DATA.TYPE_UINT48 },
+    label: 'AppLedgerVbState',
+    definition: [
+        { name: 'allowedSignatureSchemeIds', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
+        { name: 'allowedPkeSchemeIds',       type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT8 },
+        { name: 'applicationId',             type: DATA.TYPE_BIN256 },
         {
-          name: 'sharedSecrets',
-          type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-          definition: [
-            { name: 'peerActorId', type: DATA.TYPE_UINT8 },
-            { name: 'height',      type: DATA.TYPE_UINT48 }
-          ]
+            name: 'channels',
+            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+            definition: [
+                { name: 'name',      type: DATA.TYPE_STRING },
+                { name: 'isPrivate', type: DATA.TYPE_BOOLEAN },
+                { name: 'creatorId', type: DATA.TYPE_UINT8 }
+            ]
         },
         {
-          name: 'invitations',
-          type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-          definition: [
-            { name: 'channelId', type: DATA.TYPE_UINT8 },
-            { name: 'height',    type: DATA.TYPE_UINT48 }
-          ]
+            name: 'actors',
+            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+            definition: [
+                { name: 'name',               type: DATA.TYPE_STRING },
+                { name: 'subscribed',         type: DATA.TYPE_BOOLEAN },
+                { name: 'signatureKeyHeight', type: DATA.TYPE_UINT48 },
+                { name: 'pkeKeyHeight',       type: DATA.TYPE_UINT48 },
+                {
+                    name: 'sharedSecrets',
+                    type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+                    definition: [
+                        { name: 'peerActorId', type: DATA.TYPE_UINT8 },
+                        { name: 'height',      type: DATA.TYPE_UINT48 }
+                    ]
+                },
+                {
+                    name: 'invitations',
+                    type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+                    definition: [
+                        { name: 'channelId', type: DATA.TYPE_UINT8 },
+                        { name: 'height',    type: DATA.TYPE_UINT48 }
+                    ]
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 };
 
 // ============================================================================================================================ //
 //  All VB state schemas                                                                                                        //
 // ============================================================================================================================ //
 export const VB_STATES: Schema[] = [
-  PROTOCOL_VB_STATE,
-  ACCOUNT_VB_STATE,
-  VALIDATOR_NODE_VB_STATE,
-  ORGANIZATION_VB_STATE,
-  APPLICATION_VB_STATE,
-  APP_LEDGER_VB_STATE
+    PROTOCOL_VB_STATE,
+    ACCOUNT_VB_STATE,
+    VALIDATOR_NODE_VB_STATE,
+    ORGANIZATION_VB_STATE,
+    APPLICATION_VB_STATE,
+    APP_LEDGER_VB_STATE
 ];
 
 // ============================================================================================================================ //
 //  Block                                                                                                                       //
 // ============================================================================================================================ //
 export const BLOCK_INFORMATION = {
-  label: 'BlockInformation',
-  definition: [
-    { name: 'hash', type: DATA.TYPE_BIN256 },
-    { name: 'timestamp', type: DATA.TYPE_UINT48 },
-    { name: 'proposerAddress', type: DATA.TYPE_BINARY },
-    { name: 'size', type: DATA.TYPE_UINT48 },
-    { name: 'microblockCount', type: DATA.TYPE_UINT48 }
-  ]
+    label: 'BlockInformation',
+    definition: [
+        { name: 'hash', type: DATA.TYPE_BIN256 },
+        { name: 'timestamp', type: DATA.TYPE_UINT48 },
+        { name: 'proposerAddress', type: DATA.TYPE_BINARY },
+        { name: 'size', type: DATA.TYPE_UINT48 },
+        { name: 'microblockCount', type: DATA.TYPE_UINT48 }
+    ]
 };
 
 export const BLOCK_CONTENT = {
-  label: 'BlockContent',
-  definition: [
-    {
-      name: 'microblocks',
-      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-      definition: [
-        { name: 'hash', type: DATA.TYPE_BIN256 },
-        { name: 'vbIdentifier', type: DATA.TYPE_BIN256 },
-        { name: 'vbType', type: DATA.TYPE_UINT8 },
-        { name: 'height', type: DATA.TYPE_UINT48 },
-        { name: 'size', type: DATA.TYPE_UINT48 },
-        { name: 'sectionCount', type: DATA.TYPE_UINT48 },
-      ],
-    },
-  ],
+    label: 'BlockContent',
+    definition: [
+        {
+            name: 'microblocks',
+            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+            definition: [
+                { name: 'hash', type: DATA.TYPE_BIN256 },
+                { name: 'vbIdentifier', type: DATA.TYPE_BIN256 },
+                { name: 'vbType', type: DATA.TYPE_UINT8 },
+                { name: 'height', type: DATA.TYPE_UINT48 },
+                { name: 'size', type: DATA.TYPE_UINT48 },
+                { name: 'sectionCount', type: DATA.TYPE_UINT48 },
+            ],
+        },
+    ],
 };
 
 // ============================================================================================================================ //
@@ -355,49 +355,55 @@ export const BLOCK_CONTENT = {
 // ============================================================================================================================ //
 /**
  * TODO: DO NOT USE THIS VARIABLE!!! DECODE THEN EXTRACT INSTEAD OF JUST EXTRACTING
- * @deprecated Th
+ * @deprecated With CBOR encoding, this value is meaningless
  */
 export const MICROBLOCK_HEADER_PREVIOUS_HASH_OFFSET = 13;
+/**
+ * @deprecated With CBOR encoding, this value is meaningless
+ */
 export const MICROBLOCK_HEADER_BODY_HASH_OFFSET = 58;
+/**
+ * @deprecated With CBOR encoding, this value is meaningless
+ */
 export const MICROBLOCK_HEADER_SIZE = 122;
 
 export const MICROBLOCK_HEADER: Schema = {
-  label: 'MicroblockHeader',
-  definition: [
-    { name: 'magicString',     type: DATA.TYPE_STRING, size: 4 }, // +0
-    { name: 'protocolVersion', type: DATA.TYPE_UINT16 },          // +4
-    { name: 'microblockType',  type: DATA.TYPE_UINT8 },           // +6
-    { name: 'height',          type: DATA.TYPE_UINT48 },          // +7
-    { name: 'previousHash',    type: DATA.TYPE_BIN256 },          // +13
-    { name: 'timestamp',       type: DATA.TYPE_UINT48 },          // +45
-    { name: 'gas',             type: DATA.TYPE_UINT24 },          // +51
-    { name: 'gasPrice',        type: DATA.TYPE_UINT32 },          // +54
-      { name: 'bodyHash',        type: DATA.TYPE_BIN256 },           // + 58
-      { name: 'feesPayerAccount', type: DATA.TYPE_BIN256 },         // + 90
-  ]
+    label: 'MicroblockHeader',
+    definition: [
+        { name: 'magicString',     type: DATA.TYPE_STRING, size: 4 }, // +0
+        { name: 'protocolVersion', type: DATA.TYPE_UINT16 },          // +4
+        { name: 'microblockType',  type: DATA.TYPE_UINT8 },           // +6
+        { name: 'height',          type: DATA.TYPE_UINT48 },          // +7
+        { name: 'previousHash',    type: DATA.TYPE_BIN256 },          // +13
+        { name: 'timestamp',       type: DATA.TYPE_UINT48 },          // +45
+        { name: 'gas',             type: DATA.TYPE_UINT24 },          // +51
+        { name: 'gasPrice',        type: DATA.TYPE_UINT32 },          // +54
+        { name: 'bodyHash',        type: DATA.TYPE_BIN256 },          // + 58
+        { name: 'feesPayerAccount', type: DATA.TYPE_BIN256 },         // + 90
+    ]
 };
 
 export const MICROBLOCK_SECTION: Schema = {
-  label: 'MicroblockSection',
-  definition: [
-    { name: 'type', type: DATA.TYPE_UINT8 },
-    { name: 'data', type: DATA.TYPE_BINARY }
-  ]
+    label: 'MicroblockSection',
+    definition: [
+        { name: 'type', type: DATA.TYPE_UINT8 },
+        { name: 'data', type: DATA.TYPE_BINARY }
+    ]
 };
 
 export const MICROBLOCK_BODY: Schema = {
-  label: 'MicroblockBody',
-  definition: [
-    { name: 'body', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: MICROBLOCK_SECTION }
-  ]
+    label: 'MicroblockBody',
+    definition: [
+        { name: 'body', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT, schema: MICROBLOCK_SECTION }
+    ]
 };
 
 export const MICROBLOCK_VB_INFORMATION: Schema = {
-  label: 'MicroblockVbInformation',
-  definition: [
-    { name: 'virtualBlockchainType', type: DATA.TYPE_UINT8 },
-    { name: 'virtualBlockchainId',   type: DATA.TYPE_BIN256 }
-  ]
+    label: 'MicroblockVbInformation',
+    definition: [
+        { name: 'virtualBlockchainType', type: DATA.TYPE_UINT8 },
+        { name: 'virtualBlockchainId',   type: DATA.TYPE_BIN256 }
+    ]
 };
 
 // ============================================================================================================================ //
@@ -436,204 +442,204 @@ export const MSG_GENESIS_SNAPSHOT               = 0x1C;
 export const NODE_MESSAGES: Schema[] = [] as const;
 
 NODE_MESSAGES[MSG_ERROR] = {
-  label: 'MessageError',
-  definition: [
-    { name: 'error', type: DATA.TYPE_STRING }
-  ]
+    label: 'MessageError',
+    definition: [
+        { name: 'error', type: DATA.TYPE_STRING }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_CHAIN_INFORMATION] = {
-  label: 'MessageGetChainInformation',
-  definition: []
+    label: 'MessageGetChainInformation',
+    definition: []
 };
 
 NODE_MESSAGES[MSG_CHAIN_INFORMATION] = {
-  label: 'MessageChainInformation',
-  definition: [
-    { name: 'height', type: DATA.TYPE_UINT48 },
-    { name: 'lastBlockTimestamp', type: DATA.TYPE_UINT48 },
-    { name: 'microblockCount', type: DATA.TYPE_UINT48 },
-    { name: 'objectCounts', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT48, size: CHAIN.N_VIRTUAL_BLOCKCHAINS }
-  ]
+    label: 'MessageChainInformation',
+    definition: [
+        { name: 'height', type: DATA.TYPE_UINT48 },
+        { name: 'lastBlockTimestamp', type: DATA.TYPE_UINT48 },
+        { name: 'microblockCount', type: DATA.TYPE_UINT48 },
+        { name: 'objectCounts', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_UINT48, size: CHAIN.N_VIRTUAL_BLOCKCHAINS }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_BLOCK_INFORMATION] = {
-  label: 'MessageGetBlockInformation',
-  definition: [
-    { name: 'height', type: DATA.TYPE_UINT48 }
-  ]
+    label: 'MessageGetBlockInformation',
+    definition: [
+        { name: 'height', type: DATA.TYPE_UINT48 }
+    ]
 };
 
 NODE_MESSAGES[MSG_BLOCK_INFORMATION] = {
-  label: 'MessageBlockInformation',
-  definition: BLOCK_INFORMATION.definition
+    label: 'MessageBlockInformation',
+    definition: BLOCK_INFORMATION.definition
 };
 
 NODE_MESSAGES[MSG_GET_BLOCK_CONTENT] = {
-  label: 'MessageGetBlockContent',
-  definition: [
-    { name: 'height', type: DATA.TYPE_UINT48 }
-  ]
+    label: 'MessageGetBlockContent',
+    definition: [
+        { name: 'height', type: DATA.TYPE_UINT48 }
+    ]
 };
 
 NODE_MESSAGES[MSG_BLOCK_CONTENT] = {
-  label: 'MessageBlockContent',
-  definition: BLOCK_CONTENT.definition
+    label: 'MessageBlockContent',
+    definition: BLOCK_CONTENT.definition
 };
 
 NODE_MESSAGES[MSG_GET_VIRTUAL_BLOCKCHAIN_STATE] = {
-  label: 'MessageGetVirtualBlockchainState',
-  definition: [
-    { name: 'virtualBlockchainId', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageGetVirtualBlockchainState',
+    definition: [
+        { name: 'virtualBlockchainId', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_VIRTUAL_BLOCKCHAIN_STATE] = {
-  label: 'MessageVirtualBlockchainState',
-  definition: [
-    { name: 'stateData', type: DATA.TYPE_BINARY }
-  ]
+    label: 'MessageVirtualBlockchainState',
+    definition: [
+        { name: 'stateData', type: DATA.TYPE_BINARY }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_VIRTUAL_BLOCKCHAIN_UPDATE] = {
-  label: 'MessageGetVirtualBlockchainUpdate',
-  definition: [
-    { name: 'virtualBlockchainId', type: DATA.TYPE_BIN256 },
-    { name: 'knownHeight',         type: DATA.TYPE_UINT48 }
-  ]
+    label: 'MessageGetVirtualBlockchainUpdate',
+    definition: [
+        { name: 'virtualBlockchainId', type: DATA.TYPE_BIN256 },
+        { name: 'knownHeight',         type: DATA.TYPE_UINT48 }
+    ]
 };
 
 NODE_MESSAGES[MSG_VIRTUAL_BLOCKCHAIN_UPDATE] = {
-  label: 'MessageVirtualBlockchainUpdate',
-  definition: [
-    { name: 'exists',    type: DATA.TYPE_BOOLEAN },
-    { name: 'changed',   type: DATA.TYPE_BOOLEAN },
-    { name: 'stateData', type: DATA.TYPE_BINARY },
-    { name: 'headers',   type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BINARY }
-  ]
+    label: 'MessageVirtualBlockchainUpdate',
+    definition: [
+        { name: 'exists',    type: DATA.TYPE_BOOLEAN },
+        { name: 'changed',   type: DATA.TYPE_BOOLEAN },
+        { name: 'stateData', type: DATA.TYPE_BINARY },
+        { name: 'headers',   type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BINARY }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_MICROBLOCK_INFORMATION] = {
-  label: 'MessageGetMicroblockInformation',
-  definition: [
-    { name: 'hash', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageGetMicroblockInformation',
+    definition: [
+        { name: 'hash', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_MICROBLOCK_INFORMATION] = {
-  label: 'MessageMicroblockInformation',
-  definition: [
-    { name: 'virtualBlockchainType', type: DATA.TYPE_UINT8 },
-    { name: 'virtualBlockchainId',   type: DATA.TYPE_BIN256 },
-    { name: 'header',                type: DATA.TYPE_BINARY }
-  ]
+    label: 'MessageMicroblockInformation',
+    definition: [
+        { name: 'virtualBlockchainType', type: DATA.TYPE_UINT8 },
+        { name: 'virtualBlockchainId',   type: DATA.TYPE_BIN256 },
+        { name: 'header',                type: DATA.TYPE_BINARY }
+    ]
 };
 
 NODE_MESSAGES[MSG_AWAIT_MICROBLOCK_ANCHORING] = {
-  label: 'MessageAwaitMicroblockAnchoring',
-  definition: [
-    { name: 'hash', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageAwaitMicroblockAnchoring',
+    definition: [
+        { name: 'hash', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_MICROBLOCK_ANCHORING] = {
-  label: 'MessageMicroblockAnchoring',
-  definition: MICROBLOCK_VB_INFORMATION.definition
+    label: 'MessageMicroblockAnchoring',
+    definition: MICROBLOCK_VB_INFORMATION.definition
 };
 
 NODE_MESSAGES[MSG_GET_MICROBLOCK_BODYS] = {
-  label: 'MessageGetMicroblockBodys',
-  definition: [
-    { name: 'hashes', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageGetMicroblockBodys',
+    definition: [
+        { name: 'hashes', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_MICROBLOCK_BODYS] = {
-  label: 'MessageMicroblockBodys',
-  definition: [
-    {
-      name: 'list',
-      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-      definition: [
-        { name: 'hash', type: DATA.TYPE_BIN256 },
-        { name: 'body', type: DATA.TYPE_BINARY }
-      ]
-    }
-  ]
+    label: 'MessageMicroblockBodys',
+    definition: [
+        {
+            name: 'list',
+            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+            definition: [
+                { name: 'hash', type: DATA.TYPE_BIN256 },
+                { name: 'body', type: DATA.TYPE_BINARY }
+            ]
+        }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_ACCOUNT_STATE] = {
-  label: 'MessageGetAccountState',
-  definition: [
-    { name: 'accountHash', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageGetAccountState',
+    definition: [
+        { name: 'accountHash', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_ACCOUNT_STATE] = {
-  label: 'MessageAccountState',
-  definition: ACCOUNT_STATE.definition
+    label: 'MessageAccountState',
+    definition: ACCOUNT_STATE.definition
 };
 
 NODE_MESSAGES[MSG_GET_ACCOUNT_HISTORY] = {
-  label: 'MessageGetAccountHistory',
-  definition: [
-    { name: 'accountHash',     type: DATA.TYPE_BIN256 },
-    { name: 'lastHistoryHash', type: DATA.TYPE_BIN256 },
-    { name: 'maxRecords',      type: DATA.TYPE_UINT16 }
-  ]
+    label: 'MessageGetAccountHistory',
+    definition: [
+        { name: 'accountHash',     type: DATA.TYPE_BIN256 },
+        { name: 'lastHistoryHash', type: DATA.TYPE_BIN256 },
+        { name: 'maxRecords',      type: DATA.TYPE_UINT16 }
+    ]
 };
 
 NODE_MESSAGES[MSG_ACCOUNT_HISTORY] = {
-  label: 'MessageAccountHistory',
-  definition: [
-    {
-      name: 'list',
-      type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
-      schema: ACCOUNT_HISTORY
-    }
-  ]
+    label: 'MessageAccountHistory',
+    definition: [
+        {
+            name: 'list',
+            type: DATA.TYPE_ARRAY_OF | DATA.TYPE_OBJECT,
+            schema: ACCOUNT_HISTORY
+        }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_ACCOUNT_BY_PUBLIC_KEY_HASH] = {
-  label: 'MessageGetAccountByPublicKeyHash',
-  definition: [
-    { name: 'publicKeyHash', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageGetAccountByPublicKeyHash',
+    definition: [
+        { name: 'publicKeyHash', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_ACCOUNT_BY_PUBLIC_KEY_HASH] = {
-  label: 'MessageAccountByPublicKeyHash',
-  definition: [
-    { name: 'accountHash', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageAccountByPublicKeyHash',
+    definition: [
+        { name: 'accountHash', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_VALIDATOR_NODE_BY_ADDRESS] = {
-  label: 'MessageGetValidatorNodeByAddress',
-  definition: [
-    { name: 'address', type: DATA.TYPE_BINARY }
-  ]
+    label: 'MessageGetValidatorNodeByAddress',
+    definition: [
+        { name: 'address', type: DATA.TYPE_BINARY }
+    ]
 };
 
 NODE_MESSAGES[MSG_VALIDATOR_NODE_BY_ADDRESS] = {
-  label: 'MessageValidatorNodeByAddress',
-  definition: [
-    { name: 'validatorNodeHash', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageValidatorNodeByAddress',
+    definition: [
+        { name: 'validatorNodeHash', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_OBJECT_LIST] = {
-  label: 'MessageGetObjectList',
-  definition: [
-    { name: 'type', type: DATA.TYPE_UINT8 }
-  ]
+    label: 'MessageGetObjectList',
+    definition: [
+        { name: 'type', type: DATA.TYPE_UINT8 }
+    ]
 };
 
 NODE_MESSAGES[MSG_OBJECT_LIST] = {
-  label: 'MessageObjectList',
-  definition: [
-    { name: 'list', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
-  ]
+    label: 'MessageObjectList',
+    definition: [
+        { name: 'list', type: DATA.TYPE_ARRAY_OF | DATA.TYPE_BIN256 }
+    ]
 };
 
 NODE_MESSAGES[MSG_GET_GENESIS_SNAPSHOT] = {
@@ -654,12 +660,12 @@ NODE_MESSAGES[MSG_GENESIS_SNAPSHOT] = {
 const WI_MAX_SERVER_URL_LENGTH = 100;
 
 export const WI_QR_CODE: Schema = {
-  label: 'WiQrCode',
-  definition: [
-    { name: 'qrId',      type: DATA.TYPE_BIN256 },
-    { name: 'timestamp', type: DATA.TYPE_UINT48 },
-    { name: 'serverUrl', type: DATA.TYPE_STRING, size: WI_MAX_SERVER_URL_LENGTH }
-  ]
+    label: 'WiQrCode',
+    definition: [
+        { name: 'qrId',      type: DATA.TYPE_BIN256 },
+        { name: 'timestamp', type: DATA.TYPE_UINT48 },
+        { name: 'serverUrl', type: DATA.TYPE_STRING, size: WI_MAX_SERVER_URL_LENGTH }
+    ]
 };
 
 // client -> server
@@ -682,72 +688,72 @@ export const WIMSG_FORWARDED_REQUEST   = 0x08;
 export const WI_MESSAGES: Schema[] = [] as const;
 
 WI_MESSAGES[WIMSG_REQUEST] = {
-  label: 'WiMsgRequest',
-  definition: [
-    { name: 'requestType', type: DATA.TYPE_UINT8 },
-    { name: 'request',     type: DATA.TYPE_BINARY },
-    { name: 'deviceId',    type: DATA.TYPE_BIN256 },
-    { name: 'withToken',   type: DATA.TYPE_UINT8 },
-    //{ name: 'token',       type: DATA.TYPE_BIN256 }
-  ]
+    label: 'WiMsgRequest',
+    definition: [
+        { name: 'requestType', type: DATA.TYPE_UINT8 },
+        { name: 'request',     type: DATA.TYPE_BINARY },
+        { name: 'deviceId',    type: DATA.TYPE_BIN256 },
+        { name: 'withToken',   type: DATA.TYPE_UINT8 },
+        //{ name: 'token',       type: DATA.TYPE_BIN256 }
+    ]
 };
 
 WI_MESSAGES[WIMSG_UPDATE_QR] = {
-  label: 'WiMsgUpdateQr',
-  definition: [
-    { name: 'qrId',      type: DATA.TYPE_BIN256 },
-    { name: 'timestamp', type: DATA.TYPE_UINT48 }
-  ]
+    label: 'WiMsgUpdateQr',
+    definition: [
+        { name: 'qrId',      type: DATA.TYPE_BIN256 },
+        { name: 'timestamp', type: DATA.TYPE_UINT48 }
+    ]
 };
 
 WI_MESSAGES[WIMSG_CONNECTION_TOKEN] = {
-  label: 'WiMsgConnectionToken',
-  definition: [
-    { name: 'token', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'WiMsgConnectionToken',
+    definition: [
+        { name: 'token', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 WI_MESSAGES[WIMSG_FORWARDED_ANSWER] = {
-  label: 'WiMsgForwardedAnswer',
-  definition: [
-    { name: 'answerType', type: DATA.TYPE_UINT8 },
-    { name: 'answer',     type: DATA.TYPE_BINARY }
-  ]
+    label: 'WiMsgForwardedAnswer',
+    definition: [
+        { name: 'answerType', type: DATA.TYPE_UINT8 },
+        { name: 'answer',     type: DATA.TYPE_BINARY }
+    ]
 };
 
 WI_MESSAGES[WIMSG_GET_CONNECTION_INFO] = {
-  label: 'WiMsgGetConnectionInfo',
-  definition: [
-    { name: 'qrId', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'WiMsgGetConnectionInfo',
+    definition: [
+        { name: 'qrId', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 WI_MESSAGES[WIMSG_ANSWER] = {
-  label: 'WiMsgAnswer',
-  definition: [
-    { name: 'answerType', type: DATA.TYPE_UINT8 },
-    { name: 'answer',     type: DATA.TYPE_BINARY }
-  ]
+    label: 'WiMsgAnswer',
+    definition: [
+        { name: 'answerType', type: DATA.TYPE_UINT8 },
+        { name: 'answer',     type: DATA.TYPE_BINARY }
+    ]
 };
 
 WI_MESSAGES[WIMSG_CONNECTION_INFO] = {
-  label: 'WiMsgConnectionInfo',
-  definition: []
+    label: 'WiMsgConnectionInfo',
+    definition: []
 };
 
 WI_MESSAGES[WIMSG_CONNECTION_ACCEPTED] = {
-  label: 'WiMsgConnectionAccepted',
-  definition: [
-    { name: 'qrId', type: DATA.TYPE_BIN256 }
-  ]
+    label: 'WiMsgConnectionAccepted',
+    definition: [
+        { name: 'qrId', type: DATA.TYPE_BIN256 }
+    ]
 };
 
 WI_MESSAGES[WIMSG_FORWARDED_REQUEST] = {
-  label: 'WiMsgForwardedRequest',
-  definition: [
-    { name: 'requestType', type: DATA.TYPE_UINT8 },
-    { name: 'request',     type: DATA.TYPE_BINARY }
-  ]
+    label: 'WiMsgForwardedRequest',
+    definition: [
+        { name: 'requestType', type: DATA.TYPE_UINT8 },
+        { name: 'request',     type: DATA.TYPE_BINARY }
+    ]
 };
 /*
 export const WIRQ_AUTH_BY_PUBLIC_KEY = 0x00;
@@ -893,29 +899,29 @@ WALLET_OP_MESSAGES[MSG_ANS_APPROVAL_SIGNATURE] = {
 //  All schemas are summarized here for automated translation to interfaces                                                     //
 // ============================================================================================================================ //
 export const ALL_SCHEMAS = {
-  singles: [
-    RECORD_ACTOR,
-    RECORD_CHANNEL,
-    RECORD_CHANNEL_ASSIGNATION,
-    RECORD_ACTOR_ASSIGNATION,
-    RECORD_MASKED_PART,
-    RECORD_MASKABLE_FIELD,
-    RECORD_HASHABLE_FIELD,
-    RECORD_DESCRIPTION,
+    singles: [
+        RECORD_ACTOR,
+        RECORD_CHANNEL,
+        RECORD_CHANNEL_ASSIGNATION,
+        RECORD_ACTOR_ASSIGNATION,
+        RECORD_MASKED_PART,
+        RECORD_MASKABLE_FIELD,
+        RECORD_HASHABLE_FIELD,
+        RECORD_DESCRIPTION,
 
-    MICROBLOCK_HEADER,
-    MICROBLOCK_SECTION,
-    MICROBLOCK_BODY,
-    MICROBLOCK_VB_INFORMATION,
+        MICROBLOCK_HEADER,
+        MICROBLOCK_SECTION,
+        MICROBLOCK_BODY,
+        MICROBLOCK_VB_INFORMATION,
 
-    WI_QR_CODE
-  ],
-  collections: [
-    { label: 'VbState', list: VB_STATES },
-    { label: 'NodeMessage', list: NODE_MESSAGES },
-    { label: 'WiMessage', list: WI_MESSAGES },
-    //{ label: 'WiRequest', list: WI_REQUESTS },
-    //{ label: 'WiAnswer', list: WI_ANSWERS },
-    //{ label: 'WalletOpMessage', list: WALLET_OP_MESSAGES }
-  ]
+        WI_QR_CODE
+    ],
+    collections: [
+        { label: 'VbState', list: VB_STATES },
+        { label: 'NodeMessage', list: NODE_MESSAGES },
+        { label: 'WiMessage', list: WI_MESSAGES },
+        //{ label: 'WiRequest', list: WI_REQUESTS },
+        //{ label: 'WiAnswer', list: WI_ANSWERS },
+        //{ label: 'WalletOpMessage', list: WALLET_OP_MESSAGES }
+    ]
 };

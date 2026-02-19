@@ -109,7 +109,6 @@ export class Microblock {
         return new Microblock(VirtualBlockchainType.APPLICATION_VIRTUAL_BLOCKCHAIN)
     };
 
-
     static loadFromSerializedMicroblock(serializedMicroblock: Uint8Array, expectedMbType?: VirtualBlockchainType) {
         const mbStruct = v.parse(MicroblockStructSchema, decode(serializedMicroblock));
         return Microblock.loadFromHeaderAndBody(mbStruct.header, mbStruct.body, expectedMbType)

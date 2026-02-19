@@ -8,6 +8,7 @@ import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBo
 import {Crypto} from "../crypto/crypto";
 
 type StringToBinaryMap = Map<string, string>
+
 export class MemoryProvider implements IInternalProvider {
 
     private static logger = Logger.getMemoryProviderLogger();
@@ -74,16 +75,11 @@ export class MemoryProvider implements IInternalProvider {
         } else {
             const resultHash = Crypto.Hashes.sha256(result);
             const header = BlockchainUtils.decodeMicroblockHeader(result);
-            const sameHeader = BlockchainUtils.decodeMicroblockHeader(result);
             MemoryProvider.logger.info(`Header of microblock with identifier (sha256:${resultHash})=${Utils.binaryToHexa(identifier)} found: {header}`, {
                 header: JSON.stringify(header)
             });
-            MemoryProvider.logger.info(`Is the same header decoded a second time for ${Utils.binaryToHexa(identifier)}: {sameHeader}`, {
-                sameHeader: JSON.stringify(sameHeader)
-            }) // TODO: remove this log
             return result;
         }
-
     }
 
     async getMicroblockBody(identifier: Uint8Array) {

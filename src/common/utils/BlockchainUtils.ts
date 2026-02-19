@@ -117,7 +117,6 @@ export class BlockchainUtils {
         return v.parse(VirtualBlockchainStateSchema, this.decodeObjectFromBinary(serializedVirtualBlockchainState))
     }
 
-
     static encodeMicroblockBody(body: MicroblockBody) {
         return this.encodeObjectToBinary(v.parse(MicroblockBodySchema, body));
     }

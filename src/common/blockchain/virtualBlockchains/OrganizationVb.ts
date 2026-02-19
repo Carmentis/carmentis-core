@@ -29,8 +29,6 @@ export class OrganizationVb extends VirtualBlockchain<OrganizationInternalState>
         super(provider, VirtualBlockchainType.ORGANIZATION_VIRTUAL_BLOCKCHAIN, state)
     }
 
-
-
     protected async updateInternalState(protocolState: ProtocolInternalState, state: OrganizationInternalState, microblock: Microblock) {
         const stateUpdateVersion = protocolState.getOrganizationInternalStateUpdaterVersion();
         const localStateUpdater = InternalStateUpdaterFactory.createOrganizationInternalStateUpdater(

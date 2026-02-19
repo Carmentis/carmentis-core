@@ -19,7 +19,6 @@ import {FeesCalculationFormulaFactory} from "../common/blockchain/feesCalculator
 describe('Chain test', () => {
     const TEST_TIMEOUT = 45000;
 
-    // create a random account
     const nodeUrl = NODE_URL;
     const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
     const sigEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
@@ -70,7 +69,7 @@ describe('Chain test', () => {
             {
                 type: SectionType.ACCOUNT_CREATION,
                 sellerAccount: sellerAccountId.toBytes(),
-                amount: 10
+                amount: CMTSToken.createCMTS(1000).getAmountAsAtomic()
             },
         ])
         mb.setFeesPayerAccount(sellerAccountId.toBytes());
@@ -105,7 +104,35 @@ describe('Chain test', () => {
         await provider.publishMicroblock(carmentisOrganizationMicroblock);
         await provider.awaitMicroblockAnchoring(carmentisOrganizationMicroblock.getHash().toBytes());
 
-        // now create the
+        // publish an update of the description
+        const organizationVb = await provider.loadOrganizationVirtualBlockchain(Hash.from(carmentisOrgId));
+        const carmentisOrganizationSecondMicroblock = await organizationVb.createMicroblock();
+        carmentisOrganizationSecondMicroblock.addSections([
+            {
+                type: SectionType.ORG_DESCRIPTION,
+                name: 'Carmentis SAS',
+                website: 'https://www.carmentis.io',
+                countryCode: 'FR',
+                city: '',
+            },
+        ]);
+        carmentisOrganizationSecondMicroblock.setFeesPayerAccount(newAccountId.toBytes());
+        carmentisOrganizationSecondMicroblock.setTimestamp(Utils.getTimestampInSeconds());
+        carmentisOrganizationSecondMicroblock.setGas(await feesFormula.computeFees(sk.getSignatureSchemeId(), carmentisOrganizationSecondMicroblock));
+        await carmentisOrganizationSecondMicroblock.seal(sk);
+        carmentisOrganizationSecondMicroblock.serialize();
+        await provider.publishMicroblock(carmentisOrganizationSecondMicroblock);
+        await provider.awaitMicroblockAnchoring(carmentisOrganizationSecondMicroblock.getHash().toBytes());
+
+        // get the organization VB with the standard provider
+        const vbStatus1 = await provider.getVirtualBlockchainStatus(carmentisOrgId);
+        console.log('vbStatus1', vbStatus1);
+
+        // get the organization VB with the null memory provider,
+        // to force the data to be fetched from the network
+        const debugProvider = ProviderFactory.createNullInMemoryProviderWithExternalProvider(nodeUrl);
+        const vbStatus2 = await debugProvider.getVirtualBlockchainStatus(carmentisOrgId);
+        console.log('vbStatus2', vbStatus2);
     }, TEST_TIMEOUT)
 
     /*

@@ -244,19 +244,23 @@ export class BalanceAvailability {
      */
     applyNodeStakingUnlocks(referenceTimestamp: number) {
         const nodeStakingLocks = this.getNodeStakingLocks();
+        let totalUnstaked = 0;
 
         for (const lock of nodeStakingLocks) {
             if (
                 lock.parameters.plannedUnlockTimestamp != 0 &&
                 referenceTimestamp >= lock.parameters.plannedUnlockTimestamp
             ) {
+                const unstakedAmountInAtomics = lock.parameters.plannedUnlockAmountInAtomics;
                 this.removeNodeStaking(
-                    lock.parameters.plannedUnlockAmountInAtomics,
+                    unstakedAmountInAtomics,
                     lock.parameters.validatorNodeAccountId
                 );
+                totalUnstaked += unstakedAmountInAtomics;
             }
         }
         this.removeExpiredStakingLocks();
+        return totalUnstaked;
     }
 
     /**
@@ -334,7 +338,7 @@ export class BalanceAvailability {
     /**
      * Unstakes tokens for a given node.
      */
-    removeNodeStaking(amountInAtomics: number, nodeAccountId: Uint8Array) {
+    private removeNodeStaking(amountInAtomics: number, nodeAccountId: Uint8Array) {
         const lock = this.getNodeStakingLock(nodeAccountId);
 
         if (lock === undefined) {

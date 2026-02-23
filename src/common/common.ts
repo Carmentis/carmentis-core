@@ -151,6 +151,7 @@ export * from "./providers/IProvider";
 export * from "./providers/KeyedProvider";
 export * from "./providers/MemoryProvider";
 export * from "./providers/NetworkProvider";
+export * from "./providers/NullMemoryProvider";
 export * from "./providers/NullNetworkProvider";
 export * from "./providers/Provider";
 export * from "./providers/ProviderFactory";

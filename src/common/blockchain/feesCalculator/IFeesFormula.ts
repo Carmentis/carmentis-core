@@ -1,6 +1,7 @@
 import {Microblock} from "../microblock/Microblock";
 import {CMTSToken} from "../../economics/currencies/token";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
+import {IProvider} from "../../providers/IProvider";
 
 export interface IFeesFormula {
     /**
@@ -13,5 +14,10 @@ export interface IFeesFormula {
      * @param schemeId
      * @param microblock
      */
-    computeFees(schemeId: SignatureSchemeId,  microblock: Microblock): Promise<CMTSToken>
+    computeFees(
+        provider: IProvider,
+        vbId: Uint8Array,
+        schemeId: SignatureSchemeId,
+        microblock: Microblock
+    ): Promise<CMTSToken>
 }

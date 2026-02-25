@@ -165,7 +165,12 @@ export class MicroblockConsistencyChecker {
         const usedFeesCalculationFormula = feesCalculationFormula === undefined ?
             await this.getFeesCalculationFormulaFromProvider() : feesCalculationFormula;
         const declaredGas = microblock.getGas();
-        const expectedGas = await usedFeesCalculationFormula.computeFees(usedSchemeId, microblock);
+        const expectedGas = await usedFeesCalculationFormula.computeFees(
+            this.provider,
+            this.verificationState.virtualBlockchain.getId(),
+            usedSchemeId,
+            microblock
+        );
         if (!expectedGas.equals(declaredGas)) {
             throw new Error(`inconsistent gas value in microblock header (expected ${expectedGas.toString()}, got ${declaredGas.toString()})`)
         }

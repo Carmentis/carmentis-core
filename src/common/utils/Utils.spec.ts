@@ -95,7 +95,7 @@ describe("BlockchainUtils", () => {
         const header: MicroblockHeader = {
             bodyHash: Utils.getNullHash(),
             feesPayerAccount: Utils.getNullHash(),
-            gas: 0,
+            maxFees: 0,
             gasPrice: 0,
             height: 0,
             magicString: "CMTS",
@@ -169,7 +169,7 @@ describe("BlockchainUtils", () => {
                 height: 0,
                 previousHash: Utils.getNullHash(),
                 timestamp: 0,
-                gas: 0,
+                maxFees: 0,
                 gasPrice: 0,
                 bodyHash: Utils.getNullHash(),
                 feesPayerAccount: Utils.getNullHash()

@@ -166,7 +166,6 @@ export class MicroblockConsistencyChecker {
             await this.getFeesCalculationFormulaFromProvider() : feesCalculationFormula;
         const declaredGas = microblock.getGas();
         const expectedGas = await usedFeesCalculationFormula.computeFees(
-            this.provider,
             this.verificationState.virtualBlockchain.getId(),
             usedSchemeId,
             microblock
@@ -179,7 +178,7 @@ export class MicroblockConsistencyChecker {
     private async getFeesCalculationFormulaFromProvider() {
         const protocolParameters = await this.provider.getProtocolState();
         const feesCalculationVersion = protocolParameters.getFeesCalculationVersion();
-        return FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(feesCalculationVersion);
+        return FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(this.provider, feesCalculationVersion);
     }
 
     private get virtualBlockchain() {

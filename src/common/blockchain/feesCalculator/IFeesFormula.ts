@@ -15,7 +15,6 @@ export interface IFeesFormula {
      * @param microblock
      */
     computeFees(
-        provider: IProvider,
         vbId: Uint8Array,
         schemeId: SignatureSchemeId,
         microblock: Microblock

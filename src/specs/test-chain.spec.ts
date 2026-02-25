@@ -55,7 +55,6 @@ describe('Chain test', () => {
         const sellerAccountId = await provider.getAccountIdFromPublicKey(sellerPk);
         const protocolVariables = await getProtocolVariables();
         const feesFormulaVersion = protocolVariables.feesCalculationVersion;
-        const feesFormula = FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(feesFormulaVersion);
 
         const sk = Secp256k1PrivateSignatureKey.gen();
         const pk = await sk.getPublicKey();

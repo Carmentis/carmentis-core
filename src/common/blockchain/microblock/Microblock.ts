@@ -262,7 +262,7 @@ export class Microblock {
             height: 1,
             previousHash: Microblock.generatePreviousHashForGenesisMicroblock(type, defaultExpirationDay),
             timestamp: defaultTimestampInSeconds,
-            gas: 0,
+            maxFees: 0,
             gasPrice: defaultGasPrice,
             bodyHash: Microblock.computeInitialBodyHash(),
             feesPayerAccount: Utils.getNullHash(),
@@ -296,7 +296,7 @@ export class Microblock {
             height: height,
             previousHash: previousHash,
             timestamp: Utils.getTimestampInSeconds(),
-            gas: 0,
+            maxFees: 0,
             gasPrice: 0,
             bodyHash: Utils.getNullHash(),
             feesPayerAccount: Utils.getNullHash(),
@@ -370,13 +370,39 @@ export class Microblock {
         return this.header.timestamp;
     }
 
+
+    /**
+     * Returns the gas in the header.
+     * @deprecated No more gas in contained in the header. Use getMaxFees instead.
+     */
     getGas(): CMTSToken {
-        return CMTSToken.createAtomic(this.header.gas);
+        return this.getMaxFees();
     }
 
-    setGas(gas: CMTSToken) {
-        this.header.gas = gas.getAmountAsAtomic();
+    /**
+     *
+     */
+    getMaxFees(): CMTSToken {
+        return CMTSToken.createAtomic(this.header.maxFees);
+    }
+
+
+    /**
+     * Assign the maximum gas fees.
+     * @param maxFees
+     */
+    setMaxFees(maxFees: CMTSToken) {
+        this.header.maxFees = maxFees.getAmountAsAtomic();
         this.hash = Microblock.computeMicroblockHash(this.header)
+    }
+
+
+    /**
+     * @deprecated No gas in the header anymore. Use setMaxFees instead.
+     * @param gas
+     */
+    setGas(gas: CMTSToken) {
+        this.setMaxFees(gas);
     }
 
     setHeight(number: number) {
@@ -530,7 +556,7 @@ export class Microblock {
         const bodyHash = Microblock.computeBodyHashFromSections(sections);
         const headerToBeSigned: MicroblockHeader = {
             ...this.header,
-            gas: includeGas ? this.header.gas : 0,
+            maxFees: includeGas ? this.header.maxFees: 0,
             gasPrice: includeGas ? this.header.gasPrice : 0,
             bodyHash,
         }
@@ -581,7 +607,7 @@ export class Microblock {
         const sections = this.sections.slice(0, sectionIndexInMicroblock);
         const headerToBeVerified: MicroblockHeader = {
             ...this.header,
-            gas: includeGas ? this.header.gas : 0,
+            maxFees: includeGas ? this.header.maxFees : 0,
             gasPrice: includeGas ? this.header.gasPrice : 0,
             bodyHash: Microblock.computeBodyHashFromSections(sections)
         }
@@ -773,7 +799,7 @@ export class Microblock {
         output += `    Height: ${this.header.height}\n`;
         output += `    Previous Hash: ${encoder.encode(this.header.previousHash)}\n`;
         output += `    Timestamp: ${this.header.timestamp}\n`;
-        output += `    Gas: ${this.header.gas}\n`;
+        output += `    Max fees: ${this.header.maxFees}\n`;
         output += `    Gas Price: ${this.header.gasPrice}\n`;
         output += `    Body Hash: ${encoder.encode(this.header.bodyHash)}\n`;
         output += `    Computed body Hash: ${encoder.encode(this.computeBodyHash())}\n`;

@@ -6,6 +6,8 @@ import {SectionType} from "../../type/valibot/blockchain/section/SectionType";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {Section} from "../../type/valibot/blockchain/section/sections";
 import {BlockchainUtils} from "../../utils/BlockchainUtils";
+import {IProvider} from "../../providers/IProvider";
+import {StoragePriceManager} from "./storagePriceManager";
 
 /**
  * FirstFeesFormula is a concrete implementation of the IFeesFormula interface.
@@ -15,17 +17,44 @@ import {BlockchainUtils} from "../../utils/BlockchainUtils";
 export class FirstFeesFormula implements IFeesFormula {
     private static DEFAULT_GAS_PRICE = CMTSToken.createAtomic(1);
 
-    async computeFees(signatureSchemeId: SignatureSchemeId, microblock: Microblock): Promise<CMTSToken> {
+    async computeFees(provider: IProvider, vbId: Uint8Array, signatureSchemeId: SignatureSchemeId, microblock: Microblock): Promise<CMTSToken> {
+        // we search the expiration day from the microblock
+        const expirationDay = await this.searchExpirationDayFromMicroblock(provider, vbId, microblock);
+        if (expirationDay < 0) throw new Error("Invalid expiration day");
+
+        // we compute the storage price
+        const protocolState = await provider.getProtocolState();
+        const storagePriceManager  =  new StoragePriceManager(protocolState.getPriceStructure());
+        const baseFee = CMTSToken.createCMTS(1);
+        const storagePrice = storagePriceManager.getStoragePrice(baseFee, expirationDay);
+
+
+        // we compute the microblock fees
         const totalSize = this.computeSizeInBytesOfMicroblock(microblock);
         const definedGasPrice = microblock.getGasPrice();
         const usedGasPrice = definedGasPrice.isZero() ? FirstFeesFormula.DEFAULT_GAS_PRICE : definedGasPrice;
+
+        // we have an additional signature-related costs
         const additionalCosts =  this.getAdditionalCosts(signatureSchemeId)
+
+        // we compute the fees
         const feesInAtomic =  (
             ECO.FIXED_GAS_FEE +
             ECO.GAS_PER_BYTE * totalSize +
-            additionalCosts
+            additionalCosts +
+            storagePrice.getAmountAsAtomic()
         ) * usedGasPrice.getAmountAsAtomic();
         return CMTSToken.createAtomic(feesInAtomic);
+    }
+
+    private async searchExpirationDayFromMicroblock(provider: IProvider, vbId: Uint8Array, microblock: Microblock): Promise<number> {
+        if (microblock.isGenesisMicroblock()) {
+            return Microblock.extractExpirationDayFromGenesisPreviousHash(microblock.getPreviousHash().toBytes());
+        } else {
+            const vbState = await provider.getVirtualBlockchainState(vbId);
+            if (vbState === null) throw new Error("Virtual blockchain state not found");
+            return vbState.expirationDay;
+        }
     }
 
     private getAdditionalCosts(signatureSchemeId: SignatureSchemeId) {

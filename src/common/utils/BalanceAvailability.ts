@@ -81,10 +81,10 @@ export class BalanceAvailability {
         return this.locks.filter((lock) => lock.type == LockType.NodeStaking);
     }
 
-    getNodeStakingLock(nodeAccountId: Uint8Array) {
+    getNodeStakingLock(nodeId: Uint8Array) {
         const nodeStakingLocks = this.getNodeStakingLocks();
         const lock = nodeStakingLocks.find((lock) =>
-            Utils.binaryIsEqual(lock.parameters.validatorNodeAccountId, nodeAccountId)
+            Utils.binaryIsEqual(lock.parameters.validatorNodeId, nodeId)
         );
         return lock;
     }
@@ -191,7 +191,7 @@ export class BalanceAvailability {
      * Stakes a given amount of tokens for a given node.
      * If a staking is already defined for this node, the new amount is added to the current staked amount.
      */
-    addNodeStaking(amountInAtomics: number, nodeAccountId: Uint8Array) {
+    addNodeStaking(amountInAtomics: number, nodeId: Uint8Array) {
         // we must ensure the node has enough stakeable tokens to stake the requested amount
         const breakdown = this.getBreakdown();
         if (amountInAtomics < 0) {
@@ -201,14 +201,14 @@ export class BalanceAvailability {
             throw new Error(`Cannot stake more than ${breakdown.stakeable} atomic units`);
         }
 
-        const existingLock = this.getNodeStakingLock(nodeAccountId);
+        const existingLock = this.getNodeStakingLock(nodeId);
 
         if (existingLock === undefined) {
             this.locks.push({
                 type: LockType.NodeStaking,
                 lockedAmountInAtomics: amountInAtomics,
                 parameters: {
-                    validatorNodeAccountId: nodeAccountId,
+                    validatorNodeId: nodeId,
                     plannedUnlockAmountInAtomics: 0,
                     plannedUnlockTimestamp: 0,
                     slashed: false,
@@ -254,7 +254,7 @@ export class BalanceAvailability {
                 const unstakedAmountInAtomics = lock.parameters.plannedUnlockAmountInAtomics;
                 this.removeNodeStaking(
                     unstakedAmountInAtomics,
-                    lock.parameters.validatorNodeAccountId
+                    lock.parameters.validatorNodeId
                 );
                 totalUnstaked += unstakedAmountInAtomics;
             }
@@ -264,11 +264,25 @@ export class BalanceAvailability {
     }
 
     /**
+     * Sets slashing for a given node.
+     */
+    setSlashing(nodeId: Uint8Array, plannedTimestamp: number) {
+        const nodeStakingLocks = this.getNodeStakingLocks();
+        const nodeStakingLock = nodeStakingLocks.find((obj) => obj.parameters.validatorNodeId == nodeId);
+        if (nodeStakingLock == undefined) {
+            throw new Error(`Staking not found`);
+        }
+        nodeStakingLock.parameters.slashed = true;
+        nodeStakingLock.parameters.plannedSlashingAmountInAtomics = nodeStakingLock.lockedAmountInAtomics;
+        nodeStakingLock.parameters.plannedSlashingTimestamp = plannedTimestamp;
+    }
+
+    /**
      * Cancels slashing for a given node.
      */
-    cancelNodeSlashing(nodeAccountId: Uint8Array) {
+    cancelNodeSlashing(nodeId: Uint8Array) {
         const nodeStakingLocks = this.getNodeStakingLocks();
-        const nodeStakingLock = nodeStakingLocks.find((obj) => obj.parameters.validatorNodeAccountId == nodeAccountId);
+        const nodeStakingLock = nodeStakingLocks.find((obj) => obj.parameters.validatorNodeId == nodeId);
         if (nodeStakingLock == undefined) {
             throw new Error(`Staking not found`);
         }
@@ -287,20 +301,28 @@ export class BalanceAvailability {
      */
     applyNodeSlashing(referenceTimestamp: number) {
         const nodeStakingLocks = this.getNodeStakingLocks();
+        let totalSlashed = 0;
 
         for (const lock of nodeStakingLocks) {
-            const slashedAmountInAtomics = lock.parameters.plannedSlashingAmountInAtomics;
-            if (
-                slashedAmountInAtomics > 0 &&
-                lock.parameters.plannedSlashingTimestamp != 0 &&
-                referenceTimestamp >= lock.parameters.plannedSlashingTimestamp
-            ) {
-                lock.lockedAmountInAtomics -= slashedAmountInAtomics;
-                this.balanceInAtomics -= slashedAmountInAtomics;
+            if(lock.parameters.slashed) {
+                const slashedAmountInAtomics = lock.parameters.plannedSlashingAmountInAtomics;
+                if (
+                    slashedAmountInAtomics > 0 &&
+                    lock.parameters.plannedSlashingTimestamp != 0 &&
+                    referenceTimestamp >= lock.parameters.plannedSlashingTimestamp
+                ) {
+                    lock.lockedAmountInAtomics -= slashedAmountInAtomics;
+                    this.balanceInAtomics -= slashedAmountInAtomics;
+                    totalSlashed += slashedAmountInAtomics;
+                    lock.parameters.slashed = false;
+                    lock.parameters.plannedSlashingTimestamp = 0;
+                    lock.parameters.plannedSlashingAmountInAtomics = 0;
+                }
             }
         }
         this.adjustVesting();
         this.removeExpiredStakingLocks();
+        return totalSlashed;
     }
 
     /**

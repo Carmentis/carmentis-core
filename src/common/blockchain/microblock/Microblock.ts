@@ -281,9 +281,8 @@ export class Microblock {
      * @param height
      * @param previousHash
      * @param expirationDay
-     * @deprecated Use Microblock.createGenesisMicroblock or Microblock.createMicroblock to create a microblock.
      */
-    create(height: number, previousHash: Uint8Array | null, expirationDay: number) {
+    private create(height: number, previousHash: Uint8Array | null, expirationDay: number) {
         if (height == 1) {
           previousHash = Microblock.generatePreviousHashForGenesisMicroblock(this.type, expirationDay);
         } else if (previousHash === null) {

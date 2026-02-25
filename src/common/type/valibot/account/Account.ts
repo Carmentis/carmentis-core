@@ -43,7 +43,7 @@ export type VestingLock = v.InferOutput<typeof VestingLockSchema>;
 
 // Staking schemas
 export const NodeStakingParametersSchema = v.object({
-    validatorNodeAccountId: uint8array(),
+    validatorNodeId: uint8array(),
     plannedUnlockAmountInAtomics: v.number(),
     plannedUnlockTimestamp: v.number(),
     slashed: v.boolean(),

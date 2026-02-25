@@ -33,6 +33,7 @@ import {RPCNodeStatusResponseType} from "./nodeRpc/RPCNodeStatusResponseSchema";
 import {CometBFTPublicKey} from "../cometbft/CometBFTPublicKey";
 import {CometBFTPublicKeyConverter} from "../utils/CometBFTPublicKeyConverter";
 import {EncoderFactory} from "../utils/encoder";
+import {FeesCalculationFormulaFactory} from "../blockchain/feesCalculator/FeesCalculationFormulaFactory";
 
 /**
  * Represents a provider class that interacts with both internal and external providers for managing blockchain states and microblocks.
@@ -465,6 +466,13 @@ export class Provider extends AbstractProvider {
             b64.decode(b64EncodedCometbftPublicKey)
         );
         return this.getValidatorNodeIdByAddress(Hash.from(address))
+    }
+
+    async getCurrentFeesFormula() {
+        const protocolState = await this.getProtocolState();
+        const feesVersion = protocolState.getFeesCalculationVersion();
+        const feesFactory = FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(this, feesVersion);
+
     }
 
 

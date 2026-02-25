@@ -17,13 +17,16 @@ import {StoragePriceManager} from "./storagePriceManager";
 export class FirstFeesFormula implements IFeesFormula {
     private static DEFAULT_GAS_PRICE = CMTSToken.createAtomic(1);
 
-    async computeFees(provider: IProvider, vbId: Uint8Array, signatureSchemeId: SignatureSchemeId, microblock: Microblock): Promise<CMTSToken> {
+    constructor(private provider: IProvider) {
+    }
+
+    async computeFees(vbId: Uint8Array, signatureSchemeId: SignatureSchemeId, microblock: Microblock): Promise<CMTSToken> {
         // we search the expiration day from the microblock
-        const expirationDay = await this.searchExpirationDayFromMicroblock(provider, vbId, microblock);
+        const expirationDay = await this.searchExpirationDayFromMicroblock(this.provider, vbId, microblock);
         if (expirationDay < 0) throw new Error("Invalid expiration day");
 
         // we compute the storage price
-        const protocolState = await provider.getProtocolState();
+        const protocolState = await this.provider.getProtocolState();
         const storagePriceManager  =  new StoragePriceManager(protocolState.getPriceStructure());
         const baseFee = CMTSToken.createCMTS(1);
         const storagePrice = storagePriceManager.getStoragePrice(baseFee, expirationDay);

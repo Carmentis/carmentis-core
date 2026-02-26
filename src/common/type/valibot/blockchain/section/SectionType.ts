@@ -31,6 +31,7 @@ export enum SectionType {
     VN_COMETBFT_PUBLIC_KEY_DECLARATION = 34,
     VN_RPC_ENDPOINT = 35,
     VN_APPROVAL = 36,
+    VN_SLASHING_CANCELLATION = 37,
 
     // Organization
     ORG_CREATION = 52,

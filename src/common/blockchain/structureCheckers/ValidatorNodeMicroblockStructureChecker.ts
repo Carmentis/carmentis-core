@@ -26,7 +26,8 @@ export class ValidatorNodeMicroblockStructureChecker implements IMicroblockStruc
                     [
                         [ SectionConstraint.AT_MOST_ONE, SectionType.VN_COMETBFT_PUBLIC_KEY_DECLARATION ],
                         [ SectionConstraint.AT_MOST_ONE, SectionType.VN_RPC_ENDPOINT ],
-                        [ SectionConstraint.AT_MOST_ONE, SectionType.VN_APPROVAL ]
+                        [ SectionConstraint.AT_MOST_ONE, SectionType.VN_APPROVAL ],
+                        [ SectionConstraint.AT_MOST_ONE, SectionType.VN_SLASHING_CANCELLATION ]
                     ]
             );
             checker.expects(SectionConstraint.ONE, SectionType.SIGNATURE);

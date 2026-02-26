@@ -467,14 +467,4 @@ export class Provider extends AbstractProvider {
         );
         return this.getValidatorNodeIdByAddress(Hash.from(address))
     }
-
-    async getCurrentFeesFormula() {
-        const protocolState = await this.getProtocolState();
-        const feesVersion = protocolState.getFeesCalculationVersion();
-        const feesFactory = FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(this, feesVersion);
-
-    }
-
-
-
 }

@@ -2,6 +2,7 @@ import {Microblock} from "../microblock/Microblock";
 import {CMTSToken} from "../../economics/currencies/token";
 import {SignatureSchemeId} from "../../crypto/signature/SignatureSchemeId";
 import {IProvider} from "../../providers/IProvider";
+import {Utils} from "../../utils/utils";
 
 export interface IFeesFormula {
     /**
@@ -11,12 +12,11 @@ export interface IFeesFormula {
      * - fees formula should only depend on the *signed* information.
      * - fees formula should not depend on the last microblock signature (the sealing signature).
      *
-     * @param schemeId
-     * @param microblock
      */
     computeFees(
-        vbId: Uint8Array,
-        schemeId: SignatureSchemeId,
-        microblock: Microblock
-    ): Promise<CMTSToken>
+        signatureSchemeId: SignatureSchemeId,
+        microblock: Microblock,
+        expirationDay: number,
+        referenceTimestampInSeconds: number
+    ): Promise<CMTSToken>;
 }

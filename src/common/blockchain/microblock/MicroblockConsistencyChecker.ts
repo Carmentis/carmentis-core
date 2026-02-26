@@ -155,31 +155,21 @@ export class MicroblockConsistencyChecker {
     /**
      * Verifies that the declared gas matches the computed gas.
      */
-    async checkGasOrFail(feesCalculationFormula?: IFeesFormula): Promise<void> {
+    async checkGasOrFail(referenceTimestamp: number = Utils.getTimestampInSeconds()): Promise<void> {
         if (this.verificationState.isMicroblockParsingCompleted === false)
             throw new IllegalStateError("You have already called reconstructMicroblockAndVirtualBlockchain() method. You can only call it once.")
 
         const microblock = this.checkedMicroblock;
-        const signatureSection = microblock.getLastSignatureSection();
-        const usedSchemeId = signatureSection.schemeId;
-        const usedFeesCalculationFormula = feesCalculationFormula === undefined ?
-            await this.getFeesCalculationFormulaFromProvider() : feesCalculationFormula;
-        const declaredGas = microblock.getGas();
-        const expectedGas = await usedFeesCalculationFormula.computeFees(
-            this.verificationState.virtualBlockchain.getId(),
-            usedSchemeId,
-            microblock
+        const computedFees = await this.provider.computeMicroblockFees(
+            microblock,
+            { referenceTimestampInSeconds: referenceTimestamp }
         );
-        if (!expectedGas.equals(declaredGas)) {
-            throw new Error(`inconsistent gas value in microblock header (expected ${expectedGas.toString()}, got ${declaredGas.toString()})`)
+        const maxFees = microblock.getMaxFees();
+        if (maxFees.getAmountAsAtomic() < computedFees.getAmountAsAtomic()) {
+            throw new Error(`Computed fees ${computedFees.toString()} is strictly higher than max fees ${maxFees.toString()} `);
         }
     }
 
-    private async getFeesCalculationFormulaFromProvider() {
-        const protocolParameters = await this.provider.getProtocolState();
-        const feesCalculationVersion = protocolParameters.getFeesCalculationVersion();
-        return FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(this.provider, feesCalculationVersion);
-    }
 
     private get virtualBlockchain() {
         if (this.verificationState.isMicroblockParsingCompleted) {

@@ -118,53 +118,6 @@ export abstract class AbstractProvider implements IProvider {
         return feesFormula.computeFees(sigScheme, mb, expirationDay, referenceTimestampInSeconds);
     }
 
-
-    async computeMicroblockFeesFromVbId(
-        vbId: Uint8Array,
-        mb: Microblock,
-        usedSignatureScheme?: SignatureSchemeId,
-        referenceTimestampInSeconds = Utils.getTimestampInSeconds()
-    ): Promise<CMTSToken> {
-
-        // we start by recovering the expiration day from the virtual blockchain state (or the microblock if it is a genesis microblock)
-        let expirationDay = 0;
-        if (mb.isGenesisMicroblock()) {
-            expirationDay =    Microblock.extractExpirationDayFromGenesisPreviousHash(mb.getPreviousHash().toBytes());
-        } else {
-            const vbState = await this.getVirtualBlockchainState(vbId);
-            if (vbState === null) throw new Error("Virtual blockchain state not found");
-            expirationDay = vbState.expirationDay;
-        }
-
-        // we now compute the fees using the current fees formula
-        const feesFormula = await this.getCurrentFeesFormula();
-        const signatureScheme = usedSignatureScheme ?? mb.getLastSignatureSection().schemeId;
-        return feesFormula.computeFees(
-            signatureScheme,
-            mb,
-            expirationDay,
-            referenceTimestampInSeconds
-        )
-    }
-
-    async computeMicroblockFeesFromVbState(
-        vbState: VirtualBlockchainState,
-        mb: Microblock,
-        usedSignatureScheme?: SignatureSchemeId,
-        referenceTimestampInSeconds = Utils.getTimestampInSeconds()
-    ): Promise<CMTSToken> {
-        const feesFormula = await this.getCurrentFeesFormula();
-        const signatureScheme = usedSignatureScheme ?? mb.getLastSignatureSection().schemeId;
-        return feesFormula.computeFees(
-            signatureScheme,
-            mb,
-            vbState.expirationDay,
-            referenceTimestampInSeconds
-        )
-    }
-
-
-    //abstract getMicroblockInformation(microblockHash: Uint8Array): Promise<MicroblockInformationSchema | null>;
     abstract getVirtualBlockchainStatus(virtualBlockchainId: Uint8Array): Promise<VirtualBlockchainStatus | null>
     abstract getAccountIdFromPublicKey(publicKey: PublicSignatureKey): Promise<Hash>;
     abstract getListOfMicroblockBody(microblockHashes: Uint8Array[]): Promise<MicroblockBody[]>

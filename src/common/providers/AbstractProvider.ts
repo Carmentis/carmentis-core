@@ -18,6 +18,10 @@ import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockcha
 import {VirtualBlockchainStatus} from "../type/valibot/provider/VirtualBlockchainStatus";
 import {VirtualBlockchainType} from "../type/VirtualBlockchainType";
 import {Microblock} from "../blockchain/microblock/Microblock";
+import {FeesCalculationFormulaFactory} from "../blockchain/feesCalculator/FeesCalculationFormulaFactory";
+import {CMTSToken} from "../economics/currencies/token";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {Utils} from "../utils/utils";
 
 export abstract class AbstractProvider implements IProvider {
     private log = Logger.getAbstractProviderLogger(AbstractProvider.name);
@@ -82,6 +86,81 @@ export abstract class AbstractProvider implements IProvider {
         const body = await this.getMicroblockBody(microblockHash);
         if (header === null || body === null) throw new Error(`Microblock ${microblockHash.encode()} not found`);
         return Microblock.loadFromHeaderAndBody(header, body)
+    }
+
+    async getCurrentFeesFormula() {
+        const protocolState = await this.getProtocolState();
+        const feesVersion = protocolState.getFeesCalculationVersion();
+        return FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(this, feesVersion);
+    }
+
+    async computeMicroblockFees(
+        mb: Microblock,
+        options: { signatureSchemeId?: SignatureSchemeId, referenceTimestampInSeconds?: number } = {}
+    ): Promise<CMTSToken> {
+        const referenceTimestampInSeconds = options.referenceTimestampInSeconds ?? Utils.getTimestampInSeconds();
+
+        let expirationDay = 0;
+        if (mb.isGenesisMicroblock()) {
+            expirationDay =    Microblock.extractExpirationDayFromGenesisPreviousHash(mb.getPreviousHash().toBytes());
+        } else {
+            const vbId = await this.getVirtualBlockchainIdContainingMicroblock(mb.getHash());
+            const vbState = await this.getVirtualBlockchainState(vbId.toBytes());
+            if (vbState === null) throw new Error("Virtual blockchain state not found");
+            expirationDay = vbState.expirationDay;
+        }
+
+        const providedSchemeId = options.signatureSchemeId;
+        const sigScheme = providedSchemeId ?? mb.getLastSignatureSection().schemeId;
+        if (sigScheme === null) throw new Error("Signature scheme ID cannot be null");
+
+        const feesFormula = await this.getCurrentFeesFormula();
+        return feesFormula.computeFees(sigScheme, mb, expirationDay, referenceTimestampInSeconds);
+    }
+
+
+    async computeMicroblockFeesFromVbId(
+        vbId: Uint8Array,
+        mb: Microblock,
+        usedSignatureScheme?: SignatureSchemeId,
+        referenceTimestampInSeconds = Utils.getTimestampInSeconds()
+    ): Promise<CMTSToken> {
+
+        // we start by recovering the expiration day from the virtual blockchain state (or the microblock if it is a genesis microblock)
+        let expirationDay = 0;
+        if (mb.isGenesisMicroblock()) {
+            expirationDay =    Microblock.extractExpirationDayFromGenesisPreviousHash(mb.getPreviousHash().toBytes());
+        } else {
+            const vbState = await this.getVirtualBlockchainState(vbId);
+            if (vbState === null) throw new Error("Virtual blockchain state not found");
+            expirationDay = vbState.expirationDay;
+        }
+
+        // we now compute the fees using the current fees formula
+        const feesFormula = await this.getCurrentFeesFormula();
+        const signatureScheme = usedSignatureScheme ?? mb.getLastSignatureSection().schemeId;
+        return feesFormula.computeFees(
+            signatureScheme,
+            mb,
+            expirationDay,
+            referenceTimestampInSeconds
+        )
+    }
+
+    async computeMicroblockFeesFromVbState(
+        vbState: VirtualBlockchainState,
+        mb: Microblock,
+        usedSignatureScheme?: SignatureSchemeId,
+        referenceTimestampInSeconds = Utils.getTimestampInSeconds()
+    ): Promise<CMTSToken> {
+        const feesFormula = await this.getCurrentFeesFormula();
+        const signatureScheme = usedSignatureScheme ?? mb.getLastSignatureSection().schemeId;
+        return feesFormula.computeFees(
+            signatureScheme,
+            mb,
+            vbState.expirationDay,
+            referenceTimestampInSeconds
+        )
     }
 
 

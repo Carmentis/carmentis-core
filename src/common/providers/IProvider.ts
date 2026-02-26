@@ -11,6 +11,10 @@ import {MicroblockHeader} from "../type/valibot/blockchain/microblock/Microblock
 import {MicroblockBody} from "../type/valibot/blockchain/microblock/MicroblockBody";
 import {VirtualBlockchainState} from "../type/valibot/blockchain/virtualBlockchain/virtualBlockchains";
 import {VirtualBlockchainStatus} from "../type/valibot/provider/VirtualBlockchainStatus";
+import {Microblock} from "../blockchain/microblock/Microblock";
+import {SignatureSchemeId} from "../crypto/signature/SignatureSchemeId";
+import {Utils} from "../utils/utils";
+import {CMTSToken} from "../economics/currencies/token";
 
 export interface IProvider {
     getVirtualBlockchainIdContainingMicroblock(microblockHash: Hash): Promise<Hash>;
@@ -50,4 +54,9 @@ export interface IProvider {
      * Note that the protocol parameters are defined in the internal state of the protocol virtual blockchain.
      */
     getProtocolState(): Promise<ProtocolInternalState>;
+
+    computeMicroblockFees(
+        mb: Microblock,
+        options?: { signatureSchemeId?: SignatureSchemeId, referenceTimestampInSeconds?: number }
+    ): Promise<CMTSToken>
 }

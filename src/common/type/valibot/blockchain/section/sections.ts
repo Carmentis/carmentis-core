@@ -151,6 +151,11 @@ export const ValidatorNodeApprovalSectionSchema = val.object({
 })
 export type ValidatorNodeVotingPowerUpdateSection = val.InferOutput<typeof ValidatorNodeApprovalSectionSchema>;
 
+export const ValidatorNodeSlashingCancellationSectionSchema = val.object({
+    type: val.literal(SectionType.VN_SLASHING_CANCELLATION),
+    reason: string(),
+})
+export type ValidatorNodeSlashingCancellationSection = val.InferOutput<typeof ValidatorNodeSlashingCancellationSectionSchema>;
 
 // ---------------------------------------------------------------------------
 // Organization Sections
@@ -316,6 +321,7 @@ export const SectionSchema = val.variant(
         ValidatorNodeCometbftPublicKeyDeclarationSectionSchema,
         ValidatorNodeRpcEndpointSectionSchema,
         ValidatorNodeApprovalSectionSchema,
+        ValidatorNodeSlashingCancellationSectionSchema,
 
         OrganizationCreationSectionSchema,
         OrganizationDescriptionSectionSchema,

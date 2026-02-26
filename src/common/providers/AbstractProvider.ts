@@ -104,7 +104,7 @@ export abstract class AbstractProvider implements IProvider {
         if (mb.isGenesisMicroblock()) {
             expirationDay =    Microblock.extractExpirationDayFromGenesisPreviousHash(mb.getPreviousHash().toBytes());
         } else {
-            const vbId = await this.getVirtualBlockchainIdContainingMicroblock(mb.getHash());
+            const vbId = await this.getVirtualBlockchainIdContainingMicroblock(mb.getPreviousHash());
             const vbState = await this.getVirtualBlockchainState(vbId.toBytes());
             if (vbState === null) throw new Error("Virtual blockchain state not found");
             expirationDay = vbState.expirationDay;

@@ -268,7 +268,9 @@ export class BalanceAvailability {
      */
     setSlashing(nodeId: Uint8Array, plannedTimestamp: number) {
         const nodeStakingLocks = this.getNodeStakingLocks();
-        const nodeStakingLock = nodeStakingLocks.find((obj) => obj.parameters.validatorNodeId == nodeId);
+        const nodeStakingLock = nodeStakingLocks.find((obj) =>
+            Utils.binaryIsEqual(obj.parameters.validatorNodeId, nodeId)
+        );
         if (nodeStakingLock == undefined) {
             throw new Error(`Staking not found`);
         }
@@ -282,7 +284,9 @@ export class BalanceAvailability {
      */
     cancelNodeSlashing(nodeId: Uint8Array) {
         const nodeStakingLocks = this.getNodeStakingLocks();
-        const nodeStakingLock = nodeStakingLocks.find((obj) => obj.parameters.validatorNodeId == nodeId);
+        const nodeStakingLock = nodeStakingLocks.find((obj) =>
+            Utils.binaryIsEqual(obj.parameters.validatorNodeId, nodeId)
+        );
         if (nodeStakingLock == undefined) {
             throw new Error(`Staking not found`);
         }

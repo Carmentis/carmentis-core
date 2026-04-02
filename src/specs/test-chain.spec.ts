@@ -74,6 +74,7 @@ describe('Chain test', () => {
         mb.setFeesPayerAccount(sellerAccountId.toBytes());
         mb.setTimestamp(Utils.getTimestampInSeconds())
         //mb.setGas(await feesFormula.computeFees(sellerSk.getSignatureSchemeId(), mb))
+        mb.setMaxFees(CMTSToken.createCMTS(100));
         await mb.seal(sellerSk);
         await provider.publishMicroblock(mb);
         await provider.awaitMicroblockAnchoring(mb.getHash().toBytes());
@@ -97,6 +98,7 @@ describe('Chain test', () => {
         carmentisOrganizationMicroblock.setFeesPayerAccount(newAccountId.toBytes());
         carmentisOrganizationMicroblock.setTimestamp(Utils.getTimestampInSeconds());
         //carmentisOrganizationMicroblock.setGas(await feesFormula.computeFees(sk.getSignatureSchemeId(), carmentisOrganizationMicroblock));
+        carmentisOrganizationMicroblock.setMaxFees(CMTSToken.createCMTS(100));
         await carmentisOrganizationMicroblock.seal(sk);
         const { microblockData: carmentisOrganizationData, microblockHash: carmentisOrgId } =
             carmentisOrganizationMicroblock.serialize();
@@ -118,6 +120,7 @@ describe('Chain test', () => {
         carmentisOrganizationSecondMicroblock.setFeesPayerAccount(newAccountId.toBytes());
         carmentisOrganizationSecondMicroblock.setTimestamp(Utils.getTimestampInSeconds());
         //carmentisOrganizationSecondMicroblock.setGas(await feesFormula.computeFees(sk.getSignatureSchemeId(), carmentisOrganizationSecondMicroblock));
+        carmentisOrganizationSecondMicroblock.setMaxFees(CMTSToken.createCMTS(100));
         await carmentisOrganizationSecondMicroblock.seal(sk);
         carmentisOrganizationSecondMicroblock.serialize();
         await provider.publishMicroblock(carmentisOrganizationSecondMicroblock);

@@ -1,14 +1,10 @@
 import {qrcode} from "./qrCodeGenerator";
-import {SCHEMAS} from "../../common/constants/constants";
-import {SchemaSerializer} from "../../common/data/schemaSerializer";
+import {QRCode} from "./types";
 import {EncoderFactory} from "../../common/utils/encoder";
 import {
-  WI_MAX_SERVER_URL_LENGTH, WiQrCodeSchema
+  WI_MAX_SERVER_URL_LENGTH
 } from "../../common/type/valibot/clientBridge/clientBridgeMessages";
-import {ClientBridgeEncoder} from "../../common/type/valibot/clientBridge/ClientBridgeEncoder";
 import {WiQrCodeEncoder} from "../../common/type/valibot/clientBridge/WiQrCodeEncoder";
-//import * as base64 from "../../common/util/base64";
-//import * as uint8 from "../../common/util/uint8";
 
 // ============================================================================================================================ //
 //  create()                                                                                                                    //
@@ -29,17 +25,14 @@ export function create(qrId: string, timestamp: number, serverUrl: string) {
   })
 
   const base64Encoder = EncoderFactory.bytesToBase64Encoder();
-  let qr = qrcode(0, "L"),
-      b64 = base64Encoder.encode(data),
-      qrData = `carmentis:${b64}`;
+  const qr = qrcode(0, "L") as QRCode;
+  const b64 = base64Encoder.encode(data);
+  const qrData = `carmentis:${b64}`;
 
-  // @ts-ignore
   qr.addData(qrData, "Byte");
-  // @ts-ignore
   qr.make();
 
-  // @ts-expect-error TS(2339): Property 'createImgTag' does not exist on type '{}... Remove this comment to see the full error message
-  let qrImgTag = qr.createImgTag(4, 0);
+  const qrImgTag = qr.createImgTag(4, 0);
 
   return {
     imageTag: qrImgTag,

@@ -11,4 +11,5 @@ export enum SignatureSchemeId {
     SECP256K1 = 0,
     ML_DSA_65 = 1,
     PKMS_SECP256K1 = 2,
+    ED25519 = 3,
 }

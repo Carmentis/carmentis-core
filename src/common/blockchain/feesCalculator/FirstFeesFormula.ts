@@ -37,24 +37,26 @@ export class FirstFeesFormula implements IFeesFormula {
         const definedGasPrice = microblock.getGasPrice();
         const usedGasPrice = definedGasPrice.isZero() ? FirstFeesFormula.DEFAULT_GAS_PRICE : definedGasPrice;
 
-        // we have an additional signature-related costs
-        const additionalCosts =  this.getAdditionalCosts(signatureSchemeId)
-
         // we compute the base fee
         const baseFeeInAtomic =  (
-            ECO.FIXED_GAS_FEE + ECO.GAS_PER_BYTE * totalSize + additionalCosts
+            ECO.FIXED_GAS_FEE + ECO.GAS_PER_BYTE * totalSize
         ) * usedGasPrice.getAmountAsAtomic();
         const baseFee = CMTSToken.createAtomic(baseFeeInAtomic);
 
-        // we compute the final price
+        // we compute the final price: first, the storage price
         const protocolState = await this.provider.getProtocolState();
         const storagePriceManager  =  new StoragePriceManager(protocolState.getPriceStructure());
         const numberOfDaysStorage = storagePriceManager.getNumberOfDaysOfStorage(referenceTimestampInSeconds, expirationDay);
         const finalPrice = storagePriceManager.getStoragePrice(baseFee, numberOfDaysStorage);
 
+        // then, the additional signature-related costs
+        const additionalCosts = CMTSToken.createAtomic(
+            this.getAdditionalCosts(signatureSchemeId) * usedGasPrice.getAmountAsAtomic()
+        );
+        finalPrice.add(additionalCosts);
+
         return finalPrice;
     }
-
 
     private getAdditionalCosts(signatureSchemeId: SignatureSchemeId) {
         switch (signatureSchemeId) {
@@ -98,8 +100,6 @@ export class FirstFeesFormula implements IFeesFormula {
             const totalSize = this.getSizeOfListOfSections(sectionsUsedInComputeOfSize)
             return totalSize
         }
-
-
     }
 
     private getSizeOfListOfSections(sections: Section[]): number {

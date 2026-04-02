@@ -7,6 +7,14 @@ import {ProtocolUpdateSchema} from "../protocol/ProtocolUpdate";
 // ---------------------------------------------------------------------------
 // All virtual blockchain purpose
 // ---------------------------------------------------------------------------
+export const CustomSectionSchema = val.objectWithRest(
+    {
+        type: val.literal(SectionType.CUSTOM)
+    },
+    val.unknown()
+)
+export type CustomSection = val.InferOutput<typeof CustomSectionSchema>;
+
 export const SignatureSectionSchema = val.object({
     type: val.literal(SectionType.SIGNATURE),
     signature: uint8array(),
@@ -302,6 +310,7 @@ export const SectionSchema = val.variant(
     [
         SignatureSectionSchema,
         AllowedAdditionalWriterSectionSchema,
+        CustomSectionSchema,
 
         ProtocolCreationSectionSchema,
         ProtocolUpdateSectionSchema,

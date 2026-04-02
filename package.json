@@ -91,6 +91,7 @@
   "dependencies": {
     "@logtape/logtape": "^1.2.0",
     "@noble/ciphers": "^1.2.1",
+    "@noble/ed25519": "^3.0.0",
     "@noble/hashes": "^1.7.1",
     "@noble/post-quantum": "^0.4.1",
     "@noble/secp256k1": "^2.2.3",

@@ -5,6 +5,7 @@ const sectionLabelBySectionType: Record<SectionType, string> = {
     // Generic sections
     [SectionType.SIGNATURE]: 'SIGNATURE',
     [SectionType.ALLOWED_ADDITIONAL_WRITER]: 'ALLOWED_ADDITIONAL_WRITER_CREATION',
+    [SectionType.CUSTOM]: 'CUSTOM',
 
     // Protocol
     [SectionType.PROTOCOL_CREATION]: 'PROTOCOL_CREATION',
